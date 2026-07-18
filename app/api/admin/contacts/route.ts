@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { listContactMessages } from "@/lib/firebase/admin";
 import { requireAdmin } from "@/lib/firebase/requireAdmin";
-import {
-  CONTACT_COLLECTION,
-  isContactStatus,
-  type ContactMessage,
-} from "@/lib/contact/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,33 +9,12 @@ export async function GET(request: Request) {
   const auth = await requireAdmin(request);
   if (auth.error) return auth.error;
 
-  const db = await getAdminFirestore();
-  const snapshot = await db
-    .collection(CONTACT_COLLECTION)
-    .orderBy("createdAt", "desc")
-    .get();
-
-  const messages: ContactMessage[] = snapshot.docs.map((doc) => {
-    const data = doc.data() as {
-      name?: unknown;
-      email?: unknown;
-      message?: unknown;
-      status?: unknown;
-      createdAt?: { toDate?: () => Date };
-    };
-    const createdAt = data.createdAt?.toDate?.()
-      ? data.createdAt.toDate().toISOString()
-      : new Date(0).toISOString();
-
-    return {
-      id: doc.id,
-      name: typeof data.name === "string" ? data.name : "",
-      email: typeof data.email === "string" ? data.email : "",
-      message: typeof data.message === "string" ? data.message : "",
-      status: isContactStatus(data.status) ? data.status : "unread",
-      createdAt,
-    };
-  });
-
-  return NextResponse.json({ messages });
+  try {
+    const messages = await listContactMessages();
+    return NextResponse.json({ messages });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to load messages.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

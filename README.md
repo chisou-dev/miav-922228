@@ -41,13 +41,13 @@ MIAV-922228 は、Takashi Yabe による文学SFプロジェクトです。
 
 | 用途 | サービス |
 |------|----------|
-| お問い合わせ保存 | Cloud Firestore（`contact_messages`） |
-| 管理者ログイン | Firebase Authentication |
-| サーバー書き込み・管理API | Firebase Admin SDK |
+| お問い合わせ保存 | Cloud Firestore（`contact_messages`）※サーバーは REST + サービスアカウント |
+| 管理者ログイン | Firebase Authentication（Client SDK） |
+| サーバーAPI | Firestore REST / IDトークン検証（`jose`）。`firebase-admin` は未使用 |
 
-公開フォームの送信は **Next.js API Route（`/api/contact`）→ Admin SDK** 経由です。クライアントから Firestore へ直接書き込みません。
+公開フォームの送信は **Next.js API Route（`/api/contact`）→ Firestore REST（サービスアカウント）** 経由です。クライアントから Firestore へ直接書き込みません。
 
-管理者画面は Firebase Auth のトークン検証と管理者 UID チェックを行い、API（`/api/admin/contacts`）経由で一覧・既読更新をします。
+管理者画面は Firebase Auth の ID トークンをサーバーで検証し、API（`/api/admin/contacts`）経由で一覧・既読更新をします。
 
 Firestore のクライアント向けセキュリティルールは、直接アクセスを拒否する構成です（詳細は `firestore.rules`）。
 

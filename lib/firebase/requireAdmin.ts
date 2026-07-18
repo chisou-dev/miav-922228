@@ -2,9 +2,9 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import {
-  getAdminAuth,
   getAdminUid,
   isFirebaseAdminConfigured,
+  verifyFirebaseIdToken,
 } from "@/lib/firebase/admin";
 
 export async function requireAdmin(request: Request) {
@@ -36,8 +36,7 @@ export async function requireAdmin(request: Request) {
   }
 
   try {
-    const auth = await getAdminAuth();
-    const decoded = await auth.verifyIdToken(match[1]);
+    const decoded = await verifyFirebaseIdToken(match[1]);
     if (decoded.uid !== adminUid) {
       return {
         error: NextResponse.json({ error: "Forbidden." }, { status: 403 }),

@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import {
-  getAdminFirestore,
-  getServerTimestamp,
+  createContactMessage,
   isFirebaseAdminConfigured,
 } from "@/lib/firebase/admin";
-import { CONTACT_COLLECTION } from "@/lib/contact/types";
 import {
   consumeContactRateLimit,
   getRequestIp,
@@ -79,15 +77,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is required." }, { status: 400 });
   }
 
-  const db = await getAdminFirestore();
-  const createdAt = await getServerTimestamp();
-  const doc = await db.collection(CONTACT_COLLECTION).add({
-    name,
-    email,
-    message,
-    status: "unread",
-    createdAt,
-  });
-
-  return NextResponse.json({ id: doc.id, ok: true });
+  try {
+    const doc = await createContactMessage({ name, email, message });
+    return NextResponse.json({ id: doc.id, ok: true });
+  } catch (error) {
+    const messageText =
+      error instanceof Error ? error.message : "Unable to save message.";
+    return NextResponse.json({ error: messageText }, { status: 500 });
+  }
 }

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { getAdminFirestore } from "@/lib/firebase/admin";
+import { updateContactMessageStatus } from "@/lib/firebase/admin";
 import { requireAdmin } from "@/lib/firebase/requireAdmin";
-import {
-  CONTACT_COLLECTION,
-  isContactStatus,
-} from "@/lib/contact/types";
+import { isContactStatus } from "@/lib/contact/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,13 +38,15 @@ export async function PATCH(request: Request, { params }: Props) {
     );
   }
 
-  const db = await getAdminFirestore();
-  const ref = db.collection(CONTACT_COLLECTION).doc(id);
-  const existing = await ref.get();
-  if (!existing.exists) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  try {
+    const updated = await updateContactMessageStatus(id, status);
+    if (!updated) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return NextResponse.json({ id, status, ok: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to update status.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  await ref.update({ status });
-  return NextResponse.json({ id, status, ok: true });
 }
