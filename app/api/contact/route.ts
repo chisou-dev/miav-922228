@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  FieldValue,
   getAdminFirestore,
+  getServerTimestamp,
   isFirebaseAdminConfigured,
 } from "@/lib/firebase/admin";
 import { CONTACT_COLLECTION } from "@/lib/contact/types";
@@ -18,7 +18,6 @@ function isValidEmail(value: string) {
 }
 
 function silentOk() {
-  // Look like success so bots do not retry aggressively.
   return NextResponse.json({ ok: true });
 }
 
@@ -57,7 +56,6 @@ export async function POST(request: Request) {
 
   const record = body as Record<string, unknown>;
 
-  // Honeypot: real users leave this empty. Bots that fill it are rejected quietly.
   const honeypot =
     typeof record.website === "string" ? record.website.trim() : "";
   if (honeypot) {
@@ -81,12 +79,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is required." }, { status: 400 });
   }
 
-  const doc = await getAdminFirestore().collection(CONTACT_COLLECTION).add({
+  const db = await getAdminFirestore();
+  const createdAt = await getServerTimestamp();
+  const doc = await db.collection(CONTACT_COLLECTION).add({
     name,
     email,
     message,
     status: "unread",
-    createdAt: FieldValue.serverTimestamp(),
+    createdAt,
   });
 
   return NextResponse.json({ id: doc.id, ok: true });

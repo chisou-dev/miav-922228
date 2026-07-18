@@ -41,7 +41,8 @@ export async function PATCH(request: Request, { params }: Props) {
     );
   }
 
-  const ref = getAdminFirestore().collection(CONTACT_COLLECTION).doc(id);
+  const db = await getAdminFirestore();
+  const ref = db.collection(CONTACT_COLLECTION).doc(id);
   const existing = await ref.get();
   if (!existing.exists) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });

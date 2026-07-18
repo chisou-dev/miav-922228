@@ -1,8 +1,6 @@
 import "server-only";
 
-import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
-import { getAuth, type Auth } from "firebase-admin/auth";
-import { FieldValue, getFirestore, type Firestore } from "firebase-admin/firestore";
+import { createRequire } from "node:module";
 import {
   getAdminUidFromEnv,
   isFirebaseAdminEnvConfigured,
@@ -14,11 +12,69 @@ export {
   isFirebaseAdminEnvConfigured as isFirebaseAdminConfigured,
 };
 
-let app: App | null = null;
+// Force Node CJS resolution for firebase-admin (avoids Turbopack ESM jose/jwks-rsa crash).
+const require = createRequire(process.cwd() + "/package.json");
 
-function getAdminApp(): App {
+type AdminAppModule = {
+  getApps: () => unknown[];
+  initializeApp: (options: { credential: unknown }) => unknown;
+  cert: (serviceAccount: {
+    projectId: string;
+    clientEmail: string;
+    privateKey: string;
+  }) => unknown;
+};
+
+type AdminAuthModule = {
+  getAuth: (app?: unknown) => {
+    verifyIdToken: (token: string) => Promise<{ uid: string }>;
+  };
+};
+
+type AdminFirestoreModule = {
+  getFirestore: (app?: unknown) => {
+    collection: (path: string) => {
+      add: (data: Record<string, unknown>) => Promise<{ id: string }>;
+      orderBy: (
+        field: string,
+        direction: "asc" | "desc",
+      ) => {
+        get: () => Promise<{
+          docs: Array<{
+            id: string;
+            data: () => Record<string, unknown>;
+          }>;
+        }>;
+      };
+      doc: (id: string) => {
+        get: () => Promise<{ exists: boolean }>;
+        update: (data: Record<string, unknown>) => Promise<unknown>;
+      };
+    };
+  };
+  FieldValue: {
+    serverTimestamp: () => unknown;
+  };
+};
+
+let app: unknown | null = null;
+
+function loadAdminApp(): AdminAppModule {
+  return require("firebase-admin/app") as AdminAppModule;
+}
+
+function loadAdminAuth(): AdminAuthModule {
+  return require("firebase-admin/auth") as AdminAuthModule;
+}
+
+function loadAdminFirestore(): AdminFirestoreModule {
+  return require("firebase-admin/firestore") as AdminFirestoreModule;
+}
+
+function getAdminApp(): unknown {
   if (app) return app;
 
+  const { getApps, initializeApp, cert } = loadAdminApp();
   const existing = getApps()[0];
   if (existing) {
     app = existing;
@@ -41,12 +97,14 @@ function getAdminApp(): App {
   return app;
 }
 
-export function getAdminAuth(): Auth {
-  return getAuth(getAdminApp());
+export async function getAdminAuth() {
+  return loadAdminAuth().getAuth(getAdminApp());
 }
 
-export function getAdminFirestore(): Firestore {
-  return getFirestore(getAdminApp());
+export async function getAdminFirestore() {
+  return loadAdminFirestore().getFirestore(getAdminApp());
 }
 
-export { FieldValue };
+export async function getServerTimestamp() {
+  return loadAdminFirestore().FieldValue.serverTimestamp();
+}

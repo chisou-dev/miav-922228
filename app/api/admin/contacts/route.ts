@@ -14,13 +14,20 @@ export async function GET(request: Request) {
   const auth = await requireAdmin(request);
   if (auth.error) return auth.error;
 
-  const snapshot = await getAdminFirestore()
+  const db = await getAdminFirestore();
+  const snapshot = await db
     .collection(CONTACT_COLLECTION)
     .orderBy("createdAt", "desc")
     .get();
 
   const messages: ContactMessage[] = snapshot.docs.map((doc) => {
-    const data = doc.data();
+    const data = doc.data() as {
+      name?: unknown;
+      email?: unknown;
+      message?: unknown;
+      status?: unknown;
+      createdAt?: { toDate?: () => Date };
+    };
     const createdAt = data.createdAt?.toDate?.()
       ? data.createdAt.toDate().toISOString()
       : new Date(0).toISOString();

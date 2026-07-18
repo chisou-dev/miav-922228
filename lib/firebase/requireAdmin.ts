@@ -36,7 +36,8 @@ export async function requireAdmin(request: Request) {
   }
 
   try {
-    const decoded = await getAdminAuth().verifyIdToken(match[1]);
+    const auth = await getAdminAuth();
+    const decoded = await auth.verifyIdToken(match[1]);
     if (decoded.uid !== adminUid) {
       return {
         error: NextResponse.json({ error: "Forbidden." }, { status: 403 }),
