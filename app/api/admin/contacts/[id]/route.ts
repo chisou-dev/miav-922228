@@ -7,6 +7,7 @@ import {
 } from "@/lib/contact/types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ id: string }>;

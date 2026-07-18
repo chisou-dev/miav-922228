@@ -1,5 +1,11 @@
+import "server-only";
+
 import { NextResponse } from "next/server";
-import { getAdminAuth, getAdminUid, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
+import {
+  getAdminAuth,
+  getAdminUid,
+  isFirebaseAdminConfigured,
+} from "@/lib/firebase/admin";
 
 export async function requireAdmin(request: Request) {
   if (!isFirebaseAdminConfigured()) {

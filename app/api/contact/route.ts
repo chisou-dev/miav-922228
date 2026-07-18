@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
 import {
+  FieldValue,
   getAdminFirestore,
   isFirebaseAdminConfigured,
 } from "@/lib/firebase/admin";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/contact/rateLimit";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -71,7 +72,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
   }
   if (!email || !isValidEmail(email) || email.length > 200) {
-    return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
+    return NextResponse.json(
+      { error: "A valid email is required." },
+      { status: 400 },
+    );
   }
   if (!message || message.length > 5000) {
     return NextResponse.json({ error: "Message is required." }, { status: 400 });
