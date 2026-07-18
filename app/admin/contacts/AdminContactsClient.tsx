@@ -16,7 +16,7 @@ import {
 
 type Gate =
   | { kind: "loading" }
-  | { kind: "unconfigured" }
+  | { kind: "unconfigured"; missingClientKeys: string[] }
   | { kind: "signed_out" }
   | { kind: "forbidden" }
   | { kind: "ready"; user: User };
@@ -71,7 +71,20 @@ export function AdminContactsClient() {
 
   useEffect(() => {
     if (!configured) {
-      setGate({ kind: "unconfigured" });
+      void (async () => {
+        try {
+          const response = await fetch("/api/health/firebase");
+          const data = (await response.json().catch(() => null)) as {
+            missingClientKeys?: string[];
+          } | null;
+          setGate({
+            kind: "unconfigured",
+            missingClientKeys: data?.missingClientKeys || [],
+          });
+        } catch {
+          setGate({ kind: "unconfigured", missingClientKeys: [] });
+        }
+      })();
       return;
     }
 
@@ -165,9 +178,27 @@ export function AdminContactsClient() {
 
   if (gate.kind === "unconfigured") {
     return (
-      <p className="mt-20 text-center text-[0.95rem] leading-[2] text-[var(--foreground-muted)]">
-        Firebase is not configured for this environment.
-      </p>
+      <div className="mt-20 text-center">
+        <p className="text-[0.95rem] leading-[2] text-[var(--foreground-muted)]">
+          Firebase is not configured for this environment.
+        </p>
+        <p className="mt-6 text-[0.85rem] leading-[1.9] text-[var(--foreground-muted)]">
+          Set the Firebase environment variables in Vercel (Production), then
+          redeploy. Check{" "}
+          <a
+            href="/api/health/firebase"
+            className="underline decoration-[var(--line)] underline-offset-[0.4em]"
+          >
+            /api/health/firebase
+          </a>
+          .
+        </p>
+        {gate.missingClientKeys.length > 0 ? (
+          <p className="mt-8 text-[0.78rem] tracking-[0.04em] text-[var(--foreground-muted)]">
+            Missing: {gate.missingClientKeys.join(", ")}
+          </p>
+        ) : null}
+      </div>
     );
   }
 
