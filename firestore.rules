@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Current app architecture:
+    // - /contact  → POST /api/contact          (Firebase Admin SDK)
+    // - /admin/*  → /api/admin/contacts[...]   (Firebase Admin SDK + Auth UID check)
+    //
+    // Admin SDK bypasses these rules. Client SDK access must stay fully denied
+    // so browsers / attackers cannot read or write contact_messages directly.
+    match /contact_messages/{messageId} {
+      allow read, write: if false;
+    }
+  }
+}

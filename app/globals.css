@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  --background: #1a2f4a;
+  --background-deep: #122438;
+  --background-soft: #243a58;
+  --foreground: #f4efe4;
+  --foreground-muted: #c9c2b3;
+  --line: color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--foreground-muted);
+  --font-serif: var(--font-mincho);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+
+/* Soft blue field — quiet depth without flat fill */
+.site-canvas {
+  min-height: 100%;
+  background:
+    radial-gradient(
+      ellipse 120% 80% at 50% -10%,
+      var(--background-soft) 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      165deg,
+      var(--background-deep) 0%,
+      var(--background) 42%,
+      #1e3554 100%
+    );
+}
+
+.site-canvas::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+.chapter-prose {
+  max-width: 700px;
+  margin-inline: auto;
+  color: var(--foreground);
+  font-size: 1.02rem;
+  line-height: 2.3;
+  letter-spacing: 0.012em;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) {
+  .chapter-prose {
+    font-size: 1.1rem;
+    line-height: 2.45;
+  }
+}
+
+.chapter-prose p {
+  margin: 0;
+  color: var(--foreground);
+}
+
+.chapter-prose p + p {
+  margin-top: 2.1em;
+}
+
+.chapter-prose em {
+  font-style: italic;
+}
+
+.chapter-prose strong {
+  font-weight: 600;
+}
