@@ -12,6 +12,7 @@ type FlatFile = {
   countries: Array<{
     code: string;
     name: string;
+    continent?: string;
     lat: number;
     lng: number;
     zoom: number;
@@ -73,6 +74,7 @@ function groupCountries(): LocationCountry[] {
     map.set(meta.code, {
       code: meta.code,
       name: meta.name,
+      continent: meta.continent || "Asia",
       lat: meta.lat,
       lng: meta.lng,
       zoom: meta.zoom,
@@ -200,3 +202,6 @@ export {
   fetchLocationIndex,
   fetchCountryLocations,
 } from "@/lib/locations/client";
+
+export { CONTINENTS, continentForCode } from "@/lib/locations/continents";
+export type { ContinentName } from "@/lib/locations/continents";

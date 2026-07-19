@@ -4,11 +4,14 @@
  */
 
 import type {
+  ContinentName,
   LocationCountry,
   LocationCountryIndexEntry,
 } from "@/lib/locations/types";
+import { CONTINENTS } from "@/lib/locations/continents";
 
-export type { LocationCountry, LocationCountryIndexEntry };
+export type { LocationCountry, LocationCountryIndexEntry, ContinentName };
+export { CONTINENTS };
 
 export async function fetchLocationIndex(): Promise<
   LocationCountryIndexEntry[]
@@ -18,7 +21,10 @@ export async function fetchLocationIndex(): Promise<
   const data = (await res.json()) as {
     countries?: LocationCountryIndexEntry[];
   };
-  return data.countries || [];
+  return (data.countries || []).map((c) => ({
+    ...c,
+    continent: c.continent || "Asia",
+  }));
 }
 
 export async function fetchCountryLocations(
@@ -29,5 +35,18 @@ export async function fetchCountryLocations(
     : `/locations/countries/${codeOrPath.toUpperCase()}.json`;
   const res = await fetch(path, { cache: "force-cache" });
   if (!res.ok) return null;
-  return (await res.json()) as LocationCountry;
+  const data = (await res.json()) as LocationCountry;
+  return {
+    ...data,
+    continent: data.continent || "Asia",
+  };
+}
+
+export function countriesInContinent(
+  index: LocationCountryIndexEntry[],
+  continent: string,
+): LocationCountryIndexEntry[] {
+  return index
+    .filter((c) => (c.continent || "Asia") === continent)
+    .sort((a, b) => a.name.localeCompare(b.name));
 }

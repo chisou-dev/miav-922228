@@ -1,1 +1,1 @@
-{"code":"SE","name":"Sweden","lat":62,"lng":15,"zoom":4.5,"regions":[{"name":"Stockholm","lat":59.33,"lng":18.07,"cities":[{"locationId":"SE:stockholm:stockholm","name":"Stockholm","lat":59.3293,"lng":18.0686}]}]}
+{"code":"SE","name":"Sweden","continent":"Europe","lat":62,"lng":15,"zoom":4.5,"regions":[{"name":"Stockholm","lat":59.33,"lng":18.07,"cities":[{"locationId":"SE:stockholm:stockholm","name":"Stockholm","lat":59.3293,"lng":18.0686}]}]}

@@ -1,1 +1,1 @@
-{"code":"EG","name":"Egypt","lat":26.8,"lng":30.8,"zoom":5.5,"regions":[{"name":"Cairo","lat":30.04,"lng":31.24,"cities":[{"locationId":"EG:cairo:cairo","name":"Cairo","lat":30.0444,"lng":31.2357}]}]}
+{"code":"EG","name":"Egypt","continent":"Africa","lat":26.8,"lng":30.8,"zoom":5.5,"regions":[{"name":"Cairo","lat":30.04,"lng":31.24,"cities":[{"locationId":"EG:cairo:cairo","name":"Cairo","lat":30.0444,"lng":31.2357}]}]}

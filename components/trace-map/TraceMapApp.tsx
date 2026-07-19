@@ -17,6 +17,7 @@ import {
 } from "@/lib/trace/auth";
 import {
   fetchCountryLocations,
+  CONTINENTS,
   type LocationCountryIndexEntry,
 } from "@/lib/locations/client";
 import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/lib/trace/policyCopy";
@@ -55,6 +56,7 @@ export function TraceMapApp() {
   });
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [mapContinent, setMapContinent] = useState<string | null>(null);
 
   const data = useMapDataLoader();
 
@@ -353,7 +355,13 @@ export function TraceMapApp() {
           >
             <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
               <Map
-                countries={data.locationIndex}
+                countries={
+                  mapContinent
+                    ? data.locationIndex.filter(
+                        (c) => (c.continent || "Asia") === mapContinent,
+                      )
+                    : data.locationIndex
+                }
                 focus={focus}
                 selectedCountry={selectedCountry}
                 selectedRegion={selectedRegion}
@@ -365,9 +373,41 @@ export function TraceMapApp() {
                 onSelectRegion={(name) => void onSelectRegion(name)}
                 onSelectCity={(name) => void onSelectCity(name)}
               />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMapContinent(null)}
+                  className={[
+                    "min-h-[40px] cursor-pointer border px-3 text-[0.72rem] tracking-[0.1em]",
+                    !mapContinent
+                      ? "border-[#9bb0c2] bg-[#e8eef4] text-[var(--map-ink)]"
+                      : "border-[var(--map-line)] text-[var(--map-muted)]",
+                  ].join(" ")}
+                >
+                  All
+                </button>
+                {CONTINENTS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setMapContinent(item.name)}
+                    className={[
+                      "min-h-[40px] cursor-pointer border px-3 text-[0.72rem] tracking-[0.08em]",
+                      mapContinent === item.name
+                        ? "border-[#9bb0c2] bg-[#e8eef4] text-[var(--map-ink)]"
+                        : "border-[var(--map-line)] text-[var(--map-muted)]",
+                    ].join(" ")}
+                  >
+                    <span className="mr-1" aria-hidden>
+                      {item.emoji}
+                    </span>
+                    {item.name}
+                  </button>
+                ))}
+              </div>
               <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                Traces of readers who visited MIAV-922228. Places without a Trace
-                remain selectable; pins appear only where presence remains.
+                Traces of readers who visited MIAV-922228. Filter by continent,
+                then choose a country or territory marker — islands included.
               </p>
             </div>
 

@@ -1,1 +1,1 @@
-{"code":"IE","name":"Ireland","lat":53.4,"lng":-8.2,"zoom":6.5,"regions":[{"name":"Leinster","lat":53.35,"lng":-6.26,"cities":[{"locationId":"IE:leinster:dublin","name":"Dublin","lat":53.3498,"lng":-6.2603}]}]}
+{"code":"IE","name":"Ireland","continent":"Europe","lat":53.4,"lng":-8.2,"zoom":6.5,"regions":[{"name":"Leinster","lat":53.35,"lng":-6.26,"cities":[{"locationId":"IE:leinster:dublin","name":"Dublin","lat":53.3498,"lng":-6.2603}]}]}

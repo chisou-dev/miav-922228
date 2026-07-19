@@ -2,8 +2,18 @@
  * Location Database types — static JSON only (not Firestore).
  */
 
+export type ContinentName =
+  | "Asia"
+  | "Europe"
+  | "Africa"
+  | "North America"
+  | "South America"
+  | "Oceania"
+  | "Antarctica";
+
 export type LocationRecord = {
   locationId: string;
+  continent: ContinentName | string;
   countryCode: string;
   country: string;
   region: string;
@@ -29,6 +39,7 @@ export type LocationRegion = {
 export type LocationCountry = {
   code: string;
   name: string;
+  continent: ContinentName | string;
   lat: number;
   lng: number;
   zoom: number;
@@ -38,6 +49,7 @@ export type LocationCountry = {
 export type LocationCountryIndexEntry = {
   code: string;
   name: string;
+  continent: ContinentName | string;
   lat: number;
   lng: number;
   zoom: number;
@@ -47,5 +59,6 @@ export type LocationCountryIndexEntry = {
 export type LocationIndex = {
   version: number;
   description?: string;
+  continents?: string[];
   countries: LocationCountryIndexEntry[];
 };

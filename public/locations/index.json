@@ -1,414 +1,915 @@
 {
-  "version": 1,
-  "description": "Location index — countries only. Load /locations/countries/{code}.json on demand.",
+  "version": 2,
+  "description": "Location index — countries/territories by continent. Load /locations/countries/{code}.json on demand.",
+  "continents": [
+    "Asia",
+    "Europe",
+    "Africa",
+    "North America",
+    "South America",
+    "Oceania",
+    "Antarctica"
+  ],
   "countries": [
     {
-      "code": "JP",
-      "name": "Japan",
-      "lat": 36.2,
-      "lng": 138.25,
-      "zoom": 5,
-      "path": "/locations/countries/JP.json"
-    },
-    {
-      "code": "KR",
-      "name": "South Korea",
-      "lat": 36.5,
-      "lng": 127.8,
-      "zoom": 6.5,
-      "path": "/locations/countries/KR.json"
-    },
-    {
-      "code": "CN",
-      "name": "China",
-      "lat": 35,
-      "lng": 105,
-      "zoom": 4,
-      "path": "/locations/countries/CN.json"
-    },
-    {
-      "code": "TW",
-      "name": "Taiwan",
-      "lat": 23.7,
-      "lng": 121,
-      "zoom": 7,
-      "path": "/locations/countries/TW.json"
-    },
-    {
-      "code": "HK",
-      "name": "Hong Kong",
-      "lat": 22.32,
-      "lng": 114.17,
-      "zoom": 11,
-      "path": "/locations/countries/HK.json"
-    },
-    {
-      "code": "SG",
-      "name": "Singapore",
-      "lat": 1.35,
-      "lng": 103.82,
-      "zoom": 11,
-      "path": "/locations/countries/SG.json"
-    },
-    {
-      "code": "TH",
-      "name": "Thailand",
-      "lat": 15,
-      "lng": 101,
-      "zoom": 5.5,
-      "path": "/locations/countries/TH.json"
-    },
-    {
-      "code": "VN",
-      "name": "Vietnam",
-      "lat": 16,
-      "lng": 108,
-      "zoom": 5.5,
-      "path": "/locations/countries/VN.json"
-    },
-    {
-      "code": "PH",
-      "name": "Philippines",
-      "lat": 12.9,
-      "lng": 121.8,
-      "zoom": 5.5,
-      "path": "/locations/countries/PH.json"
-    },
-    {
-      "code": "MY",
-      "name": "Malaysia",
-      "lat": 4.2,
-      "lng": 101.98,
-      "zoom": 5.5,
-      "path": "/locations/countries/MY.json"
-    },
-    {
-      "code": "ID",
-      "name": "Indonesia",
-      "lat": -2.5,
-      "lng": 118,
-      "zoom": 4.5,
-      "path": "/locations/countries/ID.json"
-    },
-    {
-      "code": "IN",
-      "name": "India",
-      "lat": 22,
-      "lng": 79,
-      "zoom": 4.5,
-      "path": "/locations/countries/IN.json"
-    },
-    {
-      "code": "AU",
-      "name": "Australia",
-      "lat": -25,
-      "lng": 134,
-      "zoom": 4,
-      "path": "/locations/countries/AU.json"
-    },
-    {
-      "code": "NZ",
-      "name": "New Zealand",
-      "lat": -41,
-      "lng": 174,
-      "zoom": 5,
-      "path": "/locations/countries/NZ.json"
-    },
-    {
-      "code": "US",
-      "name": "United States",
-      "lat": 39.8,
-      "lng": -98.5,
-      "zoom": 4,
-      "path": "/locations/countries/US.json"
-    },
-    {
-      "code": "CA",
-      "name": "Canada",
-      "lat": 56,
-      "lng": -96,
-      "zoom": 3.5,
-      "path": "/locations/countries/CA.json"
-    },
-    {
-      "code": "MX",
-      "name": "Mexico",
-      "lat": 23.6,
-      "lng": -102.5,
-      "zoom": 4.5,
-      "path": "/locations/countries/MX.json"
-    },
-    {
-      "code": "BR",
-      "name": "Brazil",
-      "lat": -14.2,
-      "lng": -51.9,
-      "zoom": 4,
-      "path": "/locations/countries/BR.json"
+      "code": "AQ",
+      "name": "Antarctica",
+      "continent": "Antarctica",
+      "lat": -75,
+      "lng": 0,
+      "zoom": 2,
+      "path": "/locations/countries/AQ.json"
     },
     {
       "code": "AR",
       "name": "Argentina",
+      "continent": "South America",
       "lat": -38.4,
       "lng": -63.6,
       "zoom": 4,
       "path": "/locations/countries/AR.json"
     },
     {
-      "code": "CL",
-      "name": "Chile",
-      "lat": -35.7,
-      "lng": -71.5,
+      "code": "AU",
+      "name": "Australia",
+      "continent": "Oceania",
+      "lat": -25,
+      "lng": 134,
       "zoom": 4,
-      "path": "/locations/countries/CL.json"
-    },
-    {
-      "code": "CO",
-      "name": "Colombia",
-      "lat": 4.6,
-      "lng": -74.1,
-      "zoom": 5,
-      "path": "/locations/countries/CO.json"
-    },
-    {
-      "code": "PE",
-      "name": "Peru",
-      "lat": -9.2,
-      "lng": -75,
-      "zoom": 5,
-      "path": "/locations/countries/PE.json"
-    },
-    {
-      "code": "GB",
-      "name": "United Kingdom",
-      "lat": 54,
-      "lng": -2,
-      "zoom": 5.5,
-      "path": "/locations/countries/GB.json"
-    },
-    {
-      "code": "IE",
-      "name": "Ireland",
-      "lat": 53.4,
-      "lng": -8.2,
-      "zoom": 6.5,
-      "path": "/locations/countries/IE.json"
-    },
-    {
-      "code": "FR",
-      "name": "France",
-      "lat": 46.2,
-      "lng": 2.2,
-      "zoom": 5.5,
-      "path": "/locations/countries/FR.json"
-    },
-    {
-      "code": "DE",
-      "name": "Germany",
-      "lat": 51.2,
-      "lng": 10.4,
-      "zoom": 5.5,
-      "path": "/locations/countries/DE.json"
-    },
-    {
-      "code": "IT",
-      "name": "Italy",
-      "lat": 41.9,
-      "lng": 12.5,
-      "zoom": 5.5,
-      "path": "/locations/countries/IT.json"
-    },
-    {
-      "code": "ES",
-      "name": "Spain",
-      "lat": 40.4,
-      "lng": -3.7,
-      "zoom": 5.5,
-      "path": "/locations/countries/ES.json"
-    },
-    {
-      "code": "PT",
-      "name": "Portugal",
-      "lat": 39.4,
-      "lng": -8.2,
-      "zoom": 6.5,
-      "path": "/locations/countries/PT.json"
-    },
-    {
-      "code": "NL",
-      "name": "Netherlands",
-      "lat": 52.1,
-      "lng": 5.3,
-      "zoom": 7,
-      "path": "/locations/countries/NL.json"
-    },
-    {
-      "code": "BE",
-      "name": "Belgium",
-      "lat": 50.5,
-      "lng": 4.5,
-      "zoom": 7.5,
-      "path": "/locations/countries/BE.json"
-    },
-    {
-      "code": "CH",
-      "name": "Switzerland",
-      "lat": 46.8,
-      "lng": 8.2,
-      "zoom": 7.5,
-      "path": "/locations/countries/CH.json"
+      "path": "/locations/countries/AU.json"
     },
     {
       "code": "AT",
       "name": "Austria",
+      "continent": "Europe",
       "lat": 47.5,
       "lng": 14.5,
       "zoom": 6.5,
       "path": "/locations/countries/AT.json"
     },
     {
-      "code": "SE",
-      "name": "Sweden",
-      "lat": 62,
-      "lng": 15,
-      "zoom": 4.5,
-      "path": "/locations/countries/SE.json"
+      "code": "BS",
+      "name": "Bahamas",
+      "continent": "North America",
+      "lat": 25.03,
+      "lng": -77.4,
+      "zoom": 7,
+      "path": "/locations/countries/BS.json"
     },
     {
-      "code": "NO",
-      "name": "Norway",
-      "lat": 64,
-      "lng": 12,
-      "zoom": 4.5,
-      "path": "/locations/countries/NO.json"
-    },
-    {
-      "code": "DK",
-      "name": "Denmark",
-      "lat": 56,
-      "lng": 10,
+      "code": "BD",
+      "name": "Bangladesh",
+      "continent": "Asia",
+      "lat": 23.68,
+      "lng": 90.36,
       "zoom": 6.5,
-      "path": "/locations/countries/DK.json"
+      "path": "/locations/countries/BD.json"
     },
     {
-      "code": "FI",
-      "name": "Finland",
-      "lat": 64,
-      "lng": 26,
-      "zoom": 4.5,
-      "path": "/locations/countries/FI.json"
+      "code": "BB",
+      "name": "Barbados",
+      "continent": "North America",
+      "lat": 13.19,
+      "lng": -59.54,
+      "zoom": 10,
+      "path": "/locations/countries/BB.json"
     },
     {
-      "code": "PL",
-      "name": "Poland",
-      "lat": 52,
-      "lng": 20,
+      "code": "BE",
+      "name": "Belgium",
+      "continent": "Europe",
+      "lat": 50.5,
+      "lng": 4.5,
+      "zoom": 7.5,
+      "path": "/locations/countries/BE.json"
+    },
+    {
+      "code": "BO",
+      "name": "Bolivia",
+      "continent": "South America",
+      "lat": -16.29,
+      "lng": -63.59,
       "zoom": 5.5,
-      "path": "/locations/countries/PL.json"
+      "path": "/locations/countries/BO.json"
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "continent": "South America",
+      "lat": -14.2,
+      "lng": -51.9,
+      "zoom": 4,
+      "path": "/locations/countries/BR.json"
+    },
+    {
+      "code": "CV",
+      "name": "Cabo Verde",
+      "continent": "Africa",
+      "lat": 16,
+      "lng": -24,
+      "zoom": 7.5,
+      "path": "/locations/countries/CV.json"
+    },
+    {
+      "code": "KH",
+      "name": "Cambodia",
+      "continent": "Asia",
+      "lat": 12.57,
+      "lng": 104.99,
+      "zoom": 6.5,
+      "path": "/locations/countries/KH.json"
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "continent": "North America",
+      "lat": 56,
+      "lng": -96,
+      "zoom": 3.5,
+      "path": "/locations/countries/CA.json"
+    },
+    {
+      "code": "CL",
+      "name": "Chile",
+      "continent": "South America",
+      "lat": -35.7,
+      "lng": -71.5,
+      "zoom": 4,
+      "path": "/locations/countries/CL.json"
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "continent": "Asia",
+      "lat": 35,
+      "lng": 105,
+      "zoom": 4,
+      "path": "/locations/countries/CN.json"
+    },
+    {
+      "code": "CO",
+      "name": "Colombia",
+      "continent": "South America",
+      "lat": 4.6,
+      "lng": -74.1,
+      "zoom": 5,
+      "path": "/locations/countries/CO.json"
+    },
+    {
+      "code": "CR",
+      "name": "Costa Rica",
+      "continent": "North America",
+      "lat": 9.75,
+      "lng": -83.75,
+      "zoom": 7.5,
+      "path": "/locations/countries/CR.json"
+    },
+    {
+      "code": "CU",
+      "name": "Cuba",
+      "continent": "North America",
+      "lat": 21.52,
+      "lng": -77.78,
+      "zoom": 6,
+      "path": "/locations/countries/CU.json"
+    },
+    {
+      "code": "CY",
+      "name": "Cyprus",
+      "continent": "Asia",
+      "lat": 35.13,
+      "lng": 33.43,
+      "zoom": 8,
+      "path": "/locations/countries/CY.json"
     },
     {
       "code": "CZ",
       "name": "Czechia",
+      "continent": "Europe",
       "lat": 49.8,
       "lng": 15.5,
       "zoom": 6.5,
       "path": "/locations/countries/CZ.json"
     },
     {
-      "code": "GR",
-      "name": "Greece",
-      "lat": 39,
-      "lng": 22,
-      "zoom": 6,
-      "path": "/locations/countries/GR.json"
+      "code": "DK",
+      "name": "Denmark",
+      "continent": "Europe",
+      "lat": 56,
+      "lng": 10,
+      "zoom": 6.5,
+      "path": "/locations/countries/DK.json"
     },
     {
-      "code": "TR",
-      "name": "Turkey",
-      "lat": 39,
-      "lng": 35,
-      "zoom": 5,
-      "path": "/locations/countries/TR.json"
+      "code": "DO",
+      "name": "Dominican Republic",
+      "continent": "North America",
+      "lat": 18.74,
+      "lng": -70.16,
+      "zoom": 7.5,
+      "path": "/locations/countries/DO.json"
     },
     {
-      "code": "RU",
-      "name": "Russia",
-      "lat": 61.5,
-      "lng": 105,
-      "zoom": 3,
-      "path": "/locations/countries/RU.json"
-    },
-    {
-      "code": "UA",
-      "name": "Ukraine",
-      "lat": 48.4,
-      "lng": 31.2,
-      "zoom": 5,
-      "path": "/locations/countries/UA.json"
+      "code": "EC",
+      "name": "Ecuador",
+      "continent": "South America",
+      "lat": -1.83,
+      "lng": -78.18,
+      "zoom": 6.5,
+      "path": "/locations/countries/EC.json"
     },
     {
       "code": "EG",
       "name": "Egypt",
+      "continent": "Africa",
       "lat": 26.8,
       "lng": 30.8,
       "zoom": 5.5,
       "path": "/locations/countries/EG.json"
     },
     {
-      "code": "MA",
-      "name": "Morocco",
-      "lat": 31.8,
-      "lng": -7.1,
+      "code": "ET",
+      "name": "Ethiopia",
+      "continent": "Africa",
+      "lat": 9.15,
+      "lng": 40.49,
       "zoom": 5.5,
-      "path": "/locations/countries/MA.json"
+      "path": "/locations/countries/ET.json"
     },
     {
-      "code": "ZA",
-      "name": "South Africa",
-      "lat": -30.6,
-      "lng": 22.9,
+      "code": "FO",
+      "name": "Faroe Islands",
+      "continent": "Europe",
+      "lat": 61.89,
+      "lng": -6.91,
+      "zoom": 8,
+      "path": "/locations/countries/FO.json"
+    },
+    {
+      "code": "FJ",
+      "name": "Fiji",
+      "continent": "Oceania",
+      "lat": -17.71,
+      "lng": 178.07,
+      "zoom": 7,
+      "path": "/locations/countries/FJ.json"
+    },
+    {
+      "code": "FI",
+      "name": "Finland",
+      "continent": "Europe",
+      "lat": 64,
+      "lng": 26,
+      "zoom": 4.5,
+      "path": "/locations/countries/FI.json"
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "continent": "Europe",
+      "lat": 46.2,
+      "lng": 2.2,
+      "zoom": 5.5,
+      "path": "/locations/countries/FR.json"
+    },
+    {
+      "code": "GF",
+      "name": "French Guiana",
+      "continent": "South America",
+      "lat": 3.93,
+      "lng": -53.13,
+      "zoom": 6.5,
+      "path": "/locations/countries/GF.json"
+    },
+    {
+      "code": "PF",
+      "name": "French Polynesia",
+      "continent": "Oceania",
+      "lat": -17.68,
+      "lng": -149.41,
+      "zoom": 7,
+      "path": "/locations/countries/PF.json"
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "continent": "Europe",
+      "lat": 51.2,
+      "lng": 10.4,
+      "zoom": 5.5,
+      "path": "/locations/countries/DE.json"
+    },
+    {
+      "code": "GH",
+      "name": "Ghana",
+      "continent": "Africa",
+      "lat": 7.95,
+      "lng": -1.02,
+      "zoom": 6.5,
+      "path": "/locations/countries/GH.json"
+    },
+    {
+      "code": "GI",
+      "name": "Gibraltar",
+      "continent": "Europe",
+      "lat": 36.14,
+      "lng": -5.35,
+      "zoom": 12,
+      "path": "/locations/countries/GI.json"
+    },
+    {
+      "code": "GR",
+      "name": "Greece",
+      "continent": "Europe",
+      "lat": 39,
+      "lng": 22,
+      "zoom": 6,
+      "path": "/locations/countries/GR.json"
+    },
+    {
+      "code": "GL",
+      "name": "Greenland",
+      "continent": "North America",
+      "lat": 71.7,
+      "lng": -42.6,
+      "zoom": 3.5,
+      "path": "/locations/countries/GL.json"
+    },
+    {
+      "code": "GP",
+      "name": "Guadeloupe",
+      "continent": "North America",
+      "lat": 16.27,
+      "lng": -61.55,
+      "zoom": 9.5,
+      "path": "/locations/countries/GP.json"
+    },
+    {
+      "code": "GU",
+      "name": "Guam",
+      "continent": "Oceania",
+      "lat": 13.44,
+      "lng": 144.79,
+      "zoom": 10,
+      "path": "/locations/countries/GU.json"
+    },
+    {
+      "code": "HK",
+      "name": "Hong Kong",
+      "continent": "Asia",
+      "lat": 22.32,
+      "lng": 114.17,
+      "zoom": 11,
+      "path": "/locations/countries/HK.json"
+    },
+    {
+      "code": "IS",
+      "name": "Iceland",
+      "continent": "Europe",
+      "lat": 64.96,
+      "lng": -19.02,
+      "zoom": 5.5,
+      "path": "/locations/countries/IS.json"
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "continent": "Asia",
+      "lat": 22,
+      "lng": 79,
+      "zoom": 4.5,
+      "path": "/locations/countries/IN.json"
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "continent": "Asia",
+      "lat": -2.5,
+      "lng": 118,
+      "zoom": 4.5,
+      "path": "/locations/countries/ID.json"
+    },
+    {
+      "code": "IE",
+      "name": "Ireland",
+      "continent": "Europe",
+      "lat": 53.4,
+      "lng": -8.2,
+      "zoom": 6.5,
+      "path": "/locations/countries/IE.json"
+    },
+    {
+      "code": "IL",
+      "name": "Israel",
+      "continent": "Asia",
+      "lat": 31.5,
+      "lng": 34.8,
+      "zoom": 7,
+      "path": "/locations/countries/IL.json"
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "continent": "Europe",
+      "lat": 41.9,
+      "lng": 12.5,
+      "zoom": 5.5,
+      "path": "/locations/countries/IT.json"
+    },
+    {
+      "code": "JM",
+      "name": "Jamaica",
+      "continent": "North America",
+      "lat": 18.11,
+      "lng": -77.3,
+      "zoom": 8,
+      "path": "/locations/countries/JM.json"
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "continent": "Asia",
+      "lat": 36.2,
+      "lng": 138.25,
       "zoom": 5,
-      "path": "/locations/countries/ZA.json"
+      "path": "/locations/countries/JP.json"
     },
     {
-      "code": "NG",
-      "name": "Nigeria",
-      "lat": 9.1,
-      "lng": 8.7,
-      "zoom": 5.5,
-      "path": "/locations/countries/NG.json"
+      "code": "KZ",
+      "name": "Kazakhstan",
+      "continent": "Asia",
+      "lat": 48.02,
+      "lng": 66.92,
+      "zoom": 4.5,
+      "path": "/locations/countries/KZ.json"
     },
     {
       "code": "KE",
       "name": "Kenya",
+      "continent": "Africa",
       "lat": 0,
       "lng": 37.9,
       "zoom": 6,
       "path": "/locations/countries/KE.json"
     },
     {
-      "code": "AE",
-      "name": "United Arab Emirates",
-      "lat": 23.4,
-      "lng": 53.8,
+      "code": "LU",
+      "name": "Luxembourg",
+      "continent": "Europe",
+      "lat": 49.82,
+      "lng": 6.13,
+      "zoom": 9,
+      "path": "/locations/countries/LU.json"
+    },
+    {
+      "code": "MG",
+      "name": "Madagascar",
+      "continent": "Africa",
+      "lat": -18.77,
+      "lng": 46.87,
+      "zoom": 5.5,
+      "path": "/locations/countries/MG.json"
+    },
+    {
+      "code": "MY",
+      "name": "Malaysia",
+      "continent": "Asia",
+      "lat": 4.2,
+      "lng": 101.98,
+      "zoom": 5.5,
+      "path": "/locations/countries/MY.json"
+    },
+    {
+      "code": "MT",
+      "name": "Malta",
+      "continent": "Europe",
+      "lat": 35.94,
+      "lng": 14.38,
+      "zoom": 10,
+      "path": "/locations/countries/MT.json"
+    },
+    {
+      "code": "MQ",
+      "name": "Martinique",
+      "continent": "North America",
+      "lat": 14.64,
+      "lng": -61.02,
+      "zoom": 10,
+      "path": "/locations/countries/MQ.json"
+    },
+    {
+      "code": "MU",
+      "name": "Mauritius",
+      "continent": "Africa",
+      "lat": -20.35,
+      "lng": 57.55,
+      "zoom": 9.5,
+      "path": "/locations/countries/MU.json"
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "continent": "North America",
+      "lat": 23.6,
+      "lng": -102.5,
+      "zoom": 4.5,
+      "path": "/locations/countries/MX.json"
+    },
+    {
+      "code": "MN",
+      "name": "Mongolia",
+      "continent": "Asia",
+      "lat": 46.86,
+      "lng": 103.85,
+      "zoom": 5,
+      "path": "/locations/countries/MN.json"
+    },
+    {
+      "code": "MA",
+      "name": "Morocco",
+      "continent": "Africa",
+      "lat": 31.8,
+      "lng": -7.1,
+      "zoom": 5.5,
+      "path": "/locations/countries/MA.json"
+    },
+    {
+      "code": "MM",
+      "name": "Myanmar",
+      "continent": "Asia",
+      "lat": 21.92,
+      "lng": 95.96,
+      "zoom": 5.5,
+      "path": "/locations/countries/MM.json"
+    },
+    {
+      "code": "NP",
+      "name": "Nepal",
+      "continent": "Asia",
+      "lat": 28.39,
+      "lng": 84.12,
+      "zoom": 6.5,
+      "path": "/locations/countries/NP.json"
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "continent": "Europe",
+      "lat": 52.1,
+      "lng": 5.3,
       "zoom": 7,
-      "path": "/locations/countries/AE.json"
+      "path": "/locations/countries/NL.json"
+    },
+    {
+      "code": "NC",
+      "name": "New Caledonia",
+      "continent": "Oceania",
+      "lat": -21.3,
+      "lng": 165.3,
+      "zoom": 7,
+      "path": "/locations/countries/NC.json"
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "continent": "Oceania",
+      "lat": -41,
+      "lng": 174,
+      "zoom": 5,
+      "path": "/locations/countries/NZ.json"
+    },
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "continent": "Africa",
+      "lat": 9.1,
+      "lng": 8.7,
+      "zoom": 5.5,
+      "path": "/locations/countries/NG.json"
+    },
+    {
+      "code": "NO",
+      "name": "Norway",
+      "continent": "Europe",
+      "lat": 64,
+      "lng": 12,
+      "zoom": 4.5,
+      "path": "/locations/countries/NO.json"
+    },
+    {
+      "code": "PK",
+      "name": "Pakistan",
+      "continent": "Asia",
+      "lat": 30.38,
+      "lng": 69.35,
+      "zoom": 5,
+      "path": "/locations/countries/PK.json"
+    },
+    {
+      "code": "PW",
+      "name": "Palau",
+      "continent": "Oceania",
+      "lat": 7.51,
+      "lng": 134.58,
+      "zoom": 9,
+      "path": "/locations/countries/PW.json"
+    },
+    {
+      "code": "PA",
+      "name": "Panama",
+      "continent": "North America",
+      "lat": 8.54,
+      "lng": -80.78,
+      "zoom": 7,
+      "path": "/locations/countries/PA.json"
+    },
+    {
+      "code": "PG",
+      "name": "Papua New Guinea",
+      "continent": "Oceania",
+      "lat": -6.31,
+      "lng": 143.96,
+      "zoom": 5.5,
+      "path": "/locations/countries/PG.json"
+    },
+    {
+      "code": "PE",
+      "name": "Peru",
+      "continent": "South America",
+      "lat": -9.2,
+      "lng": -75,
+      "zoom": 5,
+      "path": "/locations/countries/PE.json"
+    },
+    {
+      "code": "PH",
+      "name": "Philippines",
+      "continent": "Asia",
+      "lat": 12.9,
+      "lng": 121.8,
+      "zoom": 5.5,
+      "path": "/locations/countries/PH.json"
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "continent": "Europe",
+      "lat": 52,
+      "lng": 20,
+      "zoom": 5.5,
+      "path": "/locations/countries/PL.json"
+    },
+    {
+      "code": "PT",
+      "name": "Portugal",
+      "continent": "Europe",
+      "lat": 39.4,
+      "lng": -8.2,
+      "zoom": 6.5,
+      "path": "/locations/countries/PT.json"
+    },
+    {
+      "code": "PR",
+      "name": "Puerto Rico",
+      "continent": "North America",
+      "lat": 18.22,
+      "lng": -66.59,
+      "zoom": 8.5,
+      "path": "/locations/countries/PR.json"
+    },
+    {
+      "code": "RE",
+      "name": "Réunion",
+      "continent": "Africa",
+      "lat": -21.12,
+      "lng": 55.54,
+      "zoom": 9.5,
+      "path": "/locations/countries/RE.json"
+    },
+    {
+      "code": "RU",
+      "name": "Russia",
+      "continent": "Europe",
+      "lat": 61.5,
+      "lng": 105,
+      "zoom": 3,
+      "path": "/locations/countries/RU.json"
+    },
+    {
+      "code": "WS",
+      "name": "Samoa",
+      "continent": "Oceania",
+      "lat": -13.76,
+      "lng": -172.1,
+      "zoom": 8,
+      "path": "/locations/countries/WS.json"
     },
     {
       "code": "SA",
       "name": "Saudi Arabia",
+      "continent": "Asia",
       "lat": 23.9,
       "lng": 45.1,
       "zoom": 5,
       "path": "/locations/countries/SA.json"
     },
     {
-      "code": "IL",
-      "name": "Israel",
-      "lat": 31.5,
-      "lng": 34.8,
+      "code": "SC",
+      "name": "Seychelles",
+      "continent": "Africa",
+      "lat": -4.68,
+      "lng": 55.49,
+      "zoom": 9,
+      "path": "/locations/countries/SC.json"
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "continent": "Asia",
+      "lat": 1.35,
+      "lng": 103.82,
+      "zoom": 11,
+      "path": "/locations/countries/SG.json"
+    },
+    {
+      "code": "SB",
+      "name": "Solomon Islands",
+      "continent": "Oceania",
+      "lat": -9.65,
+      "lng": 160.16,
       "zoom": 7,
-      "path": "/locations/countries/IL.json"
+      "path": "/locations/countries/SB.json"
+    },
+    {
+      "code": "ZA",
+      "name": "South Africa",
+      "continent": "Africa",
+      "lat": -30.6,
+      "lng": 22.9,
+      "zoom": 5,
+      "path": "/locations/countries/ZA.json"
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "continent": "Asia",
+      "lat": 36.5,
+      "lng": 127.8,
+      "zoom": 6.5,
+      "path": "/locations/countries/KR.json"
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "continent": "Europe",
+      "lat": 40.4,
+      "lng": -3.7,
+      "zoom": 5.5,
+      "path": "/locations/countries/ES.json"
+    },
+    {
+      "code": "LK",
+      "name": "Sri Lanka",
+      "continent": "Asia",
+      "lat": 7.87,
+      "lng": 80.77,
+      "zoom": 7,
+      "path": "/locations/countries/LK.json"
+    },
+    {
+      "code": "SE",
+      "name": "Sweden",
+      "continent": "Europe",
+      "lat": 62,
+      "lng": 15,
+      "zoom": 4.5,
+      "path": "/locations/countries/SE.json"
+    },
+    {
+      "code": "CH",
+      "name": "Switzerland",
+      "continent": "Europe",
+      "lat": 46.8,
+      "lng": 8.2,
+      "zoom": 7.5,
+      "path": "/locations/countries/CH.json"
+    },
+    {
+      "code": "TW",
+      "name": "Taiwan",
+      "continent": "Asia",
+      "lat": 23.7,
+      "lng": 121,
+      "zoom": 7,
+      "path": "/locations/countries/TW.json"
+    },
+    {
+      "code": "TZ",
+      "name": "Tanzania",
+      "continent": "Africa",
+      "lat": -6.37,
+      "lng": 34.89,
+      "zoom": 5.5,
+      "path": "/locations/countries/TZ.json"
+    },
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "continent": "Asia",
+      "lat": 15,
+      "lng": 101,
+      "zoom": 5.5,
+      "path": "/locations/countries/TH.json"
+    },
+    {
+      "code": "TO",
+      "name": "Tonga",
+      "continent": "Oceania",
+      "lat": -21.18,
+      "lng": -175.2,
+      "zoom": 8,
+      "path": "/locations/countries/TO.json"
+    },
+    {
+      "code": "TT",
+      "name": "Trinidad and Tobago",
+      "continent": "North America",
+      "lat": 10.69,
+      "lng": -61.22,
+      "zoom": 8.5,
+      "path": "/locations/countries/TT.json"
+    },
+    {
+      "code": "TR",
+      "name": "Turkey",
+      "continent": "Asia",
+      "lat": 39,
+      "lng": 35,
+      "zoom": 5,
+      "path": "/locations/countries/TR.json"
+    },
+    {
+      "code": "UA",
+      "name": "Ukraine",
+      "continent": "Europe",
+      "lat": 48.4,
+      "lng": 31.2,
+      "zoom": 5,
+      "path": "/locations/countries/UA.json"
+    },
+    {
+      "code": "AE",
+      "name": "United Arab Emirates",
+      "continent": "Asia",
+      "lat": 23.4,
+      "lng": 53.8,
+      "zoom": 7,
+      "path": "/locations/countries/AE.json"
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "continent": "Europe",
+      "lat": 54,
+      "lng": -2,
+      "zoom": 5.5,
+      "path": "/locations/countries/GB.json"
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "continent": "North America",
+      "lat": 39.8,
+      "lng": -98.5,
+      "zoom": 4,
+      "path": "/locations/countries/US.json"
+    },
+    {
+      "code": "UY",
+      "name": "Uruguay",
+      "continent": "South America",
+      "lat": -32.52,
+      "lng": -55.77,
+      "zoom": 6.5,
+      "path": "/locations/countries/UY.json"
+    },
+    {
+      "code": "VU",
+      "name": "Vanuatu",
+      "continent": "Oceania",
+      "lat": -15.38,
+      "lng": 166.96,
+      "zoom": 7,
+      "path": "/locations/countries/VU.json"
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "continent": "Asia",
+      "lat": 16,
+      "lng": 108,
+      "zoom": 5.5,
+      "path": "/locations/countries/VN.json"
     }
   ]
 }

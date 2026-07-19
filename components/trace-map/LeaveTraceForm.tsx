@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import {
+  CONTINENTS,
+  countriesInContinent,
   fetchCountryLocations,
   type LocationCountry,
   type LocationCountryIndexEntry,
@@ -54,6 +56,8 @@ export function LeaveTraceForm({
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
   const [catalog, setCatalog] = useState<LocationCountry | null>(null);
   const [traceEnabled, setTraceEnabled] = useState(true);
+  const [continent, setContinent] = useState<string>("");
+  const [countryFilter, setCountryFilter] = useState("");
 
   useEffect(() => {
     if (mine?.message) setMessage(mine.message);
@@ -79,6 +83,7 @@ export function LeaveTraceForm({
     if (!draft.country || !locationIndex.length) return;
     const entry = locationIndex.find((c) => c.name === draft.country);
     if (!entry) return;
+    if (entry.continent) setContinent(entry.continent);
     let cancelled = false;
     void (async () => {
       const next = await fetchCountryLocations(entry.path || entry.code);
@@ -88,6 +93,15 @@ export function LeaveTraceForm({
       cancelled = true;
     };
   }, [draft.country, locationIndex]);
+
+  const continentCountries = continent
+    ? countriesInContinent(locationIndex, continent)
+    : [];
+  const filteredCountries = countryFilter.trim()
+    ? continentCountries.filter((c) =>
+        c.name.toLowerCase().includes(countryFilter.trim().toLowerCase()),
+      )
+    : continentCountries;
 
   const regions = catalog?.regions || [];
   const region =
@@ -99,9 +113,24 @@ export function LeaveTraceForm({
   const isPermanent = authType === "google";
   const isAnonymousSession = Boolean(user && authType === "anonymous");
 
+  function selectContinent(name: string) {
+    setContinent(name);
+    setCountryFilter("");
+    setCatalog(null);
+    onDraftChange({
+      country: "",
+      region: "",
+      city: "",
+      locationId: undefined,
+    });
+  }
+
   async function setCountry(name: string) {
-    const entry = locationIndex.find((c) => c.name === name) || locationIndex[0];
+    const entry =
+      locationIndex.find((c) => c.name === name) ||
+      continentCountries[0];
     if (!entry) return;
+    if (entry.continent) setContinent(entry.continent);
     const nextCatalog = await fetchCountryLocations(entry.path || entry.code);
     if (!nextCatalog?.regions[0]?.cities[0]) return;
     setCatalog(nextCatalog);
@@ -516,57 +545,128 @@ export function LeaveTraceForm({
           <p className="mt-3 text-[0.78rem] text-[var(--map-accent)]">{authNote}</p>
         ) : null}
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-3">
-          <label className="block">
-            <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-              Country
-            </span>
-            <select
-              value={draft.country}
-              onChange={(e) => void setCountry(e.target.value)}
-              className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
-            >
-              {locationIndex.map((c) => (
-                <option key={c.code} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="mt-8 space-y-8">
+          <div>
+            <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+              Step 1 · Continent
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {CONTINENTS.map((item) => {
+                const active = continent === item.name;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => selectContinent(item.name)}
+                    className={[
+                      "min-h-[52px] cursor-pointer border px-4 py-3 text-left text-[0.92rem] tracking-[0.04em] transition-colors",
+                      active
+                        ? "border-[#9bb0c2] bg-[#e8eef4] text-[var(--map-ink)]"
+                        : "border-[var(--map-line)] bg-transparent text-[var(--map-muted)]",
+                    ].join(" ")}
+                  >
+                    <span className="mr-2" aria-hidden>
+                      {item.emoji}
+                    </span>
+                    {item.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-          <label className="block">
-            <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-              Region
-            </span>
-            <select
-              value={draft.region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
-            >
-              {regions.map((r) => (
-                <option key={r.name} value={r.name}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {continent ? (
+            <div>
+              <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                Step 2 · Country / Territory
+              </p>
+              <p className="mt-2 text-[0.8rem] leading-[1.7] text-[var(--map-muted)]">
+                {continent} — islands and territories are listed alongside
+                countries.
+              </p>
+              <input
+                type="search"
+                value={countryFilter}
+                onChange={(e) => setCountryFilter(e.target.value)}
+                placeholder="Search within this continent"
+                className="mt-4 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
+              />
+              <div className="mt-3 max-h-[240px] overflow-y-auto border border-[var(--map-line)]">
+                {filteredCountries.length === 0 ? (
+                  <p className="px-4 py-6 text-[0.85rem] text-[var(--map-muted)]">
+                    No places match this search.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-[var(--map-line)]">
+                    {filteredCountries.map((c) => {
+                      const active = draft.country === c.name;
+                      return (
+                        <li key={c.code}>
+                          <button
+                            type="button"
+                            onClick={() => void setCountry(c.name)}
+                            className={[
+                              "flex min-h-[48px] w-full cursor-pointer items-center px-4 py-3 text-left text-[0.95rem] tracking-[0.02em]",
+                              active
+                                ? "bg-[#e8eef4] text-[var(--map-ink)]"
+                                : "text-[var(--map-muted)] hover:bg-[#f7f9fb]",
+                            ].join(" ")}
+                          >
+                            <span className="mr-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
+                              {c.code}
+                            </span>
+                            {c.name}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+          ) : null}
 
-          <label className="block">
-            <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-              City
-            </span>
-            <select
-              value={draft.city}
-              onChange={(e) => setCity(e.target.value)}
-              className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
-            >
-              {cities.map((c) => (
-                <option key={c.locationId || c.name} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {draft.country && catalog ? (
+            <div>
+              <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                Step 3 · Region / City
+              </p>
+              <div className="mt-4 grid gap-6 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                    Region
+                  </span>
+                  <select
+                    value={draft.region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
+                  >
+                    {regions.map((r) => (
+                      <option key={r.name} value={r.name}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                    City
+                  </span>
+                  <select
+                    value={draft.city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
+                  >
+                    {cities.map((c) => (
+                      <option key={c.locationId || c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <label className="mt-8 block">
@@ -587,7 +687,7 @@ export function LeaveTraceForm({
         <div className="mt-10 flex flex-wrap items-center gap-6">
           <button
             type="submit"
-            disabled={busy || !message.trim()}
+            disabled={busy || !message.trim() || !draft.locationId}
             className="cursor-pointer text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Saving…" : mine ? "Save changes" : "Leave your trace"}

@@ -1,1 +1,1 @@
-{"code":"AT","name":"Austria","lat":47.5,"lng":14.5,"zoom":6.5,"regions":[{"name":"Vienna","lat":48.21,"lng":16.37,"cities":[{"locationId":"AT:vienna:vienna","name":"Vienna","lat":48.2082,"lng":16.3738}]}]}
+{"code":"AT","name":"Austria","continent":"Europe","lat":47.5,"lng":14.5,"zoom":6.5,"regions":[{"name":"Vienna","lat":48.21,"lng":16.37,"cities":[{"locationId":"AT:vienna:vienna","name":"Vienna","lat":48.2082,"lng":16.3738}]}]}

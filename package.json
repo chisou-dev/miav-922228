@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "build:locations": "node scripts/build-locations.js",
+    "build:locations": "node scripts/enrich-world-locations.js && node scripts/build-locations.js",
     "start": "next start",
     "lint": "eslint"
   },

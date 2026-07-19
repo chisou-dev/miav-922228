@@ -1,1 +1,1 @@
-{"code":"FI","name":"Finland","lat":64,"lng":26,"zoom":4.5,"regions":[{"name":"Uusimaa","lat":60.17,"lng":24.94,"cities":[{"locationId":"FI:uusimaa:helsinki","name":"Helsinki","lat":60.1699,"lng":24.9384}]}]}
+{"code":"FI","name":"Finland","continent":"Europe","lat":64,"lng":26,"zoom":4.5,"regions":[{"name":"Uusimaa","lat":60.17,"lng":24.94,"cities":[{"locationId":"FI:uusimaa:helsinki","name":"Helsinki","lat":60.1699,"lng":24.9384}]}]}

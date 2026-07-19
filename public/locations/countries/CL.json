@@ -1,1 +1,1 @@
-{"code":"CL","name":"Chile","lat":-35.7,"lng":-71.5,"zoom":4,"regions":[{"name":"Santiago Metropolitan","lat":-33.45,"lng":-70.67,"cities":[{"locationId":"CL:santiago-metropolitan:santiago","name":"Santiago","lat":-33.4489,"lng":-70.6693}]}]}
+{"code":"CL","name":"Chile","continent":"South America","lat":-35.7,"lng":-71.5,"zoom":4,"regions":[{"name":"Santiago Metropolitan","lat":-33.45,"lng":-70.67,"cities":[{"locationId":"CL:santiago-metropolitan:santiago","name":"Santiago","lat":-33.4489,"lng":-70.6693}]}]}

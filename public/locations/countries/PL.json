@@ -1,1 +1,1 @@
-{"code":"PL","name":"Poland","lat":52,"lng":20,"zoom":5.5,"regions":[{"name":"Masovia","lat":52.23,"lng":21.01,"cities":[{"locationId":"PL:masovia:warsaw","name":"Warsaw","lat":52.2297,"lng":21.0122}]}]}
+{"code":"PL","name":"Poland","continent":"Europe","lat":52,"lng":20,"zoom":5.5,"regions":[{"name":"Masovia","lat":52.23,"lng":21.01,"cities":[{"locationId":"PL:masovia:warsaw","name":"Warsaw","lat":52.2297,"lng":21.0122}]}]}

@@ -1,1 +1,1 @@
-{"code":"BE","name":"Belgium","lat":50.5,"lng":4.5,"zoom":7.5,"regions":[{"name":"Brussels","lat":50.85,"lng":4.35,"cities":[{"locationId":"BE:brussels:brussels","name":"Brussels","lat":50.8503,"lng":4.3517}]}]}
+{"code":"BE","name":"Belgium","continent":"Europe","lat":50.5,"lng":4.5,"zoom":7.5,"regions":[{"name":"Brussels","lat":50.85,"lng":4.35,"cities":[{"locationId":"BE:brussels:brussels","name":"Brussels","lat":50.8503,"lng":4.3517}]}]}
