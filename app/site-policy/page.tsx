@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/SiteShell";
-import { PrivacyPageContent } from "@/components/trace/PrivacyPageContent";
+import { SitePolicyPageContent } from "@/components/trace/SitePolicyPageContent";
 
 export const metadata: Metadata = {
-  title: "Privacy | MIAV-922228",
+  title: "Site Policy | MIAV-922228",
   description:
-    "Privacy policy for MIAV World Map — Google Sign-In is used only to identify Trace ownership. No Google profile data is stored.",
+    "Site policy for MIAV World Map — Traces belong to their owners; the operator does not edit user content.",
 };
 
-export default function PrivacyPage() {
+export default function SitePolicyPage() {
   return (
     <SiteShell>
       <main className="pb-28 sm:pb-36">
@@ -17,10 +17,10 @@ export default function PrivacyPage() {
             Policy
           </p>
           <h1 className="mt-5 text-[clamp(1.85rem,6vw,2.6rem)] font-medium leading-[1.3] tracking-[0.06em] text-[var(--foreground)] sm:mt-6">
-            Privacy
+            Site Policy
           </h1>
         </header>
-        <PrivacyPageContent />
+        <SitePolicyPageContent />
       </main>
     </SiteShell>
   );

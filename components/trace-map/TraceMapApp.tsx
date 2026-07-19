@@ -99,7 +99,29 @@ export function TraceMapApp() {
   }, []);
 
   useEffect(() => {
-    void completeTraceRedirectSignIn();
+    void (async () => {
+      const credential = await completeTraceRedirectSignIn();
+      if (!credential) return;
+      try {
+        const shouldUpgrade = sessionStorage.getItem("miav_trace_upgrade") === "1";
+        sessionStorage.removeItem("miav_trace_upgrade");
+        if (!shouldUpgrade) return;
+        const token = await credential.user.getIdToken();
+        const response = await fetch("/api/trace", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action: "upgrade" }),
+        });
+        if (response.ok) {
+          void loadTraces(credential.user);
+        }
+      } catch {
+        // Non-fatal; user can retry upgrade from the form.
+      }
+    })();
     return watchAuth((next) => {
       setUser(next);
       void loadTraces(next);
@@ -211,12 +233,18 @@ export function TraceMapApp() {
             >
               Privacy
             </a>
+            <a
+              href="/site-policy"
+              className="underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+            >
+              Site Policy
+            </a>
             {user ? (
               <>
                 <span>
                   {getTraceAuthType(user) === "google"
-                    ? "Signed in with Google"
-                    : "Anonymous session"}
+                    ? "Permanent Trace"
+                    : "Anonymous Session"}
                 </span>
                 <button
                   type="button"

@@ -38,12 +38,18 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-[var(--line)] py-12 text-center text-[0.75rem] tracking-[0.16em] text-[var(--foreground-muted)] sm:py-16">
       <p>MIAV-922228</p>
-      <p className="mt-5">
+      <p className="mt-5 flex flex-wrap justify-center gap-6">
         <a
           href="/privacy"
           className="underline decoration-[var(--line)] underline-offset-[0.4em] transition-colors duration-300 hover:text-[var(--foreground)]"
         >
           Privacy
+        </a>
+        <a
+          href="/site-policy"
+          className="underline decoration-[var(--line)] underline-offset-[0.4em] transition-colors duration-300 hover:text-[var(--foreground)]"
+        >
+          Site Policy
         </a>
       </p>
     </footer>

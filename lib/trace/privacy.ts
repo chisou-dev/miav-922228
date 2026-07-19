@@ -1,7 +1,9 @@
 /**
- * Privacy policy copy for Trace Map — kept in one place for UI consistency.
- * Google Sign-In is identity-only; no Google profile fields are persisted.
+ * Privacy helpers for Trace Map API — PII denylist.
+ * Policy copy lives in policyCopy.ts.
  */
+
+export { TRACE_PRIVACY_BLURB } from "@/lib/trace/policyCopy";
 
 export const TRACE_STORED_FIELDS = [
   "uid",
@@ -29,13 +31,6 @@ export const TRACE_FORBIDDEN_PII_KEYS = [
   "profile",
   "ip",
   "userAgent",
-] as const;
-
-export const TRACE_PRIVACY_BLURB = [
-  "Google Sign-In is used only to identify your Trace.",
-  "No personal information is stored.",
-  "Only you can edit your Trace.",
-  "The site does not edit user content.",
 ] as const;
 
 export function bodyContainsForbiddenPii(

@@ -51,6 +51,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    {
+      url: `${baseUrl}/site-policy`,
+      lastModified,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 
   const chapterRoutes: MetadataRoute.Sitemap = chapters.map((chapter) => ({
