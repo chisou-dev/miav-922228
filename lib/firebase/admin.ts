@@ -6,6 +6,7 @@ import "server-only";
  */
 export {
   getAdminUidFromEnv as getAdminUid,
+  isAllowedAdminUid,
   isFirebaseAdminEnvConfigured as isFirebaseAdminConfigured,
 } from "@/lib/firebase/serviceAccount";
 

@@ -34,6 +34,13 @@ export function getFirebaseAuth(): Auth {
 }
 
 export function getPublicAdminUid(): string | null {
-  const uid = process.env.NEXT_PUBLIC_ADMIN_UID?.trim();
-  return uid || null;
+  const raw = process.env.NEXT_PUBLIC_ADMIN_UID?.trim().replace(/^\uFEFF/, "") || "";
+  if (!raw) return null;
+  if (
+    (raw.startsWith('"') && raw.endsWith('"')) ||
+    (raw.startsWith("'") && raw.endsWith("'"))
+  ) {
+    return raw.slice(1, -1).trim() || null;
+  }
+  return raw;
 }

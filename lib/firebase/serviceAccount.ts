@@ -68,8 +68,52 @@ export function isFirebaseAdminEnvConfigured(): boolean {
   }
 }
 
-export function getAdminUidFromEnv(): string | null {
-  const uid =
-    process.env.ADMIN_UID?.trim() || process.env.NEXT_PUBLIC_ADMIN_UID?.trim();
+/**
+ * Normalize admin UID values pasted into Vercel / .env
+ * (trim, strip BOM / wrapping quotes).
+ */
+export function normalizeAdminUid(value: string | undefined | null): string | null {
+  if (!value) return null;
+  let uid = value.trim().replace(/^\uFEFF/, "");
+  if (
+    (uid.startsWith('"') && uid.endsWith('"')) ||
+    (uid.startsWith("'") && uid.endsWith("'"))
+  ) {
+    uid = uid.slice(1, -1).trim();
+  }
   return uid || null;
+}
+
+/**
+ * All configured admin UIDs (server + public).
+ * API auth accepts a token whose uid matches ANY of these.
+ */
+export function getAdminUidsFromEnv(): string[] {
+  const uids = new Set<string>();
+  for (const raw of [
+    process.env.ADMIN_UID,
+    process.env.NEXT_PUBLIC_ADMIN_UID,
+  ]) {
+    const uid = normalizeAdminUid(raw);
+    if (uid) uids.add(uid);
+  }
+  return [...uids];
+}
+
+export function getAdminUidFromEnv(): string | null {
+  return getAdminUidsFromEnv()[0] ?? null;
+}
+
+export function isAllowedAdminUid(uid: string): boolean {
+  const normalized = normalizeAdminUid(uid);
+  if (!normalized) return false;
+  return getAdminUidsFromEnv().includes(normalized);
+}
+
+/** True when both env vars are set and equal after normalization. */
+export function areAdminUidEnvVarsAligned(): boolean | null {
+  const server = normalizeAdminUid(process.env.ADMIN_UID);
+  const pub = normalizeAdminUid(process.env.NEXT_PUBLIC_ADMIN_UID);
+  if (!server || !pub) return null;
+  return server === pub;
 }

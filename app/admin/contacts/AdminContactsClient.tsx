@@ -79,10 +79,17 @@ export function AdminContactsClient() {
       const data = (await response.json().catch(() => null)) as {
         messages?: ContactMessage[];
         error?: string;
+        code?: string;
       } | null;
 
       if (!response.ok) {
-        setListError(data?.error || "問い合わせ一覧を読み込めませんでした。");
+        if (response.status === 403 || data?.code === "ADMIN_UID_MISMATCH") {
+          setListError(
+            "Forbidden — ログイン中の UID と ADMIN_UID / NEXT_PUBLIC_ADMIN_UID が一致しません。Vercel の両方が Firebase Authentication の同じ UID か確認してください。",
+          );
+        } else {
+          setListError(data?.error || "問い合わせ一覧を読み込めませんでした。");
+        }
         setMessages([]);
         return;
       }

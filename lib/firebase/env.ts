@@ -2,6 +2,8 @@
  * Public Firebase client env names required in the browser / Vercel Production.
  * Values must never be committed; set them in Vercel Environment Variables.
  */
+import { normalizeAdminUid } from "@/lib/firebase/serviceAccount";
+
 export const FIREBASE_CLIENT_ENV_KEYS = [
   "NEXT_PUBLIC_FIREBASE_API_KEY",
   "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
@@ -47,6 +49,7 @@ export function isFirebaseClientEnvReady(): boolean {
 
 export function isAdminUidConfigured(): boolean {
   return Boolean(
-    process.env.ADMIN_UID?.trim() || process.env.NEXT_PUBLIC_ADMIN_UID?.trim(),
+    normalizeAdminUid(process.env.ADMIN_UID) ||
+      normalizeAdminUid(process.env.NEXT_PUBLIC_ADMIN_UID),
   );
 }
