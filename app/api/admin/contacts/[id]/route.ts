@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { updateContactMessageStatus } from "@/lib/firebase/admin";
+import {
+  deleteContactMessage,
+  updateContactMessageStatus,
+} from "@/lib/firebase/admin";
 import { requireAdmin } from "@/lib/firebase/requireAdmin";
 import { isContactStatus } from "@/lib/contact/types";
 
@@ -9,6 +12,28 @@ export const dynamic = "force-dynamic";
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+export async function DELETE(_request: Request, { params }: Props) {
+  const auth = await requireAdmin(_request);
+  if (auth.error) return auth.error;
+
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json({ error: "Missing id." }, { status: 400 });
+  }
+
+  try {
+    const deleted = await deleteContactMessage(id);
+    if (!deleted) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return NextResponse.json({ id, ok: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to delete message.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
 
 export async function PATCH(request: Request, { params }: Props) {
   const auth = await requireAdmin(request);

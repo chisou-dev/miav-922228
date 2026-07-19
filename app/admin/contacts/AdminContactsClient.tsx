@@ -215,6 +215,41 @@ export function AdminContactsClient() {
     }
   }
 
+  async function deleteMessage(item: ContactMessage) {
+    if (gate.kind !== "ready") return;
+
+    const confirmed = window.confirm(
+      `「${item.name}」からの問い合わせを削除しますか？\nこの操作は取り消せません。`,
+    );
+    if (!confirmed) return;
+
+    setBusyId(item.id);
+    setListError(null);
+
+    try {
+      const token = await gate.user.getIdToken();
+      const response = await fetch(`/api/admin/contacts/${item.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setListError(data?.error || "削除できませんでした。");
+        return;
+      }
+
+      setMessages((current) => current.filter((entry) => entry.id !== item.id));
+      if (openId === item.id) setOpenId(null);
+    } catch {
+      setListError("削除できませんでした。");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (gate.kind === "loading") {
     return (
       <p className="mt-20 text-center text-[0.95rem] text-[var(--foreground-muted)]">
@@ -415,16 +450,26 @@ export function AdminContactsClient() {
                         {item.message}
                       </p>
 
-                      {item.status === "read" ? (
+                      <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
+                        {item.status === "read" ? (
+                          <button
+                            type="button"
+                            disabled={busyId === item.id}
+                            onClick={() => void updateStatus(item.id, "unread")}
+                            className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] disabled:opacity-50"
+                          >
+                            未読に戻す
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           disabled={busyId === item.id}
-                          onClick={() => void updateStatus(item.id, "unread")}
-                          className="mt-8 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] disabled:opacity-50"
+                          onClick={() => void deleteMessage(item)}
+                          className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] disabled:opacity-50"
                         >
-                          未読に戻す
+                          削除
                         </button>
-                      ) : null}
+                      </div>
                     </div>
                   ) : null}
                 </article>

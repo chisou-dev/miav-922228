@@ -10,5 +10,10 @@ export {
   isFirebaseAdminEnvConfigured as isFirebaseAdminConfigured,
 } from "@/lib/firebase/serviceAccount";
 
-export { createContactMessage, listContactMessages, updateContactMessageStatus } from "@/lib/firebase/firestoreRest";
+export {
+  createContactMessage,
+  deleteContactMessage,
+  listContactMessages,
+  updateContactMessageStatus,
+} from "@/lib/firebase/firestoreRest";
 export { verifyFirebaseIdToken } from "@/lib/firebase/verifyFirebaseIdToken";

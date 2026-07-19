@@ -168,3 +168,21 @@ export async function updateContactMessageStatus(
 
   return true;
 }
+
+export async function deleteContactMessage(id: string): Promise<boolean> {
+  const response = await firestoreFetch(
+    `documents/${CONTACT_COLLECTION}/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+
+  if (response.status === 404) return false;
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as {
+      error?: { message?: string };
+    } | null;
+    throw new Error(data?.error?.message || "Failed to delete contact message.");
+  }
+
+  return true;
+}
