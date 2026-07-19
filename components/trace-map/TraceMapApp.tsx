@@ -6,6 +6,7 @@ import type { User } from "firebase/auth";
 import "leaflet/dist/leaflet.css";
 import { MapSidebar } from "@/components/trace-map/MapSidebar";
 import { LeaveTraceForm } from "@/components/trace-map/LeaveTraceForm";
+import { WelcomeDialog } from "@/components/trace/WelcomeDialog";
 import {
   completeTraceRedirectSignIn,
   getIdTokenOrNull,
@@ -23,6 +24,7 @@ import {
   resolveLocationCoords,
   TRACE_COUNTRIES,
 } from "@/lib/trace/locations";
+import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/lib/trace/policyCopy";
 
 const WorldMap = dynamic(
   () =>
@@ -59,6 +61,25 @@ export function TraceMapApp() {
     region: TRACE_COUNTRIES[0]!.regions[0]!.name,
     city: TRACE_COUNTRIES[0]!.regions[0]!.cities[0]!.name,
   });
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(WELCOME_STORAGE_KEY) === "true") return;
+      setWelcomeOpen(true);
+    } catch {
+      setWelcomeOpen(true);
+    }
+  }, []);
+
+  function dismissWelcome() {
+    try {
+      localStorage.setItem(WELCOME_STORAGE_KEY, "true");
+    } catch {
+      // ignore quota / private mode
+    }
+    setWelcomeOpen(false);
+  }
 
   const loadTraces = useCallback(async (active: User | null) => {
     setLoading(true);
@@ -209,6 +230,17 @@ export function TraceMapApp() {
 
   return (
     <div className="trace-map-shell">
+      <WelcomeDialog
+        open={welcomeOpen}
+        title={WELCOME_DIALOG.title}
+        body={{
+          paragraphs: [...WELCOME_DIALOG.body.paragraphs],
+          bullets: [...WELCOME_DIALOG.body.bullets],
+          closing: [...WELCOME_DIALOG.body.closing],
+        }}
+        confirmLabel="I Understand"
+        onClose={dismissWelcome}
+      />
       <header className="border-b border-[var(--map-line)] px-5 py-8 sm:px-8 sm:py-10">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>

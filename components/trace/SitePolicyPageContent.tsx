@@ -20,6 +20,11 @@ export function SitePolicyPageContent() {
 
         <p>{SITE_POLICY_PAGE.googleNote}</p>
         <p>{SITE_POLICY_PAGE.noPii}</p>
+        <p>{SITE_POLICY_PAGE.noGoogleProfile}</p>
+        <p>{SITE_POLICY_PAGE.uidOnly}</p>
+        {SITE_POLICY_PAGE.closing.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
       </div>
 
       <p className="mt-12 flex flex-wrap gap-6 text-[0.85rem] tracking-[0.12em]">
