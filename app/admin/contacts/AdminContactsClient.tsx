@@ -24,13 +24,31 @@ type Gate =
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
+  return new Intl.DateTimeFormat("ja-JP", {
     year: "numeric",
+    month: "short",
+    day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+function statusLabel(status: ContactStatus) {
+  return status === "unread" ? "未読" : "既読";
+}
+
+function sortByNewest(messages: ContactMessage[]) {
+  return [...messages].sort((a, b) => {
+    const aTime = new Date(a.createdAt).getTime();
+    const bTime = new Date(b.createdAt).getTime();
+    return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+  });
+}
+
+function previewText(message: string) {
+  const compact = message.replace(/\s+/g, " ").trim();
+  if (compact.length <= 72) return compact;
+  return `${compact.slice(0, 72)}…`;
 }
 
 export function AdminContactsClient() {
@@ -43,6 +61,13 @@ export function AdminContactsClient() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [listError, setListError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const sortedMessages = useMemo(() => sortByNewest(messages), [messages]);
+  const unreadCount = useMemo(
+    () => messages.filter((item) => item.status === "unread").length,
+    [messages],
+  );
 
   const loadMessages = useCallback(async (user: User) => {
     setListError(null);
@@ -57,14 +82,14 @@ export function AdminContactsClient() {
       } | null;
 
       if (!response.ok) {
-        setListError(data?.error || "Unable to load messages.");
+        setListError(data?.error || "問い合わせ一覧を読み込めませんでした。");
         setMessages([]);
         return;
       }
 
-      setMessages(data?.messages || []);
+      setMessages(sortByNewest(data?.messages || []));
     } catch {
-      setListError("Unable to load messages.");
+      setListError("問い合わせ一覧を読み込めませんでした。");
       setMessages([]);
     }
   }, []);
@@ -93,12 +118,14 @@ export function AdminContactsClient() {
       if (!user) {
         setGate({ kind: "signed_out" });
         setMessages([]);
+        setOpenId(null);
         return;
       }
 
       if (!adminUid || user.uid !== adminUid) {
         setGate({ kind: "forbidden" });
         setMessages([]);
+        setOpenId(null);
         return;
       }
 
@@ -123,11 +150,11 @@ export function AdminContactsClient() {
       if (!adminUid || credential.user.uid !== adminUid) {
         await signOut(getFirebaseAuth());
         setGate({ kind: "forbidden" });
-        setAuthError("Access denied for this account.");
+        setAuthError("このアカウントではアクセスできません。");
         return;
       }
     } catch {
-      setAuthError("Unable to sign in.");
+      setAuthError("サインインに失敗しました。");
     }
   }
 
@@ -136,7 +163,7 @@ export function AdminContactsClient() {
   }
 
   async function updateStatus(id: string, status: ContactStatus) {
-    if (gate.kind !== "ready") return;
+    if (gate.kind !== "ready") return false;
     setBusyId(id);
 
     try {
@@ -154,24 +181,37 @@ export function AdminContactsClient() {
         const data = (await response.json().catch(() => null)) as {
           error?: string;
         } | null;
-        setListError(data?.error || "Unable to update status.");
-        return;
+        setListError(data?.error || "ステータスを更新できませんでした。");
+        return false;
       }
 
       setMessages((current) =>
-        current.map((item) => (item.id === id ? { ...item, status } : item)),
+        sortByNewest(
+          current.map((item) => (item.id === id ? { ...item, status } : item)),
+        ),
       );
+      return true;
     } catch {
-      setListError("Unable to update status.");
+      setListError("ステータスを更新できませんでした。");
+      return false;
     } finally {
       setBusyId(null);
+    }
+  }
+
+  async function openMessage(item: ContactMessage) {
+    const nextOpenId = openId === item.id ? null : item.id;
+    setOpenId(nextOpenId);
+
+    if (nextOpenId && item.status === "unread") {
+      await updateStatus(item.id, "read");
     }
   }
 
   if (gate.kind === "loading") {
     return (
       <p className="mt-20 text-center text-[0.95rem] text-[var(--foreground-muted)]">
-        Loading…
+        読み込み中…
       </p>
     );
   }
@@ -206,15 +246,14 @@ export function AdminContactsClient() {
     return (
       <div className="mt-20 text-center">
         <p className="text-[0.95rem] leading-[2] text-[var(--foreground-muted)]">
-          Access denied. This archive is available only to the designated
-          administrator.
+          アクセスが拒否されました。管理者のみ利用できます。
         </p>
         <button
           type="button"
           onClick={onSignOut}
           className="mt-10 text-[0.8rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em]"
         >
-          Sign out
+          サインアウト
         </button>
       </div>
     );
@@ -224,7 +263,7 @@ export function AdminContactsClient() {
     return (
       <form onSubmit={onLogin} className="mx-auto mt-20 max-w-md space-y-10">
         <p className="text-center text-[0.95rem] leading-[2] text-[var(--foreground-muted)]">
-          Administrator sign-in is required to read the contact archive.
+          問い合わせ管理には管理者サインインが必要です。
         </p>
 
         <label className="block">
@@ -257,7 +296,7 @@ export function AdminContactsClient() {
           type="submit"
           className="text-[0.85rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.55em]"
         >
-          Sign in
+          サインイン
         </button>
 
         {authError ? (
@@ -268,17 +307,22 @@ export function AdminContactsClient() {
   }
 
   return (
-    <div className="mt-16 sm:mt-20">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-baseline sm:justify-between">
-        <p className="text-[0.78rem] tracking-[0.14em] text-[var(--foreground-muted)]">
-          {messages.length} record{messages.length === 1 ? "" : "s"}
-        </p>
+    <div className="mt-14 sm:mt-16">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+            全 {messages.length} 件 / 未読 {unreadCount} 件
+          </p>
+          <p className="mt-2 text-[0.8rem] text-[var(--foreground-muted)]">
+            新しい順に表示しています
+          </p>
+        </div>
         <button
           type="button"
           onClick={onSignOut}
-          className="text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] hover:text-[var(--foreground)]"
+          className="self-start text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] hover:text-[var(--foreground)] sm:self-auto"
         >
-          Sign out
+          サインアウト
         </button>
       </div>
 
@@ -288,63 +332,99 @@ export function AdminContactsClient() {
 
       {messages.length === 0 && !listError ? (
         <p className="mt-16 text-[0.95rem] leading-[2] text-[var(--foreground-muted)]">
-          No messages have been recorded yet.
+          まだ問い合わせはありません。
         </p>
       ) : (
-        <ol className="mt-10 list-none">
-          {messages.map((item) => (
-            <li
-              key={item.id}
-              className="border-t border-[var(--line)] py-12 sm:py-16"
-            >
-              <article>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
-                  <p className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-                    {item.status}
-                  </p>
-                  <time
-                    dateTime={item.createdAt}
-                    className="text-[0.78rem] tracking-[0.08em] text-[var(--foreground-muted)]"
+        <ul className="mt-10 list-none space-y-4">
+          {sortedMessages.map((item) => {
+            const isOpen = openId === item.id;
+            const isUnread = item.status === "unread";
+
+            return (
+              <li key={item.id}>
+                <article
+                  className={[
+                    "rounded-sm border border-[var(--line)] px-5 py-5 transition-colors duration-200 sm:px-6 sm:py-6",
+                    isUnread ? "bg-white/[0.06]" : "bg-transparent",
+                  ].join(" ")}
+                >
+                  <button
+                    type="button"
+                    onClick={() => void openMessage(item)}
+                    disabled={busyId === item.id}
+                    className="w-full text-left disabled:opacity-60"
                   >
-                    {formatDate(item.createdAt)}
-                  </time>
-                </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <span
+                        className={[
+                          "text-[0.72rem] tracking-[0.16em]",
+                          isUnread
+                            ? "font-semibold text-[var(--foreground)]"
+                            : "text-[var(--foreground-muted)]",
+                        ].join(" ")}
+                      >
+                        {statusLabel(item.status)}
+                      </span>
+                      <time
+                        dateTime={item.createdAt}
+                        className="text-[0.78rem] text-[var(--foreground-muted)]"
+                      >
+                        {formatDate(item.createdAt)}
+                      </time>
+                    </div>
 
-                <h2 className="mt-6 text-[1.2rem] font-medium tracking-[0.04em] text-[var(--foreground)]">
-                  {item.name}
-                </h2>
-                <p className="mt-3 text-[0.9rem] tracking-[0.02em] text-[var(--foreground-muted)]">
-                  {item.email}
-                </p>
-                <p className="mt-8 whitespace-pre-wrap text-[1.02rem] leading-[2.2] text-[var(--foreground)]">
-                  {item.message}
-                </p>
+                    <h2
+                      className={[
+                        "mt-3 text-[1.15rem] tracking-[0.02em] text-[var(--foreground)]",
+                        isUnread ? "font-semibold" : "font-medium",
+                      ].join(" ")}
+                    >
+                      {item.name}
+                    </h2>
 
-                <div className="mt-10 flex flex-wrap gap-8">
-                  {item.status === "unread" ? (
-                    <button
-                      type="button"
-                      disabled={busyId === item.id}
-                      onClick={() => updateStatus(item.id, "read")}
-                      className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] disabled:opacity-50"
-                    >
-                      Mark as read
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={busyId === item.id}
-                      onClick={() => updateStatus(item.id, "unread")}
-                      className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] disabled:opacity-50"
-                    >
-                      Mark as unread
-                    </button>
-                  )}
-                </div>
-              </article>
-            </li>
-          ))}
-        </ol>
+                    {!isOpen ? (
+                      <p className="mt-3 text-[0.92rem] leading-[1.8] text-[var(--foreground-muted)]">
+                        {previewText(item.message)}
+                      </p>
+                    ) : null}
+                  </button>
+
+                  {isOpen ? (
+                    <div className="mt-5 border-t border-[var(--line)] pt-5">
+                      <p className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+                        Email
+                      </p>
+                      <a
+                        href={`mailto:${item.email}`}
+                        className="mt-2 inline-block text-[0.98rem] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.35em] hover:decoration-[var(--foreground-muted)]"
+                      >
+                        {item.email}
+                      </a>
+
+                      <p className="mt-8 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+                        Message
+                      </p>
+                      <p className="mt-3 whitespace-pre-wrap text-[1.02rem] leading-[2.05] text-[var(--foreground)]">
+                        {item.message}
+                      </p>
+
+                      {item.status === "read" ? (
+                        <button
+                          type="button"
+                          disabled={busyId === item.id}
+                          onClick={() => void updateStatus(item.id, "unread")}
+                          className="mt-8 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] disabled:opacity-50"
+                        >
+                          未読に戻す
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </article>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );

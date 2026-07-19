@@ -29,12 +29,11 @@ export default function AdminContactsPage() {
           </p>
 
           <h1 className="mt-5 text-[clamp(1.85rem,6vw,2.6rem)] font-medium leading-[1.3] tracking-[0.06em] text-[var(--foreground)] sm:mt-6">
-            Contact archive
+            問い合わせ管理
           </h1>
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
-            Messages received through the project contact form, held in order of
-            arrival.
+            新しい順に表示されます。カードを開くと既読になります。
           </p>
         </header>
 
