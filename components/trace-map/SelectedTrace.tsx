@@ -24,7 +24,10 @@ export function SelectedTrace({ trace }: Props) {
   }
 
   return (
-    <div className="shrink-0 border-t border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-5 sm:px-6">
+    <div
+      key={trace.id}
+      className="shrink-0 border-t border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-5 opacity-100 transition-opacity duration-300 sm:px-6"
+    >
       <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
         Selected Trace
       </p>
@@ -63,7 +66,7 @@ export function SelectedTrace({ trace }: Props) {
         <p className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
           Message
         </p>
-        <p className="mt-2 text-[0.92rem] leading-[1.85] text-[var(--map-ink)]">
+        <p className="mt-2 max-w-prose text-[0.92rem] leading-[1.85] text-[var(--map-ink)]">
           {trace.message || "—"}
         </p>
       </div>

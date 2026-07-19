@@ -283,7 +283,7 @@ export function TraceMapApp() {
               viewerOpen ? "xl:grid-cols-[minmax(0,1fr)_minmax(300px,380px)]" : ""
             }`}
           >
-            <div className="space-y-4">
+            <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
               <Map
                 focus={focus}
                 selectedCountry={selectedCountry}

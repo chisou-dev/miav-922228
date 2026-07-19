@@ -89,8 +89,10 @@ export function TraceList({
                     onSelect(trace);
                   }
                 }}
-                className={`cursor-pointer border-b border-[var(--map-line)] transition-colors last:border-b-0 ${
-                  active ? "bg-[#eef3f8]" : "hover:bg-[#f7f9fb]"
+                className={`cursor-pointer border-b border-[var(--map-line)] border-l-2 transition-colors last:border-b-0 ${
+                  active
+                    ? "border-l-[var(--map-accent)] bg-[#eef3f8]"
+                    : "border-l-transparent hover:bg-[#f7f9fb]"
                 }`}
               >
                 <td className="whitespace-nowrap px-5 py-3 font-mono text-[0.78rem] tracking-[0.04em] text-[var(--map-accent)] sm:px-6">

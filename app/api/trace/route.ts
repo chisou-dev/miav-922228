@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       ? Math.min(Math.max(1, limitRaw), 100)
       : TRACE_PAGE_SIZE;
 
-    const mine = await resolveMine(request);
+    const mine = view === "overview" ? await resolveMine(request) : null;
 
     if (view === "regions") {
       if (!country) {
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
         );
       }
       const regions = await listRegionsForCountry(country);
-      return NextResponse.json({ regions, mine });
+      return NextResponse.json({ regions });
     }
 
     if (view === "cities") {
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
         );
       }
       const cities = await listCitiesForRegion(country, region);
-      return NextResponse.json({ cities, mine });
+      return NextResponse.json({ cities });
     }
 
     if (view === "traces") {
@@ -122,7 +122,6 @@ export async function GET(request: Request) {
         traces: page.traces,
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
-        mine,
         scope: { country, region, city },
       });
     }
