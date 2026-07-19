@@ -7,6 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -16,14 +17,22 @@ type Props = {
   title: string;
   eyebrow?: string;
   onClose: () => void;
-  /** When true, Enter key also closes (Welcome dialog). */
-  closeOnEnter?: boolean;
+  /** When true, Escape calls onClose. Default true. */
+  closeOnEscape?: boolean;
+  /** When true, overlay click calls onClose. Default true. */
+  closeOnOverlayClick?: boolean;
+  /**
+   * Optional Enter handler (e.g. confirm). Skipped when focus is on a link,
+   * textarea, or checkbox/radio input.
+   */
+  onEnterConfirm?: () => void;
   children: ReactNode;
   footer?: ReactNode;
 };
 
 /**
  * Shared literary dialog shell for Trace Map (Welcome / Google Sign-In).
+ * Portaled to document.body so Leaflet panes cannot cover it.
  * White surface, thin border, pale blue accents — fade only.
  */
 export function TraceDialogFrame({
@@ -31,7 +40,9 @@ export function TraceDialogFrame({
   title,
   eyebrow,
   onClose,
-  closeOnEnter = false,
+  closeOnEscape = true,
+  closeOnOverlayClick = true,
+  onEnterConfirm,
   children,
   footer,
 }: Props) {
@@ -68,37 +79,46 @@ export function TraceDialogFrame({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        event.stopPropagation();
+        if (closeOnEscape) onClose();
         return;
       }
-      if (closeOnEnter && event.key === "Enter") {
-        const tag = (event.target as HTMLElement | null)?.tagName;
-        if (tag === "A" || tag === "TEXTAREA" || tag === "INPUT") return;
+      if (event.key === "Enter" && onEnterConfirm) {
+        const target = event.target as HTMLElement | null;
+        const tag = target?.tagName;
+        if (tag === "A" || tag === "TEXTAREA") return;
+        if (tag === "BUTTON") return;
+        if (tag === "INPUT") {
+          const type = (target as HTMLInputElement).type;
+          if (type !== "checkbox" && type !== "radio") return;
+        }
         event.preventDefault();
-        onClose();
+        onEnterConfirm();
         return;
       }
       trapFocus(event);
     };
 
-    document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey, true);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onKey, true);
       document.body.style.overflow = prevOverflow;
       previouslyFocused.current?.focus?.();
     };
-  }, [open, onClose, closeOnEnter, trapFocus]);
+  }, [open, onClose, closeOnEscape, onEnterConfirm, trapFocus]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
-      className="trace-dialog-root fixed inset-0 z-[80] flex items-center justify-center bg-[#243447]/28 px-4 opacity-100 transition-opacity duration-300"
+      className="trace-dialog-root fixed inset-0 z-[10000] flex items-center justify-center bg-[#243447]/28 px-4 opacity-100 transition-opacity duration-300"
       role="presentation"
-      onClick={onClose}
+      onClick={() => {
+        if (closeOnOverlayClick) onClose();
+      }}
     >
       <div
         ref={panelRef}
@@ -126,7 +146,8 @@ export function TraceDialogFrame({
 
         {footer ? <div className="mt-10">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

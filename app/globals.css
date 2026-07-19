@@ -160,3 +160,15 @@ body {
   background: transparent;
   border: none;
 }
+
+.leaflet-interaction-off {
+  cursor: default !important;
+}
+
+.leaflet-interaction-off .leaflet-interactive {
+  cursor: default !important;
+}
+
+.trace-dialog-root {
+  z-index: 10000;
+}

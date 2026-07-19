@@ -36,6 +36,8 @@ type Props = {
   selectedCountry: string;
   selectedRegion: string;
   listScope: ListScope | null;
+  /** When false, all Leaflet interactions are frozen (Welcome entrance). */
+  interactionsEnabled?: boolean;
   onSelectCountry: (countryName: string) => void;
   onSelectRegion: (regionName: string) => void;
   onSelectCity: (input: {
@@ -55,6 +57,50 @@ function FocusController({ focus }: { focus: Focus }) {
   return null;
 }
 
+/** Fully stop Leaflet handlers while the Welcome entrance is open. */
+function MapInteractionGate({ enabled }: { enabled: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (enabled) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      map.boxZoom.enable();
+      map.keyboard.enable();
+      const container = map.getContainer();
+      container.style.cursor = "";
+      container.classList.remove("leaflet-interaction-off");
+      return;
+    }
+
+    map.dragging.disable();
+    map.touchZoom.disable();
+    map.doubleClickZoom.disable();
+    map.scrollWheelZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+    map.closePopup();
+    const container = map.getContainer();
+    container.style.cursor = "default";
+    container.classList.add("leaflet-interaction-off");
+
+    return () => {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      map.boxZoom.enable();
+      map.keyboard.enable();
+      container.style.cursor = "";
+      container.classList.remove("leaflet-interaction-off");
+    };
+  }, [enabled, map]);
+
+  return null;
+}
+
 function stackOffsets(count: number): number[] {
   const dots = Math.min(Math.max(count, 0), MAX_CITY_MAP_DOTS);
   if (dots <= 0) return [];
@@ -69,6 +115,7 @@ function HierarchyLayer({
   selectedCountry,
   selectedRegion,
   listScope,
+  interactionsEnabled,
   onSelectCountry,
   onSelectRegion,
   onSelectCity,
@@ -79,6 +126,7 @@ function HierarchyLayer({
   selectedCountry: string;
   selectedRegion: string;
   listScope: ListScope | null;
+  interactionsEnabled: boolean;
   onSelectCountry: (name: string) => void;
   onSelectRegion: (name: string) => void;
   onSelectCity: (input: {
@@ -94,6 +142,28 @@ function HierarchyLayer({
     if (!country) return [] as TraceLocationCluster[];
     return locations.filter((item) => item.country === country.name);
   }, [locations, country]);
+
+  function guardCountry(name: string) {
+    if (!interactionsEnabled) return;
+    onSelectCountry(name);
+    onOpenList({ country: name });
+  }
+
+  function guardRegion(name: string, countryName: string) {
+    if (!interactionsEnabled) return;
+    onSelectRegion(name);
+    onOpenList({ country: countryName, region: name });
+  }
+
+  function guardCity(input: {
+    country: string;
+    region: string;
+    city: string;
+  }) {
+    if (!interactionsEnabled) return;
+    onSelectCity(input);
+    onOpenList(input);
+  }
 
   return (
     <>
@@ -112,10 +182,7 @@ function HierarchyLayer({
               fillOpacity: 0.85,
             }}
             eventHandlers={{
-              click: () => {
-                onSelectCountry(item.name);
-                onOpenList({ country: item.name });
-              },
+              click: () => guardCountry(item.name),
             }}
           >
             <Popup>
@@ -144,13 +211,7 @@ function HierarchyLayer({
               fillOpacity: 0.9,
             }}
             eventHandlers={{
-              click: () => {
-                onSelectRegion(region.name);
-                onOpenList({
-                  country: country.name,
-                  region: region.name,
-                });
-              },
+              click: () => guardRegion(region.name, country.name),
             }}
           />
         );
@@ -175,18 +236,12 @@ function HierarchyLayer({
               fillOpacity: 1,
             }}
             eventHandlers={{
-              click: () => {
-                onSelectCity({
+              click: () =>
+                guardCity({
                   country: cluster.country,
                   region: cluster.region,
                   city: cluster.city,
-                });
-                onOpenList({
-                  country: cluster.country,
-                  region: cluster.region,
-                  city: cluster.city,
-                });
-              },
+                }),
             }}
           >
             {index === 0 ? (
@@ -226,18 +281,12 @@ function HierarchyLayer({
               fillOpacity: 0.7,
             }}
             eventHandlers={{
-              click: () => {
-                onSelectCity({
+              click: () =>
+                guardCity({
                   country: country.name,
                   region: selectedRegion,
                   city: city.name,
-                });
-                onOpenList({
-                  country: country.name,
-                  region: selectedRegion,
-                  city: city.name,
-                });
-              },
+                }),
             }}
           />
         ))}
@@ -251,6 +300,7 @@ export function WorldMap({
   selectedCountry,
   selectedRegion,
   listScope,
+  interactionsEnabled = true,
   onSelectCountry,
   onSelectRegion,
   onSelectCity,
@@ -259,13 +309,23 @@ export function WorldMap({
   const countries = useMemo(() => TRACE_COUNTRIES, []);
 
   return (
-    <div className="h-[min(72vh,720px)] w-full overflow-hidden border border-[var(--map-line)] bg-[#f7f9fb]">
+    <div
+      className={`h-[min(72vh,720px)] w-full overflow-hidden border border-[var(--map-line)] bg-[#f7f9fb] ${
+        interactionsEnabled ? "" : "pointer-events-none"
+      }`}
+      aria-hidden={!interactionsEnabled}
+    >
       <MapContainer
         center={[20, 0]}
         zoom={2}
         minZoom={2}
         maxZoom={12}
-        scrollWheelZoom
+        scrollWheelZoom={interactionsEnabled}
+        dragging={interactionsEnabled}
+        doubleClickZoom={interactionsEnabled}
+        boxZoom={interactionsEnabled}
+        keyboard={interactionsEnabled}
+        touchZoom={interactionsEnabled}
         className="h-full w-full"
         worldCopyJump
       >
@@ -274,12 +334,14 @@ export function WorldMap({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <FocusController focus={focus} />
+        <MapInteractionGate enabled={interactionsEnabled} />
         <HierarchyLayer
           countries={countries}
           locations={locations}
           selectedCountry={selectedCountry}
           selectedRegion={selectedRegion}
           listScope={listScope}
+          interactionsEnabled={interactionsEnabled}
           onSelectCountry={onSelectCountry}
           onSelectRegion={onSelectRegion}
           onSelectCity={onSelectCity}

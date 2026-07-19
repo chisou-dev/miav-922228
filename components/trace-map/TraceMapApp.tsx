@@ -357,6 +357,7 @@ export function TraceMapApp() {
             selectedCountry={draft.country}
             selectedRegion={draft.region}
             listScope={listScope}
+            interactionsEnabled={!welcomeOpen}
             onSelectCountry={onSelectCountry}
             onSelectRegion={onSelectRegion}
             onSelectCity={onSelectCity}
