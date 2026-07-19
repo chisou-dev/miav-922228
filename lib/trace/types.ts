@@ -68,13 +68,34 @@ export type TraceListScope = {
   city?: string;
 };
 
+export type TraceRegionMarker = {
+  name: string;
+  lat: number;
+  lng: number;
+  count: number;
+};
+
+export type TraceCityMarker = {
+  name: string;
+  lat: number;
+  lng: number;
+  count: number;
+};
+
+export type TracePageResult = {
+  traces: TracePin[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
 export const TRACE_COLLECTION = "trace_map";
 export const TRACE_LOCATIONS_COLLECTION = "trace_locations";
 export const MIAV_COUNTER_DOC = "meta/miav_counter";
 export const TRACE_STATS_DOC = "meta/trace_stats";
 export const MAX_TRACE_MESSAGE_LENGTH = 200;
 export const MAX_CITY_MAP_DOTS = 10;
-export const MESSAGE_PREVIEW_LENGTH = 18;
+export const MESSAGE_PREVIEW_LENGTH = 20;
+export const TRACE_PAGE_SIZE = 50;
 export const ANONYMOUS_TRACE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 export function formatMiavId(n: number): string {

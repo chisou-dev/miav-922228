@@ -517,6 +517,129 @@ export async function listTraceLocations(): Promise<TraceLocationCluster[]> {
   return locations;
 }
 
+async function listLocationClustersWhere(filters: {
+  country: string;
+  region?: string;
+}): Promise<TraceLocationCluster[]> {
+  const fieldFilters: Array<Record<string, unknown>> = [
+    {
+      fieldFilter: {
+        field: { fieldPath: "country" },
+        op: "EQUAL",
+        value: { stringValue: filters.country },
+      },
+    },
+  ];
+  if (filters.region) {
+    fieldFilters.push({
+      fieldFilter: {
+        field: { fieldPath: "region" },
+        op: "EQUAL",
+        value: { stringValue: filters.region },
+      },
+    });
+  }
+
+  const where =
+    fieldFilters.length === 1
+      ? fieldFilters[0]
+      : {
+          compositeFilter: {
+            op: "AND",
+            filters: fieldFilters,
+          },
+        };
+
+  try {
+    const response = await firestoreFetch("documents:runQuery", {
+      method: "POST",
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: TRACE_LOCATIONS_COLLECTION }],
+          where,
+        },
+      }),
+    });
+    const rows = (await response.json()) as Array<{
+      document?: FirestoreDocument;
+    }>;
+    if (!response.ok || !Array.isArray(rows)) {
+      throw new Error("location query failed");
+    }
+    return rows
+      .map((row) => row.document)
+      .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
+      .map((doc) => ({
+        country: readString(doc.fields, "country"),
+        region: readString(doc.fields, "region"),
+        city: readString(doc.fields, "city"),
+        lat: readNumber(doc.fields, "lat"),
+        lng: readNumber(doc.fields, "lng"),
+        count: readNumber(doc.fields, "count"),
+      }))
+      .filter((item) => item.count > 0 && item.city);
+  } catch {
+    const all = await listTraceLocations();
+    return all.filter((item) => {
+      if (item.country !== filters.country) return false;
+      if (filters.region && item.region !== filters.region) return false;
+      return true;
+    });
+  }
+}
+
+export async function listRegionsForCountry(countryName: string): Promise<
+  Array<{ name: string; lat: number; lng: number; count: number }>
+> {
+  const { findCountry } = await import("@/lib/trace/locations");
+  const node = findCountry(countryName);
+  if (!node) return [];
+
+  const clusters = await listLocationClustersWhere({ country: node.name });
+  const countByRegion = new Map<string, number>();
+  for (const cluster of clusters) {
+    countByRegion.set(
+      cluster.region,
+      (countByRegion.get(cluster.region) || 0) + cluster.count,
+    );
+  }
+
+  return node.regions.map((region) => ({
+    name: region.name,
+    lat: region.lat,
+    lng: region.lng,
+    count: countByRegion.get(region.name) || 0,
+  }));
+}
+
+export async function listCitiesForRegion(
+  countryName: string,
+  regionName: string,
+): Promise<
+  Array<{ name: string; lat: number; lng: number; count: number }>
+> {
+  const { findCountry, findRegion } = await import("@/lib/trace/locations");
+  const country = findCountry(countryName);
+  if (!country) return [];
+  const region = findRegion(country, regionName);
+  if (!region) return [];
+
+  const clusters = await listLocationClustersWhere({
+    country: country.name,
+    region: region.name,
+  });
+  const countByCity = new Map(
+    clusters.map((cluster) => [cluster.city, cluster.count] as const),
+  );
+
+  return region.cities.map((city) => ({
+    name: city.name,
+    lat: city.lat,
+    lng: city.lng,
+    count: countByCity.get(city.name) || 0,
+  }));
+}
+
 export async function getTraceStats(): Promise<TraceStats> {
   const existing = await readTraceStatsDoc();
   if (existing) return existing;
@@ -524,12 +647,128 @@ export async function getTraceStats(): Promise<TraceStats> {
   return rebuilt.stats;
 }
 
+export async function listTracesAtCity(input: {
+  country: string;
+  region: string;
+  city: string;
+  limit?: number;
+  cursor?: string | null;
+}): Promise<{
+  traces: TracePin[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}> {
+  const pageSize = input.limit ?? 50;
+  const filters = [
+    {
+      fieldFilter: {
+        field: { fieldPath: "country" },
+        op: "EQUAL",
+        value: { stringValue: input.country },
+      },
+    },
+    {
+      fieldFilter: {
+        field: { fieldPath: "region" },
+        op: "EQUAL",
+        value: { stringValue: input.region },
+      },
+    },
+    {
+      fieldFilter: {
+        field: { fieldPath: "city" },
+        op: "EQUAL",
+        value: { stringValue: input.city },
+      },
+    },
+  ];
+
+  const structuredQuery: Record<string, unknown> = {
+    from: [{ collectionId: TRACE_COLLECTION }],
+    where: {
+      compositeFilter: {
+        op: "AND",
+        filters,
+      },
+    },
+    orderBy: [
+      {
+        field: { fieldPath: "createdAt" },
+        direction: "DESCENDING",
+      },
+    ],
+    limit: pageSize + 1,
+  };
+
+  if (input.cursor) {
+    structuredQuery.startAt = {
+      values: [{ timestampValue: input.cursor }],
+      before: true,
+    };
+  }
+
+  try {
+    const records = await runTraceQuery(structuredQuery);
+    const page = records.slice(0, pageSize);
+    const hasMore = records.length > pageSize;
+    const last = page[page.length - 1];
+    return {
+      traces: page.map(toTracePin),
+      nextCursor: hasMore && last ? last.createdAt : null,
+      hasMore,
+    };
+  } catch {
+    // Fallback when composite index is missing — still scoped, never full scan.
+    const countryRows = await runTraceQuery({
+      from: [{ collectionId: TRACE_COLLECTION }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "country" },
+          op: "EQUAL",
+          value: { stringValue: input.country },
+        },
+      },
+    });
+    const filtered = countryRows
+      .filter(
+        (trace) =>
+          trace.region === input.region && trace.city === input.city,
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    const startIndex = input.cursor
+      ? filtered.findIndex((t) => t.createdAt === input.cursor) + 1
+      : 0;
+    const safeStart = Math.max(0, startIndex);
+    const page = filtered.slice(safeStart, safeStart + pageSize);
+    const hasMore = safeStart + pageSize < filtered.length;
+    const last = page[page.length - 1];
+    return {
+      traces: page.map(toTracePin),
+      nextCursor: hasMore && last ? last.createdAt : null,
+      hasMore,
+    };
+  }
+}
+
+/** @deprecated Prefer listTracesAtCity with pagination. */
 export async function listTracesAtLocation(input: {
   country: string;
   region?: string;
   city?: string;
   limit?: number;
 }): Promise<TracePin[]> {
+  if (input.region && input.city) {
+    const page = await listTracesAtCity({
+      country: input.country,
+      region: input.region,
+      city: input.city,
+      limit: input.limit ?? 50,
+    });
+    return page.traces;
+  }
   const filters: Array<Record<string, unknown>> = [
     {
       fieldFilter: {
@@ -539,7 +778,6 @@ export async function listTracesAtLocation(input: {
       },
     },
   ];
-
   if (input.region) {
     filters.push({
       fieldFilter: {
@@ -549,44 +787,22 @@ export async function listTracesAtLocation(input: {
       },
     });
   }
-
-  if (input.city) {
-    filters.push({
-      fieldFilter: {
-        field: { fieldPath: "city" },
-        op: "EQUAL",
-        value: { stringValue: input.city },
-      },
-    });
-  }
-
   const where =
     filters.length === 1
       ? filters[0]
-      : {
-          compositeFilter: {
-            op: "AND",
-            filters,
-          },
-        };
-
-  const limit = input.limit ?? 200;
-
+      : { compositeFilter: { op: "AND", filters } };
+  const limit = input.limit ?? 50;
   try {
     const records = await runTraceQuery({
       from: [{ collectionId: TRACE_COLLECTION }],
       where,
       orderBy: [
-        {
-          field: { fieldPath: "createdAt" },
-          direction: "DESCENDING",
-        },
+        { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
       ],
       limit,
     });
     return records.map(toTracePin);
   } catch {
-    // No composite index yet: equality on country alone needs no extra index.
     const countryRows = await runTraceQuery({
       from: [{ collectionId: TRACE_COLLECTION }],
       where: {

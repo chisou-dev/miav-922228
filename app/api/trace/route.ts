@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import { requireTraceUser } from "@/lib/trace/requireTraceUser";
 import {
   MAX_TRACE_MESSAGE_LENGTH,
+  TRACE_PAGE_SIZE,
   toTracePin,
 } from "@/lib/trace/types";
 import {
   createTrace,
   getTraceByUid,
   getTraceStats,
-  listTraceLocations,
-  listTracesAtLocation,
+  listCitiesForRegion,
+  listRegionsForCountry,
+  listTracesAtCity,
   updateTraceLocationMessage,
   upgradeTraceToPermanent,
 } from "@/lib/trace/traceRest";
@@ -56,35 +58,78 @@ function validateLocation(body: {
   };
 }
 
+async function resolveMine(request: Request) {
+  const header = request.headers.get("authorization") || "";
+  if (!/^Bearer\s+/i.test(header)) return null;
+  const auth = await requireTraceUser(request);
+  if (auth.error) return null;
+  const record = await getTraceByUid(auth.uid);
+  return record ? toTracePin(record) : null;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const view = searchParams.get("view")?.trim() || "overview";
     const country = searchParams.get("country")?.trim() || "";
-    const region = searchParams.get("region")?.trim() || undefined;
-    const city = searchParams.get("city")?.trim() || undefined;
+    const region = searchParams.get("region")?.trim() || "";
+    const city = searchParams.get("city")?.trim() || "";
+    const cursor = searchParams.get("cursor")?.trim() || null;
+    const limitRaw = Number(searchParams.get("limit") || TRACE_PAGE_SIZE);
+    const limit = Number.isFinite(limitRaw)
+      ? Math.min(Math.max(1, limitRaw), 100)
+      : TRACE_PAGE_SIZE;
 
-    const header = request.headers.get("authorization") || "";
-    let mine = null;
-    if (/^Bearer\s+/i.test(header)) {
-      const auth = await requireTraceUser(request);
-      if (!auth.error) {
-        const record = await getTraceByUid(auth.uid);
-        mine = record ? toTracePin(record) : null;
+    const mine = await resolveMine(request);
+
+    if (view === "regions") {
+      if (!country) {
+        return NextResponse.json(
+          { error: "country is required for regions." },
+          { status: 400 },
+        );
       }
+      const regions = await listRegionsForCountry(country);
+      return NextResponse.json({ regions, mine });
     }
 
-    // Location-scoped list — never loads the whole collection for the UI.
-    if (country) {
-      const traces = await listTracesAtLocation({ country, region, city });
-      return NextResponse.json({ traces, mine, scope: { country, region, city } });
+    if (view === "cities") {
+      if (!country || !region) {
+        return NextResponse.json(
+          { error: "country and region are required for cities." },
+          { status: 400 },
+        );
+      }
+      const cities = await listCitiesForRegion(country, region);
+      return NextResponse.json({ cities, mine });
     }
 
-    const [stats, locations] = await Promise.all([
-      getTraceStats(),
-      listTraceLocations(),
-    ]);
+    if (view === "traces") {
+      if (!country || !region || !city) {
+        return NextResponse.json(
+          { error: "country, region, and city are required for traces." },
+          { status: 400 },
+        );
+      }
+      const page = await listTracesAtCity({
+        country,
+        region,
+        city,
+        limit,
+        cursor,
+      });
+      return NextResponse.json({
+        traces: page.traces,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        mine,
+        scope: { country, region, city },
+      });
+    }
 
-    return NextResponse.json({ stats, locations, mine });
+    // overview — stats only; never load all traces or all locations.
+    const stats = await getTraceStats();
+    return NextResponse.json({ stats, mine });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to load traces.";
