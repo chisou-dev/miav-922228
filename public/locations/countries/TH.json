@@ -1,0 +1,1 @@
+{"code":"TH","name":"Thailand","lat":15,"lng":101,"zoom":5.5,"regions":[{"name":"Bangkok","lat":13.76,"lng":100.5,"cities":[{"locationId":"TH:bangkok:bangkok","name":"Bangkok","lat":13.7563,"lng":100.5018}]},{"name":"Chiang Mai","lat":18.79,"lng":98.98,"cities":[{"locationId":"TH:chiang-mai:chiang-mai","name":"Chiang Mai","lat":18.7883,"lng":98.9853}]}]}

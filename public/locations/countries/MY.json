@@ -1,0 +1,1 @@
+{"code":"MY","name":"Malaysia","lat":4.2,"lng":101.98,"zoom":5.5,"regions":[{"name":"Kuala Lumpur","lat":3.14,"lng":101.69,"cities":[{"locationId":"MY:kuala-lumpur:kuala-lumpur","name":"Kuala Lumpur","lat":3.139,"lng":101.6869}]},{"name":"Penang","lat":5.41,"lng":100.33,"cities":[{"locationId":"MY:penang:george-town","name":"George Town","lat":5.4141,"lng":100.3288}]}]}

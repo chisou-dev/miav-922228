@@ -1,0 +1,1 @@
+{"code":"TR","name":"Turkey","lat":39,"lng":35,"zoom":5,"regions":[{"name":"Ankara","lat":39.93,"lng":32.86,"cities":[{"locationId":"TR:ankara:ankara","name":"Ankara","lat":39.9334,"lng":32.8597}]},{"name":"Istanbul","lat":41.01,"lng":28.98,"cities":[{"locationId":"TR:istanbul:istanbul","name":"Istanbul","lat":41.0082,"lng":28.9784}]}]}

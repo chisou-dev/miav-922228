@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -13,7 +13,7 @@ import {
   type TraceCityMarker,
   type TraceRegionMarker,
 } from "@/lib/trace/types";
-import { LOCATION_COUNTRIES } from "@/lib/locations";
+import type { LocationCountryIndexEntry } from "@/lib/locations/types";
 
 type Focus = {
   lat: number;
@@ -22,12 +22,14 @@ type Focus = {
 } | null;
 
 type CityScope = {
+  locationId: string;
   country: string;
   region: string;
   city: string;
 } | null;
 
 type Props = {
+  countries: LocationCountryIndexEntry[];
   focus: Focus;
   selectedCountry: string | null;
   selectedRegion: string | null;
@@ -101,10 +103,11 @@ function stackOffsets(count: number): number[] {
 }
 
 /**
- * Hierarchical world map — Country → Region → City from Location Database.
+ * Hierarchical world map — Country → Region → City from static Location JSON.
  * Trace pins (stacked dots) appear only where Traces exist.
  */
 export function Map({
+  countries,
   focus,
   selectedCountry,
   selectedRegion,
@@ -116,8 +119,6 @@ export function Map({
   onSelectRegion,
   onSelectCity,
 }: Props) {
-  const countries = useMemo(() => LOCATION_COUNTRIES, []);
-
   return (
     <div
       className={`h-[min(72vh,720px)] w-full overflow-hidden border border-[var(--map-line)] bg-[#f7f9fb] ${
@@ -202,14 +203,14 @@ export function Map({
 
         {selectedRegion
           ? cities.map((city) => {
-              const cityActive = cityScope?.city === city.name;
+              const cityActive =
+                cityScope?.locationId === city.locationId ||
+                cityScope?.city === city.name;
               const hasTraces = city.count > 0;
               const pinOffsets = stackOffsets(city.count);
 
-              // Location marker — always selectable, even with zero Traces.
-              // Trace pins stack only when count > 0 (max 10).
               return (
-                <Fragment key={`${selectedRegion}-${city.name}`}>
+                <Fragment key={city.locationId || `${selectedRegion}-${city.name}`}>
                   {!hasTraces ? (
                     <CircleMarker
                       center={[city.lat, city.lng]}
@@ -237,7 +238,7 @@ export function Map({
 
                   {pinOffsets.map((offset, index) => (
                     <CircleMarker
-                      key={`${selectedRegion}-${city.name}-pin-${index}`}
+                      key={`${city.locationId}-pin-${index}`}
                       center={[city.lat + offset, city.lng]}
                       radius={cityActive ? 4.5 : 3.5}
                       pathOptions={{

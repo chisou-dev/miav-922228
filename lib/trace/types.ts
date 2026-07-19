@@ -5,6 +5,9 @@ export type TraceRecord = {
   miavId: string;
   uid: string;
   authType: TraceAuthType;
+  /** Canonical place key from Location Database. Null on legacy documents. */
+  locationId: string | null;
+  /** Denormalized for legacy docs / migration — prefer Location DB via locationId. */
   country: string;
   region: string;
   city: string;
@@ -21,6 +24,7 @@ export type TracePin = {
   id: string;
   miavId: string;
   authType: TraceAuthType;
+  locationId: string | null;
   country: string;
   region: string;
   city: string;
@@ -32,6 +36,7 @@ export type TracePin = {
 
 /** City cluster for the map — never loads every Trace document. */
 export type TraceLocationCluster = {
+  locationId?: string | null;
   country: string;
   region: string;
   city: string;
@@ -66,6 +71,7 @@ export type TraceListScope = {
   country: string;
   region?: string;
   city?: string;
+  locationId?: string;
 };
 
 export type TraceRegionMarker = {
@@ -76,6 +82,7 @@ export type TraceRegionMarker = {
 };
 
 export type TraceCityMarker = {
+  locationId: string;
   name: string;
   lat: number;
   lng: number;
@@ -130,6 +137,7 @@ export function toTracePin(trace: TraceRecord): TracePin {
     id: trace.id,
     miavId: trace.miavId,
     authType: trace.authType,
+    locationId: trace.locationId,
     country: trace.country,
     region: trace.region,
     city: trace.city,
@@ -140,11 +148,14 @@ export function toTracePin(trace: TraceRecord): TracePin {
   };
 }
 
+/** Aggregate doc id — prefer locationId; legacy uses encoded triple. */
 export function locationDocId(input: {
+  locationId?: string | null;
   country: string;
   region: string;
   city: string;
 }): string {
+  if (input.locationId) return encodeURIComponent(input.locationId);
   return [input.country, input.region, input.city]
     .map((part) => encodeURIComponent(part.trim()))
     .join("__");

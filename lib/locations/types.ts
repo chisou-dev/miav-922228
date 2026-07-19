@@ -1,9 +1,19 @@
 /**
- * Location Database types — independent from Trace documents.
- * Expand via data/locations/world.json.
+ * Location Database types — static JSON only (not Firestore).
  */
 
+export type LocationRecord = {
+  locationId: string;
+  countryCode: string;
+  country: string;
+  region: string;
+  city: string;
+  lat: number;
+  lng: number;
+};
+
 export type LocationCity = {
+  locationId: string;
   name: string;
   lat: number;
   lng: number;
@@ -25,8 +35,17 @@ export type LocationCountry = {
   regions: LocationRegion[];
 };
 
-export type LocationWorldCatalog = {
+export type LocationCountryIndexEntry = {
+  code: string;
+  name: string;
+  lat: number;
+  lng: number;
+  zoom: number;
+  path: string;
+};
+
+export type LocationIndex = {
   version: number;
   description?: string;
-  countries: LocationCountry[];
+  countries: LocationCountryIndexEntry[];
 };

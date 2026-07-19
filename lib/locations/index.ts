@@ -1,23 +1,115 @@
-import worldCatalog from "@/data/locations/world.json";
+import flatCatalog from "@/data/locations/locations.json";
 import type {
   LocationCity,
   LocationCountry,
+  LocationCountryIndexEntry,
+  LocationRecord,
   LocationRegion,
-  LocationWorldCatalog,
 } from "@/lib/locations/types";
 
-const catalog = worldCatalog as LocationWorldCatalog;
+type FlatFile = {
+  version: number;
+  countries: Array<{
+    code: string;
+    name: string;
+    lat: number;
+    lng: number;
+    zoom: number;
+  }>;
+  locations: LocationRecord[];
+};
 
-/**
- * Static Location Database (capitals / major regions / major cities).
- * Not derived from Trace presence — Trace data stays in Firestore.
- */
-export const LOCATION_COUNTRIES: LocationCountry[] = catalog.countries;
+const flat = flatCatalog as FlatFile;
 
-/** @deprecated Prefer LOCATION_COUNTRIES — alias for existing Trace Map imports. */
+const byId = new Map<string, LocationRecord>();
+const byTriple = new Map<string, LocationRecord>();
+
+for (const loc of flat.locations) {
+  byId.set(loc.locationId, loc);
+  byTriple.set(tripleKey(loc.country, loc.region, loc.city), loc);
+}
+
+function tripleKey(country: string, region: string, city: string): string {
+  return [country, region, city].map((p) => p.trim().toLowerCase()).join("|");
+}
+
+function slug(s: string): string {
+  return String(s)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function buildLocationId(
+  countryCode: string,
+  region: string,
+  city: string,
+): string {
+  return `${countryCode.toUpperCase()}:${slug(region)}:${slug(city)}`;
+}
+
+export function getLocationById(locationId: string): LocationRecord | undefined {
+  return byId.get(locationId.trim());
+}
+
+export function findLocationByNames(input: {
+  country: string;
+  region: string;
+  city: string;
+}): LocationRecord | undefined {
+  return byTriple.get(tripleKey(input.country, input.region, input.city));
+}
+
+export function listAllLocations(): LocationRecord[] {
+  return flat.locations;
+}
+
+function groupCountries(): LocationCountry[] {
+  const map = new Map<string, LocationCountry>();
+
+  for (const meta of flat.countries) {
+    map.set(meta.code, {
+      code: meta.code,
+      name: meta.name,
+      lat: meta.lat,
+      lng: meta.lng,
+      zoom: meta.zoom,
+      regions: [],
+    });
+  }
+
+  for (const loc of flat.locations) {
+    const country = map.get(loc.countryCode);
+    if (!country) continue;
+    let region = country.regions.find((r) => r.name === loc.region);
+    if (!region) {
+      region = {
+        name: loc.region,
+        lat: loc.lat,
+        lng: loc.lng,
+        cities: [],
+      };
+      country.regions.push(region);
+    }
+    if (!region.cities.some((c) => c.locationId === loc.locationId)) {
+      region.cities.push({
+        locationId: loc.locationId,
+        name: loc.city,
+        lat: loc.lat,
+        lng: loc.lng,
+      });
+    }
+  }
+
+  return [...map.values()];
+}
+
+export const LOCATION_COUNTRIES: LocationCountry[] = groupCountries();
 export const TRACE_COUNTRIES = LOCATION_COUNTRIES;
 
-export type { LocationCity, LocationCountry, LocationRegion } from "@/lib/locations/types";
+export type { LocationCity, LocationCountry, LocationRegion, LocationRecord };
 
 export function listLocationCountries(): LocationCountry[] {
   return LOCATION_COUNTRIES;
@@ -51,6 +143,8 @@ export function resolveLocationCoords(input: {
   region: string;
   city: string;
 }): { lat: number; lng: number; zoom: number } | null {
+  const hit = findLocationByNames(input);
+  if (hit) return { lat: hit.lat, lng: hit.lng, zoom: 11 };
   const country = findCountry(input.country);
   if (!country) return null;
   const region = findRegion(country, input.region);
@@ -68,7 +162,6 @@ export function resolveLocationCoords(input: {
   return { lat: city.lat, lng: city.lng, zoom: 11 };
 }
 
-/** Map ISO / common names from IP lookup onto the Location Database. */
 export function matchCountryFromGeo(input: {
   countryCode?: string | null;
   countryName?: string | null;
@@ -102,3 +195,8 @@ export function nearestCityInCountry(
   }
   return best ? { region: best.region, city: best.city } : null;
 }
+
+export {
+  fetchLocationIndex,
+  fetchCountryLocations,
+} from "@/lib/locations/client";

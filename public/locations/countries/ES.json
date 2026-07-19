@@ -1,0 +1,1 @@
+{"code":"ES","name":"Spain","lat":40.4,"lng":-3.7,"zoom":5.5,"regions":[{"name":"Community of Madrid","lat":40.42,"lng":-3.7,"cities":[{"locationId":"ES:community-of-madrid:madrid","name":"Madrid","lat":40.4168,"lng":-3.7038}]},{"name":"Catalonia","lat":41.6,"lng":1.5,"cities":[{"locationId":"ES:catalonia:barcelona","name":"Barcelona","lat":41.3874,"lng":2.1686}]}]}

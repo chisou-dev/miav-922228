@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import {
-  LOCATION_COUNTRIES,
-  findCountry,
-  resolveLocationCoords,
-} from "@/lib/locations";
+  fetchCountryLocations,
+  type LocationCountry,
+  type LocationCountryIndexEntry,
+} from "@/lib/locations/client";
 import { MAX_TRACE_MESSAGE_LENGTH, type TracePin } from "@/lib/trace/types";
 import {
   formatAuthError,
@@ -23,12 +23,14 @@ type LocationDraft = {
   country: string;
   region: string;
   city: string;
+  locationId?: string;
 };
 
 type Props = {
   user: User | null;
   mine: TracePin | null;
   draft: LocationDraft;
+  locationIndex: LocationCountryIndexEntry[];
   onDraftChange: (next: LocationDraft) => void;
   onFocusLocation: (focus: { lat: number; lng: number; zoom: number }) => void;
   onSaved: (trace: TracePin) => void;
@@ -38,6 +40,7 @@ export function LeaveTraceForm({
   user,
   mine,
   draft,
+  locationIndex,
   onDraftChange,
   onFocusLocation,
   onSaved,
@@ -48,12 +51,27 @@ export function LeaveTraceForm({
   const [error, setError] = useState<string | null>(null);
   const [authNote, setAuthNote] = useState<string | null>(null);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
+  const [catalog, setCatalog] = useState<LocationCountry | null>(null);
 
-  const country = useMemo(
-    () => findCountry(draft.country) || LOCATION_COUNTRIES[0],
-    [draft.country],
-  );
-  const regions = country?.regions || [];
+  useEffect(() => {
+    if (mine?.message) setMessage(mine.message);
+  }, [mine?.message]);
+
+  useEffect(() => {
+    if (!draft.country || !locationIndex.length) return;
+    const entry = locationIndex.find((c) => c.name === draft.country);
+    if (!entry) return;
+    let cancelled = false;
+    void (async () => {
+      const next = await fetchCountryLocations(entry.path || entry.code);
+      if (!cancelled) setCatalog(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [draft.country, locationIndex]);
+
+  const regions = catalog?.regions || [];
   const region =
     regions.find((r) => r.name === draft.region) || regions[0] || null;
   const cities = region?.cities || [];
@@ -63,29 +81,38 @@ export function LeaveTraceForm({
   const isPermanent = authType === "google";
   const isAnonymousSession = Boolean(user && authType === "anonymous");
 
-  function setCountry(name: string) {
-    const nextCountry = findCountry(name) || LOCATION_COUNTRIES[0]!;
-    const nextRegion = nextCountry.regions[0]!;
+  async function setCountry(name: string) {
+    const entry = locationIndex.find((c) => c.name === name) || locationIndex[0];
+    if (!entry) return;
+    const nextCatalog = await fetchCountryLocations(entry.path || entry.code);
+    if (!nextCatalog?.regions[0]?.cities[0]) return;
+    setCatalog(nextCatalog);
+    const nextRegion = nextCatalog.regions[0]!;
     const nextCity = nextRegion.cities[0]!;
     const next = {
-      country: nextCountry.name,
+      country: nextCatalog.name,
       region: nextRegion.name,
       city: nextCity.name,
+      locationId: nextCity.locationId,
     };
     onDraftChange(next);
-    const coords = resolveLocationCoords(next);
-    if (coords) onFocusLocation(coords);
+    onFocusLocation({
+      lat: nextCity.lat,
+      lng: nextCity.lng,
+      zoom: entry.zoom,
+    });
   }
 
   function setRegion(name: string) {
     const nextRegion =
-      country?.regions.find((r) => r.name === name) || country?.regions[0];
-    if (!country || !nextRegion) return;
+      catalog?.regions.find((r) => r.name === name) || catalog?.regions[0];
+    if (!catalog || !nextRegion?.cities[0]) return;
     const nextCity = nextRegion.cities[0]!;
     const next = {
-      country: country.name,
+      country: catalog.name,
       region: nextRegion.name,
       city: nextCity.name,
+      locationId: nextCity.locationId,
     };
     onDraftChange(next);
     onFocusLocation({
@@ -97,11 +124,12 @@ export function LeaveTraceForm({
 
   function setCity(name: string) {
     const nextCity = cities.find((c) => c.name === name) || cities[0];
-    if (!country || !region || !nextCity) return;
+    if (!catalog || !region || !nextCity) return;
     const next = {
-      country: country.name,
+      country: catalog.name,
       region: region.name,
       city: nextCity.name,
+      locationId: nextCity.locationId,
     };
     onDraftChange(next);
     onFocusLocation({
@@ -249,6 +277,7 @@ export function LeaveTraceForm({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          locationId: draft.locationId,
           country: draft.country,
           region: draft.region,
           city: draft.city,
@@ -450,10 +479,10 @@ export function LeaveTraceForm({
             </span>
             <select
               value={draft.country}
-              onChange={(e) => setCountry(e.target.value)}
+              onChange={(e) => void setCountry(e.target.value)}
               className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
             >
-              {LOCATION_COUNTRIES.map((c) => (
+              {locationIndex.map((c) => (
                 <option key={c.code} value={c.name}>
                   {c.name}
                 </option>
@@ -488,7 +517,7 @@ export function LeaveTraceForm({
               className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
             >
               {cities.map((c) => (
-                <option key={c.name} value={c.name}>
+                <option key={c.locationId || c.name} value={c.name}>
                   {c.name}
                 </option>
               ))}

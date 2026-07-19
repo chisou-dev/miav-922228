@@ -3,19 +3,26 @@ import { requireTraceUser } from "@/lib/trace/requireTraceUser";
 import {
   MAX_TRACE_MESSAGE_LENGTH,
   TRACE_PAGE_SIZE,
-  toTracePin,
 } from "@/lib/trace/types";
 import {
   createTrace,
   getTraceByUid,
   getTraceStats,
   listCitiesForRegion,
+  listLocationCountsForCountry,
   listRegionsForCountry,
   listTracesAtCity,
+  listTracesByLocationId,
+  pinFromRecord,
   updateTraceLocationMessage,
   upgradeTraceToPermanent,
 } from "@/lib/trace/traceRest";
-import { findCountry, findRegion, findCity } from "@/lib/locations";
+import {
+  findCountry,
+  findRegion,
+  findCity,
+  getLocationById,
+} from "@/lib/locations";
 import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
 
 export const runtime = "nodejs";
@@ -25,12 +32,33 @@ function validateLocation(body: {
   country?: unknown;
   region?: unknown;
   city?: unknown;
+  locationId?: unknown;
   message?: unknown;
 }) {
+  const locationId =
+    typeof body.locationId === "string" ? body.locationId.trim() : "";
   const country = typeof body.country === "string" ? body.country.trim() : "";
   const region = typeof body.region === "string" ? body.region.trim() : "";
   const city = typeof body.city === "string" ? body.city.trim() : "";
   const message = typeof body.message === "string" ? body.message.trim() : "";
+
+  if (locationId) {
+    const loc = getLocationById(locationId);
+    if (!loc) return { error: "Unknown location." };
+    if (!message) return { error: "Message is required." };
+    if (message.length > MAX_TRACE_MESSAGE_LENGTH) {
+      return {
+        error: `Message must be ${MAX_TRACE_MESSAGE_LENGTH} characters or fewer.`,
+      };
+    }
+    return {
+      locationId: loc.locationId,
+      country: loc.country,
+      region: loc.region,
+      city: loc.city,
+      message,
+    };
+  }
 
   if (!country || !region || !city) {
     return { error: "Country, region, and city are required." };
@@ -51,6 +79,7 @@ function validateLocation(body: {
   }
 
   return {
+    locationId: cityNode.locationId,
     country: countryNode.name,
     region: regionNode.name,
     city: cityNode.name,
@@ -64,7 +93,7 @@ async function resolveMine(request: Request) {
   const auth = await requireTraceUser(request);
   if (auth.error) return null;
   const record = await getTraceByUid(auth.uid);
-  return record ? toTracePin(record) : null;
+  return record ? pinFromRecord(record) : null;
 }
 
 export async function GET(request: Request) {
@@ -74,6 +103,7 @@ export async function GET(request: Request) {
     const country = searchParams.get("country")?.trim() || "";
     const region = searchParams.get("region")?.trim() || "";
     const city = searchParams.get("city")?.trim() || "";
+    const locationId = searchParams.get("locationId")?.trim() || "";
     const cursor = searchParams.get("cursor")?.trim() || null;
     const limitRaw = Number(searchParams.get("limit") || TRACE_PAGE_SIZE);
     const limit = Number.isFinite(limitRaw)
@@ -81,6 +111,17 @@ export async function GET(request: Request) {
       : TRACE_PAGE_SIZE;
 
     const mine = view === "overview" ? await resolveMine(request) : null;
+
+    if (view === "counts") {
+      if (!country) {
+        return NextResponse.json(
+          { error: "country is required for counts." },
+          { status: 400 },
+        );
+      }
+      const counts = await listLocationCountsForCountry(country);
+      return NextResponse.json({ counts });
+    }
 
     if (view === "regions") {
       if (!country) {
@@ -105,9 +146,25 @@ export async function GET(request: Request) {
     }
 
     if (view === "traces") {
+      if (locationId) {
+        const page = await listTracesByLocationId({
+          locationId,
+          limit,
+          cursor,
+        });
+        return NextResponse.json({
+          traces: page.traces,
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
+          scope: { locationId },
+        });
+      }
       if (!country || !region || !city) {
         return NextResponse.json(
-          { error: "country, region, and city are required for traces." },
+          {
+            error:
+              "locationId or country, region, and city are required for traces.",
+          },
           { status: 400 },
         );
       }
@@ -175,7 +232,10 @@ export async function POST(request: Request) {
         );
       }
       const upgraded = await upgradeTraceToPermanent(auth.uid);
-      return NextResponse.json({ trace: toTracePin(upgraded), ok: true });
+      return NextResponse.json({
+        trace: pinFromRecord(upgraded),
+        ok: true,
+      });
     }
 
     const parsed = validateLocation(
@@ -188,6 +248,7 @@ export async function POST(request: Request) {
     }
 
     const location = parsed as {
+      locationId: string;
       country: string;
       region: string;
       city: string;
@@ -201,7 +262,7 @@ export async function POST(request: Request) {
         ...location,
       });
       return NextResponse.json({
-        trace: toTracePin(updated),
+        trace: pinFromRecord(updated),
         ok: true,
         mode: "update",
       });
@@ -214,7 +275,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({
-      trace: toTracePin(created),
+      trace: pinFromRecord(created),
       ok: true,
       mode: "create",
     });

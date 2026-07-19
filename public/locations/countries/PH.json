@@ -1,0 +1,1 @@
+{"code":"PH","name":"Philippines","lat":12.9,"lng":121.8,"zoom":5.5,"regions":[{"name":"Metro Manila","lat":14.6,"lng":121,"cities":[{"locationId":"PH:metro-manila:manila","name":"Manila","lat":14.5995,"lng":120.9842}]},{"name":"Cebu","lat":10.3,"lng":123.9,"cities":[{"locationId":"PH:cebu:cebu","name":"Cebu","lat":10.3157,"lng":123.8854}]}]}

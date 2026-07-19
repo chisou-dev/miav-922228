@@ -1,0 +1,1 @@
+{"code":"TW","name":"Taiwan","lat":23.7,"lng":121,"zoom":7,"regions":[{"name":"Taipei","lat":25.03,"lng":121.57,"cities":[{"locationId":"TW:taipei:taipei","name":"Taipei","lat":25.033,"lng":121.5654}]},{"name":"Kaohsiung","lat":22.63,"lng":120.3,"cities":[{"locationId":"TW:kaohsiung:kaohsiung","name":"Kaohsiung","lat":22.6273,"lng":120.3014}]}]}

@@ -1,0 +1,1381 @@
+{
+  "version": 1,
+  "countries": [
+    {
+      "code": "JP",
+      "name": "Japan",
+      "lat": 36.2,
+      "lng": 138.25,
+      "zoom": 5
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "lat": 36.5,
+      "lng": 127.8,
+      "zoom": 6.5
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "lat": 35,
+      "lng": 105,
+      "zoom": 4
+    },
+    {
+      "code": "TW",
+      "name": "Taiwan",
+      "lat": 23.7,
+      "lng": 121,
+      "zoom": 7
+    },
+    {
+      "code": "HK",
+      "name": "Hong Kong",
+      "lat": 22.32,
+      "lng": 114.17,
+      "zoom": 11
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "lat": 1.35,
+      "lng": 103.82,
+      "zoom": 11
+    },
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "lat": 15,
+      "lng": 101,
+      "zoom": 5.5
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "lat": 16,
+      "lng": 108,
+      "zoom": 5.5
+    },
+    {
+      "code": "PH",
+      "name": "Philippines",
+      "lat": 12.9,
+      "lng": 121.8,
+      "zoom": 5.5
+    },
+    {
+      "code": "MY",
+      "name": "Malaysia",
+      "lat": 4.2,
+      "lng": 101.98,
+      "zoom": 5.5
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "lat": -2.5,
+      "lng": 118,
+      "zoom": 4.5
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "lat": 22,
+      "lng": 79,
+      "zoom": 4.5
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "lat": -25,
+      "lng": 134,
+      "zoom": 4
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "lat": -41,
+      "lng": 174,
+      "zoom": 5
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "lat": 39.8,
+      "lng": -98.5,
+      "zoom": 4
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "lat": 56,
+      "lng": -96,
+      "zoom": 3.5
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "lat": 23.6,
+      "lng": -102.5,
+      "zoom": 4.5
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "lat": -14.2,
+      "lng": -51.9,
+      "zoom": 4
+    },
+    {
+      "code": "AR",
+      "name": "Argentina",
+      "lat": -38.4,
+      "lng": -63.6,
+      "zoom": 4
+    },
+    {
+      "code": "CL",
+      "name": "Chile",
+      "lat": -35.7,
+      "lng": -71.5,
+      "zoom": 4
+    },
+    {
+      "code": "CO",
+      "name": "Colombia",
+      "lat": 4.6,
+      "lng": -74.1,
+      "zoom": 5
+    },
+    {
+      "code": "PE",
+      "name": "Peru",
+      "lat": -9.2,
+      "lng": -75,
+      "zoom": 5
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "lat": 54,
+      "lng": -2,
+      "zoom": 5.5
+    },
+    {
+      "code": "IE",
+      "name": "Ireland",
+      "lat": 53.4,
+      "lng": -8.2,
+      "zoom": 6.5
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "lat": 46.2,
+      "lng": 2.2,
+      "zoom": 5.5
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "lat": 51.2,
+      "lng": 10.4,
+      "zoom": 5.5
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "lat": 41.9,
+      "lng": 12.5,
+      "zoom": 5.5
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "lat": 40.4,
+      "lng": -3.7,
+      "zoom": 5.5
+    },
+    {
+      "code": "PT",
+      "name": "Portugal",
+      "lat": 39.4,
+      "lng": -8.2,
+      "zoom": 6.5
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "lat": 52.1,
+      "lng": 5.3,
+      "zoom": 7
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "lat": 50.5,
+      "lng": 4.5,
+      "zoom": 7.5
+    },
+    {
+      "code": "CH",
+      "name": "Switzerland",
+      "lat": 46.8,
+      "lng": 8.2,
+      "zoom": 7.5
+    },
+    {
+      "code": "AT",
+      "name": "Austria",
+      "lat": 47.5,
+      "lng": 14.5,
+      "zoom": 6.5
+    },
+    {
+      "code": "SE",
+      "name": "Sweden",
+      "lat": 62,
+      "lng": 15,
+      "zoom": 4.5
+    },
+    {
+      "code": "NO",
+      "name": "Norway",
+      "lat": 64,
+      "lng": 12,
+      "zoom": 4.5
+    },
+    {
+      "code": "DK",
+      "name": "Denmark",
+      "lat": 56,
+      "lng": 10,
+      "zoom": 6.5
+    },
+    {
+      "code": "FI",
+      "name": "Finland",
+      "lat": 64,
+      "lng": 26,
+      "zoom": 4.5
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "lat": 52,
+      "lng": 20,
+      "zoom": 5.5
+    },
+    {
+      "code": "CZ",
+      "name": "Czechia",
+      "lat": 49.8,
+      "lng": 15.5,
+      "zoom": 6.5
+    },
+    {
+      "code": "GR",
+      "name": "Greece",
+      "lat": 39,
+      "lng": 22,
+      "zoom": 6
+    },
+    {
+      "code": "TR",
+      "name": "Turkey",
+      "lat": 39,
+      "lng": 35,
+      "zoom": 5
+    },
+    {
+      "code": "RU",
+      "name": "Russia",
+      "lat": 61.5,
+      "lng": 105,
+      "zoom": 3
+    },
+    {
+      "code": "UA",
+      "name": "Ukraine",
+      "lat": 48.4,
+      "lng": 31.2,
+      "zoom": 5
+    },
+    {
+      "code": "EG",
+      "name": "Egypt",
+      "lat": 26.8,
+      "lng": 30.8,
+      "zoom": 5.5
+    },
+    {
+      "code": "MA",
+      "name": "Morocco",
+      "lat": 31.8,
+      "lng": -7.1,
+      "zoom": 5.5
+    },
+    {
+      "code": "ZA",
+      "name": "South Africa",
+      "lat": -30.6,
+      "lng": 22.9,
+      "zoom": 5
+    },
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "lat": 9.1,
+      "lng": 8.7,
+      "zoom": 5.5
+    },
+    {
+      "code": "KE",
+      "name": "Kenya",
+      "lat": 0,
+      "lng": 37.9,
+      "zoom": 6
+    },
+    {
+      "code": "AE",
+      "name": "United Arab Emirates",
+      "lat": 23.4,
+      "lng": 53.8,
+      "zoom": 7
+    },
+    {
+      "code": "SA",
+      "name": "Saudi Arabia",
+      "lat": 23.9,
+      "lng": 45.1,
+      "zoom": 5
+    },
+    {
+      "code": "IL",
+      "name": "Israel",
+      "lat": 31.5,
+      "lng": 34.8,
+      "zoom": 7
+    }
+  ],
+  "locations": [
+    {
+      "locationId": "JP:tokyo:tokyo",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Tokyo",
+      "city": "Tokyo",
+      "lat": 35.6812,
+      "lng": 139.7671
+    },
+    {
+      "locationId": "JP:tokyo:shibuya",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Tokyo",
+      "city": "Shibuya",
+      "lat": 35.6595,
+      "lng": 139.7004
+    },
+    {
+      "locationId": "JP:tokyo:shinjuku",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Tokyo",
+      "city": "Shinjuku",
+      "lat": 35.6938,
+      "lng": 139.7034
+    },
+    {
+      "locationId": "JP:osaka:osaka",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Osaka",
+      "city": "Osaka",
+      "lat": 34.6937,
+      "lng": 135.5023
+    },
+    {
+      "locationId": "JP:osaka:namba",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Osaka",
+      "city": "Namba",
+      "lat": 34.665,
+      "lng": 135.501
+    },
+    {
+      "locationId": "JP:kyoto:kyoto",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kyoto",
+      "city": "Kyoto",
+      "lat": 35.0116,
+      "lng": 135.7681
+    },
+    {
+      "locationId": "JP:kyoto:gion",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kyoto",
+      "city": "Gion",
+      "lat": 35.0037,
+      "lng": 135.778
+    },
+    {
+      "locationId": "JP:hokkaido:sapporo",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Hokkaido",
+      "city": "Sapporo",
+      "lat": 43.0618,
+      "lng": 141.3545
+    },
+    {
+      "locationId": "JP:hokkaido:hakodate",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Hokkaido",
+      "city": "Hakodate",
+      "lat": 41.7687,
+      "lng": 140.729
+    },
+    {
+      "locationId": "KR:seoul:seoul",
+      "countryCode": "KR",
+      "country": "South Korea",
+      "region": "Seoul",
+      "city": "Seoul",
+      "lat": 37.5665,
+      "lng": 126.978
+    },
+    {
+      "locationId": "KR:seoul:gangnam",
+      "countryCode": "KR",
+      "country": "South Korea",
+      "region": "Seoul",
+      "city": "Gangnam",
+      "lat": 37.4979,
+      "lng": 127.0276
+    },
+    {
+      "locationId": "KR:busan:busan",
+      "countryCode": "KR",
+      "country": "South Korea",
+      "region": "Busan",
+      "city": "Busan",
+      "lat": 35.1796,
+      "lng": 129.0756
+    },
+    {
+      "locationId": "CN:beijing:beijing",
+      "countryCode": "CN",
+      "country": "China",
+      "region": "Beijing",
+      "city": "Beijing",
+      "lat": 39.9042,
+      "lng": 116.4074
+    },
+    {
+      "locationId": "CN:shanghai:shanghai",
+      "countryCode": "CN",
+      "country": "China",
+      "region": "Shanghai",
+      "city": "Shanghai",
+      "lat": 31.2304,
+      "lng": 121.4737
+    },
+    {
+      "locationId": "CN:guangdong:guangzhou",
+      "countryCode": "CN",
+      "country": "China",
+      "region": "Guangdong",
+      "city": "Guangzhou",
+      "lat": 23.1291,
+      "lng": 113.2644
+    },
+    {
+      "locationId": "CN:guangdong:shenzhen",
+      "countryCode": "CN",
+      "country": "China",
+      "region": "Guangdong",
+      "city": "Shenzhen",
+      "lat": 22.5431,
+      "lng": 114.0579
+    },
+    {
+      "locationId": "TW:taipei:taipei",
+      "countryCode": "TW",
+      "country": "Taiwan",
+      "region": "Taipei",
+      "city": "Taipei",
+      "lat": 25.033,
+      "lng": 121.5654
+    },
+    {
+      "locationId": "TW:kaohsiung:kaohsiung",
+      "countryCode": "TW",
+      "country": "Taiwan",
+      "region": "Kaohsiung",
+      "city": "Kaohsiung",
+      "lat": 22.6273,
+      "lng": 120.3014
+    },
+    {
+      "locationId": "HK:hong-kong:hong-kong",
+      "countryCode": "HK",
+      "country": "Hong Kong",
+      "region": "Hong Kong",
+      "city": "Hong Kong",
+      "lat": 22.3193,
+      "lng": 114.1694
+    },
+    {
+      "locationId": "SG:singapore:singapore",
+      "countryCode": "SG",
+      "country": "Singapore",
+      "region": "Singapore",
+      "city": "Singapore",
+      "lat": 1.3521,
+      "lng": 103.8198
+    },
+    {
+      "locationId": "TH:bangkok:bangkok",
+      "countryCode": "TH",
+      "country": "Thailand",
+      "region": "Bangkok",
+      "city": "Bangkok",
+      "lat": 13.7563,
+      "lng": 100.5018
+    },
+    {
+      "locationId": "TH:chiang-mai:chiang-mai",
+      "countryCode": "TH",
+      "country": "Thailand",
+      "region": "Chiang Mai",
+      "city": "Chiang Mai",
+      "lat": 18.7883,
+      "lng": 98.9853
+    },
+    {
+      "locationId": "VN:hanoi:hanoi",
+      "countryCode": "VN",
+      "country": "Vietnam",
+      "region": "Hanoi",
+      "city": "Hanoi",
+      "lat": 21.0278,
+      "lng": 105.8342
+    },
+    {
+      "locationId": "VN:ho-chi-minh:ho-chi-minh-city",
+      "countryCode": "VN",
+      "country": "Vietnam",
+      "region": "Ho Chi Minh",
+      "city": "Ho Chi Minh City",
+      "lat": 10.8231,
+      "lng": 106.6297
+    },
+    {
+      "locationId": "PH:metro-manila:manila",
+      "countryCode": "PH",
+      "country": "Philippines",
+      "region": "Metro Manila",
+      "city": "Manila",
+      "lat": 14.5995,
+      "lng": 120.9842
+    },
+    {
+      "locationId": "PH:cebu:cebu",
+      "countryCode": "PH",
+      "country": "Philippines",
+      "region": "Cebu",
+      "city": "Cebu",
+      "lat": 10.3157,
+      "lng": 123.8854
+    },
+    {
+      "locationId": "MY:kuala-lumpur:kuala-lumpur",
+      "countryCode": "MY",
+      "country": "Malaysia",
+      "region": "Kuala Lumpur",
+      "city": "Kuala Lumpur",
+      "lat": 3.139,
+      "lng": 101.6869
+    },
+    {
+      "locationId": "MY:penang:george-town",
+      "countryCode": "MY",
+      "country": "Malaysia",
+      "region": "Penang",
+      "city": "George Town",
+      "lat": 5.4141,
+      "lng": 100.3288
+    },
+    {
+      "locationId": "ID:jakarta:jakarta",
+      "countryCode": "ID",
+      "country": "Indonesia",
+      "region": "Jakarta",
+      "city": "Jakarta",
+      "lat": -6.2088,
+      "lng": 106.8456
+    },
+    {
+      "locationId": "ID:bali:denpasar",
+      "countryCode": "ID",
+      "country": "Indonesia",
+      "region": "Bali",
+      "city": "Denpasar",
+      "lat": -8.6705,
+      "lng": 115.2126
+    },
+    {
+      "locationId": "IN:delhi:new-delhi",
+      "countryCode": "IN",
+      "country": "India",
+      "region": "Delhi",
+      "city": "New Delhi",
+      "lat": 28.6139,
+      "lng": 77.209
+    },
+    {
+      "locationId": "IN:maharashtra:mumbai",
+      "countryCode": "IN",
+      "country": "India",
+      "region": "Maharashtra",
+      "city": "Mumbai",
+      "lat": 19.076,
+      "lng": 72.8777
+    },
+    {
+      "locationId": "IN:maharashtra:pune",
+      "countryCode": "IN",
+      "country": "India",
+      "region": "Maharashtra",
+      "city": "Pune",
+      "lat": 18.5204,
+      "lng": 73.8567
+    },
+    {
+      "locationId": "IN:karnataka:bengaluru",
+      "countryCode": "IN",
+      "country": "India",
+      "region": "Karnataka",
+      "city": "Bengaluru",
+      "lat": 12.9716,
+      "lng": 77.5946
+    },
+    {
+      "locationId": "AU:new-south-wales:sydney",
+      "countryCode": "AU",
+      "country": "Australia",
+      "region": "New South Wales",
+      "city": "Sydney",
+      "lat": -33.8688,
+      "lng": 151.2093
+    },
+    {
+      "locationId": "AU:new-south-wales:newcastle",
+      "countryCode": "AU",
+      "country": "Australia",
+      "region": "New South Wales",
+      "city": "Newcastle",
+      "lat": -32.9283,
+      "lng": 151.7817
+    },
+    {
+      "locationId": "AU:victoria:melbourne",
+      "countryCode": "AU",
+      "country": "Australia",
+      "region": "Victoria",
+      "city": "Melbourne",
+      "lat": -37.8136,
+      "lng": 144.9631
+    },
+    {
+      "locationId": "AU:australian-capital-territory:canberra",
+      "countryCode": "AU",
+      "country": "Australia",
+      "region": "Australian Capital Territory",
+      "city": "Canberra",
+      "lat": -35.2809,
+      "lng": 149.13
+    },
+    {
+      "locationId": "NZ:wellington:wellington",
+      "countryCode": "NZ",
+      "country": "New Zealand",
+      "region": "Wellington",
+      "city": "Wellington",
+      "lat": -41.2865,
+      "lng": 174.7762
+    },
+    {
+      "locationId": "NZ:auckland:auckland",
+      "countryCode": "NZ",
+      "country": "New Zealand",
+      "region": "Auckland",
+      "city": "Auckland",
+      "lat": -36.8509,
+      "lng": 174.7645
+    },
+    {
+      "locationId": "US:district-of-columbia:washington-d-c",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "District of Columbia",
+      "city": "Washington, D.C.",
+      "lat": 38.9072,
+      "lng": -77.0369
+    },
+    {
+      "locationId": "US:california:los-angeles",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "California",
+      "city": "Los Angeles",
+      "lat": 34.0522,
+      "lng": -118.2437
+    },
+    {
+      "locationId": "US:california:san-francisco",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "California",
+      "city": "San Francisco",
+      "lat": 37.7749,
+      "lng": -122.4194
+    },
+    {
+      "locationId": "US:california:san-diego",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "California",
+      "city": "San Diego",
+      "lat": 32.7157,
+      "lng": -117.1611
+    },
+    {
+      "locationId": "US:new-york:new-york-city",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "New York",
+      "city": "New York City",
+      "lat": 40.7128,
+      "lng": -74.006
+    },
+    {
+      "locationId": "US:new-york:buffalo",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "New York",
+      "city": "Buffalo",
+      "lat": 42.8864,
+      "lng": -78.8784
+    },
+    {
+      "locationId": "US:washington:seattle",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Washington",
+      "city": "Seattle",
+      "lat": 47.6062,
+      "lng": -122.3321
+    },
+    {
+      "locationId": "US:washington:spokane",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Washington",
+      "city": "Spokane",
+      "lat": 47.6588,
+      "lng": -117.426
+    },
+    {
+      "locationId": "US:illinois:chicago",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Illinois",
+      "city": "Chicago",
+      "lat": 41.8781,
+      "lng": -87.6298
+    },
+    {
+      "locationId": "CA:ontario:toronto",
+      "countryCode": "CA",
+      "country": "Canada",
+      "region": "Ontario",
+      "city": "Toronto",
+      "lat": 43.6532,
+      "lng": -79.3832
+    },
+    {
+      "locationId": "CA:ontario:ottawa",
+      "countryCode": "CA",
+      "country": "Canada",
+      "region": "Ontario",
+      "city": "Ottawa",
+      "lat": 45.4215,
+      "lng": -75.6972
+    },
+    {
+      "locationId": "CA:british-columbia:vancouver",
+      "countryCode": "CA",
+      "country": "Canada",
+      "region": "British Columbia",
+      "city": "Vancouver",
+      "lat": 49.2827,
+      "lng": -123.1207
+    },
+    {
+      "locationId": "CA:quebec:montreal",
+      "countryCode": "CA",
+      "country": "Canada",
+      "region": "Quebec",
+      "city": "Montreal",
+      "lat": 45.5017,
+      "lng": -73.5673
+    },
+    {
+      "locationId": "MX:mexico-city:mexico-city",
+      "countryCode": "MX",
+      "country": "Mexico",
+      "region": "Mexico City",
+      "city": "Mexico City",
+      "lat": 19.4326,
+      "lng": -99.1332
+    },
+    {
+      "locationId": "MX:jalisco:guadalajara",
+      "countryCode": "MX",
+      "country": "Mexico",
+      "region": "Jalisco",
+      "city": "Guadalajara",
+      "lat": 20.6597,
+      "lng": -103.3496
+    },
+    {
+      "locationId": "BR:distrito-federal:brasilia",
+      "countryCode": "BR",
+      "country": "Brazil",
+      "region": "Distrito Federal",
+      "city": "Brasília",
+      "lat": -15.8267,
+      "lng": -47.9218
+    },
+    {
+      "locationId": "BR:sao-paulo:sao-paulo",
+      "countryCode": "BR",
+      "country": "Brazil",
+      "region": "São Paulo",
+      "city": "São Paulo",
+      "lat": -23.5505,
+      "lng": -46.6333
+    },
+    {
+      "locationId": "BR:rio-de-janeiro:rio-de-janeiro",
+      "countryCode": "BR",
+      "country": "Brazil",
+      "region": "Rio de Janeiro",
+      "city": "Rio de Janeiro",
+      "lat": -22.9068,
+      "lng": -43.1729
+    },
+    {
+      "locationId": "AR:buenos-aires:buenos-aires",
+      "countryCode": "AR",
+      "country": "Argentina",
+      "region": "Buenos Aires",
+      "city": "Buenos Aires",
+      "lat": -34.6037,
+      "lng": -58.3816
+    },
+    {
+      "locationId": "CL:santiago-metropolitan:santiago",
+      "countryCode": "CL",
+      "country": "Chile",
+      "region": "Santiago Metropolitan",
+      "city": "Santiago",
+      "lat": -33.4489,
+      "lng": -70.6693
+    },
+    {
+      "locationId": "CO:bogota:bogota",
+      "countryCode": "CO",
+      "country": "Colombia",
+      "region": "Bogotá",
+      "city": "Bogotá",
+      "lat": 4.711,
+      "lng": -74.0721
+    },
+    {
+      "locationId": "PE:lima:lima",
+      "countryCode": "PE",
+      "country": "Peru",
+      "region": "Lima",
+      "city": "Lima",
+      "lat": -12.0464,
+      "lng": -77.0428
+    },
+    {
+      "locationId": "GB:england:london",
+      "countryCode": "GB",
+      "country": "United Kingdom",
+      "region": "England",
+      "city": "London",
+      "lat": 51.5074,
+      "lng": -0.1278
+    },
+    {
+      "locationId": "GB:england:manchester",
+      "countryCode": "GB",
+      "country": "United Kingdom",
+      "region": "England",
+      "city": "Manchester",
+      "lat": 53.4808,
+      "lng": -2.2426
+    },
+    {
+      "locationId": "GB:england:oxford",
+      "countryCode": "GB",
+      "country": "United Kingdom",
+      "region": "England",
+      "city": "Oxford",
+      "lat": 51.752,
+      "lng": -1.2577
+    },
+    {
+      "locationId": "GB:scotland:edinburgh",
+      "countryCode": "GB",
+      "country": "United Kingdom",
+      "region": "Scotland",
+      "city": "Edinburgh",
+      "lat": 55.9533,
+      "lng": -3.1883
+    },
+    {
+      "locationId": "GB:scotland:glasgow",
+      "countryCode": "GB",
+      "country": "United Kingdom",
+      "region": "Scotland",
+      "city": "Glasgow",
+      "lat": 55.8642,
+      "lng": -4.2518
+    },
+    {
+      "locationId": "IE:leinster:dublin",
+      "countryCode": "IE",
+      "country": "Ireland",
+      "region": "Leinster",
+      "city": "Dublin",
+      "lat": 53.3498,
+      "lng": -6.2603
+    },
+    {
+      "locationId": "FR:ile-de-france:paris",
+      "countryCode": "FR",
+      "country": "France",
+      "region": "Île-de-France",
+      "city": "Paris",
+      "lat": 48.8566,
+      "lng": 2.3522
+    },
+    {
+      "locationId": "FR:ile-de-france:versailles",
+      "countryCode": "FR",
+      "country": "France",
+      "region": "Île-de-France",
+      "city": "Versailles",
+      "lat": 48.8049,
+      "lng": 2.1204
+    },
+    {
+      "locationId": "FR:provence-alpes-cote-d-azur:marseille",
+      "countryCode": "FR",
+      "country": "France",
+      "region": "Provence-Alpes-Côte d'Azur",
+      "city": "Marseille",
+      "lat": 43.2965,
+      "lng": 5.3698
+    },
+    {
+      "locationId": "FR:provence-alpes-cote-d-azur:nice",
+      "countryCode": "FR",
+      "country": "France",
+      "region": "Provence-Alpes-Côte d'Azur",
+      "city": "Nice",
+      "lat": 43.7102,
+      "lng": 7.262
+    },
+    {
+      "locationId": "DE:berlin:berlin",
+      "countryCode": "DE",
+      "country": "Germany",
+      "region": "Berlin",
+      "city": "Berlin",
+      "lat": 52.52,
+      "lng": 13.405
+    },
+    {
+      "locationId": "DE:bavaria:munich",
+      "countryCode": "DE",
+      "country": "Germany",
+      "region": "Bavaria",
+      "city": "Munich",
+      "lat": 48.1351,
+      "lng": 11.582
+    },
+    {
+      "locationId": "DE:bavaria:nuremberg",
+      "countryCode": "DE",
+      "country": "Germany",
+      "region": "Bavaria",
+      "city": "Nuremberg",
+      "lat": 49.4521,
+      "lng": 11.0767
+    },
+    {
+      "locationId": "IT:lazio:rome",
+      "countryCode": "IT",
+      "country": "Italy",
+      "region": "Lazio",
+      "city": "Rome",
+      "lat": 41.9028,
+      "lng": 12.4964
+    },
+    {
+      "locationId": "IT:lombardy:milan",
+      "countryCode": "IT",
+      "country": "Italy",
+      "region": "Lombardy",
+      "city": "Milan",
+      "lat": 45.4642,
+      "lng": 9.19
+    },
+    {
+      "locationId": "IT:tuscany:florence",
+      "countryCode": "IT",
+      "country": "Italy",
+      "region": "Tuscany",
+      "city": "Florence",
+      "lat": 43.7696,
+      "lng": 11.2558
+    },
+    {
+      "locationId": "ES:community-of-madrid:madrid",
+      "countryCode": "ES",
+      "country": "Spain",
+      "region": "Community of Madrid",
+      "city": "Madrid",
+      "lat": 40.4168,
+      "lng": -3.7038
+    },
+    {
+      "locationId": "ES:catalonia:barcelona",
+      "countryCode": "ES",
+      "country": "Spain",
+      "region": "Catalonia",
+      "city": "Barcelona",
+      "lat": 41.3874,
+      "lng": 2.1686
+    },
+    {
+      "locationId": "PT:lisbon:lisbon",
+      "countryCode": "PT",
+      "country": "Portugal",
+      "region": "Lisbon",
+      "city": "Lisbon",
+      "lat": 38.7223,
+      "lng": -9.1393
+    },
+    {
+      "locationId": "NL:north-holland:amsterdam",
+      "countryCode": "NL",
+      "country": "Netherlands",
+      "region": "North Holland",
+      "city": "Amsterdam",
+      "lat": 52.3676,
+      "lng": 4.9041
+    },
+    {
+      "locationId": "NL:south-holland:the-hague",
+      "countryCode": "NL",
+      "country": "Netherlands",
+      "region": "South Holland",
+      "city": "The Hague",
+      "lat": 52.0705,
+      "lng": 4.3007
+    },
+    {
+      "locationId": "BE:brussels:brussels",
+      "countryCode": "BE",
+      "country": "Belgium",
+      "region": "Brussels",
+      "city": "Brussels",
+      "lat": 50.8503,
+      "lng": 4.3517
+    },
+    {
+      "locationId": "CH:bern:bern",
+      "countryCode": "CH",
+      "country": "Switzerland",
+      "region": "Bern",
+      "city": "Bern",
+      "lat": 46.948,
+      "lng": 7.4474
+    },
+    {
+      "locationId": "CH:zurich:zurich",
+      "countryCode": "CH",
+      "country": "Switzerland",
+      "region": "Zurich",
+      "city": "Zurich",
+      "lat": 47.3769,
+      "lng": 8.5417
+    },
+    {
+      "locationId": "AT:vienna:vienna",
+      "countryCode": "AT",
+      "country": "Austria",
+      "region": "Vienna",
+      "city": "Vienna",
+      "lat": 48.2082,
+      "lng": 16.3738
+    },
+    {
+      "locationId": "SE:stockholm:stockholm",
+      "countryCode": "SE",
+      "country": "Sweden",
+      "region": "Stockholm",
+      "city": "Stockholm",
+      "lat": 59.3293,
+      "lng": 18.0686
+    },
+    {
+      "locationId": "NO:oslo:oslo",
+      "countryCode": "NO",
+      "country": "Norway",
+      "region": "Oslo",
+      "city": "Oslo",
+      "lat": 59.9139,
+      "lng": 10.7522
+    },
+    {
+      "locationId": "DK:capital-region:copenhagen",
+      "countryCode": "DK",
+      "country": "Denmark",
+      "region": "Capital Region",
+      "city": "Copenhagen",
+      "lat": 55.6761,
+      "lng": 12.5683
+    },
+    {
+      "locationId": "FI:uusimaa:helsinki",
+      "countryCode": "FI",
+      "country": "Finland",
+      "region": "Uusimaa",
+      "city": "Helsinki",
+      "lat": 60.1699,
+      "lng": 24.9384
+    },
+    {
+      "locationId": "PL:masovia:warsaw",
+      "countryCode": "PL",
+      "country": "Poland",
+      "region": "Masovia",
+      "city": "Warsaw",
+      "lat": 52.2297,
+      "lng": 21.0122
+    },
+    {
+      "locationId": "CZ:prague:prague",
+      "countryCode": "CZ",
+      "country": "Czechia",
+      "region": "Prague",
+      "city": "Prague",
+      "lat": 50.0755,
+      "lng": 14.4378
+    },
+    {
+      "locationId": "GR:attica:athens",
+      "countryCode": "GR",
+      "country": "Greece",
+      "region": "Attica",
+      "city": "Athens",
+      "lat": 37.9838,
+      "lng": 23.7275
+    },
+    {
+      "locationId": "TR:ankara:ankara",
+      "countryCode": "TR",
+      "country": "Turkey",
+      "region": "Ankara",
+      "city": "Ankara",
+      "lat": 39.9334,
+      "lng": 32.8597
+    },
+    {
+      "locationId": "TR:istanbul:istanbul",
+      "countryCode": "TR",
+      "country": "Turkey",
+      "region": "Istanbul",
+      "city": "Istanbul",
+      "lat": 41.0082,
+      "lng": 28.9784
+    },
+    {
+      "locationId": "RU:moscow:moscow",
+      "countryCode": "RU",
+      "country": "Russia",
+      "region": "Moscow",
+      "city": "Moscow",
+      "lat": 55.7558,
+      "lng": 37.6173
+    },
+    {
+      "locationId": "RU:saint-petersburg:saint-petersburg",
+      "countryCode": "RU",
+      "country": "Russia",
+      "region": "Saint Petersburg",
+      "city": "Saint Petersburg",
+      "lat": 59.9311,
+      "lng": 30.3609
+    },
+    {
+      "locationId": "UA:kyiv:kyiv",
+      "countryCode": "UA",
+      "country": "Ukraine",
+      "region": "Kyiv",
+      "city": "Kyiv",
+      "lat": 50.4501,
+      "lng": 30.5234
+    },
+    {
+      "locationId": "EG:cairo:cairo",
+      "countryCode": "EG",
+      "country": "Egypt",
+      "region": "Cairo",
+      "city": "Cairo",
+      "lat": 30.0444,
+      "lng": 31.2357
+    },
+    {
+      "locationId": "MA:rabat-sale-kenitra:rabat",
+      "countryCode": "MA",
+      "country": "Morocco",
+      "region": "Rabat-Salé-Kénitra",
+      "city": "Rabat",
+      "lat": 34.0209,
+      "lng": -6.8416
+    },
+    {
+      "locationId": "MA:casablanca-settat:casablanca",
+      "countryCode": "MA",
+      "country": "Morocco",
+      "region": "Casablanca-Settat",
+      "city": "Casablanca",
+      "lat": 33.5731,
+      "lng": -7.5898
+    },
+    {
+      "locationId": "ZA:gauteng:pretoria",
+      "countryCode": "ZA",
+      "country": "South Africa",
+      "region": "Gauteng",
+      "city": "Pretoria",
+      "lat": -25.7479,
+      "lng": 28.2293
+    },
+    {
+      "locationId": "ZA:gauteng:johannesburg",
+      "countryCode": "ZA",
+      "country": "South Africa",
+      "region": "Gauteng",
+      "city": "Johannesburg",
+      "lat": -26.2041,
+      "lng": 28.0473
+    },
+    {
+      "locationId": "ZA:western-cape:cape-town",
+      "countryCode": "ZA",
+      "country": "South Africa",
+      "region": "Western Cape",
+      "city": "Cape Town",
+      "lat": -33.9249,
+      "lng": 18.4241
+    },
+    {
+      "locationId": "NG:federal-capital-territory:abuja",
+      "countryCode": "NG",
+      "country": "Nigeria",
+      "region": "Federal Capital Territory",
+      "city": "Abuja",
+      "lat": 9.0765,
+      "lng": 7.3986
+    },
+    {
+      "locationId": "NG:lagos:lagos",
+      "countryCode": "NG",
+      "country": "Nigeria",
+      "region": "Lagos",
+      "city": "Lagos",
+      "lat": 6.5244,
+      "lng": 3.3792
+    },
+    {
+      "locationId": "KE:nairobi:nairobi",
+      "countryCode": "KE",
+      "country": "Kenya",
+      "region": "Nairobi",
+      "city": "Nairobi",
+      "lat": -1.2921,
+      "lng": 36.8219
+    },
+    {
+      "locationId": "AE:abu-dhabi:abu-dhabi",
+      "countryCode": "AE",
+      "country": "United Arab Emirates",
+      "region": "Abu Dhabi",
+      "city": "Abu Dhabi",
+      "lat": 24.4539,
+      "lng": 54.3773
+    },
+    {
+      "locationId": "AE:dubai:dubai",
+      "countryCode": "AE",
+      "country": "United Arab Emirates",
+      "region": "Dubai",
+      "city": "Dubai",
+      "lat": 25.2048,
+      "lng": 55.2708
+    },
+    {
+      "locationId": "SA:riyadh:riyadh",
+      "countryCode": "SA",
+      "country": "Saudi Arabia",
+      "region": "Riyadh",
+      "city": "Riyadh",
+      "lat": 24.7136,
+      "lng": 46.6753
+    },
+    {
+      "locationId": "IL:jerusalem:jerusalem",
+      "countryCode": "IL",
+      "country": "Israel",
+      "region": "Jerusalem",
+      "city": "Jerusalem",
+      "lat": 31.7683,
+      "lng": 35.2137
+    },
+    {
+      "locationId": "IL:tel-aviv:tel-aviv",
+      "countryCode": "IL",
+      "country": "Israel",
+      "region": "Tel Aviv",
+      "city": "Tel Aviv",
+      "lat": 32.0853,
+      "lng": 34.7818
+    }
+  ]
+}

@@ -4,6 +4,14 @@
       "collectionGroup": "trace_map",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "locationId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trace_map",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "country", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]

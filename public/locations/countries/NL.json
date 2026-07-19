@@ -1,0 +1,1 @@
+{"code":"NL","name":"Netherlands","lat":52.1,"lng":5.3,"zoom":7,"regions":[{"name":"North Holland","lat":52.5,"lng":4.75,"cities":[{"locationId":"NL:north-holland:amsterdam","name":"Amsterdam","lat":52.3676,"lng":4.9041}]},{"name":"South Holland","lat":52,"lng":4.5,"cities":[{"locationId":"NL:south-holland:the-hague","name":"The Hague","lat":52.0705,"lng":4.3007}]}]}

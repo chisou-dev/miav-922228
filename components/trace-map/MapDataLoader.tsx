@@ -2,6 +2,12 @@
 
 import { useCallback, useState } from "react";
 import type { User } from "firebase/auth";
+import {
+  fetchCountryLocations,
+  fetchLocationIndex,
+  type LocationCountry,
+  type LocationCountryIndexEntry,
+} from "@/lib/locations/client";
 import { getIdTokenOrNull } from "@/lib/trace/auth";
 import {
   TRACE_PAGE_SIZE,
@@ -18,6 +24,7 @@ export type MapFocus = {
 } | null;
 
 export type CityScope = {
+  locationId: string;
   country: string;
   region: string;
   city: string;
@@ -34,14 +41,36 @@ function emptyStats(): TraceStats {
   };
 }
 
+function countForCity(
+  counts: Record<string, number>,
+  city: { locationId: string; name: string },
+  country: string,
+  region: string,
+): number {
+  return (
+    counts[city.locationId] ||
+    counts[`${country}|${region}|${city.name}`] ||
+    0
+  );
+}
+
 /**
  * Lazy-loading data layer for Trace Map.
- * Overview loads stats only; regions / cities / traces load on demand.
+ * Location shape comes from static JSON; Firestore is Trace counts / traces only.
  */
 export function useMapDataLoader() {
   const [stats, setStats] = useState<TraceStats | null>(null);
   const [mine, setMine] = useState<TracePin | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
+
+  const [locationIndex, setLocationIndex] = useState<
+    LocationCountryIndexEntry[]
+  >([]);
+  const [indexLoading, setIndexLoading] = useState(true);
+  const [countryCatalog, setCountryCatalog] = useState<LocationCountry | null>(
+    null,
+  );
+  const [countMap, setCountMap] = useState<Record<string, number>>({});
 
   const [regions, setRegions] = useState<TraceRegionMarker[]>([]);
   const [regionsLoading, setRegionsLoading] = useState(false);
@@ -61,6 +90,18 @@ export function useMapDataLoader() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [selectedTrace, setSelectedTrace] = useState<TracePin | null>(null);
+
+  const loadLocationIndex = useCallback(async () => {
+    setIndexLoading(true);
+    try {
+      const countries = await fetchLocationIndex();
+      setLocationIndex(countries);
+    } catch {
+      setLocationIndex([]);
+    } finally {
+      setIndexLoading(false);
+    }
+  }, []);
 
   const loadOverview = useCallback(async (active: User | null) => {
     setOverviewLoading(true);
@@ -85,9 +126,9 @@ export function useMapDataLoader() {
     }
   }, []);
 
-  const loadRegions = useCallback(async (country: string) => {
+  const loadCountry = useCallback(async (entry: LocationCountryIndexEntry) => {
     setRegionsLoading(true);
-    setRegionsCountry(country);
+    setRegionsCountry(entry.name);
     setCities([]);
     setCitiesScope(null);
     setCityScope(null);
@@ -96,45 +137,90 @@ export function useMapDataLoader() {
     setHasMore(false);
     setSelectedTrace(null);
     try {
-      const response = await fetch(
-        `/api/trace?view=regions&country=${encodeURIComponent(country)}`,
-      );
-      const data = (await response.json().catch(() => null)) as {
-        regions?: TraceRegionMarker[];
+      const [catalog, countsRes] = await Promise.all([
+        fetchCountryLocations(entry.path || entry.code),
+        fetch(
+          `/api/trace?view=counts&country=${encodeURIComponent(entry.name)}`,
+        ),
+      ]);
+      const countsData = (await countsRes.json().catch(() => null)) as {
+        counts?: Record<string, number>;
       } | null;
-      setRegions(response.ok ? data?.regions || [] : []);
+      const counts =
+        countsRes.ok && countsData?.counts ? countsData.counts : {};
+      setCountryCatalog(catalog);
+      setCountMap(counts);
+
+      if (!catalog) {
+        setRegions([]);
+        return;
+      }
+
+      setRegions(
+        catalog.regions.map((region) => ({
+          name: region.name,
+          lat: region.lat,
+          lng: region.lng,
+          count: region.cities.reduce(
+            (sum, city) =>
+              sum + countForCity(counts, city, catalog.name, region.name),
+            0,
+          ),
+        })),
+      );
     } catch {
       setRegions([]);
+      setCountryCatalog(null);
+      setCountMap({});
     } finally {
       setRegionsLoading(false);
     }
   }, []);
 
-  const loadCities = useCallback(async (country: string, region: string) => {
-    setCitiesLoading(true);
-    setCitiesScope({ country, region });
-    setCityScope(null);
-    setTraces([]);
-    setNextCursor(null);
-    setHasMore(false);
-    setSelectedTrace(null);
-    try {
-      const params = new URLSearchParams({
-        view: "cities",
-        country,
-        region,
-      });
-      const response = await fetch(`/api/trace?${params.toString()}`);
-      const data = (await response.json().catch(() => null)) as {
-        cities?: TraceCityMarker[];
-      } | null;
-      setCities(response.ok ? data?.cities || [] : []);
-    } catch {
-      setCities([]);
-    } finally {
-      setCitiesLoading(false);
-    }
-  }, []);
+  const loadCities = useCallback(
+    async (countryName: string, regionName: string) => {
+      setCitiesLoading(true);
+      setCitiesScope({ country: countryName, region: regionName });
+      setCityScope(null);
+      setTraces([]);
+      setNextCursor(null);
+      setHasMore(false);
+      setSelectedTrace(null);
+      try {
+        let catalog = countryCatalog;
+        if (!catalog || catalog.name !== countryName) {
+          const entry = locationIndex.find((c) => c.name === countryName);
+          catalog = entry
+            ? await fetchCountryLocations(entry.path || entry.code)
+            : null;
+          setCountryCatalog(catalog);
+        }
+        if (!catalog) {
+          setCities([]);
+          return;
+        }
+        const region = catalog.regions.find((r) => r.name === regionName);
+        if (!region) {
+          setCities([]);
+          return;
+        }
+        setCities(
+          region.cities.map((city) => ({
+            locationId: city.locationId,
+            name: city.name,
+            lat: city.lat,
+            lng: city.lng,
+            count: countForCity(countMap, city, catalog!.name, region.name),
+          })),
+        );
+      } catch {
+        setCities([]);
+      } finally {
+        setCitiesLoading(false);
+      }
+    },
+    [countryCatalog, countMap, locationIndex],
+  );
 
   const loadCityTraces = useCallback(async (scope: CityScope) => {
     setCityScope(scope);
@@ -146,9 +232,7 @@ export function useMapDataLoader() {
     try {
       const params = new URLSearchParams({
         view: "traces",
-        country: scope.country,
-        region: scope.region,
-        city: scope.city,
+        locationId: scope.locationId,
         limit: String(TRACE_PAGE_SIZE),
       });
       const response = await fetch(`/api/trace?${params.toString()}`);
@@ -179,9 +263,7 @@ export function useMapDataLoader() {
     try {
       const params = new URLSearchParams({
         view: "traces",
-        country: cityScope.country,
-        region: cityScope.region,
-        city: cityScope.city,
+        locationId: cityScope.locationId,
         limit: String(TRACE_PAGE_SIZE),
         cursor: nextCursor,
       });
@@ -209,16 +291,73 @@ export function useMapDataLoader() {
     setSelectedTrace(null);
   }, []);
 
+  const refreshCounts = useCallback(async (countryName: string) => {
+    try {
+      const response = await fetch(
+        `/api/trace?view=counts&country=${encodeURIComponent(countryName)}`,
+      );
+      const data = (await response.json().catch(() => null)) as {
+        counts?: Record<string, number>;
+      } | null;
+      if (!response.ok || !data?.counts) return;
+      setCountMap(data.counts);
+      setCountryCatalog((catalog) => {
+        if (!catalog || catalog.name !== countryName) return catalog;
+        setRegions(
+          catalog.regions.map((region) => ({
+            name: region.name,
+            lat: region.lat,
+            lng: region.lng,
+            count: region.cities.reduce(
+              (sum, city) =>
+                sum +
+                countForCity(data.counts!, city, catalog.name, region.name),
+              0,
+            ),
+          })),
+        );
+        setCitiesScope((scope) => {
+          if (!scope || scope.country !== countryName) return scope;
+          const region = catalog.regions.find((r) => r.name === scope.region);
+          if (region) {
+            setCities(
+              region.cities.map((city) => ({
+                locationId: city.locationId,
+                name: city.name,
+                lat: city.lat,
+                lng: city.lng,
+                count: countForCity(
+                  data.counts!,
+                  city,
+                  catalog.name,
+                  region.name,
+                ),
+              })),
+            );
+          }
+          return scope;
+        });
+        return catalog;
+      });
+    } catch {
+      // non-fatal
+    }
+  }, []);
+
   return {
     stats,
     mine,
     setMine,
     overviewLoading,
     loadOverview,
+    locationIndex,
+    indexLoading,
+    loadLocationIndex,
+    countryCatalog,
+    loadCountry,
     regions,
     regionsLoading,
     regionsCountry,
-    loadRegions,
     cities,
     citiesLoading,
     citiesScope,
@@ -233,6 +372,7 @@ export function useMapDataLoader() {
     selectedTrace,
     setSelectedTrace,
     closeViewer,
+    refreshCounts,
   };
 }
 

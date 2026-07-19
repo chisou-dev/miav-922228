@@ -16,10 +16,9 @@ import {
   watchAuth,
 } from "@/lib/trace/auth";
 import {
-  findCountry,
-  resolveLocationCoords,
-  LOCATION_COUNTRIES,
-} from "@/lib/locations";
+  fetchCountryLocations,
+  type LocationCountryIndexEntry,
+} from "@/lib/locations/client";
 import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/lib/trace/policyCopy";
 
 const Map = dynamic(
@@ -38,6 +37,7 @@ type LocationDraft = {
   country: string;
   region: string;
   city: string;
+  locationId?: string;
 };
 
 export function TraceMapApp() {
@@ -49,9 +49,9 @@ export function TraceMapApp() {
     zoom: number;
   } | null>(null);
   const [draft, setDraft] = useState<LocationDraft>({
-    country: LOCATION_COUNTRIES[0]!.name,
-    region: LOCATION_COUNTRIES[0]!.regions[0]!.name,
-    city: LOCATION_COUNTRIES[0]!.regions[0]!.cities[0]!.name,
+    country: "",
+    region: "",
+    city: "",
   });
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -66,6 +66,28 @@ export function TraceMapApp() {
       setWelcomeOpen(true);
     }
   }, []);
+
+  useEffect(() => {
+    void data.loadLocationIndex();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!data.locationIndex.length || draft.country) return;
+    const first = data.locationIndex[0]!;
+    void (async () => {
+      const catalog = await fetchCountryLocations(first.path || first.code);
+      if (!catalog?.regions[0]?.cities[0]) return;
+      const region = catalog.regions[0]!;
+      const city = region.cities[0]!;
+      setDraft({
+        country: catalog.name,
+        region: region.name,
+        city: city.name,
+        locationId: city.locationId,
+      });
+    })();
+  }, [data.locationIndex, draft.country]);
 
   function dismissWelcome() {
     try {
@@ -115,27 +137,34 @@ export function TraceMapApp() {
           region?: string;
           city?: string;
         } | null;
-        if (!geo?.country) return;
-        const country = findCountry(geo.country);
-        if (!country) return;
+        if (!geo?.country || data.mine) return;
+        const entry = data.locationIndex.find(
+          (c) => c.name.toLowerCase() === geo.country!.trim().toLowerCase(),
+        );
+        if (!entry) return;
+        const catalog = await fetchCountryLocations(entry.path || entry.code);
+        if (!catalog) return;
         const region =
-          country.regions.find((r) => r.name === geo.region) ||
-          country.regions[0]!;
+          catalog.regions.find((r) => r.name === geo.region) ||
+          catalog.regions[0]!;
         const city =
           region.cities.find((c) => c.name === geo.city) || region.cities[0]!;
-        const next = {
-          country: country.name,
+        setDraft({
+          country: catalog.name,
           region: region.name,
           city: city.name,
-        };
-        setDraft((current) => (data.mine ? current : next));
-        const coords = resolveLocationCoords(next);
-        if (coords) setFocus(coords);
+          locationId: city.locationId,
+        });
+        setFocus({
+          lat: city.lat,
+          lng: city.lng,
+          zoom: 11,
+        });
       } catch {
         // Keep curated default.
       }
     })();
-  }, [data.mine]);
+  }, [data.locationIndex, data.mine]);
 
   useEffect(() => {
     if (data.mine) {
@@ -143,61 +172,100 @@ export function TraceMapApp() {
         country: data.mine.country,
         region: data.mine.region,
         city: data.mine.city,
+        locationId: data.mine.locationId || undefined,
       });
     }
   }, [data.mine]);
 
+  function findIndexEntry(name: string): LocationCountryIndexEntry | undefined {
+    return data.locationIndex.find((c) => c.name === name);
+  }
+
   async function onSelectCountry(countryName: string) {
-    const country = findCountry(countryName);
-    if (!country) return;
-    setSelectedCountry(country.name);
+    const entry = findIndexEntry(countryName);
+    if (!entry) return;
+    setSelectedCountry(entry.name);
     setSelectedRegion(null);
-    setDraft({
-      country: country.name,
-      region: country.regions[0]!.name,
-      city: country.regions[0]!.cities[0]!.name,
-    });
     setFocus({
-      lat: country.lat,
-      lng: country.lng,
-      zoom: country.zoom,
+      lat: entry.lat,
+      lng: entry.lng,
+      zoom: entry.zoom,
     });
-    await data.loadRegions(country.name);
+    await data.loadCountry(entry);
+    const catalog = data.countryCatalog;
+    // loadCountry sets catalog asynchronously; fetch local copy for draft
+    const fresh = await fetchCountryLocations(entry.path || entry.code);
+    if (fresh?.regions[0]?.cities[0]) {
+      const region = fresh.regions[0]!;
+      const city = region.cities[0]!;
+      setDraft({
+        country: fresh.name,
+        region: region.name,
+        city: city.name,
+        locationId: city.locationId,
+      });
+    } else if (catalog?.regions[0]?.cities[0]) {
+      const region = catalog.regions[0]!;
+      const city = region.cities[0]!;
+      setDraft({
+        country: catalog.name,
+        region: region.name,
+        city: city.name,
+        locationId: city.locationId,
+      });
+    }
   }
 
   async function onSelectRegion(regionName: string) {
     if (!selectedCountry) return;
-    const country = findCountry(selectedCountry);
-    const region = country?.regions.find((r) => r.name === regionName);
-    if (!country || !region) return;
+    const catalog =
+      data.countryCatalog?.name === selectedCountry
+        ? data.countryCatalog
+        : null;
+    const entry = findIndexEntry(selectedCountry);
+    const resolved =
+      catalog ||
+      (entry ? await fetchCountryLocations(entry.path || entry.code) : null);
+    const region = resolved?.regions.find((r) => r.name === regionName);
+    if (!resolved || !region?.cities[0]) return;
     setSelectedRegion(region.name);
+    const city = region.cities[0]!;
     setDraft({
-      country: country.name,
+      country: resolved.name,
       region: region.name,
-      city: region.cities[0]!.name,
+      city: city.name,
+      locationId: city.locationId,
     });
     setFocus({
       lat: region.lat,
       lng: region.lng,
-      zoom: Math.min(country.zoom + 3, 10),
+      zoom: Math.min((entry?.zoom || 5) + 3, 10),
     });
-    await data.loadCities(country.name, region.name);
+    await data.loadCities(resolved.name, region.name);
   }
 
   async function onSelectCity(cityName: string) {
     if (!selectedCountry || !selectedRegion) return;
-    const country = findCountry(selectedCountry);
-    const region = country?.regions.find((r) => r.name === selectedRegion);
+    const entry = findIndexEntry(selectedCountry);
+    const catalog =
+      data.countryCatalog?.name === selectedCountry
+        ? data.countryCatalog
+        : entry
+          ? await fetchCountryLocations(entry.path || entry.code)
+          : null;
+    const region = catalog?.regions.find((r) => r.name === selectedRegion);
     const city = region?.cities.find((c) => c.name === cityName);
-    if (!country || !region || !city) return;
+    if (!catalog || !region || !city) return;
     setDraft({
-      country: country.name,
+      country: catalog.name,
       region: region.name,
       city: city.name,
+      locationId: city.locationId,
     });
     setFocus({ lat: city.lat, lng: city.lng, zoom: 11 });
     await data.loadCityTraces({
-      country: country.name,
+      locationId: city.locationId,
+      country: catalog.name,
       region: region.name,
       city: city.name,
     });
@@ -289,6 +357,7 @@ export function TraceMapApp() {
           >
             <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
               <Map
+                countries={data.locationIndex}
                 focus={focus}
                 selectedCountry={selectedCountry}
                 selectedRegion={selectedRegion}
@@ -326,12 +395,14 @@ export function TraceMapApp() {
             user={user}
             mine={data.mine}
             draft={draft}
+            locationIndex={data.locationIndex}
             onDraftChange={setDraft}
             onFocusLocation={setFocus}
             onSaved={(trace) => {
               data.setMine(trace);
               void data.loadOverview(user);
               if (data.cityScope) void data.loadCityTraces(data.cityScope);
+              if (selectedCountry) void data.refreshCounts(selectedCountry);
               if (selectedCountry && selectedRegion) {
                 void data.loadCities(selectedCountry, selectedRegion);
               }

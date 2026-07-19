@@ -19,7 +19,46 @@ import {
   type TraceRecord,
   type TraceStats,
 } from "@/lib/trace/types";
-import { resolveLocationCoords } from "@/lib/locations";
+import {
+  findLocationByNames,
+  getLocationById,
+  resolveLocationCoords,
+} from "@/lib/locations";
+
+/** Public pin with Location DB enrichment (and legacy name→locationId bridge). */
+export function pinFromRecord(record: TraceRecord): TracePin {
+  const base = toTracePin(record);
+  if (record.locationId) {
+    const loc = getLocationById(record.locationId);
+    if (loc) {
+      return {
+        ...base,
+        locationId: loc.locationId,
+        country: loc.country,
+        region: loc.region,
+        city: loc.city,
+        lat: loc.lat,
+        lng: loc.lng,
+      };
+    }
+  }
+  if (record.country && record.region && record.city) {
+    const loc = findLocationByNames({
+      country: record.country,
+      region: record.region,
+      city: record.city,
+    });
+    if (loc) {
+      return {
+        ...base,
+        locationId: loc.locationId,
+        lat: loc.lat,
+        lng: loc.lng,
+      };
+    }
+  }
+  return base;
+}
 
 type FirestoreValue =
   | { stringValue: string }
@@ -99,11 +138,13 @@ async function firestoreFetch(
 
 function toTraceRecord(doc: FirestoreDocument): TraceRecord {
   const authRaw = readString(doc.fields, "authType");
+  const locationIdRaw = readString(doc.fields, "locationId");
   return {
     id: documentIdFromName(doc.name),
     miavId: readString(doc.fields, "miavId"),
     uid: readString(doc.fields, "uid"),
     authType: isTraceAuthType(authRaw) ? authRaw : "anonymous",
+    locationId: locationIdRaw || null,
     country: readString(doc.fields, "country"),
     region: readString(doc.fields, "region"),
     city: readString(doc.fields, "city"),
@@ -210,7 +251,14 @@ async function runTraceQuery(structuredQuery: Record<string, unknown>) {
 }
 
 async function bumpLocationCount(
-  location: { country: string; region: string; city: string; lat: number; lng: number },
+  location: {
+    locationId?: string | null;
+    country: string;
+    region: string;
+    city: string;
+    lat: number;
+    lng: number;
+  },
   delta: number,
 ) {
   if (delta === 0) return;
@@ -227,6 +275,9 @@ async function bumpLocationCount(
         method: "POST",
         body: JSON.stringify({
           fields: {
+            locationId: location.locationId
+              ? { stringValue: location.locationId }
+              : { nullValue: null },
             country: { stringValue: location.country },
             region: { stringValue: location.region },
             city: { stringValue: location.city },
@@ -252,7 +303,7 @@ async function bumpLocationCount(
   }
 
   await firestoreFetch(
-    `documents/${TRACE_LOCATIONS_COLLECTION}/${id}?updateMask.fieldPaths=count&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng`,
+    `documents/${TRACE_LOCATIONS_COLLECTION}/${id}?updateMask.fieldPaths=count&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=locationId`,
     {
       method: "PATCH",
       body: JSON.stringify({
@@ -260,6 +311,9 @@ async function bumpLocationCount(
           count: { integerValue: String(next) },
           lat: { doubleValue: location.lat },
           lng: { doubleValue: location.lng },
+          locationId: location.locationId
+            ? { stringValue: location.locationId }
+            : { nullValue: null },
         },
       }),
     },
@@ -496,6 +550,7 @@ export async function listTraceLocations(): Promise<TraceLocationCluster[]> {
     .map((row) => row.document)
     .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
     .map((doc) => ({
+      locationId: readString(doc.fields, "locationId") || null,
       country: readString(doc.fields, "country"),
       region: readString(doc.fields, "region"),
       city: readString(doc.fields, "city"),
@@ -570,6 +625,7 @@ async function listLocationClustersWhere(filters: {
       .map((row) => row.document)
       .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
       .map((doc) => ({
+        locationId: readString(doc.fields, "locationId") || null,
         country: readString(doc.fields, "country"),
         region: readString(doc.fields, "region"),
         city: readString(doc.fields, "city"),
@@ -617,7 +673,13 @@ export async function listCitiesForRegion(
   countryName: string,
   regionName: string,
 ): Promise<
-  Array<{ name: string; lat: number; lng: number; count: number }>
+  Array<{
+    locationId: string;
+    name: string;
+    lat: number;
+    lng: number;
+    count: number;
+  }>
 > {
   const { findCountry, findRegion } = await import("@/lib/locations");
   const country = findCountry(countryName);
@@ -632,13 +694,39 @@ export async function listCitiesForRegion(
   const countByCity = new Map(
     clusters.map((cluster) => [cluster.city, cluster.count] as const),
   );
+  const countByLocationId = new Map(
+    clusters
+      .filter((c) => c.locationId)
+      .map((c) => [c.locationId!, c.count] as const),
+  );
 
   return region.cities.map((city) => ({
+    locationId: city.locationId,
     name: city.name,
     lat: city.lat,
     lng: city.lng,
-    count: countByCity.get(city.name) || 0,
+    count:
+      countByLocationId.get(city.locationId) ||
+      countByCity.get(city.name) ||
+      0,
   }));
+}
+
+/** Counts only for a country — Location shape comes from static JSON on the client. */
+export async function listLocationCountsForCountry(
+  countryName: string,
+): Promise<Record<string, number>> {
+  const clusters = await listLocationClustersWhere({ country: countryName });
+  const counts: Record<string, number> = {};
+  for (const cluster of clusters) {
+    if (cluster.locationId) {
+      counts[cluster.locationId] = cluster.count;
+    } else {
+      const key = `${cluster.country}|${cluster.region}|${cluster.city}`;
+      counts[key] = cluster.count;
+    }
+  }
+  return counts;
 }
 
 export async function getTraceStats(): Promise<TraceStats> {
@@ -648,7 +736,68 @@ export async function getTraceStats(): Promise<TraceStats> {
   return rebuilt.stats;
 }
 
-export async function listTracesAtCity(input: {
+export async function listTracesByLocationId(input: {
+  locationId: string;
+  limit?: number;
+  cursor?: string | null;
+}): Promise<{
+  traces: TracePin[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}> {
+  const pageSize = input.limit ?? 50;
+  const loc = getLocationById(input.locationId);
+
+  async function pageFromRecords(records: TraceRecord[]) {
+    const page = records.slice(0, pageSize);
+    const hasMore = records.length > pageSize;
+    const last = page[page.length - 1];
+    return {
+      traces: page.map(pinFromRecord),
+      nextCursor: hasMore && last ? last.createdAt : null,
+      hasMore,
+    };
+  }
+
+  const byLocationIdQuery: Record<string, unknown> = {
+    from: [{ collectionId: TRACE_COLLECTION }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: "locationId" },
+        op: "EQUAL",
+        value: { stringValue: input.locationId },
+      },
+    },
+    orderBy: [
+      { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
+    ],
+    limit: pageSize + 1,
+  };
+  if (input.cursor) {
+    byLocationIdQuery.startAt = {
+      values: [{ timestampValue: input.cursor }],
+      before: true,
+    };
+  }
+
+  try {
+    const records = await runTraceQuery(byLocationIdQuery);
+    if (records.length > 0) return pageFromRecords(records);
+  } catch {
+    // Fall through to legacy place fields.
+  }
+
+  if (!loc) return { traces: [], nextCursor: null, hasMore: false };
+  return listTracesAtCityLegacy({
+    country: loc.country,
+    region: loc.region,
+    city: loc.city,
+    limit: pageSize,
+    cursor: input.cursor,
+  });
+}
+
+async function listTracesAtCityLegacy(input: {
   country: string;
   region: string;
   city: string;
@@ -683,43 +832,31 @@ export async function listTracesAtCity(input: {
       },
     },
   ];
-
   const structuredQuery: Record<string, unknown> = {
     from: [{ collectionId: TRACE_COLLECTION }],
-    where: {
-      compositeFilter: {
-        op: "AND",
-        filters,
-      },
-    },
+    where: { compositeFilter: { op: "AND", filters } },
     orderBy: [
-      {
-        field: { fieldPath: "createdAt" },
-        direction: "DESCENDING",
-      },
+      { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
     ],
     limit: pageSize + 1,
   };
-
   if (input.cursor) {
     structuredQuery.startAt = {
       values: [{ timestampValue: input.cursor }],
       before: true,
     };
   }
-
   try {
     const records = await runTraceQuery(structuredQuery);
     const page = records.slice(0, pageSize);
     const hasMore = records.length > pageSize;
     const last = page[page.length - 1];
     return {
-      traces: page.map(toTracePin),
+      traces: page.map(pinFromRecord),
       nextCursor: hasMore && last ? last.createdAt : null,
       hasMore,
     };
   } catch {
-    // Fallback when composite index is missing — still scoped, never full scan.
     const countryRows = await runTraceQuery({
       from: [{ collectionId: TRACE_COLLECTION }],
       where: {
@@ -747,12 +884,35 @@ export async function listTracesAtCity(input: {
     const hasMore = safeStart + pageSize < filtered.length;
     const last = page[page.length - 1];
     return {
-      traces: page.map(toTracePin),
+      traces: page.map(pinFromRecord),
       nextCursor: hasMore && last ? last.createdAt : null,
       hasMore,
     };
   }
 }
+
+export async function listTracesAtCity(input: {
+  country: string;
+  region: string;
+  city: string;
+  limit?: number;
+  cursor?: string | null;
+}): Promise<{
+  traces: TracePin[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}> {
+  const matched = findLocationByNames(input);
+  if (matched) {
+    return listTracesByLocationId({
+      locationId: matched.locationId,
+      limit: input.limit,
+      cursor: input.cursor,
+    });
+  }
+  return listTracesAtCityLegacy(input);
+}
+
 
 /** @deprecated Prefer listTracesAtCity with pagination. */
 export async function listTracesAtLocation(input: {
@@ -884,20 +1044,34 @@ export async function createTrace(input: {
   region: string;
   city: string;
   message: string;
+  locationId?: string | null;
 }): Promise<TraceRecord> {
   const existing = await getTraceByUid(input.uid);
   if (existing) {
     throw new Error("TRACE_EXISTS");
   }
 
-  const coords = resolveLocationCoords({
-    country: input.country,
-    region: input.region,
-    city: input.city,
-  });
+  const matched =
+    (input.locationId ? getLocationById(input.locationId) : undefined) ||
+    findLocationByNames({
+      country: input.country,
+      region: input.region,
+      city: input.city,
+    });
+  const coords = matched
+    ? { lat: matched.lat, lng: matched.lng, zoom: 11 }
+    : resolveLocationCoords({
+        country: input.country,
+        region: input.region,
+        city: input.city,
+      });
   if (!coords) {
     throw new Error("Invalid location.");
   }
+  const locationId = matched?.locationId || input.locationId || null;
+  const country = matched?.country || input.country;
+  const region = matched?.region || input.region;
+  const city = matched?.city || input.city;
 
   const miavNumber = await allocateMiavNumber();
   const miavId = formatMiavId(miavNumber);
@@ -912,9 +1086,12 @@ export async function createTrace(input: {
     miavId: { stringValue: miavId },
     uid: { stringValue: input.uid },
     authType: { stringValue: input.authType },
-    country: { stringValue: input.country },
-    region: { stringValue: input.region },
-    city: { stringValue: input.city },
+    locationId: locationId
+      ? { stringValue: locationId }
+      : { nullValue: null },
+    country: { stringValue: country },
+    region: { stringValue: region },
+    city: { stringValue: city },
     lat: { doubleValue: coords.lat },
     lng: { doubleValue: coords.lng },
     message: { stringValue: input.message },
@@ -944,6 +1121,7 @@ export async function createTrace(input: {
 
   await bumpLocationCount(
     {
+      locationId: record.locationId,
       country: record.country,
       region: record.region,
       city: record.city,
@@ -980,32 +1158,51 @@ export async function updateTraceLocationMessage(input: {
   region: string;
   city: string;
   message: string;
+  locationId?: string | null;
 }): Promise<TraceRecord> {
   const existing = await getTraceByUid(input.uid);
   if (!existing) throw new Error("NOT_FOUND");
 
-  const coords = resolveLocationCoords({
-    country: input.country,
-    region: input.region,
-    city: input.city,
-  });
+  const matched =
+    (input.locationId ? getLocationById(input.locationId) : undefined) ||
+    findLocationByNames({
+      country: input.country,
+      region: input.region,
+      city: input.city,
+    });
+  const coords = matched
+    ? { lat: matched.lat, lng: matched.lng, zoom: 11 }
+    : resolveLocationCoords({
+        country: input.country,
+        region: input.region,
+        city: input.city,
+      });
   if (!coords) throw new Error("Invalid location.");
 
+  const locationId = matched?.locationId || input.locationId || null;
+  const country = matched?.country || input.country;
+  const region = matched?.region || input.region;
+  const city = matched?.city || input.city;
+
   const locationChanged =
-    existing.country !== input.country ||
-    existing.region !== input.region ||
-    existing.city !== input.city;
+    existing.locationId !== locationId ||
+    existing.country !== country ||
+    existing.region !== region ||
+    existing.city !== city;
 
   const updatedAt = new Date().toISOString();
   const response = await firestoreFetch(
-    `documents/${TRACE_COLLECTION}/${encodeURIComponent(input.uid)}?updateMask.fieldPaths=country&updateMask.fieldPaths=region&updateMask.fieldPaths=city&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=message&updateMask.fieldPaths=updatedAt`,
+    `documents/${TRACE_COLLECTION}/${encodeURIComponent(input.uid)}?updateMask.fieldPaths=locationId&updateMask.fieldPaths=country&updateMask.fieldPaths=region&updateMask.fieldPaths=city&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=message&updateMask.fieldPaths=updatedAt`,
     {
       method: "PATCH",
       body: JSON.stringify({
         fields: {
-          country: { stringValue: input.country },
-          region: { stringValue: input.region },
-          city: { stringValue: input.city },
+          locationId: locationId
+            ? { stringValue: locationId }
+            : { nullValue: null },
+          country: { stringValue: country },
+          region: { stringValue: region },
+          city: { stringValue: city },
           lat: { doubleValue: coords.lat },
           lng: { doubleValue: coords.lng },
           message: { stringValue: input.message },
@@ -1026,6 +1223,7 @@ export async function updateTraceLocationMessage(input: {
   if (locationChanged) {
     await bumpLocationCount(
       {
+        locationId: existing.locationId,
         country: existing.country,
         region: existing.region,
         city: existing.city,
@@ -1036,6 +1234,7 @@ export async function updateTraceLocationMessage(input: {
     );
     await bumpLocationCount(
       {
+        locationId: record.locationId,
         country: record.country,
         region: record.region,
         city: record.city,
