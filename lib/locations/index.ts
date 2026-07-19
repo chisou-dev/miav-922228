@@ -203,5 +203,4 @@ export {
   fetchCountryLocations,
 } from "@/lib/locations/client";
 
-export { CONTINENTS, continentForCode } from "@/lib/locations/continents";
-export type { ContinentName } from "@/lib/locations/continents";
+export { flagEmoji } from "@/lib/locations/flags";

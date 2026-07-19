@@ -1,7 +1,183 @@
 {
-  "version": 2,
+  "version": 3,
   "description": "MIAV Location Database — countries, territories, capitals, and major cities with continent grouping. Expandable; separate from Trace data.",
   "countries": [
+    {
+      "code": "AF",
+      "name": "Afghanistan",
+      "continent": "Asia",
+      "lat": 34.5553,
+      "lng": 69.2075,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kabul",
+          "lat": 34.5553,
+          "lng": 69.2075,
+          "cities": [
+            {
+              "name": "Kabul",
+              "lat": 34.5553,
+              "lng": 69.2075
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AX",
+      "name": "Aland Islands",
+      "continent": "Europe",
+      "lat": 60.0971,
+      "lng": 19.9348,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Mariehamn",
+          "lat": 60.0971,
+          "lng": 19.9348,
+          "cities": [
+            {
+              "name": "Mariehamn",
+              "lat": 60.0971,
+              "lng": 19.9348
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AL",
+      "name": "Albania",
+      "continent": "Europe",
+      "lat": 41.3275,
+      "lng": 19.8187,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tirana",
+          "lat": 41.3275,
+          "lng": 19.8187,
+          "cities": [
+            {
+              "name": "Tirana",
+              "lat": 41.3275,
+              "lng": 19.8187
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "DZ",
+      "name": "Algeria",
+      "continent": "Africa",
+      "lat": 36.7538,
+      "lng": 3.0588,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Algiers",
+          "lat": 36.7538,
+          "lng": 3.0588,
+          "cities": [
+            {
+              "name": "Algiers",
+              "lat": 36.7538,
+              "lng": 3.0588
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AS",
+      "name": "American Samoa",
+      "continent": "Oceania",
+      "lat": -14.2756,
+      "lng": -170.702,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Pago Pago",
+          "lat": -14.2756,
+          "lng": -170.702,
+          "cities": [
+            {
+              "name": "Pago Pago",
+              "lat": -14.2756,
+              "lng": -170.702
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AD",
+      "name": "Andorra",
+      "continent": "Europe",
+      "lat": 42.5063,
+      "lng": 1.5218,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Andorra la Vella",
+          "lat": 42.5063,
+          "lng": 1.5218,
+          "cities": [
+            {
+              "name": "Andorra la Vella",
+              "lat": 42.5063,
+              "lng": 1.5218
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AO",
+      "name": "Angola",
+      "continent": "Africa",
+      "lat": -8.839,
+      "lng": 13.2894,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Luanda",
+          "lat": -8.839,
+          "lng": 13.2894,
+          "cities": [
+            {
+              "name": "Luanda",
+              "lat": -8.839,
+              "lng": 13.2894
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AI",
+      "name": "Anguilla",
+      "continent": "North America",
+      "lat": 18.2206,
+      "lng": -63.0686,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "The Valley",
+          "lat": 18.2206,
+          "lng": -63.0686,
+          "cities": [
+            {
+              "name": "The Valley",
+              "lat": 18.2206,
+              "lng": -63.0686
+            }
+          ]
+        }
+      ]
+    },
     {
       "code": "AQ",
       "name": "Antarctica",
@@ -19,6 +195,28 @@
               "name": "McMurdo Station",
               "lat": -77.8419,
               "lng": 166.6863
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AG",
+      "name": "Antigua and Barbuda",
+      "continent": "North America",
+      "lat": 17.1274,
+      "lng": -61.8468,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Saint Johns",
+          "lat": 17.1274,
+          "lng": -61.8468,
+          "cities": [
+            {
+              "name": "Saint Johns",
+              "lat": 17.1274,
+              "lng": -61.8468
             }
           ]
         }
@@ -45,6 +243,50 @@
         }
       ],
       "continent": "South America"
+    },
+    {
+      "code": "AM",
+      "name": "Armenia",
+      "continent": "Asia",
+      "lat": 40.1792,
+      "lng": 44.4991,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Yerevan",
+          "lat": 40.1792,
+          "lng": 44.4991,
+          "cities": [
+            {
+              "name": "Yerevan",
+              "lat": 40.1792,
+              "lng": 44.4991
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AW",
+      "name": "Aruba",
+      "continent": "North America",
+      "lat": 12.5092,
+      "lng": -70.0089,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Oranjestad",
+          "lat": 12.5092,
+          "lng": -70.0089,
+          "cities": [
+            {
+              "name": "Oranjestad",
+              "lat": 12.5092,
+              "lng": -70.0089
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "AU",
@@ -120,6 +362,28 @@
       "continent": "Europe"
     },
     {
+      "code": "AZ",
+      "name": "Azerbaijan",
+      "continent": "Asia",
+      "lat": 40.4093,
+      "lng": 49.8671,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Baku",
+          "lat": 40.4093,
+          "lng": 49.8671,
+          "cities": [
+            {
+              "name": "Baku",
+              "lat": 40.4093,
+              "lng": 49.8671
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "BS",
       "name": "Bahamas",
       "lat": 25.03,
@@ -136,6 +400,28 @@
               "name": "Nassau",
               "lat": 25.0443,
               "lng": -77.3504
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BH",
+      "name": "Bahrain",
+      "continent": "Asia",
+      "lat": 26.2285,
+      "lng": 50.586,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Manama",
+          "lat": 26.2285,
+          "lng": 50.586,
+          "cities": [
+            {
+              "name": "Manama",
+              "lat": 26.2285,
+              "lng": 50.586
             }
           ]
         }
@@ -186,6 +472,28 @@
       ]
     },
     {
+      "code": "BY",
+      "name": "Belarus",
+      "continent": "Europe",
+      "lat": 53.9006,
+      "lng": 27.559,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Minsk",
+          "lat": 53.9006,
+          "lng": 27.559,
+          "cities": [
+            {
+              "name": "Minsk",
+              "lat": 53.9006,
+              "lng": 27.559
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "BE",
       "name": "Belgium",
       "lat": 50.5,
@@ -208,6 +516,94 @@
       "continent": "Europe"
     },
     {
+      "code": "BZ",
+      "name": "Belize",
+      "continent": "North America",
+      "lat": 17.251,
+      "lng": -88.759,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Belmopan",
+          "lat": 17.251,
+          "lng": -88.759,
+          "cities": [
+            {
+              "name": "Belmopan",
+              "lat": 17.251,
+              "lng": -88.759
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BJ",
+      "name": "Benin",
+      "continent": "Africa",
+      "lat": 6.4969,
+      "lng": 2.6289,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Porto-Novo",
+          "lat": 6.4969,
+          "lng": 2.6289,
+          "cities": [
+            {
+              "name": "Porto-Novo",
+              "lat": 6.4969,
+              "lng": 2.6289
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BM",
+      "name": "Bermuda",
+      "continent": "North America",
+      "lat": 32.2942,
+      "lng": -64.7839,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Hamilton",
+          "lat": 32.2942,
+          "lng": -64.7839,
+          "cities": [
+            {
+              "name": "Hamilton",
+              "lat": 32.2942,
+              "lng": -64.7839
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BT",
+      "name": "Bhutan",
+      "continent": "Asia",
+      "lat": 27.4728,
+      "lng": 89.639,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Thimphu",
+          "lat": 27.4728,
+          "lng": 89.639,
+          "cities": [
+            {
+              "name": "Thimphu",
+              "lat": 27.4728,
+              "lng": 89.639
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "BO",
       "name": "Bolivia",
       "lat": -16.29,
@@ -224,6 +620,50 @@
               "name": "La Paz",
               "lat": -16.4897,
               "lng": -68.1193
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BA",
+      "name": "Bosnia and Herzegovina",
+      "continent": "Europe",
+      "lat": 43.8563,
+      "lng": 18.4131,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Sarajevo",
+          "lat": 43.8563,
+          "lng": 18.4131,
+          "cities": [
+            {
+              "name": "Sarajevo",
+              "lat": 43.8563,
+              "lng": 18.4131
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BW",
+      "name": "Botswana",
+      "continent": "Africa",
+      "lat": -24.6282,
+      "lng": 25.9231,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Gaborone",
+          "lat": -24.6282,
+          "lng": 25.9231,
+          "cities": [
+            {
+              "name": "Gaborone",
+              "lat": -24.6282,
+              "lng": 25.9231
             }
           ]
         }
@@ -276,6 +716,116 @@
       "continent": "South America"
     },
     {
+      "code": "VG",
+      "name": "British Virgin Islands",
+      "continent": "North America",
+      "lat": 18.4286,
+      "lng": -64.6185,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Road Town",
+          "lat": 18.4286,
+          "lng": -64.6185,
+          "cities": [
+            {
+              "name": "Road Town",
+              "lat": 18.4286,
+              "lng": -64.6185
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BN",
+      "name": "Brunei",
+      "continent": "Asia",
+      "lat": 4.9031,
+      "lng": 114.9398,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bandar Seri Begawan",
+          "lat": 4.9031,
+          "lng": 114.9398,
+          "cities": [
+            {
+              "name": "Bandar Seri Begawan",
+              "lat": 4.9031,
+              "lng": 114.9398
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BG",
+      "name": "Bulgaria",
+      "continent": "Europe",
+      "lat": 42.6977,
+      "lng": 23.3219,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Sofia",
+          "lat": 42.6977,
+          "lng": 23.3219,
+          "cities": [
+            {
+              "name": "Sofia",
+              "lat": 42.6977,
+              "lng": 23.3219
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BF",
+      "name": "Burkina Faso",
+      "continent": "Africa",
+      "lat": 12.3714,
+      "lng": -1.5197,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Ouagadougou",
+          "lat": 12.3714,
+          "lng": -1.5197,
+          "cities": [
+            {
+              "name": "Ouagadougou",
+              "lat": 12.3714,
+              "lng": -1.5197
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BI",
+      "name": "Burundi",
+      "continent": "Africa",
+      "lat": -3.4264,
+      "lng": 29.9306,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Gitega",
+          "lat": -3.4264,
+          "lng": 29.9306,
+          "cities": [
+            {
+              "name": "Gitega",
+              "lat": -3.4264,
+              "lng": 29.9306
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "CV",
       "name": "Cabo Verde",
       "lat": 16,
@@ -314,6 +864,28 @@
               "name": "Phnom Penh",
               "lat": 11.5564,
               "lng": 104.9282
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CM",
+      "name": "Cameroon",
+      "continent": "Africa",
+      "lat": 3.848,
+      "lng": 11.5021,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Yaounde",
+          "lat": 3.848,
+          "lng": 11.5021,
+          "cities": [
+            {
+              "name": "Yaounde",
+              "lat": 3.848,
+              "lng": 11.5021
             }
           ]
         }
@@ -369,6 +941,94 @@
         }
       ],
       "continent": "North America"
+    },
+    {
+      "code": "BQ",
+      "name": "Caribbean Netherlands",
+      "continent": "North America",
+      "lat": 12.1444,
+      "lng": -68.2655,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kralendijk",
+          "lat": 12.1444,
+          "lng": -68.2655,
+          "cities": [
+            {
+              "name": "Kralendijk",
+              "lat": 12.1444,
+              "lng": -68.2655
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "KY",
+      "name": "Cayman Islands",
+      "continent": "North America",
+      "lat": 19.2869,
+      "lng": -81.3674,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "George Town",
+          "lat": 19.2869,
+          "lng": -81.3674,
+          "cities": [
+            {
+              "name": "George Town",
+              "lat": 19.2869,
+              "lng": -81.3674
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CF",
+      "name": "Central African Republic",
+      "continent": "Africa",
+      "lat": 4.3947,
+      "lng": 18.5582,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bangui",
+          "lat": 4.3947,
+          "lng": 18.5582,
+          "cities": [
+            {
+              "name": "Bangui",
+              "lat": 4.3947,
+              "lng": 18.5582
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD",
+      "name": "Chad",
+      "continent": "Africa",
+      "lat": 12.1348,
+      "lng": 15.0557,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "NDjamena",
+          "lat": 12.1348,
+          "lng": 15.0557,
+          "cities": [
+            {
+              "name": "NDjamena",
+              "lat": 12.1348,
+              "lng": 15.0557
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "CL",
@@ -444,6 +1104,50 @@
       "continent": "Asia"
     },
     {
+      "code": "CX",
+      "name": "Christmas Island",
+      "continent": "Oceania",
+      "lat": -10.4475,
+      "lng": 105.69,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Flying Fish Cove",
+          "lat": -10.4475,
+          "lng": 105.69,
+          "cities": [
+            {
+              "name": "Flying Fish Cove",
+              "lat": -10.4475,
+              "lng": 105.69
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CC",
+      "name": "Cocos Islands",
+      "continent": "Oceania",
+      "lat": -12.1642,
+      "lng": 96.871,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "West Island",
+          "lat": -12.1642,
+          "lng": 96.871,
+          "cities": [
+            {
+              "name": "West Island",
+              "lat": -12.1642,
+              "lng": 96.871
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "CO",
       "name": "Colombia",
       "lat": 4.6,
@@ -464,6 +1168,72 @@
         }
       ],
       "continent": "South America"
+    },
+    {
+      "code": "KM",
+      "name": "Comoros",
+      "continent": "Africa",
+      "lat": -11.7172,
+      "lng": 43.2473,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Moroni",
+          "lat": -11.7172,
+          "lng": 43.2473,
+          "cities": [
+            {
+              "name": "Moroni",
+              "lat": -11.7172,
+              "lng": 43.2473
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CG",
+      "name": "Congo",
+      "continent": "Africa",
+      "lat": -4.2634,
+      "lng": 15.2429,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Brazzaville",
+          "lat": -4.2634,
+          "lng": 15.2429,
+          "cities": [
+            {
+              "name": "Brazzaville",
+              "lat": -4.2634,
+              "lng": 15.2429
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CK",
+      "name": "Cook Islands",
+      "continent": "Oceania",
+      "lat": -21.2078,
+      "lng": -159.775,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Avarua",
+          "lat": -21.2078,
+          "lng": -159.775,
+          "cities": [
+            {
+              "name": "Avarua",
+              "lat": -21.2078,
+              "lng": -159.775
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "CR",
@@ -488,6 +1258,50 @@
       ]
     },
     {
+      "code": "CI",
+      "name": "Cote dIvoire",
+      "continent": "Africa",
+      "lat": 6.8276,
+      "lng": -5.2893,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Yamoussoukro",
+          "lat": 6.8276,
+          "lng": -5.2893,
+          "cities": [
+            {
+              "name": "Yamoussoukro",
+              "lat": 6.8276,
+              "lng": -5.2893
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "HR",
+      "name": "Croatia",
+      "continent": "Europe",
+      "lat": 45.815,
+      "lng": 15.9819,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Zagreb",
+          "lat": 45.815,
+          "lng": 15.9819,
+          "cities": [
+            {
+              "name": "Zagreb",
+              "lat": 45.815,
+              "lng": 15.9819
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "CU",
       "name": "Cuba",
       "lat": 21.52,
@@ -504,6 +1318,28 @@
               "name": "Havana",
               "lat": 23.1136,
               "lng": -82.3666
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CW",
+      "name": "Curacao",
+      "continent": "North America",
+      "lat": 12.1224,
+      "lng": -68.8824,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Willemstad",
+          "lat": 12.1224,
+          "lng": -68.8824,
+          "cities": [
+            {
+              "name": "Willemstad",
+              "lat": 12.1224,
+              "lng": -68.8824
             }
           ]
         }
@@ -576,6 +1412,50 @@
       "continent": "Europe"
     },
     {
+      "code": "DJ",
+      "name": "Djibouti",
+      "continent": "Africa",
+      "lat": 11.8251,
+      "lng": 42.5903,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Djibouti",
+          "lat": 11.8251,
+          "lng": 42.5903,
+          "cities": [
+            {
+              "name": "Djibouti",
+              "lat": 11.8251,
+              "lng": 42.5903
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "DM",
+      "name": "Dominica",
+      "continent": "North America",
+      "lat": 15.3092,
+      "lng": -61.3794,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Roseau",
+          "lat": 15.3092,
+          "lng": -61.3794,
+          "cities": [
+            {
+              "name": "Roseau",
+              "lat": 15.3092,
+              "lng": -61.3794
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "DO",
       "name": "Dominican Republic",
       "lat": 18.74,
@@ -592,6 +1472,28 @@
               "name": "Santo Domingo",
               "lat": 18.4861,
               "lng": -69.9312
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CD",
+      "name": "DR Congo",
+      "continent": "Africa",
+      "lat": -4.4419,
+      "lng": 15.2663,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kinshasa",
+          "lat": -4.4419,
+          "lng": 15.2663,
+          "cities": [
+            {
+              "name": "Kinshasa",
+              "lat": -4.4419,
+              "lng": 15.2663
             }
           ]
         }
@@ -642,6 +1544,116 @@
       "continent": "Africa"
     },
     {
+      "code": "SV",
+      "name": "El Salvador",
+      "continent": "North America",
+      "lat": 13.6929,
+      "lng": -89.2182,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "San Salvador",
+          "lat": 13.6929,
+          "lng": -89.2182,
+          "cities": [
+            {
+              "name": "San Salvador",
+              "lat": 13.6929,
+              "lng": -89.2182
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GQ",
+      "name": "Equatorial Guinea",
+      "continent": "Africa",
+      "lat": 3.7504,
+      "lng": 8.7371,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Malabo",
+          "lat": 3.7504,
+          "lng": 8.7371,
+          "cities": [
+            {
+              "name": "Malabo",
+              "lat": 3.7504,
+              "lng": 8.7371
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ER",
+      "name": "Eritrea",
+      "continent": "Africa",
+      "lat": 15.3229,
+      "lng": 38.9251,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Asmara",
+          "lat": 15.3229,
+          "lng": 38.9251,
+          "cities": [
+            {
+              "name": "Asmara",
+              "lat": 15.3229,
+              "lng": 38.9251
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "EE",
+      "name": "Estonia",
+      "continent": "Europe",
+      "lat": 59.437,
+      "lng": 24.7536,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tallinn",
+          "lat": 59.437,
+          "lng": 24.7536,
+          "cities": [
+            {
+              "name": "Tallinn",
+              "lat": 59.437,
+              "lng": 24.7536
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SZ",
+      "name": "Eswatini",
+      "continent": "Africa",
+      "lat": -26.3054,
+      "lng": 31.1367,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Mbabane",
+          "lat": -26.3054,
+          "lng": 31.1367,
+          "cities": [
+            {
+              "name": "Mbabane",
+              "lat": -26.3054,
+              "lng": 31.1367
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "ET",
       "name": "Ethiopia",
       "lat": 9.15,
@@ -658,6 +1670,28 @@
               "name": "Addis Ababa",
               "lat": 9.032,
               "lng": 38.7469
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "FK",
+      "name": "Falkland Islands",
+      "continent": "South America",
+      "lat": -51.6977,
+      "lng": -57.8517,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Stanley",
+          "lat": -51.6977,
+          "lng": -57.8517,
+          "cities": [
+            {
+              "name": "Stanley",
+              "lat": -51.6977,
+              "lng": -57.8517
             }
           ]
         }
@@ -818,6 +1852,72 @@
       ]
     },
     {
+      "code": "GA",
+      "name": "Gabon",
+      "continent": "Africa",
+      "lat": 0.4162,
+      "lng": 9.4673,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Libreville",
+          "lat": 0.4162,
+          "lng": 9.4673,
+          "cities": [
+            {
+              "name": "Libreville",
+              "lat": 0.4162,
+              "lng": 9.4673
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GM",
+      "name": "Gambia",
+      "continent": "Africa",
+      "lat": 13.4549,
+      "lng": -16.579,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Banjul",
+          "lat": 13.4549,
+          "lng": -16.579,
+          "cities": [
+            {
+              "name": "Banjul",
+              "lat": 13.4549,
+              "lng": -16.579
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GE",
+      "name": "Georgia",
+      "continent": "Asia",
+      "lat": 41.7151,
+      "lng": 44.8271,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tbilisi",
+          "lat": 41.7151,
+          "lng": 44.8271,
+          "cities": [
+            {
+              "name": "Tbilisi",
+              "lat": 41.7151,
+              "lng": 44.8271
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "DE",
       "name": "Germany",
       "lat": 51.2,
@@ -945,6 +2045,28 @@
       ]
     },
     {
+      "code": "GD",
+      "name": "Grenada",
+      "continent": "North America",
+      "lat": 12.0561,
+      "lng": -61.7488,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Saint Georges",
+          "lat": 12.0561,
+          "lng": -61.7488,
+          "cities": [
+            {
+              "name": "Saint Georges",
+              "lat": 12.0561,
+              "lng": -61.7488
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "GP",
       "name": "Guadeloupe",
       "lat": 16.27,
@@ -989,6 +2111,160 @@
       ]
     },
     {
+      "code": "GT",
+      "name": "Guatemala",
+      "continent": "North America",
+      "lat": 14.6349,
+      "lng": -90.5069,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Guatemala City",
+          "lat": 14.6349,
+          "lng": -90.5069,
+          "cities": [
+            {
+              "name": "Guatemala City",
+              "lat": 14.6349,
+              "lng": -90.5069
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GG",
+      "name": "Guernsey",
+      "continent": "Europe",
+      "lat": 49.4542,
+      "lng": -2.5369,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Saint Peter Port",
+          "lat": 49.4542,
+          "lng": -2.5369,
+          "cities": [
+            {
+              "name": "Saint Peter Port",
+              "lat": 49.4542,
+              "lng": -2.5369
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GN",
+      "name": "Guinea",
+      "continent": "Africa",
+      "lat": 9.6412,
+      "lng": -13.5784,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Conakry",
+          "lat": 9.6412,
+          "lng": -13.5784,
+          "cities": [
+            {
+              "name": "Conakry",
+              "lat": 9.6412,
+              "lng": -13.5784
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GW",
+      "name": "Guinea-Bissau",
+      "continent": "Africa",
+      "lat": 11.8636,
+      "lng": -15.5977,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bissau",
+          "lat": 11.8636,
+          "lng": -15.5977,
+          "cities": [
+            {
+              "name": "Bissau",
+              "lat": 11.8636,
+              "lng": -15.5977
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GY",
+      "name": "Guyana",
+      "continent": "South America",
+      "lat": 6.8013,
+      "lng": -58.1551,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Georgetown",
+          "lat": 6.8013,
+          "lng": -58.1551,
+          "cities": [
+            {
+              "name": "Georgetown",
+              "lat": 6.8013,
+              "lng": -58.1551
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "HT",
+      "name": "Haiti",
+      "continent": "North America",
+      "lat": 18.5944,
+      "lng": -72.3074,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Port-au-Prince",
+          "lat": 18.5944,
+          "lng": -72.3074,
+          "cities": [
+            {
+              "name": "Port-au-Prince",
+              "lat": 18.5944,
+              "lng": -72.3074
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "HN",
+      "name": "Honduras",
+      "continent": "North America",
+      "lat": 14.0723,
+      "lng": -87.1921,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tegucigalpa",
+          "lat": 14.0723,
+          "lng": -87.1921,
+          "cities": [
+            {
+              "name": "Tegucigalpa",
+              "lat": 14.0723,
+              "lng": -87.1921
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "HK",
       "name": "Hong Kong",
       "lat": 22.32,
@@ -1009,6 +2285,28 @@
         }
       ],
       "continent": "Asia"
+    },
+    {
+      "code": "HU",
+      "name": "Hungary",
+      "continent": "Europe",
+      "lat": 47.4979,
+      "lng": 19.0402,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Budapest",
+          "lat": 47.4979,
+          "lng": 19.0402,
+          "cities": [
+            {
+              "name": "Budapest",
+              "lat": 47.4979,
+              "lng": 19.0402
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "IS",
@@ -1118,6 +2416,50 @@
       "continent": "Asia"
     },
     {
+      "code": "IR",
+      "name": "Iran",
+      "continent": "Asia",
+      "lat": 35.6892,
+      "lng": 51.389,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tehran",
+          "lat": 35.6892,
+          "lng": 51.389,
+          "cities": [
+            {
+              "name": "Tehran",
+              "lat": 35.6892,
+              "lng": 51.389
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "IQ",
+      "name": "Iraq",
+      "continent": "Asia",
+      "lat": 33.3152,
+      "lng": 44.3661,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Baghdad",
+          "lat": 33.3152,
+          "lng": 44.3661,
+          "cities": [
+            {
+              "name": "Baghdad",
+              "lat": 33.3152,
+              "lng": 44.3661
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "IE",
       "name": "Ireland",
       "lat": 53.4,
@@ -1138,6 +2480,28 @@
         }
       ],
       "continent": "Europe"
+    },
+    {
+      "code": "IM",
+      "name": "Isle of Man",
+      "continent": "Europe",
+      "lat": 54.1523,
+      "lng": -4.4861,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Douglas",
+          "lat": 54.1523,
+          "lng": -4.4861,
+          "cities": [
+            {
+              "name": "Douglas",
+              "lat": 54.1523,
+              "lng": -4.4861
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "IL",
@@ -1325,6 +2689,50 @@
       "continent": "Asia"
     },
     {
+      "code": "JE",
+      "name": "Jersey",
+      "continent": "Europe",
+      "lat": 49.1805,
+      "lng": -2.1031,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Saint Helier",
+          "lat": 49.1805,
+          "lng": -2.1031,
+          "cities": [
+            {
+              "name": "Saint Helier",
+              "lat": 49.1805,
+              "lng": -2.1031
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "JO",
+      "name": "Jordan",
+      "continent": "Asia",
+      "lat": 31.9454,
+      "lng": 35.9284,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Amman",
+          "lat": 31.9454,
+          "lng": 35.9284,
+          "cities": [
+            {
+              "name": "Amman",
+              "lat": 31.9454,
+              "lng": 35.9284
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "KZ",
       "name": "Kazakhstan",
       "lat": 48.02,
@@ -1369,6 +2777,270 @@
       "continent": "Africa"
     },
     {
+      "code": "KI",
+      "name": "Kiribati",
+      "continent": "Oceania",
+      "lat": 1.3292,
+      "lng": 172.978,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "South Tarawa",
+          "lat": 1.3292,
+          "lng": 172.978,
+          "cities": [
+            {
+              "name": "South Tarawa",
+              "lat": 1.3292,
+              "lng": 172.978
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "XK",
+      "name": "Kosovo",
+      "continent": "Europe",
+      "lat": 42.6629,
+      "lng": 21.1655,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Pristina",
+          "lat": 42.6629,
+          "lng": 21.1655,
+          "cities": [
+            {
+              "name": "Pristina",
+              "lat": 42.6629,
+              "lng": 21.1655
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "KW",
+      "name": "Kuwait",
+      "continent": "Asia",
+      "lat": 29.3759,
+      "lng": 47.9774,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kuwait City",
+          "lat": 29.3759,
+          "lng": 47.9774,
+          "cities": [
+            {
+              "name": "Kuwait City",
+              "lat": 29.3759,
+              "lng": 47.9774
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "KG",
+      "name": "Kyrgyzstan",
+      "continent": "Asia",
+      "lat": 42.8746,
+      "lng": 74.5698,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bishkek",
+          "lat": 42.8746,
+          "lng": 74.5698,
+          "cities": [
+            {
+              "name": "Bishkek",
+              "lat": 42.8746,
+              "lng": 74.5698
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LA",
+      "name": "Laos",
+      "continent": "Asia",
+      "lat": 17.9757,
+      "lng": 102.6331,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Vientiane",
+          "lat": 17.9757,
+          "lng": 102.6331,
+          "cities": [
+            {
+              "name": "Vientiane",
+              "lat": 17.9757,
+              "lng": 102.6331
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LV",
+      "name": "Latvia",
+      "continent": "Europe",
+      "lat": 56.9496,
+      "lng": 24.1052,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Riga",
+          "lat": 56.9496,
+          "lng": 24.1052,
+          "cities": [
+            {
+              "name": "Riga",
+              "lat": 56.9496,
+              "lng": 24.1052
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LB",
+      "name": "Lebanon",
+      "continent": "Asia",
+      "lat": 33.8938,
+      "lng": 35.5018,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Beirut",
+          "lat": 33.8938,
+          "lng": 35.5018,
+          "cities": [
+            {
+              "name": "Beirut",
+              "lat": 33.8938,
+              "lng": 35.5018
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LS",
+      "name": "Lesotho",
+      "continent": "Africa",
+      "lat": -29.3151,
+      "lng": 27.4869,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Maseru",
+          "lat": -29.3151,
+          "lng": 27.4869,
+          "cities": [
+            {
+              "name": "Maseru",
+              "lat": -29.3151,
+              "lng": 27.4869
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LR",
+      "name": "Liberia",
+      "continent": "Africa",
+      "lat": 6.3156,
+      "lng": -10.8074,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Monrovia",
+          "lat": 6.3156,
+          "lng": -10.8074,
+          "cities": [
+            {
+              "name": "Monrovia",
+              "lat": 6.3156,
+              "lng": -10.8074
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LY",
+      "name": "Libya",
+      "continent": "Africa",
+      "lat": 32.8872,
+      "lng": 13.1913,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tripoli",
+          "lat": 32.8872,
+          "lng": 13.1913,
+          "cities": [
+            {
+              "name": "Tripoli",
+              "lat": 32.8872,
+              "lng": 13.1913
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LI",
+      "name": "Liechtenstein",
+      "continent": "Europe",
+      "lat": 47.141,
+      "lng": 9.5209,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Vaduz",
+          "lat": 47.141,
+          "lng": 9.5209,
+          "cities": [
+            {
+              "name": "Vaduz",
+              "lat": 47.141,
+              "lng": 9.5209
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LT",
+      "name": "Lithuania",
+      "continent": "Europe",
+      "lat": 54.6872,
+      "lng": 25.2797,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Vilnius",
+          "lat": 54.6872,
+          "lng": 25.2797,
+          "cities": [
+            {
+              "name": "Vilnius",
+              "lat": 54.6872,
+              "lng": 25.2797
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "LU",
       "name": "Luxembourg",
       "lat": 49.82,
@@ -1391,6 +3063,28 @@
       ]
     },
     {
+      "code": "MO",
+      "name": "Macao",
+      "continent": "Asia",
+      "lat": 22.1987,
+      "lng": 113.5439,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Macao",
+          "lat": 22.1987,
+          "lng": 113.5439,
+          "cities": [
+            {
+              "name": "Macao",
+              "lat": 22.1987,
+              "lng": 113.5439
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "MG",
       "name": "Madagascar",
       "lat": -18.77,
@@ -1407,6 +3101,28 @@
               "name": "Antananarivo",
               "lat": -18.8792,
               "lng": 47.5079
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MW",
+      "name": "Malawi",
+      "continent": "Africa",
+      "lat": -13.9626,
+      "lng": 33.7741,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Lilongwe",
+          "lat": -13.9626,
+          "lng": 33.7741,
+          "cities": [
+            {
+              "name": "Lilongwe",
+              "lat": -13.9626,
+              "lng": 33.7741
             }
           ]
         }
@@ -1447,6 +3163,50 @@
       "continent": "Asia"
     },
     {
+      "code": "MV",
+      "name": "Maldives",
+      "continent": "Asia",
+      "lat": 4.1755,
+      "lng": 73.5093,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Male",
+          "lat": 4.1755,
+          "lng": 73.5093,
+          "cities": [
+            {
+              "name": "Male",
+              "lat": 4.1755,
+              "lng": 73.5093
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ML",
+      "name": "Mali",
+      "continent": "Africa",
+      "lat": 12.6392,
+      "lng": -8.0029,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bamako",
+          "lat": 12.6392,
+          "lng": -8.0029,
+          "cities": [
+            {
+              "name": "Bamako",
+              "lat": 12.6392,
+              "lng": -8.0029
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "MT",
       "name": "Malta",
       "lat": 35.94,
@@ -1463,6 +3223,28 @@
               "name": "Valletta",
               "lat": 35.8989,
               "lng": 14.5146
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MH",
+      "name": "Marshall Islands",
+      "continent": "Oceania",
+      "lat": 7.1164,
+      "lng": 171.185,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Majuro",
+          "lat": 7.1164,
+          "lng": 171.185,
+          "cities": [
+            {
+              "name": "Majuro",
+              "lat": 7.1164,
+              "lng": 171.185
             }
           ]
         }
@@ -1491,6 +3273,28 @@
       ]
     },
     {
+      "code": "MR",
+      "name": "Mauritania",
+      "continent": "Africa",
+      "lat": 18.0735,
+      "lng": -15.9582,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Nouakchott",
+          "lat": 18.0735,
+          "lng": -15.9582,
+          "cities": [
+            {
+              "name": "Nouakchott",
+              "lat": 18.0735,
+              "lng": -15.9582
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "MU",
       "name": "Mauritius",
       "lat": -20.35,
@@ -1507,6 +3311,28 @@
               "name": "Port Louis",
               "lat": -20.1609,
               "lng": 57.5012
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "YT",
+      "name": "Mayotte",
+      "continent": "Africa",
+      "lat": -12.7806,
+      "lng": 45.2278,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Mamoudzou",
+          "lat": -12.7806,
+          "lng": 45.2278,
+          "cities": [
+            {
+              "name": "Mamoudzou",
+              "lat": -12.7806,
+              "lng": 45.2278
             }
           ]
         }
@@ -1547,6 +3373,72 @@
       "continent": "North America"
     },
     {
+      "code": "FM",
+      "name": "Micronesia",
+      "continent": "Oceania",
+      "lat": 6.9248,
+      "lng": 158.161,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Palikir",
+          "lat": 6.9248,
+          "lng": 158.161,
+          "cities": [
+            {
+              "name": "Palikir",
+              "lat": 6.9248,
+              "lng": 158.161
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MD",
+      "name": "Moldova",
+      "continent": "Europe",
+      "lat": 47.0105,
+      "lng": 28.8638,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Chisinau",
+          "lat": 47.0105,
+          "lng": 28.8638,
+          "cities": [
+            {
+              "name": "Chisinau",
+              "lat": 47.0105,
+              "lng": 28.8638
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MC",
+      "name": "Monaco",
+      "continent": "Europe",
+      "lat": 43.7384,
+      "lng": 7.4246,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Monaco",
+          "lat": 43.7384,
+          "lng": 7.4246,
+          "cities": [
+            {
+              "name": "Monaco",
+              "lat": 43.7384,
+              "lng": 7.4246
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "MN",
       "name": "Mongolia",
       "lat": 46.86,
@@ -1563,6 +3455,50 @@
               "name": "Ulaanbaatar",
               "lat": 47.8864,
               "lng": 106.9057
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ME",
+      "name": "Montenegro",
+      "continent": "Europe",
+      "lat": 42.4304,
+      "lng": 19.2594,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Podgorica",
+          "lat": 42.4304,
+          "lng": 19.2594,
+          "cities": [
+            {
+              "name": "Podgorica",
+              "lat": 42.4304,
+              "lng": 19.2594
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MS",
+      "name": "Montserrat",
+      "continent": "North America",
+      "lat": 16.7065,
+      "lng": -62.2158,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Plymouth",
+          "lat": 16.7065,
+          "lng": -62.2158,
+          "cities": [
+            {
+              "name": "Plymouth",
+              "lat": 16.7065,
+              "lng": -62.2158
             }
           ]
         }
@@ -1619,6 +3555,50 @@
               "name": "Yangon",
               "lat": 16.8661,
               "lng": 96.1951
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "NA",
+      "name": "Namibia",
+      "continent": "Africa",
+      "lat": -22.5609,
+      "lng": 17.0658,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Windhoek",
+          "lat": -22.5609,
+          "lng": 17.0658,
+          "cities": [
+            {
+              "name": "Windhoek",
+              "lat": -22.5609,
+              "lng": 17.0658
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "NR",
+      "name": "Nauru",
+      "continent": "Oceania",
+      "lat": -0.5477,
+      "lng": 166.9209,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Yaren",
+          "lat": -0.5477,
+          "lng": 166.9209,
+          "cities": [
+            {
+              "name": "Yaren",
+              "lat": -0.5477,
+              "lng": 166.9209
             }
           ]
         }
@@ -1737,6 +3717,50 @@
       "continent": "Oceania"
     },
     {
+      "code": "NI",
+      "name": "Nicaragua",
+      "continent": "North America",
+      "lat": 12.115,
+      "lng": -86.2362,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Managua",
+          "lat": 12.115,
+          "lng": -86.2362,
+          "cities": [
+            {
+              "name": "Managua",
+              "lat": 12.115,
+              "lng": -86.2362
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "NE",
+      "name": "Niger",
+      "continent": "Africa",
+      "lat": 13.5116,
+      "lng": 2.1254,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Niamey",
+          "lat": 13.5116,
+          "lng": 2.1254,
+          "cities": [
+            {
+              "name": "Niamey",
+              "lat": 13.5116,
+              "lng": 2.1254
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "NG",
       "name": "Nigeria",
       "lat": 9.1,
@@ -1771,6 +3795,94 @@
       "continent": "Africa"
     },
     {
+      "code": "NU",
+      "name": "Niue",
+      "continent": "Oceania",
+      "lat": -19.0544,
+      "lng": -169.918,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Alofi",
+          "lat": -19.0544,
+          "lng": -169.918,
+          "cities": [
+            {
+              "name": "Alofi",
+              "lat": -19.0544,
+              "lng": -169.918
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "NF",
+      "name": "Norfolk Island",
+      "continent": "Oceania",
+      "lat": -29.056,
+      "lng": 167.96,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kingston",
+          "lat": -29.056,
+          "lng": 167.96,
+          "cities": [
+            {
+              "name": "Kingston",
+              "lat": -29.056,
+              "lng": 167.96
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MK",
+      "name": "North Macedonia",
+      "continent": "Europe",
+      "lat": 41.9981,
+      "lng": 21.4254,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Skopje",
+          "lat": 41.9981,
+          "lng": 21.4254,
+          "cities": [
+            {
+              "name": "Skopje",
+              "lat": 41.9981,
+              "lng": 21.4254
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MP",
+      "name": "Northern Mariana Islands",
+      "continent": "Oceania",
+      "lat": 15.1778,
+      "lng": 145.75,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Saipan",
+          "lat": 15.1778,
+          "lng": 145.75,
+          "cities": [
+            {
+              "name": "Saipan",
+              "lat": 15.1778,
+              "lng": 145.75
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "NO",
       "name": "Norway",
       "lat": 64,
@@ -1791,6 +3903,28 @@
         }
       ],
       "continent": "Europe"
+    },
+    {
+      "code": "OM",
+      "name": "Oman",
+      "continent": "Asia",
+      "lat": 23.588,
+      "lng": 58.3829,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Muscat",
+          "lat": 23.588,
+          "lng": 58.3829,
+          "cities": [
+            {
+              "name": "Muscat",
+              "lat": 23.588,
+              "lng": 58.3829
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "PK",
@@ -1837,6 +3971,28 @@
       ]
     },
     {
+      "code": "PS",
+      "name": "Palestine",
+      "continent": "Asia",
+      "lat": 31.9038,
+      "lng": 35.2034,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Ramallah",
+          "lat": 31.9038,
+          "lng": 35.2034,
+          "cities": [
+            {
+              "name": "Ramallah",
+              "lat": 31.9038,
+              "lng": 35.2034
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "PA",
       "name": "Panama",
       "lat": 8.54,
@@ -1875,6 +4031,28 @@
               "name": "Port Moresby",
               "lat": -9.4438,
               "lng": 147.1803
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "PY",
+      "name": "Paraguay",
+      "continent": "South America",
+      "lat": -25.2637,
+      "lng": -57.5759,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Asuncion",
+          "lat": -25.2637,
+          "lng": -57.5759,
+          "cities": [
+            {
+              "name": "Asuncion",
+              "lat": -25.2637,
+              "lng": -57.5759
             }
           ]
         }
@@ -1935,6 +4113,28 @@
         }
       ],
       "continent": "Asia"
+    },
+    {
+      "code": "PN",
+      "name": "Pitcairn Islands",
+      "continent": "Oceania",
+      "lat": -25.0662,
+      "lng": -130.1,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Adamstown",
+          "lat": -25.0662,
+          "lng": -130.1,
+          "cities": [
+            {
+              "name": "Adamstown",
+              "lat": -25.0662,
+              "lng": -130.1
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "PL",
@@ -2003,6 +4203,28 @@
       ]
     },
     {
+      "code": "QA",
+      "name": "Qatar",
+      "continent": "Asia",
+      "lat": 25.2854,
+      "lng": 51.531,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Doha",
+          "lat": 25.2854,
+          "lng": 51.531,
+          "cities": [
+            {
+              "name": "Doha",
+              "lat": 25.2854,
+              "lng": 51.531
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "RE",
       "name": "Réunion",
       "lat": -21.12,
@@ -2019,6 +4241,28 @@
               "name": "Saint-Denis",
               "lat": -20.8823,
               "lng": 55.4504
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "RO",
+      "name": "Romania",
+      "continent": "Europe",
+      "lat": 44.4268,
+      "lng": 26.1025,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bucharest",
+          "lat": 44.4268,
+          "lng": 26.1025,
+          "cities": [
+            {
+              "name": "Bucharest",
+              "lat": 44.4268,
+              "lng": 26.1025
             }
           ]
         }
@@ -2059,6 +4303,182 @@
       "continent": "Europe"
     },
     {
+      "code": "RW",
+      "name": "Rwanda",
+      "continent": "Africa",
+      "lat": -1.9441,
+      "lng": 30.0619,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kigali",
+          "lat": -1.9441,
+          "lng": 30.0619,
+          "cities": [
+            {
+              "name": "Kigali",
+              "lat": -1.9441,
+              "lng": 30.0619
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "BL",
+      "name": "Saint Barthelemy",
+      "continent": "North America",
+      "lat": 17.8969,
+      "lng": -62.8498,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Gustavia",
+          "lat": 17.8969,
+          "lng": -62.8498,
+          "cities": [
+            {
+              "name": "Gustavia",
+              "lat": 17.8969,
+              "lng": -62.8498
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SH",
+      "name": "Saint Helena",
+      "continent": "Africa",
+      "lat": -15.926,
+      "lng": -5.72,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Jamestown",
+          "lat": -15.926,
+          "lng": -5.72,
+          "cities": [
+            {
+              "name": "Jamestown",
+              "lat": -15.926,
+              "lng": -5.72
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "KN",
+      "name": "Saint Kitts and Nevis",
+      "continent": "North America",
+      "lat": 17.3026,
+      "lng": -62.7177,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Basseterre",
+          "lat": 17.3026,
+          "lng": -62.7177,
+          "cities": [
+            {
+              "name": "Basseterre",
+              "lat": 17.3026,
+              "lng": -62.7177
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "LC",
+      "name": "Saint Lucia",
+      "continent": "North America",
+      "lat": 14.0101,
+      "lng": -60.9875,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Castries",
+          "lat": 14.0101,
+          "lng": -60.9875,
+          "cities": [
+            {
+              "name": "Castries",
+              "lat": 14.0101,
+              "lng": -60.9875
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MF",
+      "name": "Saint Martin",
+      "continent": "North America",
+      "lat": 18.0708,
+      "lng": -63.0501,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Marigot",
+          "lat": 18.0708,
+          "lng": -63.0501,
+          "cities": [
+            {
+              "name": "Marigot",
+              "lat": 18.0708,
+              "lng": -63.0501
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "PM",
+      "name": "Saint Pierre and Miquelon",
+      "continent": "North America",
+      "lat": 46.7811,
+      "lng": -56.1711,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Saint-Pierre",
+          "lat": 46.7811,
+          "lng": -56.1711,
+          "cities": [
+            {
+              "name": "Saint-Pierre",
+              "lat": 46.7811,
+              "lng": -56.1711
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "VC",
+      "name": "Saint Vincent and the Grenadines",
+      "continent": "North America",
+      "lat": 13.16,
+      "lng": -61.2248,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kingstown",
+          "lat": 13.16,
+          "lng": -61.2248,
+          "cities": [
+            {
+              "name": "Kingstown",
+              "lat": 13.16,
+              "lng": -61.2248
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "WS",
       "name": "Samoa",
       "lat": -13.76,
@@ -2075,6 +4495,50 @@
               "name": "Apia",
               "lat": -13.8333,
               "lng": -171.7667
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SM",
+      "name": "San Marino",
+      "continent": "Europe",
+      "lat": 43.9424,
+      "lng": 12.4578,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "San Marino",
+          "lat": 43.9424,
+          "lng": 12.4578,
+          "cities": [
+            {
+              "name": "San Marino",
+              "lat": 43.9424,
+              "lng": 12.4578
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ST",
+      "name": "Sao Tome and Principe",
+      "continent": "Africa",
+      "lat": 0.3389,
+      "lng": 6.7313,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Sao Tome",
+          "lat": 0.3389,
+          "lng": 6.7313,
+          "cities": [
+            {
+              "name": "Sao Tome",
+              "lat": 0.3389,
+              "lng": 6.7313
             }
           ]
         }
@@ -2103,6 +4567,50 @@
       "continent": "Asia"
     },
     {
+      "code": "SN",
+      "name": "Senegal",
+      "continent": "Africa",
+      "lat": 14.7167,
+      "lng": -17.4677,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Dakar",
+          "lat": 14.7167,
+          "lng": -17.4677,
+          "cities": [
+            {
+              "name": "Dakar",
+              "lat": 14.7167,
+              "lng": -17.4677
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "RS",
+      "name": "Serbia",
+      "continent": "Europe",
+      "lat": 44.7866,
+      "lng": 20.4489,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Belgrade",
+          "lat": 44.7866,
+          "lng": 20.4489,
+          "cities": [
+            {
+              "name": "Belgrade",
+              "lat": 44.7866,
+              "lng": 20.4489
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "SC",
       "name": "Seychelles",
       "lat": -4.68,
@@ -2119,6 +4627,28 @@
               "name": "Victoria",
               "lat": -4.6191,
               "lng": 55.4513
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SL",
+      "name": "Sierra Leone",
+      "continent": "Africa",
+      "lat": 8.4657,
+      "lng": -13.2317,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Freetown",
+          "lat": 8.4657,
+          "lng": -13.2317,
+          "cities": [
+            {
+              "name": "Freetown",
+              "lat": 8.4657,
+              "lng": -13.2317
             }
           ]
         }
@@ -2147,6 +4677,72 @@
       "continent": "Asia"
     },
     {
+      "code": "SX",
+      "name": "Sint Maarten",
+      "continent": "North America",
+      "lat": 18.0425,
+      "lng": -63.0548,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Philipsburg",
+          "lat": 18.0425,
+          "lng": -63.0548,
+          "cities": [
+            {
+              "name": "Philipsburg",
+              "lat": 18.0425,
+              "lng": -63.0548
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SK",
+      "name": "Slovakia",
+      "continent": "Europe",
+      "lat": 48.1486,
+      "lng": 17.1077,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Bratislava",
+          "lat": 48.1486,
+          "lng": 17.1077,
+          "cities": [
+            {
+              "name": "Bratislava",
+              "lat": 48.1486,
+              "lng": 17.1077
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SI",
+      "name": "Slovenia",
+      "continent": "Europe",
+      "lat": 46.0569,
+      "lng": 14.5058,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Ljubljana",
+          "lat": 46.0569,
+          "lng": 14.5058,
+          "cities": [
+            {
+              "name": "Ljubljana",
+              "lat": 46.0569,
+              "lng": 14.5058
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "SB",
       "name": "Solomon Islands",
       "lat": -9.65,
@@ -2163,6 +4759,28 @@
               "name": "Honiara",
               "lat": -9.4456,
               "lng": 159.9729
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SO",
+      "name": "Somalia",
+      "continent": "Africa",
+      "lat": 2.0469,
+      "lng": 45.3182,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Mogadishu",
+          "lat": 2.0469,
+          "lng": 45.3182,
+          "cities": [
+            {
+              "name": "Mogadishu",
+              "lat": 2.0469,
+              "lng": 45.3182
             }
           ]
         }
@@ -2247,6 +4865,28 @@
       "continent": "Asia"
     },
     {
+      "code": "SS",
+      "name": "South Sudan",
+      "continent": "Africa",
+      "lat": 4.8594,
+      "lng": 31.5713,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Juba",
+          "lat": 4.8594,
+          "lng": 31.5713,
+          "cities": [
+            {
+              "name": "Juba",
+              "lat": 4.8594,
+              "lng": 31.5713
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "ES",
       "name": "Spain",
       "lat": 40.4,
@@ -2297,6 +4937,72 @@
               "name": "Colombo",
               "lat": 6.9271,
               "lng": 79.8612
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SD",
+      "name": "Sudan",
+      "continent": "Africa",
+      "lat": 15.5007,
+      "lng": 32.5599,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Khartoum",
+          "lat": 15.5007,
+          "lng": 32.5599,
+          "cities": [
+            {
+              "name": "Khartoum",
+              "lat": 15.5007,
+              "lng": 32.5599
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SR",
+      "name": "Suriname",
+      "continent": "South America",
+      "lat": 5.852,
+      "lng": -55.2038,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Paramaribo",
+          "lat": 5.852,
+          "lng": -55.2038,
+          "cities": [
+            {
+              "name": "Paramaribo",
+              "lat": 5.852,
+              "lng": -55.2038
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SJ",
+      "name": "Svalbard",
+      "continent": "Europe",
+      "lat": 78.2232,
+      "lng": 15.6469,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Longyearbyen",
+          "lat": 78.2232,
+          "lng": 15.6469,
+          "cities": [
+            {
+              "name": "Longyearbyen",
+              "lat": 78.2232,
+              "lng": 15.6469
             }
           ]
         }
@@ -2359,6 +5065,28 @@
       "continent": "Europe"
     },
     {
+      "code": "SY",
+      "name": "Syria",
+      "continent": "Asia",
+      "lat": 33.5138,
+      "lng": 36.2765,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Damascus",
+          "lat": 33.5138,
+          "lng": 36.2765,
+          "cities": [
+            {
+              "name": "Damascus",
+              "lat": 33.5138,
+              "lng": 36.2765
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "TW",
       "name": "Taiwan",
       "lat": 23.7,
@@ -2391,6 +5119,28 @@
         }
       ],
       "continent": "Asia"
+    },
+    {
+      "code": "TJ",
+      "name": "Tajikistan",
+      "continent": "Asia",
+      "lat": 38.5598,
+      "lng": 68.7738,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Dushanbe",
+          "lat": 38.5598,
+          "lng": 68.7738,
+          "cities": [
+            {
+              "name": "Dushanbe",
+              "lat": 38.5598,
+              "lng": 68.7738
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "TZ",
@@ -2449,6 +5199,72 @@
       "continent": "Asia"
     },
     {
+      "code": "TL",
+      "name": "Timor-Leste",
+      "continent": "Asia",
+      "lat": -8.5569,
+      "lng": 125.5603,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Dili",
+          "lat": -8.5569,
+          "lng": 125.5603,
+          "cities": [
+            {
+              "name": "Dili",
+              "lat": -8.5569,
+              "lng": 125.5603
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TG",
+      "name": "Togo",
+      "continent": "Africa",
+      "lat": 6.1725,
+      "lng": 1.2314,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Lome",
+          "lat": 6.1725,
+          "lng": 1.2314,
+          "cities": [
+            {
+              "name": "Lome",
+              "lat": 6.1725,
+              "lng": 1.2314
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TK",
+      "name": "Tokelau",
+      "continent": "Oceania",
+      "lat": -9.2002,
+      "lng": -171.848,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Fakaofo",
+          "lat": -9.2002,
+          "lng": -171.848,
+          "cities": [
+            {
+              "name": "Fakaofo",
+              "lat": -9.2002,
+              "lng": -171.848
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "TO",
       "name": "Tonga",
       "lat": -21.18,
@@ -2493,6 +5309,28 @@
       ]
     },
     {
+      "code": "TN",
+      "name": "Tunisia",
+      "continent": "Africa",
+      "lat": 36.8065,
+      "lng": 10.1815,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tunis",
+          "lat": 36.8065,
+          "lng": 10.1815,
+          "cities": [
+            {
+              "name": "Tunis",
+              "lat": 36.8065,
+              "lng": 10.1815
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "TR",
       "name": "Turkey",
       "lat": 39,
@@ -2525,6 +5363,94 @@
         }
       ],
       "continent": "Asia"
+    },
+    {
+      "code": "TM",
+      "name": "Turkmenistan",
+      "continent": "Asia",
+      "lat": 37.9601,
+      "lng": 58.3261,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Ashgabat",
+          "lat": 37.9601,
+          "lng": 58.3261,
+          "cities": [
+            {
+              "name": "Ashgabat",
+              "lat": 37.9601,
+              "lng": 58.3261
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TC",
+      "name": "Turks and Caicos",
+      "continent": "North America",
+      "lat": 21.4608,
+      "lng": -71.1419,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Cockburn Town",
+          "lat": 21.4608,
+          "lng": -71.1419,
+          "cities": [
+            {
+              "name": "Cockburn Town",
+              "lat": 21.4608,
+              "lng": -71.1419
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TV",
+      "name": "Tuvalu",
+      "continent": "Oceania",
+      "lat": -8.5243,
+      "lng": 179.194,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Funafuti",
+          "lat": -8.5243,
+          "lng": 179.194,
+          "cities": [
+            {
+              "name": "Funafuti",
+              "lat": -8.5243,
+              "lng": 179.194
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "UG",
+      "name": "Uganda",
+      "continent": "Africa",
+      "lat": 0.3476,
+      "lng": 32.5825,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Kampala",
+          "lat": 0.3476,
+          "lng": 32.5825,
+          "cities": [
+            {
+              "name": "Kampala",
+              "lat": 0.3476,
+              "lng": 32.5825
+            }
+          ]
+        }
+      ]
     },
     {
       "code": "UA",
@@ -2744,6 +5670,72 @@
       ]
     },
     {
+      "code": "UM",
+      "name": "US Minor Outlying Islands",
+      "continent": "Oceania",
+      "lat": 19.2823,
+      "lng": 166.647,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Wake Island",
+          "lat": 19.2823,
+          "lng": 166.647,
+          "cities": [
+            {
+              "name": "Wake Island",
+              "lat": 19.2823,
+              "lng": 166.647
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "VI",
+      "name": "US Virgin Islands",
+      "continent": "North America",
+      "lat": 18.3419,
+      "lng": -64.9307,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Charlotte Amalie",
+          "lat": 18.3419,
+          "lng": -64.9307,
+          "cities": [
+            {
+              "name": "Charlotte Amalie",
+              "lat": 18.3419,
+              "lng": -64.9307
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "UZ",
+      "name": "Uzbekistan",
+      "continent": "Asia",
+      "lat": 41.2995,
+      "lng": 69.2401,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Tashkent",
+          "lat": 41.2995,
+          "lng": 69.2401,
+          "cities": [
+            {
+              "name": "Tashkent",
+              "lat": 41.2995,
+              "lng": 69.2401
+            }
+          ]
+        }
+      ]
+    },
+    {
       "code": "VU",
       "name": "Vanuatu",
       "lat": -15.38,
@@ -2760,6 +5752,50 @@
               "name": "Port Vila",
               "lat": -17.7333,
               "lng": 168.3273
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "VA",
+      "name": "Vatican City",
+      "continent": "Europe",
+      "lat": 41.9029,
+      "lng": 12.4534,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Vatican City",
+          "lat": 41.9029,
+          "lng": 12.4534,
+          "cities": [
+            {
+              "name": "Vatican City",
+              "lat": 41.9029,
+              "lng": 12.4534
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "VE",
+      "name": "Venezuela",
+      "continent": "South America",
+      "lat": 10.4806,
+      "lng": -66.9036,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Caracas",
+          "lat": 10.4806,
+          "lng": -66.9036,
+          "cities": [
+            {
+              "name": "Caracas",
+              "lat": 10.4806,
+              "lng": -66.9036
             }
           ]
         }
@@ -2798,6 +5834,116 @@
         }
       ],
       "continent": "Asia"
+    },
+    {
+      "code": "WF",
+      "name": "Wallis and Futuna",
+      "continent": "Oceania",
+      "lat": -13.2825,
+      "lng": -176.176,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Mata-Utu",
+          "lat": -13.2825,
+          "lng": -176.176,
+          "cities": [
+            {
+              "name": "Mata-Utu",
+              "lat": -13.2825,
+              "lng": -176.176
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "EH",
+      "name": "Western Sahara",
+      "continent": "Africa",
+      "lat": 27.1253,
+      "lng": -13.1625,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Laayoune",
+          "lat": 27.1253,
+          "lng": -13.1625,
+          "cities": [
+            {
+              "name": "Laayoune",
+              "lat": 27.1253,
+              "lng": -13.1625
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "YE",
+      "name": "Yemen",
+      "continent": "Asia",
+      "lat": 15.3694,
+      "lng": 44.191,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Sanaa",
+          "lat": 15.3694,
+          "lng": 44.191,
+          "cities": [
+            {
+              "name": "Sanaa",
+              "lat": 15.3694,
+              "lng": 44.191
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ZM",
+      "name": "Zambia",
+      "continent": "Africa",
+      "lat": -15.3875,
+      "lng": 28.3228,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Lusaka",
+          "lat": -15.3875,
+          "lng": 28.3228,
+          "cities": [
+            {
+              "name": "Lusaka",
+              "lat": -15.3875,
+              "lng": 28.3228
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ZW",
+      "name": "Zimbabwe",
+      "continent": "Africa",
+      "lat": -17.8252,
+      "lng": 31.0335,
+      "zoom": 6.5,
+      "regions": [
+        {
+          "name": "Harare",
+          "lat": -17.8252,
+          "lng": 31.0335,
+          "cities": [
+            {
+              "name": "Harare",
+              "lat": -17.8252,
+              "lng": 31.0335
+            }
+          ]
+        }
+      ]
     }
   ]
 }

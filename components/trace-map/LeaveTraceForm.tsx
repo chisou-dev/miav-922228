@@ -9,6 +9,7 @@ import {
   type LocationCountry,
   type LocationCountryIndexEntry,
 } from "@/lib/locations/client";
+import { flagEmoji } from "@/lib/locations/flags";
 import { MAX_TRACE_MESSAGE_LENGTH, type TracePin } from "@/lib/trace/types";
 import {
   formatAuthError,
@@ -58,6 +59,7 @@ export function LeaveTraceForm({
   const [traceEnabled, setTraceEnabled] = useState(true);
   const [continent, setContinent] = useState<string>("");
   const [countryFilter, setCountryFilter] = useState("");
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   useEffect(() => {
     if (mine?.message) setMessage(mine.message);
@@ -84,6 +86,7 @@ export function LeaveTraceForm({
     const entry = locationIndex.find((c) => c.name === draft.country);
     if (!entry) return;
     if (entry.continent) setContinent(entry.continent);
+    setStep(3);
     let cancelled = false;
     void (async () => {
       const next = await fetchCountryLocations(entry.path || entry.code);
@@ -98,15 +101,21 @@ export function LeaveTraceForm({
     ? countriesInContinent(locationIndex, continent)
     : [];
   const filteredCountries = countryFilter.trim()
-    ? continentCountries.filter((c) =>
-        c.name.toLowerCase().includes(countryFilter.trim().toLowerCase()),
-      )
+    ? continentCountries.filter((c) => {
+        const q = countryFilter.trim().toLowerCase();
+        return (
+          c.name.toLowerCase().includes(q) ||
+          c.code.toLowerCase().includes(q)
+        );
+      })
     : continentCountries;
 
   const regions = catalog?.regions || [];
   const region =
     regions.find((r) => r.name === draft.region) || regions[0] || null;
   const cities = region?.cities || [];
+  const selectedEntry = locationIndex.find((c) => c.name === draft.country);
+  const selectedFlag = selectedEntry ? flagEmoji(selectedEntry.code) : "";
 
   const authType = getTraceAuthType(user);
   const configured = isFirebaseClientConfigured();
@@ -116,6 +125,31 @@ export function LeaveTraceForm({
   function selectContinent(name: string) {
     setContinent(name);
     setCountryFilter("");
+    setCatalog(null);
+    setStep(2);
+    onDraftChange({
+      country: "",
+      region: "",
+      city: "",
+      locationId: undefined,
+    });
+  }
+
+  function goBackToContinent() {
+    setStep(1);
+    setCountryFilter("");
+    setCatalog(null);
+    setContinent("");
+    onDraftChange({
+      country: "",
+      region: "",
+      city: "",
+      locationId: undefined,
+    });
+  }
+
+  function goBackToCountry() {
+    setStep(2);
     setCatalog(null);
     onDraftChange({
       country: "",
@@ -127,8 +161,7 @@ export function LeaveTraceForm({
 
   async function setCountry(name: string) {
     const entry =
-      locationIndex.find((c) => c.name === name) ||
-      continentCountries[0];
+      locationIndex.find((c) => c.name === name) || continentCountries[0];
     if (!entry) return;
     if (entry.continent) setContinent(entry.continent);
     const nextCatalog = await fetchCountryLocations(entry.path || entry.code);
@@ -143,6 +176,7 @@ export function LeaveTraceForm({
       locationId: nextCity.locationId,
     };
     onDraftChange(next);
+    setStep(3);
     onFocusLocation({
       lat: nextCity.lat,
       lng: nextCity.lng,
@@ -545,53 +579,83 @@ export function LeaveTraceForm({
           <p className="mt-3 text-[0.78rem] text-[var(--map-accent)]">{authNote}</p>
         ) : null}
 
-        <div className="mt-8 space-y-8">
-          <div>
-            <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-              Step 1 · Continent
-            </p>
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {CONTINENTS.map((item) => {
-                const active = continent === item.name;
-                return (
+        <div className="mt-8 space-y-6">
+          {draft.country ? (
+            <div className="border border-[var(--map-line)] bg-[#f7f9fb] px-4 py-4">
+              <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                Selected place
+              </p>
+              <p className="mt-2 text-[0.98rem] leading-[1.7] text-[var(--map-ink)]">
+                {selectedFlag ? (
+                  <span className="mr-2" aria-hidden>
+                    {selectedFlag}
+                  </span>
+                ) : null}
+                {[continent, draft.country, draft.region, draft.city]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              {draft.locationId ? (
+                <p className="mt-1 text-[0.72rem] tracking-[0.06em] text-[var(--map-muted)]">
+                  {draft.locationId}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {step === 1 ? (
+            <div>
+              <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                Step 1 · Continent
+              </p>
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {CONTINENTS.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => selectContinent(item.name)}
-                    className={[
-                      "min-h-[52px] cursor-pointer border px-4 py-3 text-left text-[0.92rem] tracking-[0.04em] transition-colors",
-                      active
-                        ? "border-[#9bb0c2] bg-[#e8eef4] text-[var(--map-ink)]"
-                        : "border-[var(--map-line)] bg-transparent text-[var(--map-muted)]",
-                    ].join(" ")}
+                    className="min-h-[52px] cursor-pointer border border-[var(--map-line)] px-4 py-3 text-left text-[0.92rem] tracking-[0.04em] text-[var(--map-muted)] transition-colors hover:bg-[#f7f9fb]"
                   >
                     <span className="mr-2" aria-hidden>
                       {item.emoji}
                     </span>
                     {item.name}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          {continent ? (
+          {step === 2 && continent ? (
             <div>
-              <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-                Step 2 · Country / Territory
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                  Step 2 · Country / Territory
+                </p>
+                <button
+                  type="button"
+                  onClick={goBackToContinent}
+                  className="min-h-[40px] cursor-pointer text-[0.75rem] tracking-[0.1em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+                >
+                  ← Continent
+                </button>
+              </div>
+              <p className="mt-2 text-[0.85rem] leading-[1.7] text-[var(--map-ink)]">
+                {CONTINENTS.find((c) => c.name === continent)?.emoji}{" "}
+                {continent}
               </p>
-              <p className="mt-2 text-[0.8rem] leading-[1.7] text-[var(--map-muted)]">
-                {continent} — islands and territories are listed alongside
-                countries.
+              <p className="mt-1 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
+                Islands and territories are listed with countries — every
+                presence matters.
               </p>
               <input
                 type="search"
                 value={countryFilter}
                 onChange={(e) => setCountryFilter(e.target.value)}
-                placeholder="Search within this continent"
-                className="mt-4 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
+                placeholder="Search name or code (e.g. Iceland, IS)"
+                className="mt-4 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-3 text-[0.95rem] text-[var(--map-ink)] outline-none"
               />
-              <div className="mt-3 max-h-[240px] overflow-y-auto border border-[var(--map-line)]">
+              <div className="mt-3 max-h-[280px] overflow-y-auto border border-[var(--map-line)]">
                 {filteredCountries.length === 0 ? (
                   <p className="px-4 py-6 text-[0.85rem] text-[var(--map-muted)]">
                     No places match this search.
@@ -599,23 +663,24 @@ export function LeaveTraceForm({
                 ) : (
                   <ul className="divide-y divide-[var(--map-line)]">
                     {filteredCountries.map((c) => {
-                      const active = draft.country === c.name;
+                      const flag = flagEmoji(c.code);
                       return (
                         <li key={c.code}>
                           <button
                             type="button"
                             onClick={() => void setCountry(c.name)}
-                            className={[
-                              "flex min-h-[48px] w-full cursor-pointer items-center px-4 py-3 text-left text-[0.95rem] tracking-[0.02em]",
-                              active
-                                ? "bg-[#e8eef4] text-[var(--map-ink)]"
-                                : "text-[var(--map-muted)] hover:bg-[#f7f9fb]",
-                            ].join(" ")}
+                            className="flex min-h-[52px] w-full cursor-pointer items-center px-4 py-3 text-left text-[0.95rem] tracking-[0.02em] text-[var(--map-muted)] hover:bg-[#f7f9fb]"
                           >
-                            <span className="mr-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
-                              {c.code}
-                            </span>
-                            {c.name}
+                            {flag ? (
+                              <span className="mr-3 text-[1.1rem]" aria-hidden>
+                                {flag}
+                              </span>
+                            ) : (
+                              <span className="mr-3 w-6 text-[0.7rem] tracking-[0.08em]">
+                                {c.code}
+                              </span>
+                            )}
+                            <span className="text-[var(--map-ink)]">{c.name}</span>
                           </button>
                         </li>
                       );
@@ -626,11 +691,20 @@ export function LeaveTraceForm({
             </div>
           ) : null}
 
-          {draft.country && catalog ? (
+          {step === 3 && draft.country && catalog ? (
             <div>
-              <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-                Step 3 · Region / City
-              </p>
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
+                  Step 3 · Region / City
+                </p>
+                <button
+                  type="button"
+                  onClick={goBackToCountry}
+                  className="min-h-[40px] cursor-pointer text-[0.75rem] tracking-[0.1em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+                >
+                  ← Country
+                </button>
+              </div>
               <div className="mt-4 grid gap-6 sm:grid-cols-2">
                 <label className="block">
                   <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
@@ -639,7 +713,7 @@ export function LeaveTraceForm({
                   <select
                     value={draft.region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
+                    className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-3 text-[0.95rem] text-[var(--map-ink)] outline-none"
                   >
                     {regions.map((r) => (
                       <option key={r.name} value={r.name}>
@@ -655,7 +729,7 @@ export function LeaveTraceForm({
                   <select
                     value={draft.city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
+                    className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-3 text-[0.95rem] text-[var(--map-ink)] outline-none"
                   >
                     {cities.map((c) => (
                       <option key={c.locationId || c.name} value={c.name}>

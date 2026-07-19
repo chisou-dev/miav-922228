@@ -1,7 +1,7 @@
 /**
- * Enrich world.json with continent fields and merge extras.json.
- * Run: node scripts/enrich-world-locations.js
- * Then: npm run build:locations
+ * Enrich world.json with continent fields and merge extras.
+ * Existing country codes in world.json are never replaced (preserves regions/cities).
+ * Run via: npm run build:locations
  */
 const fs = require("fs");
 const path = require("path");
@@ -60,22 +60,49 @@ const CONTINENT_BY_CODE = {
   IL: "Asia",
 };
 
+function fromCompact(row) {
+  const [code, name, continent, capital, lat, lng] = row;
+  return {
+    code,
+    name,
+    continent,
+    lat,
+    lng,
+    zoom: 6.5,
+    regions: [
+      {
+        name: capital,
+        lat,
+        lng,
+        cities: [{ name: capital, lat, lng }],
+      },
+    ],
+  };
+}
+
 const worldPath = path.join("data", "locations", "world.json");
 const extrasPath = path.join("data", "locations", "extras.json");
+const compactPath = path.join("data", "locations", "extras-compact.js");
 
 const world = JSON.parse(fs.readFileSync(worldPath, "utf8"));
-const extras = JSON.parse(fs.readFileSync(extrasPath, "utf8"));
+const extrasJson = JSON.parse(fs.readFileSync(extrasPath, "utf8"));
+const compactRows = require(path.resolve(compactPath));
 
 const byCode = new Map();
+
+// Preserve existing entries first (keeps existing region/city names → same locationIds).
 for (const c of world.countries) {
-  const continent = CONTINENT_BY_CODE[c.code] || c.continent || "Asia";
+  const continent = c.continent || CONTINENT_BY_CODE[c.code] || "Asia";
   byCode.set(c.code, { ...c, continent });
 }
 
-for (const extra of extras) {
-  if (byCode.has(extra.code)) continue;
+function mergeExtra(extra) {
+  if (byCode.has(extra.code)) return;
   byCode.set(extra.code, extra);
 }
+
+for (const extra of extrasJson) mergeExtra(extra);
+for (const row of compactRows) mergeExtra(fromCompact(row));
 
 const countries = [...byCode.values()].sort((a, b) =>
   a.name.localeCompare(b.name),
@@ -84,7 +111,7 @@ const countries = [...byCode.values()].sort((a, b) =>
 world.countries = countries;
 world.description =
   "MIAV Location Database — countries, territories, capitals, and major cities with continent grouping. Expandable; separate from Trace data.";
-world.version = 2;
+world.version = 3;
 
 fs.writeFileSync(worldPath, JSON.stringify(world, null, 2) + "\n");
 console.log(
