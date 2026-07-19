@@ -9,6 +9,7 @@ import {
 } from "@/lib/trace/locations";
 import { MAX_TRACE_MESSAGE_LENGTH, type TracePin } from "@/lib/trace/types";
 import {
+  formatAuthError,
   getIdTokenOrNull,
   getTraceAuthType,
   signInTraceAnonymous,
@@ -44,6 +45,7 @@ export function LeaveTraceForm({
   const [message, setMessage] = useState(mine?.message || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authNote, setAuthNote] = useState<string | null>(null);
 
   const country = useMemo(
     () => findCountry(draft.country) || TRACE_COUNTRIES[0],
@@ -106,11 +108,38 @@ export function LeaveTraceForm({
   }
 
   async function ensureAuth(mode: "anonymous" | "google") {
-    if (mode === "anonymous") {
-      await signInTraceAnonymous();
-    } else {
-      await signInTraceGoogle();
+    setError(null);
+    setAuthNote(null);
+    setBusy(true);
+    try {
+      if (!configured) {
+        setError("Firebase is not configured.");
+        return;
+      }
+      if (mode === "anonymous") {
+        await signInTraceAnonymous();
+        setAuthNote("Signed in anonymously. You can leave your Trace.");
+      } else {
+        const result = await signInTraceGoogle();
+        if (result === null) {
+          setAuthNote("Redirecting to Google sign-in…");
+          return;
+        }
+        setAuthNote("Signed in with Google. You can leave your Trace.");
+      }
+    } catch (err) {
+      setError(formatAuthError(err));
+    } finally {
+      setBusy(false);
     }
+  }
+
+  async function resolveUserForSubmit(): Promise<User | null> {
+    if (user) return user;
+    // Auto Temporary Trace session so visitors can leave a pin without an extra click.
+    const credential = await signInTraceAnonymous();
+    setAuthNote("Signed in anonymously. Leaving your Trace…");
+    return credential.user;
   }
 
   async function onSubmit(event: FormEvent) {
@@ -124,9 +153,16 @@ export function LeaveTraceForm({
         return;
       }
 
-      let activeUser = user;
-      if (!activeUser) {
-        setError("Choose Anonymous or Google sign-in first.");
+      let activeUser: User;
+      try {
+        const resolved = await resolveUserForSubmit();
+        if (!resolved) {
+          setError("Unable to authenticate.");
+          return;
+        }
+        activeUser = resolved;
+      } catch (err) {
+        setError(formatAuthError(err));
         return;
       }
 
@@ -136,9 +172,11 @@ export function LeaveTraceForm({
         return;
       }
 
-      // If Google signed in over an anonymous session with existing trace, upgrade.
-      if (getTraceAuthType(activeUser) === "google" && mine?.authType === "anonymous") {
-        await fetch("/api/trace", {
+      if (
+        getTraceAuthType(activeUser) === "google" &&
+        mine?.authType === "anonymous"
+      ) {
+        const upgrade = await fetch("/api/trace", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -146,6 +184,13 @@ export function LeaveTraceForm({
           },
           body: JSON.stringify({ action: "upgrade" }),
         });
+        if (!upgrade.ok) {
+          const data = (await upgrade.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          setError(data?.error || "Unable to make Trace permanent.");
+          return;
+        }
       }
 
       const response = await fetch("/api/trace", {
@@ -174,8 +219,11 @@ export function LeaveTraceForm({
 
       onSaved(data.trace);
       setOpen(false);
-    } catch {
-      setError("Unable to leave a trace.");
+      setAuthNote(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to leave a trace.",
+      );
     } finally {
       setBusy(false);
     }
@@ -208,6 +256,7 @@ export function LeaveTraceForm({
           type="button"
           onClick={() => {
             setMessage(mine?.message || "");
+            setError(null);
             setOpen(true);
           }}
           className="mt-8 text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em]"
@@ -284,6 +333,23 @@ export function LeaveTraceForm({
         </p>
       )}
 
+      {user ? (
+        <p className="mt-4 text-[0.78rem] tracking-[0.06em] text-[var(--map-accent)]">
+          {authType === "google"
+            ? "Signed in with Google"
+            : "Anonymous session ready"}
+        </p>
+      ) : (
+        <p className="mt-4 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
+          You can press Leave your trace without signing in first — a Temporary
+          Trace will be created. Use Google if you want a Permanent Trace.
+        </p>
+      )}
+
+      {authNote ? (
+        <p className="mt-3 text-[0.78rem] text-[var(--map-accent)]">{authNote}</p>
+      ) : null}
+
       <div className="mt-8 grid gap-6 sm:grid-cols-3">
         <label className="block">
           <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
@@ -354,10 +420,10 @@ export function LeaveTraceForm({
       <div className="mt-10 flex flex-wrap items-center gap-6">
         <button
           type="submit"
-          disabled={busy || !user}
+          disabled={busy || !message.trim()}
           className="text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em] disabled:opacity-50"
         >
-          {mine ? "Save changes" : "Leave your trace"}
+          {busy ? "Saving…" : mine ? "Save changes" : "Leave your trace"}
         </button>
         <button
           type="button"
@@ -369,7 +435,7 @@ export function LeaveTraceForm({
       </div>
 
       {error ? (
-        <p className="mt-6 text-[0.85rem] text-[var(--map-muted)]">{error}</p>
+        <p className="mt-6 text-[0.9rem] leading-[1.7] text-[#8a4b4b]">{error}</p>
       ) : null}
     </form>
   );

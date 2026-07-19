@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import { MapSidebar } from "@/components/trace-map/MapSidebar";
 import { LeaveTraceForm } from "@/components/trace-map/LeaveTraceForm";
 import {
+  completeTraceRedirectSignIn,
   getIdTokenOrNull,
   getTraceAuthType,
   signOutTrace,
@@ -98,6 +99,7 @@ export function TraceMapApp() {
   }, []);
 
   useEffect(() => {
+    void completeTraceRedirectSignIn();
     return watchAuth((next) => {
       setUser(next);
       void loadTraces(next);

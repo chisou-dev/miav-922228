@@ -2,12 +2,16 @@
 
 import {
   GoogleAuthProvider,
+  getRedirectResult,
   linkWithPopup,
+  linkWithRedirect,
   onAuthStateChanged,
   signInAnonymously,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   type User,
+  type UserCredential,
 } from "firebase/auth";
 import { getFirebaseAuth, isFirebaseClientConfigured } from "@/lib/firebase/client";
 
@@ -27,33 +31,108 @@ export function getTraceAuthType(user: User | null): "anonymous" | "google" | nu
   return providers.length ? "google" : "anonymous";
 }
 
-export async function signInTraceAnonymous() {
+export function formatAuthError(error: unknown): string {
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? String((error as { code?: string }).code || "")
+      : "";
+
+  switch (code) {
+    case "auth/operation-not-allowed":
+      return "This sign-in method is not enabled in Firebase Console (Anonymous or Google).";
+    case "auth/popup-blocked":
+      return "The sign-in popup was blocked. Allow popups, or try again (redirect will be used).";
+    case "auth/popup-closed-by-user":
+      return "The sign-in window was closed before completion.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized in Firebase Authentication → Settings → Authorized domains. Add miav-922228.com and www.miav-922228.com.";
+    case "auth/account-exists-with-different-credential":
+      return "This Google account is already linked to another sign-in method.";
+    case "auth/credential-already-in-use":
+      return "This Google account is already used by another Trace session.";
+    case "auth/network-request-failed":
+      return "Network error during sign-in. Please try again.";
+    default: {
+      const message =
+        error instanceof Error ? error.message : "Sign-in failed.";
+      return message;
+    }
+  }
+}
+
+function googleProvider() {
+  const provider = new GoogleAuthProvider();
+  // Identity only — do not add extra scopes.
+  provider.setCustomParameters({ prompt: "select_account" });
+  return provider;
+}
+
+export async function signInTraceAnonymous(): Promise<UserCredential> {
   return signInAnonymously(getFirebaseAuth());
 }
 
 /**
  * Google Sign-In for Trace ownership only.
- * - No extra OAuth scopes (no Contacts, Drive, etc.)
- * - Email / displayName / photoURL may exist on the in-memory User object
- *   for Firebase Auth, but are NEVER written to Firestore.
+ * Tries popup first; falls back to redirect when popups are blocked.
  */
-export async function signInTraceGoogle() {
+export async function signInTraceGoogle(): Promise<UserCredential | null> {
   const auth = getFirebaseAuth();
-  const provider = new GoogleAuthProvider();
-  // Minimal identity prompt — do not addScope() for profile extras.
-  provider.setCustomParameters({
-    prompt: "select_account",
-  });
+  const provider = googleProvider();
 
-  if (auth.currentUser?.isAnonymous) {
-    try {
-      return await linkWithPopup(auth.currentUser, provider);
-    } catch {
-      // If credential already linked elsewhere, fall through to fresh Google sign-in.
+  const tryPopup = async () => {
+    if (auth.currentUser?.isAnonymous) {
+      try {
+        return await linkWithPopup(auth.currentUser, provider);
+      } catch (error) {
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? String((error as { code?: string }).code || "")
+            : "";
+        // Fall through to fresh Google sign-in for common link conflicts.
+        if (
+          code !== "auth/credential-already-in-use" &&
+          code !== "auth/email-already-in-use" &&
+          code !== "auth/account-exists-with-different-credential"
+        ) {
+          throw error;
+        }
+      }
     }
-  }
+    return signInWithPopup(auth, provider);
+  };
 
-  return signInWithPopup(auth, provider);
+  try {
+    return await tryPopup();
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code?: string }).code || "")
+        : "";
+
+    if (
+      code === "auth/popup-blocked" ||
+      code === "auth/cancelled-popup-request"
+    ) {
+      if (auth.currentUser?.isAnonymous) {
+        await linkWithRedirect(auth.currentUser, provider);
+      } else {
+        await signInWithRedirect(auth, provider);
+      }
+      return null; // page will navigate away
+    }
+
+    throw error;
+  }
+}
+
+/** Complete Google redirect sign-in after returning to the page. */
+export async function completeTraceRedirectSignIn(): Promise<UserCredential | null> {
+  if (!isFirebaseClientConfigured()) return null;
+  try {
+    return await getRedirectResult(getFirebaseAuth());
+  } catch {
+    return null;
+  }
 }
 
 export async function signOutTrace() {
