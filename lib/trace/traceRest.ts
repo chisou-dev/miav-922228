@@ -250,6 +250,7 @@ export async function createTrace(input: {
       : null;
 
   const fields: Record<string, FirestoreValue> = {
+    // Privacy: only these fields — never email, displayName, photoURL, etc.
     miavId: { stringValue: miavId },
     uid: { stringValue: input.uid },
     authType: { stringValue: input.authType },
@@ -401,4 +402,20 @@ export async function deleteExpiredAnonymousTraces(): Promise<number> {
 
   // MIAV numbers are never reused — counter is not decremented.
   return deleted;
+}
+
+/** Operator removal only — never used to edit Trace content. */
+export async function deleteTraceById(id: string): Promise<boolean> {
+  const response = await firestoreFetch(
+    `documents/${TRACE_COLLECTION}/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+  if (response.status === 404) return false;
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as {
+      error?: { message?: string };
+    } | null;
+    throw new Error(data?.error?.message || "Failed to delete trace.");
+  }
+  return true;
 }

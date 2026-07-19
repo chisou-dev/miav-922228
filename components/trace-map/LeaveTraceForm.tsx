@@ -15,6 +15,7 @@ import {
   signInTraceGoogle,
 } from "@/lib/trace/auth";
 import { isFirebaseClientConfigured } from "@/lib/firebase/client";
+import { TRACE_PRIVACY_BLURB } from "@/lib/trace/privacy";
 
 type LocationDraft = {
   country: string;
@@ -190,6 +191,19 @@ export function LeaveTraceForm({
           Leave a single presence on the map. Temporary traces fade after three
           months. Permanent traces remain with Google sign-in.
         </p>
+        <ul className="mt-6 max-w-md space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">
+          {TRACE_PRIVACY_BLURB.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <p className="mt-4">
+          <a
+            href="/privacy"
+            className="text-[0.75rem] tracking-[0.1em] text-[var(--map-accent)] underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+          >
+            Privacy
+          </a>
+        </p>
         <button
           type="button"
           onClick={() => {
@@ -217,6 +231,20 @@ export function LeaveTraceForm({
     >
       <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
         Trace registration
+      </p>
+
+      <ul className="mt-5 max-w-xl space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">
+        {TRACE_PRIVACY_BLURB.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
+      <p className="mt-3">
+        <a
+          href="/privacy"
+          className="text-[0.72rem] tracking-[0.1em] text-[var(--map-accent)] underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+        >
+          Privacy
+        </a>
       </p>
 
       {!mine ? (

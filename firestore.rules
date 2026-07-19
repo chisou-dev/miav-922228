@@ -2,17 +2,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Replace with the Firebase Auth UID of the site operator (same as ADMIN_UID).
+    // Used only for Trace deletion in cases of spam, terms violations, or legal duty.
+    // The operator never edits Trace content through the client.
+    function adminUid() {
+      return 'REPLACE_WITH_ADMIN_UID';
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isAdmin() {
-      return isSignedIn()
-        && request.auth.uid == 'REPLACE_WITH_ADMIN_UID';
+      return isSignedIn() && request.auth.uid == adminUid();
     }
 
-    function isOwner(uid) {
-      return isSignedIn() && request.auth.uid == uid;
+    function isTraceOwner(traceId) {
+      return isSignedIn()
+        && request.auth.uid == resource.data.uid
+        && request.auth.uid == traceId;
+    }
+
+    function traceImmutableUnchanged() {
+      return request.resource.data.uid == resource.data.uid
+        && request.resource.data.miavId == resource.data.miavId
+        && request.resource.data.authType == resource.data.authType
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.expiresAt == resource.data.expiresAt;
+    }
+
+    function onlyTraceEditableFields() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['country', 'region', 'city', 'lat', 'lng', 'message', 'updatedAt']);
     }
 
     // Contact form: server-only (REST / service account). Deny all clients.
@@ -25,17 +46,31 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Trace Map public pins.
-    // Creates / updates / deletes for clients are denied — Next.js API
-    // (service account) owns writes after Firebase Auth verification.
-    // This keeps miavId / createdAt / uid / authType immutable from browsers.
+    /**
+     * Trace Map — privacy model
+     *
+     * Stored fields only:
+     *   uid, miavId, authType, country, region, city, lat, lng,
+     *   message, createdAt, updatedAt, expiresAt (anonymous only)
+     *
+     * Never store: email, displayName, photoURL, phoneNumber, IP, Google profile.
+     *
+     * Create / MIAV ID allocation / anonymous→permanent upgrade / expiry cleanup
+     * are performed by the trusted server (service account), which bypasses rules.
+     *
+     * Clients may read pins. Owners may update location + message only.
+     * Operator may delete only (never edit content).
+     */
     match /trace_map/{traceId} {
       allow read: if true;
-      allow create, update, delete: if false;
 
-      // Admin SDK / scheduled cleanup bypasses rules.
-      // If client admin tooling is added later:
-      // allow delete: if isAdmin();
+      allow create: if false;
+
+      allow update: if isTraceOwner(traceId)
+        && traceImmutableUnchanged()
+        && onlyTraceEditableFields();
+
+      allow delete: if isAdmin();
     }
   }
 }

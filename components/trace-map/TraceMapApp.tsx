@@ -199,9 +199,15 @@ export function TraceMapApp() {
               MIAV-922228. One visitor, one pin.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]">
+            <div className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]">
             <a href="/" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
               Home
+            </a>
+            <a
+              href="/privacy"
+              className="underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+            >
+              Privacy
             </a>
             {user ? (
               <>

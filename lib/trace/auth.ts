@@ -31,10 +31,19 @@ export async function signInTraceAnonymous() {
   return signInAnonymously(getFirebaseAuth());
 }
 
+/**
+ * Google Sign-In for Trace ownership only.
+ * - No extra OAuth scopes (no Contacts, Drive, etc.)
+ * - Email / displayName / photoURL may exist on the in-memory User object
+ *   for Firebase Auth, but are NEVER written to Firestore.
+ */
 export async function signInTraceGoogle() {
   const auth = getFirebaseAuth();
   const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
+  // Minimal identity prompt — do not addScope() for profile extras.
+  provider.setCustomParameters({
+    prompt: "select_account",
+  });
 
   if (auth.currentUser?.isAnonymous) {
     try {

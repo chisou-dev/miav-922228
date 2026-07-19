@@ -13,6 +13,7 @@ import {
   upgradeTraceToPermanent,
 } from "@/lib/trace/traceRest";
 import { findCountry, findRegion, findCity } from "@/lib/trace/locations";
+import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -88,6 +89,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  if (body && typeof body === "object") {
+    const forbidden = bodyContainsForbiddenPii(body as Record<string, unknown>);
+    if (forbidden) {
+      return NextResponse.json(
+        {
+          error:
+            "Personal profile fields are not accepted. Only location and message may be saved.",
+          field: forbidden,
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   const action =
     body && typeof body === "object"
       ? (body as Record<string, unknown>).action
@@ -101,6 +116,7 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
+      // Server-only authType change — never copies Google profile data.
       const upgraded = await upgradeTraceToPermanent(auth.uid);
       return NextResponse.json({ trace: toTracePin(upgraded), ok: true });
     }

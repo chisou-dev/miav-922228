@@ -16,7 +16,7 @@ export type TraceRecord = {
   expiresAt: string | null;
 };
 
-/** Public pin payload — never includes email, IP, or raw secrets. */
+/** Public pin payload — never includes email, displayName, photoURL, IP, or UID. */
 export type TracePin = {
   id: string;
   miavId: string;
