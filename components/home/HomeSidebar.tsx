@@ -34,9 +34,9 @@ export function HomeSidebar() {
             <span className="mr-2 inline-block opacity-80" aria-hidden>
               🌍
             </span>
-            MIAV World Map
+            MIAV World Memory
             <span className="mt-2 block text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)] group-hover:text-[var(--foreground)]">
-              Trace Map
+              A quiet record of visits
             </span>
           </a>
         </div>

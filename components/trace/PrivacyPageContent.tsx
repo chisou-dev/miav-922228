@@ -10,7 +10,7 @@ export function PrivacyPageContent() {
       </div>
 
       <p className="mt-16 text-[0.78rem] leading-[1.9] tracking-[0.04em] text-[var(--foreground-muted)]">
-        Trace Map stores only: Firebase UID, MIAV ID, auth type, location,
+        World Memory stores only: Firebase UID, MIAV ID, auth type, location,
         message, and timestamps. Temporary (anonymous) traces also carry an
         expiry time.
       </p>
@@ -26,7 +26,7 @@ export function PrivacyPageContent() {
           href="/world-map"
           className="text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em]"
         >
-          Return to World Map
+          Return to World Memory
         </a>
       </p>
     </article>

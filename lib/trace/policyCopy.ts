@@ -13,19 +13,20 @@ export const TRACE_PRIVACY_BLURB = [
 ] as const;
 
 export const WELCOME_DIALOG = {
-  title: "Welcome to MIAV World Map",
+  title: "Welcome to MIAV World Memory",
   body: {
     paragraphs: [
       "Leave a single Trace in the world of MIAV-922228.",
       "This is not analytics.",
       "It is a quiet record of readers who have visited this world.",
       "Each visitor may leave only one Trace.",
+      "A Trace is simply a mark that you were here.",
       "Temporary Traces disappear after three months.",
       "Permanent Traces remain.",
       "Google Sign-In is used only to identify the owner of a Trace.",
       "No personal information is stored.",
       "The operator does not edit user content.",
-      "Users are responsible for the content they submit.",
+      "Users are responsible for the content they leave.",
       "Content may be removed only if it:",
     ],
     bullets: [
@@ -54,7 +55,7 @@ export const GOOGLE_SIGNIN_DIALOG = {
   uidNote:
     "Only an anonymous Firebase UID is stored so that only you can edit your Trace.",
   neverAccess: "The site never accesses your Google data.",
-  responsibility: "Users are responsible for the content they submit.",
+  responsibility: "Users are responsible for the content they leave.",
   noEdit: "The operator does not edit user content.",
   removal:
     "Content may be removed only if it violates the law, contains spam, or violates the Site Policy.",
@@ -68,18 +69,18 @@ export const PRIVACY_PAGE_PARAGRAPHS = [
   "Google account data is never accessed.",
   "Your Trace belongs to you.",
   "The site provides a place for readers to leave a Trace, but does not edit user content.",
-  "Users are responsible for the content they submit.",
+  "Users are responsible for the content they leave.",
   "The operator may remove content only when it violates the law, contains spam, or violates the Site Policy.",
   "This is not a social network.",
   "It is a quiet literary space where readers leave a single Trace.",
 ] as const;
 
 export const SITE_POLICY_PAGE = {
-  intro: "MIAV World Map is a place where readers leave a Trace.",
+  intro: "MIAV World Memory is a place where readers leave a Trace.",
   paragraphs: [
     "Each Trace belongs to its owner.",
     "The operator provides the place but does not edit user content.",
-    "Users are responsible for the content they submit.",
+    "Users are responsible for the content they leave.",
   ] as const,
   removeHeading: "The operator may remove content only when:",
   removeReasons: [

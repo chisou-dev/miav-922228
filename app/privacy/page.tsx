@@ -5,7 +5,7 @@ import { PrivacyPageContent } from "@/components/trace/PrivacyPageContent";
 export const metadata: Metadata = {
   title: "Privacy | MIAV-922228",
   description:
-    "Privacy policy for MIAV World Map — Google Sign-In is used only to identify Trace ownership. No Google profile data is stored.",
+    "Privacy policy for MIAV World Memory — Google Sign-In is used only to identify Trace ownership. No Google profile data is stored.",
 };
 
 export default function PrivacyPage() {

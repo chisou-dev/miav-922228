@@ -38,7 +38,7 @@ export function SitePolicyPageContent() {
           href="/world-map"
           className="text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em]"
         >
-          Return to World Map
+          Return to World Memory
         </a>
       </p>
     </article>

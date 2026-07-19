@@ -5,7 +5,7 @@ import { SitePolicyPageContent } from "@/components/trace/SitePolicyPageContent"
 export const metadata: Metadata = {
   title: "Site Policy | MIAV-922228",
   description:
-    "Site policy for MIAV World Map — Traces belong to their owners; the operator does not edit user content.",
+    "Site policy for MIAV World Memory — Traces belong to their owners; the operator does not edit user content.",
 };
 
 export default function SitePolicyPage() {

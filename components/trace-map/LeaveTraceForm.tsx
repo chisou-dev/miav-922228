@@ -354,7 +354,7 @@ export function LeaveTraceForm({
       <>
         <div className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-6">
           <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-            Leave Trace
+            Leave your trace
           </p>
           {registrationPaused ? (
             <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
@@ -363,8 +363,13 @@ export function LeaveTraceForm({
           ) : (
             <>
           <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
-            Leave a quiet Trace in place — not a board post. Temporary traces
-            fade after three months. Permanent traces remain with Google
+            Leave a small message
+            <br />
+            as a memory of your visit.
+          </p>
+          <p className="mt-4 max-w-md text-[0.88rem] leading-[1.85] text-[var(--map-muted)]">
+            A Trace is a mark that you were here — not a post. Temporary Traces
+            fade after three months. Permanent Traces remain with Google
             sign-in.
           </p>
           <ul className="mt-6 max-w-md space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">
@@ -438,7 +443,7 @@ export function LeaveTraceForm({
         className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-6"
       >
         <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-          Trace registration
+          Leave your trace
         </p>
 
         <ul className="mt-5 max-w-xl space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">

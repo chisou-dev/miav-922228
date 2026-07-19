@@ -50,7 +50,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 text-[0.78rem] tracking-[0.1em] text-[var(--foreground-muted)]"
           >
             <span aria-hidden>🌍</span>
-            MIAV World Map
+            MIAV World Memory
           </a>
         </div>
         <SiteShell>
