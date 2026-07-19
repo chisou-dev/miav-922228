@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { AdminContactsClient } from "./AdminContactsClient";
 
 export const metadata: Metadata = {
-  title: "Contact Archive | Admin — MIAV-922228",
-  description: "Administrator archive of contact messages for MIAV-922228.",
+  title: "Admin | MIAV-922228",
+  description: "Administrator Safety Control and contact archive for MIAV-922228.",
   robots: {
     index: false,
     follow: false,
@@ -29,11 +29,11 @@ export default function AdminContactsPage() {
           </p>
 
           <h1 className="mt-5 text-[clamp(1.85rem,6vw,2.6rem)] font-medium leading-[1.3] tracking-[0.06em] text-[var(--foreground)] sm:mt-6">
-            問い合わせ管理
+            Site Control
           </h1>
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
-            新しい順に表示されます。カードを開くと既読になります。
+            Safety switches and the contact archive. For the operator only.
           </p>
         </header>
 

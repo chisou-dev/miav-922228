@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { CONTACT_DISABLED_MESSAGE } from "@/lib/site-control/types";
 
 type SubmitState = "idle" | "sending" | "sent" | "error";
 
@@ -11,9 +12,31 @@ export function ContactForm() {
   const [website, setWebsite] = useState("");
   const [state, setState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [contactEnabled, setContactEnabled] = useState(true);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const response = await fetch("/api/site-control");
+        const data = (await response.json().catch(() => null)) as {
+          contactEnabled?: boolean;
+        } | null;
+        if (response.ok && typeof data?.contactEnabled === "boolean") {
+          setContactEnabled(data.contactEnabled);
+        }
+      } catch {
+        // Keep form available if the flag check fails.
+      }
+    })();
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!contactEnabled) {
+      setState("error");
+      setError(CONTACT_DISABLED_MESSAGE);
+      return;
+    }
     setState("sending");
     setError(null);
 
@@ -26,10 +49,16 @@ export function ContactForm() {
 
       const data = (await response.json().catch(() => null)) as {
         error?: string;
+        code?: string;
       } | null;
 
       if (!response.ok) {
         setState("error");
+        if (data?.code === "CONTACT_DISABLED") {
+          setContactEnabled(false);
+          setError(CONTACT_DISABLED_MESSAGE);
+          return;
+        }
         setError(
           response.status === 429
             ? "Too many messages were sent. Please wait a moment and try again."
@@ -47,6 +76,14 @@ export function ContactForm() {
       setState("error");
       setError("Unable to send the message.");
     }
+  }
+
+  if (!contactEnabled) {
+    return (
+      <p className="mt-16 text-[0.95rem] leading-[2] text-[var(--foreground-muted)] sm:mt-20">
+        {CONTACT_DISABLED_MESSAGE}
+      </p>
+    );
   }
 
   return (

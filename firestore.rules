@@ -51,6 +51,21 @@ service cloud.firestore {
     }
 
     /**
+     * Site Safety Control — Trace registration / Contact submission flags.
+     * General clients: no access. Admin UID may read/write siteControl only.
+     * Production changes go through /api/admin/site-control (ADMIN_UID + service account).
+     */
+    match /system_config/{docId} {
+      allow read: if isAdmin() && docId == 'siteControl';
+      allow create, update: if isAdmin()
+        && docId == 'siteControl'
+        && request.resource.data.keys().hasOnly(['traceEnabled', 'contactEnabled', 'updatedAt'])
+        && request.resource.data.traceEnabled is bool
+        && request.resource.data.contactEnabled is bool;
+      allow delete: if false;
+    }
+
+    /**
      * Trace Map — privacy model
      *
      * Stored fields only:

@@ -24,6 +24,10 @@ import {
   getLocationById,
 } from "@/lib/locations";
 import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
+import {
+  getSiteControl,
+} from "@/lib/site-control/siteControlRest";
+import { TRACE_DISABLED_MESSAGE } from "@/lib/site-control/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -266,6 +270,17 @@ export async function POST(request: Request) {
         ok: true,
         mode: "update",
       });
+    }
+
+    const siteControl = await getSiteControl();
+    if (!siteControl.traceEnabled) {
+      return NextResponse.json(
+        {
+          error: TRACE_DISABLED_MESSAGE,
+          code: "TRACE_DISABLED",
+        },
+        { status: 503 },
+      );
     }
 
     const created = await createTrace({

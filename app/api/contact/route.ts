@@ -7,6 +7,8 @@ import {
   consumeContactRateLimit,
   getRequestIp,
 } from "@/lib/contact/rateLimit";
+import { getSiteControl } from "@/lib/site-control/siteControlRest";
+import { CONTACT_DISABLED_MESSAGE } from "@/lib/site-control/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +25,17 @@ export async function POST(request: Request) {
   if (!isFirebaseAdminConfigured()) {
     return NextResponse.json(
       { error: "Contact storage is not configured." },
+      { status: 503 },
+    );
+  }
+
+  const siteControl = await getSiteControl();
+  if (!siteControl.contactEnabled) {
+    return NextResponse.json(
+      {
+        error: CONTACT_DISABLED_MESSAGE,
+        code: "CONTACT_DISABLED",
+      },
       { status: 503 },
     );
   }

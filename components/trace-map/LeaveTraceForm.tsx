@@ -17,6 +17,7 @@ import {
 } from "@/lib/trace/auth";
 import { isFirebaseClientConfigured } from "@/lib/firebase/client";
 import { TRACE_PRIVACY_BLURB } from "@/lib/trace/policyCopy";
+import { TRACE_DISABLED_MESSAGE } from "@/lib/site-control/types";
 import { GoogleSignInDialog } from "@/components/trace/GoogleSignInDialog";
 
 type LocationDraft = {
@@ -52,10 +53,27 @@ export function LeaveTraceForm({
   const [authNote, setAuthNote] = useState<string | null>(null);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
   const [catalog, setCatalog] = useState<LocationCountry | null>(null);
+  const [traceEnabled, setTraceEnabled] = useState(true);
 
   useEffect(() => {
     if (mine?.message) setMessage(mine.message);
   }, [mine?.message]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const response = await fetch("/api/site-control");
+        const data = (await response.json().catch(() => null)) as {
+          traceEnabled?: boolean;
+        } | null;
+        if (response.ok && typeof data?.traceEnabled === "boolean") {
+          setTraceEnabled(data.traceEnabled);
+        }
+      } catch {
+        // Keep registration available if the flag check fails.
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!draft.country || !locationIndex.length) return;
@@ -230,6 +248,12 @@ export function LeaveTraceForm({
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (!mine && !traceEnabled) {
+      setError(TRACE_DISABLED_MESSAGE);
+      return;
+    }
+
     setBusy(true);
 
     try {
@@ -287,10 +311,16 @@ export function LeaveTraceForm({
 
       const data = (await response.json().catch(() => null)) as {
         error?: string;
+        code?: string;
         trace?: TracePin;
       } | null;
 
       if (!response.ok || !data?.trace) {
+        if (data?.code === "TRACE_DISABLED") {
+          setTraceEnabled(false);
+          setError(TRACE_DISABLED_MESSAGE);
+          return;
+        }
         setError(data?.error || "Unable to leave a trace.");
         return;
       }
@@ -319,12 +349,19 @@ export function LeaveTraceForm({
   );
 
   if (!open) {
+    const registrationPaused = !mine && !traceEnabled;
     return (
       <>
         <div className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-6">
           <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
             Leave Trace
           </p>
+          {registrationPaused ? (
+            <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
+              {TRACE_DISABLED_MESSAGE}
+            </p>
+          ) : (
+            <>
           <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
             Leave a quiet Trace in place — not a board post. Temporary traces
             fade after three months. Permanent traces remain with Google
@@ -386,6 +423,8 @@ export function LeaveTraceForm({
           >
             {mine ? "Edit your trace" : "Leave your trace"}
           </button>
+            </>
+          )}
         </div>
         {googleDialog}
       </>

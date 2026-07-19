@@ -13,6 +13,7 @@ import {
   getPublicAdminUid,
   isFirebaseClientConfigured,
 } from "@/lib/firebase/client";
+import { AdminSafetyControl } from "./AdminSafetyControl";
 
 type Gate =
   | { kind: "loading" }
@@ -349,10 +350,16 @@ export function AdminContactsClient() {
   }
 
   return (
-    <div className="mt-14 sm:mt-16">
+    <div className="mt-14 space-y-14 sm:mt-16 sm:space-y-16">
+      <AdminSafetyControl user={gate.user} />
+
+      <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+          <p className="text-[0.68rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase">
+            Contact Archive
+          </p>
+          <p className="mt-3 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)]">
             全 {messages.length} 件 / 未読 {unreadCount} 件
           </p>
           <p className="mt-2 text-[0.8rem] text-[var(--foreground-muted)]">
@@ -478,6 +485,7 @@ export function AdminContactsClient() {
           })}
         </ul>
       )}
+      </div>
     </div>
   );
 }
