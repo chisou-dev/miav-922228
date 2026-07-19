@@ -102,7 +102,7 @@ export function AdminSafetyControl({ user }: Props) {
       {control ? (
         <div className="mt-10 space-y-6">
           <SwitchRow
-            label="World Memory Trace"
+            label="World Map Trace"
             hint="New Trace registration"
             enabled={control.traceEnabled}
             busy={busyKey === "trace"}

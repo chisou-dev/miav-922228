@@ -288,37 +288,16 @@ export function TraceMapApp() {
       />
 
       <header className="border-b border-[var(--map-line)] px-5 py-8 sm:px-8 sm:py-10">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
-            <p className="text-[0.7rem] tracking-[0.22em] text-[var(--map-muted)] uppercase">
-              MIAV World Memory
-            </p>
-            <h1 className="mt-4 text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--map-ink)]">
-              A quiet record of visitors to MIAV-922228.
+            <h1 className="text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--map-ink)]">
+              World Memory
             </h1>
-            <div className="mt-6 space-y-4 text-[0.92rem] leading-[1.95] text-[var(--map-muted)]">
-              <p>
-                If this world left an impression on you,
-                <br className="hidden sm:block" /> you may leave a single Trace.
-              </p>
-              <p>
-                Your Trace is not a post.
-                <br className="hidden sm:block" /> It is simply a mark that you
-                were here.
-              </p>
-            </div>
-            <div className="mt-8 border-t border-[var(--map-line)] pt-6">
-              <p className="text-[0.72rem] tracking-[0.18em] text-[var(--map-ink)] uppercase">
-                Leave your trace
-              </p>
-              <p className="mt-3 text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
-                Leave a small message
-                <br />
-                as a memory of your visit.
-              </p>
-            </div>
+            <p className="mt-4 text-[0.95rem] leading-[1.9] tracking-[0.02em] text-[var(--map-muted)]">
+              Reader traces preserved around the world.
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)] sm:justify-end sm:pt-1">
+          <div className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]">
             <a
               href="/"
               className="underline decoration-[var(--map-line)] underline-offset-[0.4em]"
@@ -387,9 +366,8 @@ export function TraceMapApp() {
                 onSelectCity={(name) => void onSelectCity(name)}
               />
               <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                Country → Region → City from the Location Database. Places
-                without Traces remain selectable; pins appear only where Traces
-                remain. Stacks stop at ten quiet dots.
+                Traces of readers who visited MIAV-922228. Places without a Trace
+                remain selectable; pins appear only where presence remains.
               </p>
             </div>
 
