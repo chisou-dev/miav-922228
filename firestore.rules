@@ -41,7 +41,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // MIAV ID counter: server-only. Never decrement (IDs are never reused).
+    match /trace_locations/{locationId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /meta/{docId} {
       allow read, write: if false;
     }

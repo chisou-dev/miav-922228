@@ -5,11 +5,19 @@ import {
   ANONYMOUS_TRACE_TTL_MS,
   formatMiavId,
   isTraceAuthType,
+  locationDocId,
+  previewMessage,
   toTracePin,
   TRACE_COLLECTION,
+  TRACE_LOCATIONS_COLLECTION,
+  TRACE_STATS_DOC,
   type TraceAuthType,
+  type TraceFirstSummary,
+  type TraceLatestSummary,
+  type TraceLocationCluster,
   type TracePin,
   type TraceRecord,
+  type TraceStats,
 } from "@/lib/trace/types";
 import { resolveLocationCoords } from "@/lib/trace/locations";
 
@@ -108,6 +116,11 @@ function toTraceRecord(doc: FirestoreDocument): TraceRecord {
   };
 }
 
+function isActiveTrace(trace: TraceRecord, now = Date.now()): boolean {
+  if (trace.authType !== "anonymous" || !trace.expiresAt) return true;
+  return new Date(trace.expiresAt).getTime() > now;
+}
+
 async function allocateMiavNumber(): Promise<number> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const getRes = await firestoreFetch("documents/meta/miav_counter");
@@ -115,16 +128,18 @@ async function allocateMiavNumber(): Promise<number> {
     let updateTime: string | undefined;
 
     if (getRes.status === 404) {
-      const createRes = await firestoreFetch("documents/meta?documentId=miav_counter", {
-        method: "POST",
-        body: JSON.stringify({
-          fields: {
-            lastNumber: { integerValue: "1" },
-          },
-        }),
-      });
+      const createRes = await firestoreFetch(
+        "documents/meta?documentId=miav_counter",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            fields: {
+              lastNumber: { integerValue: "1" },
+            },
+          }),
+        },
+      );
       if (createRes.ok) return 1;
-      // Race: another request created it — retry read/patch.
       continue;
     }
 
@@ -152,7 +167,11 @@ async function allocateMiavNumber(): Promise<number> {
     });
 
     if (patchRes.ok) return next;
-    if (patchRes.status === 400 || patchRes.status === 409 || patchRes.status === 412) {
+    if (
+      patchRes.status === 400 ||
+      patchRes.status === 409 ||
+      patchRes.status === 412
+    ) {
       continue;
     }
     const err = (await patchRes.json()) as { error?: { message?: string } };
@@ -162,20 +181,10 @@ async function allocateMiavNumber(): Promise<number> {
   throw new Error("Failed to allocate MIAV ID after retries.");
 }
 
-export async function listTracePins(): Promise<TracePin[]> {
+async function runTraceQuery(structuredQuery: Record<string, unknown>) {
   const response = await firestoreFetch("documents:runQuery", {
     method: "POST",
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: TRACE_COLLECTION }],
-        orderBy: [
-          {
-            field: { fieldPath: "createdAt" },
-            direction: "DESCENDING",
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify({ structuredQuery }),
   });
 
   const rows = (await response.json()) as Array<{
@@ -187,22 +196,455 @@ export async function listTracePins(): Promise<TracePin[]> {
     const message =
       Array.isArray(rows) && rows[0]?.error?.message
         ? rows[0].error.message
-        : "Failed to list traces.";
+        : "Failed to query traces.";
     throw new Error(message);
   }
 
-  if (!Array.isArray(rows)) return [];
+  if (!Array.isArray(rows)) return [] as TraceRecord[];
 
-  const now = Date.now();
   return rows
     .map((row) => row.document)
     .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
     .map(toTraceRecord)
-    .filter((trace) => {
-      if (trace.authType !== "anonymous" || !trace.expiresAt) return true;
-      return new Date(trace.expiresAt).getTime() > now;
-    })
-    .map(toTracePin);
+    .filter((trace) => isActiveTrace(trace));
+}
+
+async function bumpLocationCount(
+  location: { country: string; region: string; city: string; lat: number; lng: number },
+  delta: number,
+) {
+  if (delta === 0) return;
+  const id = locationDocId(location);
+  const getRes = await firestoreFetch(
+    `documents/${TRACE_LOCATIONS_COLLECTION}/${id}`,
+  );
+
+  if (getRes.status === 404) {
+    if (delta < 0) return;
+    await firestoreFetch(
+      `documents/${TRACE_LOCATIONS_COLLECTION}?documentId=${id}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fields: {
+            country: { stringValue: location.country },
+            region: { stringValue: location.region },
+            city: { stringValue: location.city },
+            lat: { doubleValue: location.lat },
+            lng: { doubleValue: location.lng },
+            count: { integerValue: String(delta) },
+          },
+        }),
+      },
+    );
+    return;
+  }
+
+  if (!getRes.ok) return;
+  const doc = (await getRes.json()) as FirestoreDocument;
+  const next = Math.max(0, readNumber(doc.fields, "count") + delta);
+
+  if (next === 0) {
+    await firestoreFetch(`documents/${TRACE_LOCATIONS_COLLECTION}/${id}`, {
+      method: "DELETE",
+    });
+    return;
+  }
+
+  await firestoreFetch(
+    `documents/${TRACE_LOCATIONS_COLLECTION}/${id}?updateMask.fieldPaths=count&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        fields: {
+          count: { integerValue: String(next) },
+          lat: { doubleValue: location.lat },
+          lng: { doubleValue: location.lng },
+        },
+      }),
+    },
+  );
+}
+
+function emptyStats(): TraceStats {
+  return {
+    countryCount: 0,
+    cityCount: 0,
+    permanentCount: 0,
+    temporaryCount: 0,
+    first: null,
+    latest: null,
+  };
+}
+
+function statsFromRecords(records: TraceRecord[]): TraceStats {
+  const countries = new Set<string>();
+  const cities = new Set<string>();
+  let permanentCount = 0;
+  let temporaryCount = 0;
+  let first: TraceRecord | null = null;
+  let latest: TraceRecord | null = null;
+
+  for (const trace of records) {
+    countries.add(trace.country);
+    cities.add(`${trace.country}|${trace.region}|${trace.city}`);
+    if (trace.authType === "google") permanentCount += 1;
+    else temporaryCount += 1;
+    if (
+      !first ||
+      new Date(trace.createdAt).getTime() < new Date(first.createdAt).getTime()
+    ) {
+      first = trace;
+    }
+    if (
+      !latest ||
+      new Date(trace.createdAt).getTime() > new Date(latest.createdAt).getTime()
+    ) {
+      latest = trace;
+    }
+  }
+
+  return {
+    countryCount: countries.size,
+    cityCount: cities.size,
+    permanentCount,
+    temporaryCount,
+    first: first
+      ? { miavId: first.miavId, createdAt: first.createdAt }
+      : null,
+    latest: latest
+      ? {
+          miavId: latest.miavId,
+          country: latest.country,
+          city: latest.city,
+          messagePreview: previewMessage(latest.message),
+          createdAt: latest.createdAt,
+        }
+      : null,
+  };
+}
+
+async function writeTraceStats(stats: TraceStats) {
+  const fields: Record<string, FirestoreValue> = {
+    countryCount: { integerValue: String(stats.countryCount) },
+    cityCount: { integerValue: String(stats.cityCount) },
+    permanentCount: { integerValue: String(stats.permanentCount) },
+    temporaryCount: { integerValue: String(stats.temporaryCount) },
+    firstMiavId: stats.first
+      ? { stringValue: stats.first.miavId }
+      : { nullValue: null },
+    firstCreatedAt: stats.first
+      ? { timestampValue: stats.first.createdAt }
+      : { nullValue: null },
+    latestMiavId: stats.latest
+      ? { stringValue: stats.latest.miavId }
+      : { nullValue: null },
+    latestCountry: stats.latest
+      ? { stringValue: stats.latest.country }
+      : { nullValue: null },
+    latestCity: stats.latest
+      ? { stringValue: stats.latest.city }
+      : { nullValue: null },
+    latestMessagePreview: stats.latest
+      ? { stringValue: stats.latest.messagePreview }
+      : { nullValue: null },
+    latestCreatedAt: stats.latest
+      ? { timestampValue: stats.latest.createdAt }
+      : { nullValue: null },
+  };
+
+  const getRes = await firestoreFetch(`documents/${TRACE_STATS_DOC}`);
+  if (getRes.status === 404) {
+    await firestoreFetch("documents/meta?documentId=trace_stats", {
+      method: "POST",
+      body: JSON.stringify({ fields }),
+    });
+    return;
+  }
+
+  await firestoreFetch(
+    `documents/${TRACE_STATS_DOC}?updateMask.fieldPaths=countryCount&updateMask.fieldPaths=cityCount&updateMask.fieldPaths=permanentCount&updateMask.fieldPaths=temporaryCount&updateMask.fieldPaths=firstMiavId&updateMask.fieldPaths=firstCreatedAt&updateMask.fieldPaths=latestMiavId&updateMask.fieldPaths=latestCountry&updateMask.fieldPaths=latestCity&updateMask.fieldPaths=latestMessagePreview&updateMask.fieldPaths=latestCreatedAt`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ fields }),
+    },
+  );
+}
+
+async function rebuildAggregatesFromTraces(): Promise<{
+  stats: TraceStats;
+  locations: TraceLocationCluster[];
+}> {
+  const records = await runTraceQuery({
+    from: [{ collectionId: TRACE_COLLECTION }],
+  });
+  const stats = statsFromRecords(records);
+  await writeTraceStats(stats);
+
+  const byCity = new Map<string, TraceLocationCluster>();
+  for (const trace of records) {
+    const key = locationDocId(trace);
+    const current = byCity.get(key);
+    if (current) {
+      current.count += 1;
+    } else {
+      byCity.set(key, {
+        country: trace.country,
+        region: trace.region,
+        city: trace.city,
+        lat: trace.lat,
+        lng: trace.lng,
+        count: 1,
+      });
+    }
+  }
+
+  for (const cluster of byCity.values()) {
+    await bumpLocationCount(cluster, 0); // ensure write via set
+    const id = locationDocId(cluster);
+    await firestoreFetch(
+      `documents/${TRACE_LOCATIONS_COLLECTION}?documentId=${id}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fields: {
+            country: { stringValue: cluster.country },
+            region: { stringValue: cluster.region },
+            city: { stringValue: cluster.city },
+            lat: { doubleValue: cluster.lat },
+            lng: { doubleValue: cluster.lng },
+            count: { integerValue: String(cluster.count) },
+          },
+        }),
+      },
+    ).catch(async () => {
+      await firestoreFetch(
+        `documents/${TRACE_LOCATIONS_COLLECTION}/${id}?updateMask.fieldPaths=count&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=country&updateMask.fieldPaths=region&updateMask.fieldPaths=city`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            fields: {
+              country: { stringValue: cluster.country },
+              region: { stringValue: cluster.region },
+              city: { stringValue: cluster.city },
+              lat: { doubleValue: cluster.lat },
+              lng: { doubleValue: cluster.lng },
+              count: { integerValue: String(cluster.count) },
+            },
+          }),
+        },
+      );
+    });
+  }
+
+  return { stats, locations: [...byCity.values()] };
+}
+
+async function readTraceStatsDoc(): Promise<TraceStats | null> {
+  const response = await firestoreFetch(`documents/${TRACE_STATS_DOC}`);
+  if (response.status === 404) return null;
+  if (!response.ok) return null;
+  const doc = (await response.json()) as FirestoreDocument;
+  const firstMiavId = readString(doc.fields, "firstMiavId");
+  const latestMiavId = readString(doc.fields, "latestMiavId");
+  const first: TraceFirstSummary | null = firstMiavId
+    ? {
+        miavId: firstMiavId,
+        createdAt: readTimestamp(doc.fields, "firstCreatedAt"),
+      }
+    : null;
+  const latest: TraceLatestSummary | null = latestMiavId
+    ? {
+        miavId: latestMiavId,
+        country: readString(doc.fields, "latestCountry"),
+        city: readString(doc.fields, "latestCity"),
+        messagePreview: readString(doc.fields, "latestMessagePreview"),
+        createdAt: readTimestamp(doc.fields, "latestCreatedAt"),
+      }
+    : null;
+
+  return {
+    countryCount: readNumber(doc.fields, "countryCount"),
+    cityCount: readNumber(doc.fields, "cityCount"),
+    permanentCount: readNumber(doc.fields, "permanentCount"),
+    temporaryCount: readNumber(doc.fields, "temporaryCount"),
+    first,
+    latest,
+  };
+}
+
+export async function listTraceLocations(): Promise<TraceLocationCluster[]> {
+  const response = await firestoreFetch("documents:runQuery", {
+    method: "POST",
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: TRACE_LOCATIONS_COLLECTION }],
+      },
+    }),
+  });
+
+  const rows = (await response.json()) as Array<{
+    document?: FirestoreDocument;
+  }>;
+
+  if (!response.ok || !Array.isArray(rows)) {
+    const rebuilt = await rebuildAggregatesFromTraces();
+    return rebuilt.locations;
+  }
+
+  const locations = rows
+    .map((row) => row.document)
+    .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
+    .map((doc) => ({
+      country: readString(doc.fields, "country"),
+      region: readString(doc.fields, "region"),
+      city: readString(doc.fields, "city"),
+      lat: readNumber(doc.fields, "lat"),
+      lng: readNumber(doc.fields, "lng"),
+      count: readNumber(doc.fields, "count"),
+    }))
+    .filter((item) => item.count > 0 && item.city);
+
+  if (locations.length === 0) {
+    const stats = await readTraceStatsDoc();
+    if (!stats || stats.permanentCount + stats.temporaryCount === 0) {
+      return [];
+    }
+    const rebuilt = await rebuildAggregatesFromTraces();
+    return rebuilt.locations;
+  }
+
+  return locations;
+}
+
+export async function getTraceStats(): Promise<TraceStats> {
+  const existing = await readTraceStatsDoc();
+  if (existing) return existing;
+  const rebuilt = await rebuildAggregatesFromTraces();
+  return rebuilt.stats;
+}
+
+export async function listTracesAtLocation(input: {
+  country: string;
+  region?: string;
+  city?: string;
+  limit?: number;
+}): Promise<TracePin[]> {
+  const filters: Array<Record<string, unknown>> = [
+    {
+      fieldFilter: {
+        field: { fieldPath: "country" },
+        op: "EQUAL",
+        value: { stringValue: input.country },
+      },
+    },
+  ];
+
+  if (input.region) {
+    filters.push({
+      fieldFilter: {
+        field: { fieldPath: "region" },
+        op: "EQUAL",
+        value: { stringValue: input.region },
+      },
+    });
+  }
+
+  if (input.city) {
+    filters.push({
+      fieldFilter: {
+        field: { fieldPath: "city" },
+        op: "EQUAL",
+        value: { stringValue: input.city },
+      },
+    });
+  }
+
+  const where =
+    filters.length === 1
+      ? filters[0]
+      : {
+          compositeFilter: {
+            op: "AND",
+            filters,
+          },
+        };
+
+  const limit = input.limit ?? 200;
+
+  try {
+    const records = await runTraceQuery({
+      from: [{ collectionId: TRACE_COLLECTION }],
+      where,
+      orderBy: [
+        {
+          field: { fieldPath: "createdAt" },
+          direction: "DESCENDING",
+        },
+      ],
+      limit,
+    });
+    return records.map(toTracePin);
+  } catch {
+    // No composite index yet: equality on country alone needs no extra index.
+    const countryRows = await runTraceQuery({
+      from: [{ collectionId: TRACE_COLLECTION }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "country" },
+          op: "EQUAL",
+          value: { stringValue: input.country },
+        },
+      },
+    });
+    return countryRows
+      .filter((trace) => {
+        if (input.region && trace.region !== input.region) return false;
+        if (input.city && trace.city !== input.city) return false;
+        return true;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .slice(0, limit)
+      .map(toTracePin);
+  }
+}
+
+async function refreshStatsAfterMutation(changed: TraceRecord) {
+  const stats = await getTraceStats();
+  const next = { ...stats };
+
+  if (!next.first) {
+    next.first = { miavId: changed.miavId, createdAt: changed.createdAt };
+  } else if (
+    new Date(changed.createdAt).getTime() <
+    new Date(next.first.createdAt).getTime()
+  ) {
+    next.first = { miavId: changed.miavId, createdAt: changed.createdAt };
+  }
+
+  if (
+    !next.latest ||
+    new Date(changed.updatedAt || changed.createdAt).getTime() >=
+      new Date(next.latest.createdAt).getTime() ||
+    changed.miavId === next.latest.miavId
+  ) {
+    next.latest = {
+      miavId: changed.miavId,
+      country: changed.country,
+      city: changed.city,
+      messagePreview: previewMessage(changed.message),
+      createdAt: changed.createdAt,
+    };
+  }
+
+  // Recompute counts from location docs when possible; else light rebuild.
+  const locations = await listTraceLocations();
+  next.cityCount = locations.length;
+  next.countryCount = new Set(locations.map((l) => l.country)).size;
+  await writeTraceStats(next);
 }
 
 export async function getTraceByUid(uid: string): Promise<TraceRecord | null> {
@@ -250,7 +692,6 @@ export async function createTrace(input: {
       : null;
 
   const fields: Record<string, FirestoreValue> = {
-    // Privacy: only these fields — never email, displayName, photoURL, etc.
     miavId: { stringValue: miavId },
     uid: { stringValue: input.uid },
     authType: { stringValue: input.authType },
@@ -282,7 +723,38 @@ export async function createTrace(input: {
   }
 
   const doc = (await response.json()) as FirestoreDocument;
-  return toTraceRecord(doc);
+  const record = toTraceRecord(doc);
+
+  await bumpLocationCount(
+    {
+      country: record.country,
+      region: record.region,
+      city: record.city,
+      lat: record.lat,
+      lng: record.lng,
+    },
+    1,
+  );
+
+  const stats = (await readTraceStatsDoc()) || emptyStats();
+  stats.permanentCount += record.authType === "google" ? 1 : 0;
+  stats.temporaryCount += record.authType === "anonymous" ? 1 : 0;
+  if (!stats.first) {
+    stats.first = { miavId: record.miavId, createdAt: record.createdAt };
+  }
+  stats.latest = {
+    miavId: record.miavId,
+    country: record.country,
+    city: record.city,
+    messagePreview: previewMessage(record.message),
+    createdAt: record.createdAt,
+  };
+  const locations = await listTraceLocations();
+  stats.cityCount = locations.length;
+  stats.countryCount = new Set(locations.map((l) => l.country)).size;
+  await writeTraceStats(stats);
+
+  return record;
 }
 
 export async function updateTraceLocationMessage(input: {
@@ -301,6 +773,11 @@ export async function updateTraceLocationMessage(input: {
     city: input.city,
   });
   if (!coords) throw new Error("Invalid location.");
+
+  const locationChanged =
+    existing.country !== input.country ||
+    existing.region !== input.region ||
+    existing.city !== input.city;
 
   const updatedAt = new Date().toISOString();
   const response = await firestoreFetch(
@@ -327,11 +804,38 @@ export async function updateTraceLocationMessage(input: {
   }
 
   const doc = (await response.json()) as FirestoreDocument;
-  return toTraceRecord(doc);
+  const record = toTraceRecord(doc);
+
+  if (locationChanged) {
+    await bumpLocationCount(
+      {
+        country: existing.country,
+        region: existing.region,
+        city: existing.city,
+        lat: existing.lat,
+        lng: existing.lng,
+      },
+      -1,
+    );
+    await bumpLocationCount(
+      {
+        country: record.country,
+        region: record.region,
+        city: record.city,
+        lat: record.lat,
+        lng: record.lng,
+      },
+      1,
+    );
+  }
+
+  await refreshStatsAfterMutation(record);
+  return record;
 }
 
-/** Upgrade anonymous → permanent (Google) without changing miavId / createdAt. */
-export async function upgradeTraceToPermanent(uid: string): Promise<TraceRecord> {
+export async function upgradeTraceToPermanent(
+  uid: string,
+): Promise<TraceRecord> {
   const existing = await getTraceByUid(uid);
   if (!existing) throw new Error("NOT_FOUND");
 
@@ -356,40 +860,34 @@ export async function upgradeTraceToPermanent(uid: string): Promise<TraceRecord>
   }
 
   const doc = (await response.json()) as FirestoreDocument;
-  return toTraceRecord(doc);
+  const record = toTraceRecord(doc);
+
+  if (existing.authType === "anonymous") {
+    const stats = (await readTraceStatsDoc()) || emptyStats();
+    stats.temporaryCount = Math.max(0, stats.temporaryCount - 1);
+    stats.permanentCount += 1;
+    await writeTraceStats(stats);
+  }
+
+  return record;
 }
 
 export async function deleteExpiredAnonymousTraces(): Promise<number> {
-  const response = await firestoreFetch("documents:runQuery", {
-    method: "POST",
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: TRACE_COLLECTION }],
-        where: {
-          fieldFilter: {
-            field: { fieldPath: "authType" },
-            op: "EQUAL",
-            value: { stringValue: "anonymous" },
-          },
-        },
+  const records = await runTraceQuery({
+    from: [{ collectionId: TRACE_COLLECTION }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: "authType" },
+        op: "EQUAL",
+        value: { stringValue: "anonymous" },
       },
-    }),
+    },
   });
-
-  const rows = (await response.json()) as Array<{
-    document?: FirestoreDocument;
-  }>;
-
-  if (!response.ok || !Array.isArray(rows)) {
-    throw new Error("Failed to query anonymous traces.");
-  }
 
   const now = Date.now();
   let deleted = 0;
 
-  for (const row of rows) {
-    if (!row.document?.name) continue;
-    const trace = toTraceRecord(row.document);
+  for (const trace of records) {
     if (!trace.expiresAt) continue;
     if (new Date(trace.expiresAt).getTime() > now) continue;
 
@@ -397,15 +895,30 @@ export async function deleteExpiredAnonymousTraces(): Promise<number> {
       `documents/${TRACE_COLLECTION}/${encodeURIComponent(trace.id)}`,
       { method: "DELETE" },
     );
-    if (del.ok || del.status === 404) deleted += 1;
+    if (del.ok || del.status === 404) {
+      deleted += 1;
+      await bumpLocationCount(
+        {
+          country: trace.country,
+          region: trace.region,
+          city: trace.city,
+          lat: trace.lat,
+          lng: trace.lng,
+        },
+        -1,
+      );
+    }
   }
 
-  // MIAV numbers are never reused — counter is not decremented.
+  if (deleted > 0) {
+    await rebuildAggregatesFromTraces();
+  }
+
   return deleted;
 }
 
-/** Operator removal only — never used to edit Trace content. */
 export async function deleteTraceById(id: string): Promise<boolean> {
+  const existing = await getTraceByUid(id);
   const response = await firestoreFetch(
     `documents/${TRACE_COLLECTION}/${encodeURIComponent(id)}`,
     { method: "DELETE" },
@@ -417,5 +930,34 @@ export async function deleteTraceById(id: string): Promise<boolean> {
     } | null;
     throw new Error(data?.error?.message || "Failed to delete trace.");
   }
+
+  if (existing) {
+    await bumpLocationCount(
+      {
+        country: existing.country,
+        region: existing.region,
+        city: existing.city,
+        lat: existing.lat,
+        lng: existing.lng,
+      },
+      -1,
+    );
+    await rebuildAggregatesFromTraces();
+  }
+
   return true;
+}
+
+/** @deprecated Prefer overview + location queries. Kept for emergency rebuild. */
+export async function listTracePins(): Promise<TracePin[]> {
+  const records = await runTraceQuery({
+    from: [{ collectionId: TRACE_COLLECTION }],
+    orderBy: [
+      {
+        field: { fieldPath: "createdAt" },
+        direction: "DESCENDING",
+      },
+    ],
+  });
+  return records.map(toTracePin);
 }

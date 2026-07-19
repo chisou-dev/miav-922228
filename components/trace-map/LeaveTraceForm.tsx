@@ -297,8 +297,9 @@ export function LeaveTraceForm({
             Leave Trace
           </p>
           <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
-            Leave a single presence on the map. Temporary traces fade after
-            three months. Permanent traces remain with Google sign-in.
+            Leave a quiet Trace in place — not a board post. Temporary traces
+            fade after three months. Permanent traces remain with Google
+            sign-in.
           </p>
           <ul className="mt-6 max-w-md space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">
             {TRACE_PRIVACY_BLURB.map((line) => (
@@ -497,15 +498,16 @@ export function LeaveTraceForm({
 
         <label className="mt-8 block">
           <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-            Message ({MAX_TRACE_MESSAGE_LENGTH} characters)
+            Message ({message.length}/{MAX_TRACE_MESSAGE_LENGTH})
           </span>
-          <input
+          <textarea
             value={message}
             maxLength={MAX_TRACE_MESSAGE_LENGTH}
             onChange={(e) => setMessage(e.target.value)}
             required
-            className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[1rem] text-[var(--map-ink)] outline-none"
-            placeholder="A quiet presence"
+            rows={4}
+            className="mt-3 w-full resize-y border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[1rem] leading-[1.8] text-[var(--map-ink)] outline-none"
+            placeholder="A quiet presence left in place"
           />
         </label>
 

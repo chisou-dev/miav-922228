@@ -1,34 +1,32 @@
 "use client";
 
-import type { TracePin } from "@/lib/trace/types";
+import {
+  formatJoinedDate,
+  type TracePin,
+} from "@/lib/trace/types";
 
 type Props = {
   pin: TracePin;
   onClose?: () => void;
 };
 
-function formatJoined(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
 export function TraceCard({ pin, onClose }: Props) {
   return (
-    <div className="min-w-[200px] max-w-[260px] border border-[var(--map-line)] bg-white px-4 py-4 text-left shadow-none">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[0.72rem] tracking-[0.16em] text-[var(--map-accent)]">
-          {pin.miavId}
-        </p>
+    <article className="border border-[var(--map-line)] bg-white px-5 py-6 sm:px-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
+            Trace
+          </p>
+          <p className="mt-2 font-mono text-[0.95rem] tracking-[0.06em] text-[var(--map-accent)]">
+            {pin.miavId}
+          </p>
+        </div>
         {onClose ? (
           <button
             type="button"
             onClick={onClose}
-            className="text-[0.7rem] tracking-[0.12em] text-[var(--map-muted)]"
+            className="text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.4em]"
             aria-label="Close"
           >
             Close
@@ -36,42 +34,49 @@ export function TraceCard({ pin, onClose }: Props) {
         ) : null}
       </div>
 
-      <dl className="mt-4 space-y-3 text-[0.82rem] leading-[1.6] text-[var(--map-ink)]">
+      <dl className="mt-6 grid gap-5 border-t border-[var(--map-line)] pt-6 sm:grid-cols-3">
         <div>
           <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
             Country
           </dt>
-          <dd className="mt-1">{pin.country}</dd>
+          <dd className="mt-2 text-[0.9rem] text-[var(--map-ink)]">{pin.country}</dd>
         </div>
         <div>
           <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
             Region
           </dt>
-          <dd className="mt-1">{pin.region}</dd>
+          <dd className="mt-2 text-[0.9rem] text-[var(--map-ink)]">{pin.region}</dd>
         </div>
         <div>
           <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
             City
           </dt>
-          <dd className="mt-1">{pin.city}</dd>
-        </div>
-        <div>
-          <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-            Message
-          </dt>
-          <dd className="mt-1 italic">{pin.message || "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-            Joined
-          </dt>
-          <dd className="mt-1">{formatJoined(pin.createdAt)}</dd>
+          <dd className="mt-2 text-[0.9rem] text-[var(--map-ink)]">{pin.city}</dd>
         </div>
       </dl>
 
-      <p className="mt-4 text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)]">
-        {pin.authType === "google" ? "Permanent Trace" : "Temporary Trace"}
-      </p>
-    </div>
+      <div className="mt-6 border-t border-[var(--map-line)] pt-6">
+        <p className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
+          Message
+        </p>
+        <p className="mt-3 max-w-2xl text-[0.95rem] leading-[1.9] text-[var(--map-ink)]">
+          {pin.message || "—"}
+        </p>
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--map-line)] pt-5">
+        <div>
+          <p className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
+            Joined
+          </p>
+          <p className="mt-2 text-[0.85rem] tracking-[0.04em] text-[var(--map-ink)]">
+            {formatJoinedDate(pin.createdAt)}
+          </p>
+        </div>
+        <p className="text-[0.68rem] tracking-[0.12em] text-[var(--map-muted)]">
+          {pin.authType === "google" ? "Permanent Trace" : "Temporary Trace"}
+        </p>
+      </div>
+    </article>
   );
 }

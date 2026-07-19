@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireTraceUser } from "@/lib/trace/requireTraceUser";
 import {
-  computeTraceStats,
   MAX_TRACE_MESSAGE_LENGTH,
   toTracePin,
 } from "@/lib/trace/types";
 import {
   createTrace,
   getTraceByUid,
-  listTracePins,
+  getTraceStats,
+  listTraceLocations,
+  listTracesAtLocation,
   updateTraceLocationMessage,
   upgradeTraceToPermanent,
 } from "@/lib/trace/traceRest";
@@ -57,8 +58,10 @@ function validateLocation(body: {
 
 export async function GET(request: Request) {
   try {
-    const pins = await listTracePins();
-    const stats = computeTraceStats(pins);
+    const { searchParams } = new URL(request.url);
+    const country = searchParams.get("country")?.trim() || "";
+    const region = searchParams.get("region")?.trim() || undefined;
+    const city = searchParams.get("city")?.trim() || undefined;
 
     const header = request.headers.get("authorization") || "";
     let mine = null;
@@ -70,7 +73,18 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ pins, stats, mine });
+    // Location-scoped list — never loads the whole collection for the UI.
+    if (country) {
+      const traces = await listTracesAtLocation({ country, region, city });
+      return NextResponse.json({ traces, mine, scope: { country, region, city } });
+    }
+
+    const [stats, locations] = await Promise.all([
+      getTraceStats(),
+      listTraceLocations(),
+    ]);
+
+    return NextResponse.json({ stats, locations, mine });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to load traces.";
@@ -116,7 +130,6 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
-      // Server-only authType change — never copies Google profile data.
       const upgraded = await upgradeTraceToPermanent(auth.uid);
       return NextResponse.json({ trace: toTracePin(upgraded), ok: true });
     }
@@ -165,7 +178,10 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Unable to save trace.";
     if (message === "TRACE_EXISTS") {
       return NextResponse.json(
-        { error: "You already have a Trace. You may only edit location and message." },
+        {
+          error:
+            "You already have a Trace. You may only edit location and message.",
+        },
         { status: 409 },
       );
     }
