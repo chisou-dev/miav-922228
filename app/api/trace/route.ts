@@ -15,7 +15,7 @@ import {
   updateTraceLocationMessage,
   upgradeTraceToPermanent,
 } from "@/lib/trace/traceRest";
-import { findCountry, findRegion, findCity } from "@/lib/trace/locations";
+import { findCountry, findRegion, findCity } from "@/lib/locations";
 import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
 
 export const runtime = "nodejs";

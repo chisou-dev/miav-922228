@@ -2,10 +2,12 @@
 
 import { FirstTraceCard } from "@/components/trace-map/FirstTraceCard";
 import { LatestTraceCard } from "@/components/trace-map/LatestTraceCard";
-import type { TraceStats } from "@/lib/trace/types";
+import type { TracePin, TraceStats } from "@/lib/trace/types";
 
 type Props = {
   stats: TraceStats | null;
+  /** Own Trace for the signed-in Firebase UID (server-resolved). */
+  mine: TracePin | null;
   loading?: boolean;
 };
 
@@ -22,7 +24,7 @@ function StatRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function Sidebar({ stats, loading }: Props) {
+export function Sidebar({ stats, mine, loading }: Props) {
   return (
     <aside className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-6">
       <p className="text-[0.68rem] tracking-[0.22em] text-[var(--map-muted)] uppercase">
@@ -53,8 +55,9 @@ export function Sidebar({ stats, loading }: Props) {
               label="Temporary Traces"
               value={String(stats.temporaryCount)}
             />
-            <FirstTraceCard first={stats.first} />
-            <LatestTraceCard latest={stats.latest} />
+            {/* Own Trace only — omitted when signed out or no Trace yet */}
+            <FirstTraceCard mine={mine} />
+            <LatestTraceCard mine={mine} />
           </>
         )}
       </div>

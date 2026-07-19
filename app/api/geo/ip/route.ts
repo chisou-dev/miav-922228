@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import {
   matchCountryFromGeo,
   nearestCityInCountry,
-} from "@/lib/trace/locations";
+} from "@/lib/locations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

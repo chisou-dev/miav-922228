@@ -19,7 +19,7 @@ import {
   type TraceRecord,
   type TraceStats,
 } from "@/lib/trace/types";
-import { resolveLocationCoords } from "@/lib/trace/locations";
+import { resolveLocationCoords } from "@/lib/locations";
 
 type FirestoreValue =
   | { stringValue: string }
@@ -591,7 +591,7 @@ async function listLocationClustersWhere(filters: {
 export async function listRegionsForCountry(countryName: string): Promise<
   Array<{ name: string; lat: number; lng: number; count: number }>
 > {
-  const { findCountry } = await import("@/lib/trace/locations");
+  const { findCountry } = await import("@/lib/locations");
   const node = findCountry(countryName);
   if (!node) return [];
 
@@ -604,6 +604,7 @@ export async function listRegionsForCountry(countryName: string): Promise<
     );
   }
 
+  // Location Database drives the list; Trace counts only annotate presence.
   return node.regions.map((region) => ({
     name: region.name,
     lat: region.lat,
@@ -618,7 +619,7 @@ export async function listCitiesForRegion(
 ): Promise<
   Array<{ name: string; lat: number; lng: number; count: number }>
 > {
-  const { findCountry, findRegion } = await import("@/lib/trace/locations");
+  const { findCountry, findRegion } = await import("@/lib/locations");
   const country = findCountry(countryName);
   if (!country) return [];
   const region = findRegion(country, regionName);

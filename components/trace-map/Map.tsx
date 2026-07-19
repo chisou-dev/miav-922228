@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, Fragment } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -13,7 +13,7 @@ import {
   type TraceCityMarker,
   type TraceRegionMarker,
 } from "@/lib/trace/types";
-import { TRACE_COUNTRIES } from "@/lib/trace/locations";
+import { LOCATION_COUNTRIES } from "@/lib/locations";
 
 type Focus = {
   lat: number;
@@ -94,15 +94,15 @@ function MapInteractionGate({ enabled }: { enabled: boolean }) {
 
 function stackOffsets(count: number): number[] {
   const dots = Math.min(Math.max(count, 0), MAX_CITY_MAP_DOTS);
-  if (dots <= 0) return [0];
+  if (dots <= 0) return [];
   const step = 0.045;
   const start = ((dots - 1) * step) / 2;
   return Array.from({ length: dots }, (_, index) => start - index * step);
 }
 
 /**
- * Hierarchical world map — Country → Region → City only.
- * City stacks show at most 10 quiet dots; list holds the rest.
+ * Hierarchical world map — Country → Region → City from Location Database.
+ * Trace pins (stacked dots) appear only where Traces exist.
  */
 export function Map({
   focus,
@@ -116,7 +116,7 @@ export function Map({
   onSelectRegion,
   onSelectCity,
 }: Props) {
-  const countries = useMemo(() => TRACE_COUNTRIES, []);
+  const countries = useMemo(() => LOCATION_COUNTRIES, []);
 
   return (
     <div
@@ -202,44 +202,69 @@ export function Map({
 
         {selectedRegion
           ? cities.map((city) => {
-              const offsets = stackOffsets(city.count);
               const cityActive = cityScope?.city === city.name;
-              return offsets.map((offset, index) => (
-                <CircleMarker
-                  key={`${selectedRegion}-${city.name}-${index}`}
-                  center={[city.lat + offset, city.lng]}
-                  radius={cityActive ? 4.5 : city.count > 0 ? 3.5 : 3}
-                  pathOptions={{
-                    color: city.count > 0 ? "#6f8fa8" : "#b7c5d1",
-                    weight: 1,
-                    fillColor: cityActive
-                      ? "#d7e3ee"
-                      : city.count > 0
-                        ? "#ffffff"
-                        : "#ffffff",
-                    fillOpacity: city.count > 0 ? 1 : 0.7,
-                  }}
-                  eventHandlers={{
-                    click: () => {
-                      if (!interactionsEnabled) return;
-                      onSelectCity(city.name);
-                    },
-                  }}
-                >
-                  {index === 0 ? (
-                    <Popup>
-                      <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
-                        {city.name}
-                        {city.count > MAX_CITY_MAP_DOTS
-                          ? ` · ${city.count}`
-                          : city.count > 0
-                            ? ` · ${city.count}`
-                            : ""}
-                      </span>
-                    </Popup>
+              const hasTraces = city.count > 0;
+              const pinOffsets = stackOffsets(city.count);
+
+              // Location marker — always selectable, even with zero Traces.
+              // Trace pins stack only when count > 0 (max 10).
+              return (
+                <Fragment key={`${selectedRegion}-${city.name}`}>
+                  {!hasTraces ? (
+                    <CircleMarker
+                      center={[city.lat, city.lng]}
+                      radius={cityActive ? 4 : 3}
+                      pathOptions={{
+                        color: "#b7c5d1",
+                        weight: 1,
+                        fillColor: cityActive ? "#d7e3ee" : "#ffffff",
+                        fillOpacity: 0.75,
+                      }}
+                      eventHandlers={{
+                        click: () => {
+                          if (!interactionsEnabled) return;
+                          onSelectCity(city.name);
+                        },
+                      }}
+                    >
+                      <Popup>
+                        <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
+                          {city.name}
+                        </span>
+                      </Popup>
+                    </CircleMarker>
                   ) : null}
-                </CircleMarker>
-              ));
+
+                  {pinOffsets.map((offset, index) => (
+                    <CircleMarker
+                      key={`${selectedRegion}-${city.name}-pin-${index}`}
+                      center={[city.lat + offset, city.lng]}
+                      radius={cityActive ? 4.5 : 3.5}
+                      pathOptions={{
+                        color: "#6f8fa8",
+                        weight: 1,
+                        fillColor: cityActive ? "#d7e3ee" : "#ffffff",
+                        fillOpacity: 1,
+                      }}
+                      eventHandlers={{
+                        click: () => {
+                          if (!interactionsEnabled) return;
+                          onSelectCity(city.name);
+                        },
+                      }}
+                    >
+                      {index === 0 ? (
+                        <Popup>
+                          <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
+                            {city.name}
+                            {` · ${city.count}`}
+                          </span>
+                        </Popup>
+                      ) : null}
+                    </CircleMarker>
+                  ))}
+                </Fragment>
+              );
             })
           : null}
       </MapContainer>

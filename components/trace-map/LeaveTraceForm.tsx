@@ -3,10 +3,10 @@
 import { FormEvent, useMemo, useState } from "react";
 import type { User } from "firebase/auth";
 import {
-  TRACE_COUNTRIES,
+  LOCATION_COUNTRIES,
   findCountry,
   resolveLocationCoords,
-} from "@/lib/trace/locations";
+} from "@/lib/locations";
 import { MAX_TRACE_MESSAGE_LENGTH, type TracePin } from "@/lib/trace/types";
 import {
   formatAuthError,
@@ -50,7 +50,7 @@ export function LeaveTraceForm({
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
 
   const country = useMemo(
-    () => findCountry(draft.country) || TRACE_COUNTRIES[0],
+    () => findCountry(draft.country) || LOCATION_COUNTRIES[0],
     [draft.country],
   );
   const regions = country?.regions || [];
@@ -64,7 +64,7 @@ export function LeaveTraceForm({
   const isAnonymousSession = Boolean(user && authType === "anonymous");
 
   function setCountry(name: string) {
-    const nextCountry = findCountry(name) || TRACE_COUNTRIES[0]!;
+    const nextCountry = findCountry(name) || LOCATION_COUNTRIES[0]!;
     const nextRegion = nextCountry.regions[0]!;
     const nextCity = nextRegion.cities[0]!;
     const next = {
@@ -453,7 +453,7 @@ export function LeaveTraceForm({
               onChange={(e) => setCountry(e.target.value)}
               className="mt-3 w-full border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[0.95rem] text-[var(--map-ink)] outline-none"
             >
-              {TRACE_COUNTRIES.map((c) => (
+              {LOCATION_COUNTRIES.map((c) => (
                 <option key={c.code} value={c.name}>
                   {c.name}
                 </option>

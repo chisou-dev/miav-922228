@@ -18,8 +18,8 @@ import {
 import {
   findCountry,
   resolveLocationCoords,
-  TRACE_COUNTRIES,
-} from "@/lib/trace/locations";
+  LOCATION_COUNTRIES,
+} from "@/lib/locations";
 import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/lib/trace/policyCopy";
 
 const Map = dynamic(
@@ -49,9 +49,9 @@ export function TraceMapApp() {
     zoom: number;
   } | null>(null);
   const [draft, setDraft] = useState<LocationDraft>({
-    country: TRACE_COUNTRIES[0]!.name,
-    region: TRACE_COUNTRIES[0]!.regions[0]!.name,
-    city: TRACE_COUNTRIES[0]!.regions[0]!.cities[0]!.name,
+    country: LOCATION_COUNTRIES[0]!.name,
+    region: LOCATION_COUNTRIES[0]!.regions[0]!.name,
+    city: LOCATION_COUNTRIES[0]!.regions[0]!.cities[0]!.name,
   });
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -274,7 +274,11 @@ export function TraceMapApp() {
 
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[220px_minmax(0,1fr)]">
         <div className="order-2 lg:order-1">
-          <Sidebar stats={data.stats} loading={data.overviewLoading} />
+          <Sidebar
+            stats={data.stats}
+            mine={data.mine}
+            loading={data.overviewLoading}
+          />
         </div>
 
         <div className="order-1 space-y-8 lg:order-2">
@@ -297,8 +301,9 @@ export function TraceMapApp() {
                 onSelectCity={(name) => void onSelectCity(name)}
               />
               <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                Country → Region → City. Each step loads only what is needed.
-                Same city stacks up to ten quiet dots; the list holds the rest.
+                Country → Region → City from the Location Database. Places
+                without Traces remain selectable; pins appear only where Traces
+                remain. Stacks stop at ten quiet dots.
               </p>
             </div>
 

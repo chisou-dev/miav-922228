@@ -53,6 +53,7 @@ export function TraceViewer({
       </div>
 
       <TraceList
+        key={title}
         traces={traces}
         loading={loading}
         loadingMore={loadingMore}
