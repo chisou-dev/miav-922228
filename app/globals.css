@@ -130,6 +130,15 @@ body {
   color: var(--map-ink);
 }
 
+.trace-map-shell button:not(:disabled),
+.trace-map-shell a {
+  cursor: pointer;
+}
+
+.trace-map-shell button:disabled {
+  cursor: not-allowed;
+}
+
 .trace-map-shell .leaflet-container {
   background: #f7f9fb;
   font-family: var(--font-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;

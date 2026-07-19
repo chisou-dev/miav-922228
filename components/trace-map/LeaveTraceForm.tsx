@@ -259,7 +259,7 @@ export function LeaveTraceForm({
             setError(null);
             setOpen(true);
           }}
-          className="mt-8 text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em]"
+          className="mt-8 cursor-pointer text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em]"
         >
           {mine ? "Edit your trace" : "Leave your trace"}
         </button>
@@ -302,7 +302,7 @@ export function LeaveTraceForm({
             type="button"
             disabled={busy || !configured}
             onClick={() => void ensureAuth("anonymous")}
-            className="text-[0.8rem] tracking-[0.12em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.45em] disabled:opacity-50"
+            className="cursor-pointer text-[0.8rem] tracking-[0.12em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.45em] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Continue anonymously
           </button>
@@ -310,7 +310,7 @@ export function LeaveTraceForm({
             type="button"
             disabled={busy || !configured}
             onClick={() => void ensureAuth("google")}
-            className="text-[0.8rem] tracking-[0.12em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.45em] disabled:opacity-50"
+            className="cursor-pointer text-[0.8rem] tracking-[0.12em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.45em] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Continue with Google
           </button>
@@ -321,7 +321,7 @@ export function LeaveTraceForm({
           without changing your MIAV ID.
           <button
             type="button"
-            className="ml-3 underline decoration-[var(--map-line)] underline-offset-[0.35em]"
+            className="ml-3 cursor-pointer underline decoration-[var(--map-line)] underline-offset-[0.35em]"
             onClick={() => void ensureAuth("google")}
           >
             Make permanent
@@ -421,14 +421,14 @@ export function LeaveTraceForm({
         <button
           type="submit"
           disabled={busy || !message.trim()}
-          className="text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em] disabled:opacity-50"
+          className="cursor-pointer text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "Saving…" : mine ? "Save changes" : "Leave your trace"}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-[0.78rem] tracking-[0.12em] text-[var(--map-muted)]"
+          className="cursor-pointer text-[0.78rem] tracking-[0.12em] text-[var(--map-muted)]"
         >
           Cancel
         </button>

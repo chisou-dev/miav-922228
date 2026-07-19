@@ -221,7 +221,7 @@ export function TraceMapApp() {
                 <button
                   type="button"
                   onClick={() => void signOutTrace()}
-                  className="underline decoration-[var(--map-line)] underline-offset-[0.4em]"
+                  className="cursor-pointer underline decoration-[var(--map-line)] underline-offset-[0.4em]"
                 >
                   Sign out
                 </button>

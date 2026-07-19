@@ -38,6 +38,8 @@ export function formatAuthError(error: unknown): string {
       : "";
 
   switch (code) {
+    case "auth/admin-restricted-operation":
+      return "Anonymous sign-in is blocked. In Firebase Console → Authentication → Sign-in method, enable Anonymous (and Google if you use it).";
     case "auth/operation-not-allowed":
       return "This sign-in method is not enabled in Firebase Console (Anonymous or Google).";
     case "auth/popup-blocked":
