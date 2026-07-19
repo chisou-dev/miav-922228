@@ -83,3 +83,71 @@ body {
 .chapter-prose strong {
   font-weight: 600;
 }
+
+/* Home left sidebar */
+.home-with-sidebar {
+  display: block;
+}
+
+.home-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  height: 100vh;
+  width: 220px;
+  padding: 2.5rem 1.5rem 2rem;
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--background-deep) 72%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.home-sidebar-inner {
+  position: sticky;
+  top: 2.5rem;
+}
+
+.home-main {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .home-with-sidebar {
+    padding-left: 220px;
+  }
+}
+
+/* Trace Map — quiet literary surface */
+.trace-map-shell {
+  --map-ink: #243447;
+  --map-muted: #6b7c8d;
+  --map-line: #d5dee7;
+  --map-panel: #ffffff;
+  --map-accent: #5b7c99;
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f4f7fa 48%, #eef3f7 100%);
+  color: var(--map-ink);
+}
+
+.trace-map-shell .leaflet-container {
+  background: #f7f9fb;
+  font-family: var(--font-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+
+.trace-map-shell .leaflet-popup-content-wrapper,
+.trace-map-shell .leaflet-popup-tip {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+}
+
+.trace-map-shell .leaflet-popup-content {
+  margin: 0;
+}
+
+.miav-trace-pin {
+  background: transparent;
+  border: none;
+}

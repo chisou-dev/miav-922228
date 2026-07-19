@@ -2,14 +2,40 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Current app architecture:
-    // - /contact  → POST /api/contact          (Firebase Admin SDK)
-    // - /admin/*  → /api/admin/contacts[...]   (Firebase Admin SDK + Auth UID check)
-    //
-    // Admin SDK bypasses these rules. Client SDK access must stay fully denied
-    // so browsers / attackers cannot read or write contact_messages directly.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.uid == 'REPLACE_WITH_ADMIN_UID';
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Contact form: server-only (REST / service account). Deny all clients.
     match /contact_messages/{messageId} {
       allow read, write: if false;
+    }
+
+    // MIAV ID counter: server-only. Never decrement (IDs are never reused).
+    match /meta/{docId} {
+      allow read, write: if false;
+    }
+
+    // Trace Map public pins.
+    // Creates / updates / deletes for clients are denied — Next.js API
+    // (service account) owns writes after Firebase Auth verification.
+    // This keeps miavId / createdAt / uid / authType immutable from browsers.
+    match /trace_map/{traceId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+
+      // Admin SDK / scheduled cleanup bypasses rules.
+      // If client admin tooling is added later:
+      // allow delete: if isAdmin();
     }
   }
 }

@@ -4,9 +4,10 @@ import "server-only";
  * Verify Firebase Auth ID tokens without firebase-admin.
  * Uses ESM jose via dynamic import (never require()).
  */
-export async function verifyFirebaseIdToken(
-  idToken: string,
-): Promise<{ uid: string }> {
+export async function verifyFirebaseIdToken(idToken: string): Promise<{
+  uid: string;
+  signInProvider: string;
+}> {
   const projectId =
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() ||
     process.env.GCLOUD_PROJECT?.trim();
@@ -27,15 +28,21 @@ export async function verifyFirebaseIdToken(
     audience: projectId,
   });
 
-  const uid = typeof payload.user_id === "string"
-    ? payload.user_id
-    : typeof payload.sub === "string"
-      ? payload.sub
-      : "";
+  const uid =
+    typeof payload.user_id === "string"
+      ? payload.user_id
+      : typeof payload.sub === "string"
+        ? payload.sub
+        : "";
 
   if (!uid) {
     throw new Error("Invalid Firebase ID token.");
   }
 
-  return { uid };
+  const firebaseClaim = payload.firebase as
+    | { sign_in_provider?: string }
+    | undefined;
+  const signInProvider = firebaseClaim?.sign_in_provider || "unknown";
+
+  return { uid, signInProvider };
 }

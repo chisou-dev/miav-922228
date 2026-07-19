@@ -39,6 +39,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.5,
     },
+    {
+      url: `${baseUrl}/world-map`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.85,
+    },
   ];
 
   const chapterRoutes: MetadataRoute.Sitemap = chapters.map((chapter) => ({

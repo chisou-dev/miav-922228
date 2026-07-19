@@ -3,6 +3,7 @@ const navLinks = [
   { href: "/chapters", label: "Chapters" },
   { href: "/books", label: "Books" },
   { href: "/author", label: "Author" },
+  { href: "/world-map", label: "World Map" },
   { href: "/contact", label: "Contact" },
 ] as const;
 
