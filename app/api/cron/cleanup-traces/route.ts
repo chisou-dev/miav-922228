@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 
 /**
  * Cleanup Temporary (anonymous) Traces past expiresAt.
+ * Canonical path for World Memory star consistency:
+ *   delete Trace → decrement trace_locations → rebuild aggregates.
  * MIAV IDs are never reused.
  *
- * Secure with CRON_SECRET header, or deploy the Cloud Function in /functions.
+ * Secure with CRON_SECRET. Vercel Cron and the Cloud Function both call this route.
  */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET?.trim();

@@ -1,89 +1,107 @@
 "use client";
 
-import {
-  formatJoinedDate,
-  type TracePin,
-} from "@/lib/trace/types";
+import { useRef, type TouchEvent } from "react";
+import { formatJoinedDate, type TracePin } from "@/lib/trace/types";
+import { formatMessageFull } from "@/lib/trace/messagePolicy";
 
 type Props = {
-  trace: TracePin | null;
+  trace: TracePin;
+  locationLabel: string;
+  pinned: boolean;
+  onClose: () => void;
+  onHoverStay?: () => void;
+  onHoverLeave?: () => void;
+  onSwipePrev?: () => void;
+  onSwipeNext?: () => void;
 };
 
-export function SelectedTrace({ trace }: Props) {
-  if (!trace) {
-    return (
-      <div className="shrink-0 border-t border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-5 sm:px-6">
-        <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-          Selected Trace
-        </p>
-        <p className="mt-3 text-[0.85rem] leading-[1.8] text-[var(--map-muted)]">
-          Choose a row above to read the full Trace.
-        </p>
-      </div>
-    );
+/**
+ * Reader Memory card — public fields only.
+ * Never render trace.id, uid, email, IP, or coordinates.
+ */
+export function SelectedTrace({
+  trace,
+  locationLabel,
+  pinned,
+  onClose,
+  onHoverStay,
+  onHoverLeave,
+  onSwipePrev,
+  onSwipeNext,
+}: Props) {
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const fullMemory = formatMessageFull(trace.message);
+
+  function onTouchStart(event: TouchEvent) {
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function onTouchEnd(event: TouchEvent) {
+    const start = touchStart.current;
+    const touch = event.changedTouches[0];
+    touchStart.current = null;
+    if (!start || !touch) return;
+
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0) onSwipeNext?.();
+    else onSwipePrev?.();
   }
 
   return (
     <div
-      key={trace.id}
-      className="shrink-0 border-t border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-5 opacity-100 transition-opacity duration-300 sm:px-6"
+      role="dialog"
+      aria-label={`Memory ${trace.miavId}`}
+      aria-modal={pinned || undefined}
+      className="pointer-events-auto w-[min(100%,22rem)] border border-[var(--map-line)] bg-[var(--map-panel)] shadow-[0_12px_40px_rgba(36,52,71,0.14)]"
+      onMouseEnter={onHoverStay}
+      onMouseLeave={onHoverLeave}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
-      <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-        Selected Trace
-      </p>
-      <p className="mt-2 font-mono text-[0.95rem] tracking-[0.06em] text-[var(--map-accent)]">
-        {trace.miavId}
-      </p>
-
-      <dl className="mt-5 grid gap-4 border-t border-[var(--map-line)] pt-5 sm:grid-cols-3">
+      <div className="flex items-start justify-between gap-3 border-b border-[var(--map-line)] px-4 py-3">
         <div>
-          <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-            Country
-          </dt>
-          <dd className="mt-1.5 text-[0.88rem] text-[var(--map-ink)]">
-            {trace.country}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-            Region
-          </dt>
-          <dd className="mt-1.5 text-[0.88rem] text-[var(--map-ink)]">
-            {trace.region}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-            City
-          </dt>
-          <dd className="mt-1.5 text-[0.88rem] text-[var(--map-ink)]">
-            {trace.city}
-          </dd>
-        </div>
-      </dl>
-
-      <div className="mt-5 border-t border-[var(--map-line)] pt-5">
-        <p className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-          Message
-        </p>
-        <p className="mt-2 max-w-prose text-[0.92rem] leading-[1.85] text-[var(--map-ink)]">
-          {trace.message || "—"}
-        </p>
-      </div>
-
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--map-line)] pt-4">
-        <div>
-          <p className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
-            Joined
+          <p className="font-mono text-[0.92rem] tracking-[0.06em] text-[var(--map-accent)]">
+            {trace.miavId}
           </p>
-          <p className="mt-1.5 text-[0.85rem] tracking-[0.04em] text-[var(--map-ink)]">
+          <p className="mt-1.5 text-[0.8rem] tracking-[0.04em] text-[var(--map-muted)]">
             {formatJoinedDate(trace.createdAt)}
           </p>
+          {locationLabel ? (
+            <p className="mt-1 text-[0.78rem] tracking-[0.03em] text-[var(--map-muted)]">
+              {locationLabel}
+            </p>
+          ) : null}
         </div>
-        <p className="text-[0.68rem] tracking-[0.12em] text-[var(--map-muted)]">
-          {trace.authType === "google" ? "Permanent Trace" : "Temporary Trace"}
-        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="shrink-0 cursor-pointer text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.35em]"
+        >
+          Close
+        </button>
       </div>
+
+      <div className="max-h-[min(40vh,20rem)] overflow-y-auto px-4 py-4">
+        <p className="text-[0.62rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
+          Memory
+        </p>
+        {fullMemory ? (
+          <p className="mt-2 whitespace-pre-wrap break-words text-[0.95rem] leading-[1.85] text-[var(--map-ink)]">
+            {`“${fullMemory}”`}
+          </p>
+        ) : (
+          <p className="mt-2 text-[0.95rem] text-[var(--map-muted)]">—</p>
+        )}
+      </div>
+
+      <p className="border-t border-[var(--map-line)] px-4 py-2.5 text-[0.68rem] tracking-[0.08em] text-[var(--map-muted)] md:hidden">
+        Swipe left / right for more memories
+      </p>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireTraceUser } from "@/lib/trace/requireTraceUser";
 import {
-  MAX_TRACE_MESSAGE_LENGTH,
   TRACE_PAGE_SIZE,
 } from "@/lib/trace/types";
 import {
@@ -24,6 +23,7 @@ import {
   getLocationById,
 } from "@/lib/locations";
 import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
+import { normalizeTraceMessage } from "@/lib/trace/messagePolicy";
 import {
   getSiteControl,
 } from "@/lib/site-control/siteControlRest";
@@ -38,23 +38,25 @@ function validateLocation(body: {
   city?: unknown;
   locationId?: unknown;
   message?: unknown;
+  lat?: unknown;
+  lng?: unknown;
 }) {
+  // Reject client-supplied coordinates — only Catalog places are accepted.
+  if (body.lat != null || body.lng != null) {
+    return { error: "Coordinates are not accepted; choose a catalog location." };
+  }
   const locationId =
     typeof body.locationId === "string" ? body.locationId.trim() : "";
   const country = typeof body.country === "string" ? body.country.trim() : "";
   const region = typeof body.region === "string" ? body.region.trim() : "";
   const city = typeof body.city === "string" ? body.city.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
+  const messageResult = normalizeTraceMessage(body.message);
+  if (!messageResult.ok) return { error: messageResult.error };
+  const message = messageResult.message;
 
   if (locationId) {
     const loc = getLocationById(locationId);
     if (!loc) return { error: "Unknown location." };
-    if (!message) return { error: "Message is required." };
-    if (message.length > MAX_TRACE_MESSAGE_LENGTH) {
-      return {
-        error: `Message must be ${MAX_TRACE_MESSAGE_LENGTH} characters or fewer.`,
-      };
-    }
     return {
       locationId: loc.locationId,
       country: loc.country,
@@ -74,13 +76,6 @@ function validateLocation(body: {
   if (!regionNode) return { error: "Unknown region." };
   const cityNode = findCity(regionNode, city);
   if (!cityNode) return { error: "Unknown city." };
-
-  if (!message) return { error: "Message is required." };
-  if (message.length > MAX_TRACE_MESSAGE_LENGTH) {
-    return {
-      error: `Message must be ${MAX_TRACE_MESSAGE_LENGTH} characters or fewer.`,
-    };
-  }
 
   return {
     locationId: cityNode.locationId,

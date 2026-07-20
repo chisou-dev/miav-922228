@@ -9,9 +9,12 @@ export const TRACE_STORED_FIELDS = [
   "uid",
   "miavId",
   "authType",
+  "locationId",
   "country",
   "region",
   "city",
+  // Catalog representative coords at write time — never device GPS.
+  // Public responses always re-resolve from Location Catalog.
   "lat",
   "lng",
   "message",
@@ -31,6 +34,19 @@ export const TRACE_FORBIDDEN_PII_KEYS = [
   "profile",
   "ip",
   "userAgent",
+] as const;
+
+/**
+ * Keys that must never appear on public Memory / TracePin JSON.
+ * Document id equals Firebase UID in this project.
+ */
+export const TRACE_PUBLIC_FORBIDDEN_KEYS = [
+  "id",
+  "uid",
+  "email",
+  "displayName",
+  "photoURL",
+  "ip",
 ] as const;
 
 export function bodyContainsForbiddenPii(

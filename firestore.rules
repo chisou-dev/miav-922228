@@ -6,7 +6,7 @@ service cloud.firestore {
     // Used only for Trace deletion in cases of spam, terms violations, or legal duty.
     // The operator never edits Trace content through the client.
     function adminUid() {
-      return 'REPLACE_WITH_ADMIN_UID';
+      return 'PiaoGLZXS7SvlRawNwlIj4WGdi12';
     }
 
     function isSignedIn() {
@@ -42,8 +42,8 @@ service cloud.firestore {
     }
 
     match /trace_locations/{locationId} {
-      allow read: if true;
-      allow write: if false;
+      // Aggregates for World Memory stars — server/API only (service account).
+      allow read, write: if false;
     }
 
     match /meta/{docId} {
@@ -77,11 +77,13 @@ service cloud.firestore {
      * Create / MIAV ID allocation / anonymous→permanent upgrade / expiry cleanup
      * are performed by the trusted server (service account), which bypasses rules.
      *
-     * Clients may read pins. Owners may update location + message only.
+     * Public World Memory display is API-only (/api/trace). Clients must not
+     * read raw documents (uid would otherwise be visible).
+     * Owners may update location + message only.
      * Operator may delete only (never edit content).
      */
     match /trace_map/{traceId} {
-      allow read: if true;
+      allow read: if false;
 
       allow create: if false;
 

@@ -296,7 +296,7 @@ export function TraceMapApp() {
               World Memory
             </h1>
             <p className="mt-4 text-[0.95rem] leading-[1.9] tracking-[0.02em] text-[var(--map-muted)]">
-              Reader traces preserved around the world.
+              Reader Memories preserved around the world.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]">
@@ -413,13 +413,12 @@ export function TraceMapApp() {
 
             {viewerOpen && data.cityScope ? (
               <TraceViewer
-                title={`${data.cityScope.city} · ${data.cityScope.region}`}
+                city={data.cityScope.city}
+                country={data.cityScope.country}
                 traces={data.traces}
                 loading={data.tracesLoading}
                 loadingMore={data.tracesLoadingMore}
                 hasMore={data.hasMore}
-                selected={data.selectedTrace}
-                onSelect={data.setSelectedTrace}
                 onLoadMore={() => void data.loadMoreTraces()}
                 onClose={data.closeViewer}
               />

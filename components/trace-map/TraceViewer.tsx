@@ -1,47 +1,52 @@
 "use client";
 
 import { TraceList } from "@/components/trace-map/TraceList";
-import { SelectedTrace } from "@/components/trace-map/SelectedTrace";
 import type { TracePin } from "@/lib/trace/types";
 
 type Props = {
-  title: string;
+  city: string;
+  country: string;
   traces: TracePin[];
   loading?: boolean;
   loadingMore?: boolean;
   hasMore?: boolean;
-  selected: TracePin | null;
-  onSelect: (trace: TracePin) => void;
   onLoadMore: () => void;
   onClose: () => void;
 };
 
 /**
- * Side panel (desktop right / mobile below map).
- * Trace List scrolls; Selected Trace stays fixed at the bottom.
- * No modal.
+ * Side panel for reader memories at a catalog city.
+ * List + floating memory card (hover / tap / swipe) — no UID or coordinates.
  */
 export function TraceViewer({
-  title,
+  city,
+  country,
   traces,
   loading,
   loadingMore,
   hasMore,
-  selected,
-  onSelect,
   onLoadMore,
   onClose,
 }: Props) {
+  const cityLabel = city.trim() || "Unknown";
+  const countryLabel = country.trim() || "";
+
   return (
     <section className="flex h-[min(70vh,640px)] min-h-[320px] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] lg:h-[min(72vh,720px)]">
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-3 border-b border-[var(--map-line)] px-5 py-4 sm:px-6">
         <div>
-          <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-            Trace Viewer
-          </p>
-          <h2 className="mt-1.5 text-[1.05rem] font-medium tracking-[0.05em] text-[var(--map-ink)]">
-            {title}
+          <h2 className="text-[1.15rem] font-medium tracking-[0.12em] text-[var(--map-ink)] uppercase">
+            {cityLabel}{" "}
+            <span className="text-[var(--map-accent)]" aria-hidden>
+              ★
+            </span>
           </h2>
+          <p className="mt-1.5 text-[0.88rem] tracking-[0.04em] text-[var(--map-muted)]">
+            {countryLabel ? `${cityLabel}, ${countryLabel}` : cityLabel}
+          </p>
+          <p className="mt-3 text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)]">
+            Reader Memories
+          </p>
         </div>
         <button
           type="button"
@@ -53,17 +58,16 @@ export function TraceViewer({
       </div>
 
       <TraceList
-        key={title}
+        key={`${cityLabel}|${countryLabel}`}
         traces={traces}
+        locationLabel={
+          countryLabel ? `${cityLabel}, ${countryLabel}` : cityLabel
+        }
         loading={loading}
         loadingMore={loadingMore}
         hasMore={hasMore}
-        selectedId={selected?.id || null}
-        onSelect={onSelect}
         onLoadMore={onLoadMore}
       />
-
-      <SelectedTrace trace={selected} />
     </section>
   );
 }

@@ -34,7 +34,7 @@ export function Sidebar({ stats, mine, loading }: Props) {
         Presence
       </h2>
       <p className="mt-4 text-[0.85rem] leading-[1.85] text-[var(--map-muted)]">
-        Quiet traces left on the map. Temporary fades; permanent remains. MIAV
+        Quiet Memories left on the map. Temporary fades; permanent remains. MIAV
         IDs are never reused.
       </p>
 

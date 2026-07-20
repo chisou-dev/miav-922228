@@ -25,39 +25,98 @@ import {
   resolveLocationCoords,
 } from "@/lib/locations";
 
-/** Public pin with Location DB enrichment (and legacy name→locationId bridge). */
+/**
+ * Public pin — never expose Firebase UID or Firestore document id.
+ * Catalog lat/lng only; re-resolved in pinFromRecord.
+ */
 export function pinFromRecord(record: TraceRecord): TracePin {
   const base = toTracePin(record);
-  if (record.locationId) {
-    const loc = getLocationById(record.locationId);
-    if (loc) {
-      return {
-        ...base,
-        locationId: loc.locationId,
-        country: loc.country,
-        region: loc.region,
-        city: loc.city,
-        lat: loc.lat,
-        lng: loc.lng,
-      };
-    }
+  const coords = catalogCoordsForTrace(record);
+  return {
+    miavId: base.miavId,
+    authType: base.authType,
+    locationId: coords.locationId,
+    country: coords.country,
+    region: coords.region,
+    city: coords.city,
+    lat: coords.lat,
+    lng: coords.lng,
+    message: base.message,
+    createdAt: base.createdAt,
+  };
+}
+
+/** Resolve representative Catalog coords for a stored Trace (never device GPS). */
+function catalogCoordsForTrace(record: {
+  locationId?: string | null;
+  country: string;
+  region: string;
+  city: string;
+}): {
+  locationId: string | null;
+  country: string;
+  region: string;
+  city: string;
+  lat: number;
+  lng: number;
+} {
+  const loc =
+    (record.locationId ? getLocationById(record.locationId) : undefined) ||
+    (record.country && record.region && record.city
+      ? findLocationByNames({
+          country: record.country,
+          region: record.region,
+          city: record.city,
+        })
+      : undefined);
+
+  if (loc) {
+    return {
+      locationId: loc.locationId,
+      country: loc.country,
+      region: loc.region,
+      city: loc.city,
+      lat: loc.lat,
+      lng: loc.lng,
+    };
   }
-  if (record.country && record.region && record.city) {
-    const loc = findLocationByNames({
-      country: record.country,
-      region: record.region,
-      city: record.city,
-    });
-    if (loc) {
-      return {
-        ...base,
-        locationId: loc.locationId,
-        lat: loc.lat,
-        lng: loc.lng,
-      };
-    }
-  }
-  return base;
+
+  const fallback = resolveLocationCoords({
+    country: record.country,
+    region: record.region,
+    city: record.city,
+  });
+
+  return {
+    locationId: record.locationId || null,
+    country: record.country,
+    region: record.region,
+    city: record.city,
+    // Unknown place: still never emit stored/personal coordinates.
+    lat: fallback?.lat ?? 20,
+    lng: fallback?.lng ?? 0,
+  };
+}
+
+/** Enrich a cluster doc with Catalog coords before any public use. */
+function withCatalogClusterCoords(
+  cluster: TraceLocationCluster,
+): TraceLocationCluster {
+  const coords = catalogCoordsForTrace({
+    locationId: cluster.locationId,
+    country: cluster.country,
+    region: cluster.region,
+    city: cluster.city,
+  });
+  return {
+    ...cluster,
+    locationId: coords.locationId,
+    country: coords.country,
+    region: coords.region,
+    city: coords.city,
+    lat: coords.lat,
+    lng: coords.lng,
+  };
 }
 
 type FirestoreValue =
@@ -222,7 +281,10 @@ async function allocateMiavNumber(): Promise<number> {
   throw new Error("Failed to allocate MIAV ID after retries.");
 }
 
-async function runTraceQuery(structuredQuery: Record<string, unknown>) {
+async function runTraceQuery(
+  structuredQuery: Record<string, unknown>,
+  options?: { includeExpired?: boolean },
+) {
   const response = await firestoreFetch("documents:runQuery", {
     method: "POST",
     body: JSON.stringify({ structuredQuery }),
@@ -243,11 +305,15 @@ async function runTraceQuery(structuredQuery: Record<string, unknown>) {
 
   if (!Array.isArray(rows)) return [] as TraceRecord[];
 
-  return rows
+  const records = rows
     .map((row) => row.document)
     .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
-    .map(toTraceRecord)
-    .filter((trace) => isActiveTrace(trace));
+    .map(toTraceRecord);
+
+  // Public / map paths omit expired anonymous Traces.
+  // Cleanup must pass includeExpired: true to find TTL victims.
+  if (options?.includeExpired) return records;
+  return records.filter((trace) => isActiveTrace(trace));
 }
 
 async function bumpLocationCount(
@@ -425,6 +491,72 @@ async function writeTraceStats(stats: TraceStats) {
   );
 }
 
+async function listAllLocationDocumentIds(): Promise<string[]> {
+  const response = await firestoreFetch("documents:runQuery", {
+    method: "POST",
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: TRACE_LOCATIONS_COLLECTION }],
+      },
+    }),
+  });
+  const rows = (await response.json()) as Array<{
+    document?: FirestoreDocument;
+  }>;
+  if (!response.ok || !Array.isArray(rows)) return [];
+  return rows
+    .map((row) => row.document)
+    .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
+    .map((doc) => documentIdFromName(doc.name));
+}
+
+function locationClusterFields(cluster: TraceLocationCluster): Record<
+  string,
+  FirestoreValue
+> {
+  return {
+    locationId: cluster.locationId
+      ? { stringValue: cluster.locationId }
+      : { nullValue: null },
+    country: { stringValue: cluster.country },
+    region: { stringValue: cluster.region },
+    city: { stringValue: cluster.city },
+    lat: { doubleValue: cluster.lat },
+    lng: { doubleValue: cluster.lng },
+    count: { integerValue: String(cluster.count) },
+  };
+}
+
+async function upsertLocationCluster(cluster: TraceLocationCluster) {
+  const id = locationDocId(cluster);
+  const fields = locationClusterFields(cluster);
+  const getRes = await firestoreFetch(
+    `documents/${TRACE_LOCATIONS_COLLECTION}/${id}`,
+  );
+  if (getRes.status === 404) {
+    await firestoreFetch(
+      `documents/${TRACE_LOCATIONS_COLLECTION}?documentId=${id}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ fields }),
+      },
+    );
+    return;
+  }
+  if (!getRes.ok) return;
+  await firestoreFetch(
+    `documents/${TRACE_LOCATIONS_COLLECTION}/${id}?updateMask.fieldPaths=count&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=locationId&updateMask.fieldPaths=country&updateMask.fieldPaths=region&updateMask.fieldPaths=city`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ fields }),
+    },
+  );
+}
+
+/**
+ * Rebuild stats + location counts from active Traces only, and prune orphan
+ * trace_locations docs so World Memory stars cannot linger after deletes.
+ */
 async function rebuildAggregatesFromTraces(): Promise<{
   stats: TraceStats;
   locations: TraceLocationCluster[];
@@ -437,61 +569,73 @@ async function rebuildAggregatesFromTraces(): Promise<{
 
   const byCity = new Map<string, TraceLocationCluster>();
   for (const trace of records) {
-    const key = locationDocId(trace);
+    const coords = catalogCoordsForTrace(trace);
+    const key = locationDocId(coords);
     const current = byCity.get(key);
     if (current) {
       current.count += 1;
     } else {
       byCity.set(key, {
-        country: trace.country,
-        region: trace.region,
-        city: trace.city,
-        lat: trace.lat,
-        lng: trace.lng,
+        locationId: coords.locationId,
+        country: coords.country,
+        region: coords.region,
+        city: coords.city,
+        lat: coords.lat,
+        lng: coords.lng,
         count: 1,
       });
     }
   }
 
+  const existingIds = await listAllLocationDocumentIds();
+  for (const id of existingIds) {
+    if (!byCity.has(id)) {
+      await firestoreFetch(`documents/${TRACE_LOCATIONS_COLLECTION}/${id}`, {
+        method: "DELETE",
+      });
+    }
+  }
+
   for (const cluster of byCity.values()) {
-    await bumpLocationCount(cluster, 0); // ensure write via set
-    const id = locationDocId(cluster);
-    await firestoreFetch(
-      `documents/${TRACE_LOCATIONS_COLLECTION}?documentId=${id}`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          fields: {
-            country: { stringValue: cluster.country },
-            region: { stringValue: cluster.region },
-            city: { stringValue: cluster.city },
-            lat: { doubleValue: cluster.lat },
-            lng: { doubleValue: cluster.lng },
-            count: { integerValue: String(cluster.count) },
-          },
-        }),
-      },
-    ).catch(async () => {
-      await firestoreFetch(
-        `documents/${TRACE_LOCATIONS_COLLECTION}/${id}?updateMask.fieldPaths=count&updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=country&updateMask.fieldPaths=region&updateMask.fieldPaths=city`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({
-            fields: {
-              country: { stringValue: cluster.country },
-              region: { stringValue: cluster.region },
-              city: { stringValue: cluster.city },
-              lat: { doubleValue: cluster.lat },
-              lng: { doubleValue: cluster.lng },
-              count: { integerValue: String(cluster.count) },
-            },
-          }),
-        },
-      );
-    });
+    await upsertLocationCluster(cluster);
   }
 
   return { stats, locations: [...byCity.values()] };
+}
+
+/**
+ * Canonical delete path for World Memory consistency:
+ * 1) delete Trace document
+ * 2) decrement (or remove) the location aggregate used for stars
+ * Returns false only when the Trace delete itself fails.
+ * Callers should run rebuildAggregatesFromTraces() after a batch to prune
+ * orphans and refresh stats so stars always match active Traces.
+ */
+async function deleteTraceDocumentAndDecrementLocation(
+  trace: TraceRecord,
+): Promise<boolean> {
+  const del = await firestoreFetch(
+    `documents/${TRACE_COLLECTION}/${encodeURIComponent(trace.id)}`,
+    { method: "DELETE" },
+  );
+  if (!del.ok && del.status !== 404) {
+    return false;
+  }
+
+  const coords = catalogCoordsForTrace(trace);
+  await bumpLocationCount(
+    {
+      locationId: coords.locationId,
+      country: coords.country,
+      region: coords.region,
+      city: coords.city,
+      lat: coords.lat,
+      lng: coords.lng,
+    },
+    -1,
+  );
+
+  return true;
 }
 
 async function readTraceStatsDoc(): Promise<TraceStats | null> {
@@ -549,15 +693,17 @@ export async function listTraceLocations(): Promise<TraceLocationCluster[]> {
   const locations = rows
     .map((row) => row.document)
     .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
-    .map((doc) => ({
-      locationId: readString(doc.fields, "locationId") || null,
-      country: readString(doc.fields, "country"),
-      region: readString(doc.fields, "region"),
-      city: readString(doc.fields, "city"),
-      lat: readNumber(doc.fields, "lat"),
-      lng: readNumber(doc.fields, "lng"),
-      count: readNumber(doc.fields, "count"),
-    }))
+    .map((doc) =>
+      withCatalogClusterCoords({
+        locationId: readString(doc.fields, "locationId") || null,
+        country: readString(doc.fields, "country"),
+        region: readString(doc.fields, "region"),
+        city: readString(doc.fields, "city"),
+        lat: readNumber(doc.fields, "lat"),
+        lng: readNumber(doc.fields, "lng"),
+        count: readNumber(doc.fields, "count"),
+      }),
+    )
     .filter((item) => item.count > 0 && item.city);
 
   if (locations.length === 0) {
@@ -624,15 +770,17 @@ async function listLocationClustersWhere(filters: {
     return rows
       .map((row) => row.document)
       .filter((doc): doc is FirestoreDocument => Boolean(doc?.name))
-      .map((doc) => ({
-        locationId: readString(doc.fields, "locationId") || null,
-        country: readString(doc.fields, "country"),
-        region: readString(doc.fields, "region"),
-        city: readString(doc.fields, "city"),
-        lat: readNumber(doc.fields, "lat"),
-        lng: readNumber(doc.fields, "lng"),
-        count: readNumber(doc.fields, "count"),
-      }))
+      .map((doc) =>
+        withCatalogClusterCoords({
+          locationId: readString(doc.fields, "locationId") || null,
+          country: readString(doc.fields, "country"),
+          region: readString(doc.fields, "region"),
+          city: readString(doc.fields, "city"),
+          lat: readNumber(doc.fields, "lat"),
+          lng: readNumber(doc.fields, "lng"),
+          count: readNumber(doc.fields, "count"),
+        }),
+      )
       .filter((item) => item.count > 0 && item.city);
   } catch {
     const all = await listTraceLocations();
@@ -962,7 +1110,7 @@ export async function listTracesAtLocation(input: {
       ],
       limit,
     });
-    return records.map(toTracePin);
+    return records.map(pinFromRecord);
   } catch {
     const countryRows = await runTraceQuery({
       from: [{ collectionId: TRACE_COLLECTION }],
@@ -985,7 +1133,7 @@ export async function listTracesAtLocation(input: {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
       .slice(0, limit)
-      .map(toTracePin);
+      .map(pinFromRecord);
   }
 }
 
@@ -1288,17 +1436,24 @@ export async function upgradeTraceToPermanent(
   return record;
 }
 
+/**
+ * TTL cleanup — same path as admin delete:
+ * expired Trace → delete doc → decrement location → rebuild aggregates/stars.
+ */
 export async function deleteExpiredAnonymousTraces(): Promise<number> {
-  const records = await runTraceQuery({
-    from: [{ collectionId: TRACE_COLLECTION }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: "authType" },
-        op: "EQUAL",
-        value: { stringValue: "anonymous" },
+  const records = await runTraceQuery(
+    {
+      from: [{ collectionId: TRACE_COLLECTION }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "authType" },
+          op: "EQUAL",
+          value: { stringValue: "anonymous" },
+        },
       },
     },
-  });
+    { includeExpired: true },
+  );
 
   const now = Date.now();
   let deleted = 0;
@@ -1307,60 +1462,45 @@ export async function deleteExpiredAnonymousTraces(): Promise<number> {
     if (!trace.expiresAt) continue;
     if (new Date(trace.expiresAt).getTime() > now) continue;
 
-    const del = await firestoreFetch(
-      `documents/${TRACE_COLLECTION}/${encodeURIComponent(trace.id)}`,
-      { method: "DELETE" },
-    );
-    if (del.ok || del.status === 404) {
+    if (await deleteTraceDocumentAndDecrementLocation(trace)) {
       deleted += 1;
-      await bumpLocationCount(
-        {
-          country: trace.country,
-          region: trace.region,
-          city: trace.city,
-          lat: trace.lat,
-          lng: trace.lng,
-        },
-        -1,
-      );
     }
   }
 
   if (deleted > 0) {
+    // Source of truth for World Memory stars after any delete batch.
     await rebuildAggregatesFromTraces();
   }
 
   return deleted;
 }
 
+/**
+ * Admin / single-Trace delete — identical aggregate sync as TTL cleanup.
+ */
 export async function deleteTraceById(id: string): Promise<boolean> {
   const existing = await getTraceByUid(id);
-  const response = await firestoreFetch(
-    `documents/${TRACE_COLLECTION}/${encodeURIComponent(id)}`,
-    { method: "DELETE" },
-  );
-  if (response.status === 404) return false;
-  if (!response.ok) {
-    const data = (await response.json().catch(() => null)) as {
-      error?: { message?: string };
-    } | null;
-    throw new Error(data?.error?.message || "Failed to delete trace.");
-  }
-
-  if (existing) {
-    await bumpLocationCount(
-      {
-        country: existing.country,
-        region: existing.region,
-        city: existing.city,
-        lat: existing.lat,
-        lng: existing.lng,
-      },
-      -1,
+  if (!existing) {
+    const response = await firestoreFetch(
+      `documents/${TRACE_COLLECTION}/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
     );
+    if (response.status === 404) return false;
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as {
+        error?: { message?: string };
+      } | null;
+      throw new Error(data?.error?.message || "Failed to delete trace.");
+    }
     await rebuildAggregatesFromTraces();
+    return true;
   }
 
+  const ok = await deleteTraceDocumentAndDecrementLocation(existing);
+  if (!ok) {
+    throw new Error("Failed to delete trace.");
+  }
+  await rebuildAggregatesFromTraces();
   return true;
 }
 
@@ -1375,5 +1515,5 @@ export async function listTracePins(): Promise<TracePin[]> {
       },
     ],
   });
-  return records.map(toTracePin);
+  return records.map(pinFromRecord);
 }

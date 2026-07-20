@@ -46,7 +46,7 @@ export function LatestTraceCard({ mine }: Props) {
         </div>
         <div>
           <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-            Message
+            Memory
           </dt>
           <dd className="mt-1 text-[var(--map-muted)]">
             {previewMessage(mine.message) || "—"}

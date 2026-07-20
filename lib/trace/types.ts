@@ -11,6 +11,10 @@ export type TraceRecord = {
   country: string;
   region: string;
   city: string;
+  /**
+   * Stored copy of Location Catalog representative coords at write time.
+   * Never treat as device GPS; public APIs must re-resolve from Catalog.
+   */
   lat: number;
   lng: number;
   message: string;
@@ -19,15 +23,16 @@ export type TraceRecord = {
   expiresAt: string | null;
 };
 
-/** Public pin payload — never includes email, displayName, photoURL, IP, or UID. */
+/** Public Memory pin — never includes email, displayName, photoURL, IP, or Firebase UID. */
 export type TracePin = {
-  id: string;
+  /** Public identifier only (e.g. MIAV-000157). Never the Firestore document id / UID. */
   miavId: string;
   authType: TraceAuthType;
   locationId: string | null;
   country: string;
   region: string;
   city: string;
+  /** Catalog representative coords only — not device GPS. */
   lat: number;
   lng: number;
   message: string;
@@ -40,6 +45,7 @@ export type TraceLocationCluster = {
   country: string;
   region: string;
   city: string;
+  /** Catalog representative coords only when exposed publicly. */
   lat: number;
   lng: number;
   count: number;
@@ -99,9 +105,10 @@ export const TRACE_COLLECTION = "trace_map";
 export const TRACE_LOCATIONS_COLLECTION = "trace_locations";
 export const MIAV_COUNTER_DOC = "meta/miav_counter";
 export const TRACE_STATS_DOC = "meta/trace_stats";
-export const MAX_TRACE_MESSAGE_LENGTH = 200;
+export const MAX_TRACE_MESSAGE_LENGTH = 500;
 export const MAX_CITY_MAP_DOTS = 10;
-export const MESSAGE_PREVIEW_LENGTH = 20;
+/** List preview only — keep short; full text belongs on the memory card. */
+export const MESSAGE_PREVIEW_LENGTH = 40;
 export const TRACE_PAGE_SIZE = 50;
 export const ANONYMOUS_TRACE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
@@ -117,6 +124,7 @@ export function previewMessage(
   message: string,
   max = MESSAGE_PREVIEW_LENGTH,
 ): string {
+  // Prefer formatMessagePreview from messagePolicy in UI; kept for callers.
   const compact = message.replace(/\s+/g, " ").trim();
   if (compact.length <= max) return compact;
   return `${compact.slice(0, max).trimEnd()}...`;
@@ -132,9 +140,13 @@ export function formatJoinedDate(value: string): string {
   }).format(date);
 }
 
+/**
+ * Public Memory pin from a stored record.
+ * Omits Firestore document id / Firebase UID — identify by miavId only.
+ * Prefer `pinFromRecord` so lat/lng are Catalog-resolved.
+ */
 export function toTracePin(trace: TraceRecord): TracePin {
   return {
-    id: trace.id,
     miavId: trace.miavId,
     authType: trace.authType,
     locationId: trace.locationId,

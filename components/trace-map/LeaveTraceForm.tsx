@@ -417,7 +417,7 @@ export function LeaveTraceForm({
       <>
         <div className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-6">
           <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-            Leave your trace
+            Leave a Memory
           </p>
           {registrationPaused ? (
             <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
@@ -426,14 +426,12 @@ export function LeaveTraceForm({
           ) : (
             <>
           <p className="mt-4 max-w-md text-[0.9rem] leading-[1.9] text-[var(--map-muted)]">
-            Leave a small message
-            <br />
-            as a memory of your visit.
+            Leave a short memory of reading MIAV — a quiet mark that you were
+            here, not a social post.
           </p>
           <p className="mt-4 max-w-md text-[0.88rem] leading-[1.85] text-[var(--map-muted)]">
-            A Trace is a mark that you were here — not a post. Temporary Traces
-            fade after three months. Permanent Traces remain with Google
-            sign-in.
+            Temporary memories fade after three months. Permanent memories
+            remain with Google sign-in.
           </p>
           <ul className="mt-6 max-w-md space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">
             {TRACE_PRIVACY_BLURB.map((line) => (
@@ -489,7 +487,7 @@ export function LeaveTraceForm({
             }}
             className="mt-8 cursor-pointer text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em]"
           >
-            {mine ? "Edit your trace" : "Leave your trace"}
+            {mine ? "Edit your memory" : "Leave a Memory"}
           </button>
             </>
           )}
@@ -506,7 +504,7 @@ export function LeaveTraceForm({
         className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-6"
       >
         <p className="text-[0.68rem] tracking-[0.2em] text-[var(--map-muted)] uppercase">
-          Leave your trace
+          Leave a Memory
         </p>
 
         <ul className="mt-5 max-w-xl space-y-2 text-[0.8rem] leading-[1.75] text-[var(--map-muted)]">
@@ -569,9 +567,9 @@ export function LeaveTraceForm({
 
         {!user && !isPermanent ? (
           <p className="mt-4 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
-            You can press Leave your trace without signing in first — a
-            Temporary Trace will be created. Use Google for a Permanent Trace
-            after confirming the privacy notice.
+            You can press Leave a Memory without signing in first — a Temporary
+            Trace will be created. Use Google for a Permanent Trace after
+            confirming the privacy notice.
           </p>
         ) : null}
 
@@ -745,17 +743,20 @@ export function LeaveTraceForm({
 
         <label className="mt-8 block">
           <span className="text-[0.68rem] tracking-[0.16em] text-[var(--map-muted)] uppercase">
-            Message ({message.length}/{MAX_TRACE_MESSAGE_LENGTH})
+            Memory ({message.length}/{MAX_TRACE_MESSAGE_LENGTH})
           </span>
           <textarea
             value={message}
             maxLength={MAX_TRACE_MESSAGE_LENGTH}
             onChange={(e) => setMessage(e.target.value)}
             required
-            rows={4}
+            rows={6}
             className="mt-3 w-full resize-y border-0 border-b border-[var(--map-line)] bg-transparent py-2 text-[1rem] leading-[1.8] text-[var(--map-ink)] outline-none"
-            placeholder="A quiet presence left in place"
+            placeholder="Leave a short memory of reading MIAV."
           />
+          <p className="mt-2 text-[0.72rem] leading-[1.7] text-[var(--map-muted)]">
+            Plain text only — no links, HTML, or personal details.
+          </p>
         </label>
 
         <div className="mt-10 flex flex-wrap items-center gap-6">
@@ -764,7 +765,7 @@ export function LeaveTraceForm({
             disabled={busy || !message.trim() || !draft.locationId}
             className="cursor-pointer text-[0.85rem] tracking-[0.14em] text-[var(--map-ink)] underline decoration-[var(--map-line)] underline-offset-[0.5em] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? "Saving…" : mine ? "Save changes" : "Leave your trace"}
+            {busy ? "Saving…" : mine ? "Save changes" : "Leave a Memory"}
           </button>
           <button
             type="button"
