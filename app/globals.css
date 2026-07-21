@@ -161,6 +161,48 @@ body {
   border: none;
 }
 
+.miav-memory-star-wrap {
+  background: transparent;
+  border: none;
+}
+
+.miav-memory-star {
+  display: block;
+  position: relative;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  background: linear-gradient(180deg, #e8eef4 0%, #c5d6e6 100%);
+  border: 1px solid #8fa8bc;
+  animation: miav-star-breathe 3s ease-in-out infinite;
+}
+
+.miav-memory-star--active {
+  background: linear-gradient(180deg, #f4f8fb 0%, #d7e3ee 100%);
+  border-color: #6f8fa8;
+}
+
+@keyframes miav-star-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+    filter: brightness(0.92);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+}
+
 .leaflet-interaction-off {
   cursor: default !important;
 }

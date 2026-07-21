@@ -12,8 +12,7 @@ import {
   TRACE_LOCATIONS_COLLECTION,
   TRACE_STATS_DOC,
   type TraceAuthType,
-  type TraceFirstSummary,
-  type TraceLatestSummary,
+  type MemoryStar,
   type TraceLocationCluster,
   type TracePin,
   type TraceRecord,
@@ -24,6 +23,11 @@ import {
   getLocationById,
   resolveLocationCoords,
 } from "@/lib/locations";
+import { getPlaceById, placeToTraceFields } from "@/lib/places";
+import {
+  canonicalPlaceId,
+  legacyIdsForCanonical,
+} from "@/lib/places/legacyMap";
 
 /**
  * Public pin — never expose Firebase UID or Firestore document id.
@@ -60,9 +64,17 @@ function catalogCoordsForTrace(record: {
   lat: number;
   lng: number;
 } {
+  const place = record.locationId
+    ? getPlaceById(record.locationId)
+    : undefined;
+  if (place) {
+    const fields = placeToTraceFields(place);
+    return fields;
+  }
+
   const loc =
     (record.locationId ? getLocationById(record.locationId) : undefined) ||
-    (record.country && record.region && record.city
+    (record.country && record.city
       ? findLocationByNames({
           country: record.country,
           region: record.region,
@@ -386,18 +398,46 @@ async function bumpLocationCount(
   );
 }
 
-function emptyStats(): TraceStats {
+type InternalTraceStats = {
+  countryCount: number;
+  cityCount: number;
+  permanentCount: number;
+  temporaryCount: number;
+  firstMiavId: string | null;
+  firstCreatedAt: string | null;
+  latestMiavId: string | null;
+  latestCountry: string | null;
+  latestCity: string | null;
+  latestMessagePreview: string | null;
+  latestCreatedAt: string | null;
+};
+
+function emptyInternalStats(): InternalTraceStats {
   return {
     countryCount: 0,
     cityCount: 0,
     permanentCount: 0,
     temporaryCount: 0,
-    first: null,
-    latest: null,
+    firstMiavId: null,
+    firstCreatedAt: null,
+    latestMiavId: null,
+    latestCountry: null,
+    latestCity: null,
+    latestMessagePreview: null,
+    latestCreatedAt: null,
   };
 }
 
-function statsFromRecords(records: TraceRecord[]): TraceStats {
+function toPublicStats(stats: InternalTraceStats): TraceStats {
+  return {
+    placeCount: stats.cityCount,
+    memoryCount: stats.permanentCount + stats.temporaryCount,
+    guestCount: stats.temporaryCount,
+    googleCount: stats.permanentCount,
+  };
+}
+
+function statsFromRecords(records: TraceRecord[]): InternalTraceStats {
   const countries = new Set<string>();
   const cities = new Set<string>();
   let permanentCount = 0;
@@ -429,47 +469,42 @@ function statsFromRecords(records: TraceRecord[]): TraceStats {
     cityCount: cities.size,
     permanentCount,
     temporaryCount,
-    first: first
-      ? { miavId: first.miavId, createdAt: first.createdAt }
-      : null,
-    latest: latest
-      ? {
-          miavId: latest.miavId,
-          country: latest.country,
-          city: latest.city,
-          messagePreview: previewMessage(latest.message),
-          createdAt: latest.createdAt,
-        }
-      : null,
+    firstMiavId: first?.miavId || null,
+    firstCreatedAt: first?.createdAt || null,
+    latestMiavId: latest?.miavId || null,
+    latestCountry: latest?.country || null,
+    latestCity: latest?.city || null,
+    latestMessagePreview: latest ? previewMessage(latest.message) : null,
+    latestCreatedAt: latest?.createdAt || null,
   };
 }
 
-async function writeTraceStats(stats: TraceStats) {
+async function writeTraceStats(stats: InternalTraceStats) {
   const fields: Record<string, FirestoreValue> = {
     countryCount: { integerValue: String(stats.countryCount) },
     cityCount: { integerValue: String(stats.cityCount) },
     permanentCount: { integerValue: String(stats.permanentCount) },
     temporaryCount: { integerValue: String(stats.temporaryCount) },
-    firstMiavId: stats.first
-      ? { stringValue: stats.first.miavId }
+    firstMiavId: stats.firstMiavId
+      ? { stringValue: stats.firstMiavId }
       : { nullValue: null },
-    firstCreatedAt: stats.first
-      ? { timestampValue: stats.first.createdAt }
+    firstCreatedAt: stats.firstCreatedAt
+      ? { timestampValue: stats.firstCreatedAt }
       : { nullValue: null },
-    latestMiavId: stats.latest
-      ? { stringValue: stats.latest.miavId }
+    latestMiavId: stats.latestMiavId
+      ? { stringValue: stats.latestMiavId }
       : { nullValue: null },
-    latestCountry: stats.latest
-      ? { stringValue: stats.latest.country }
+    latestCountry: stats.latestCountry
+      ? { stringValue: stats.latestCountry }
       : { nullValue: null },
-    latestCity: stats.latest
-      ? { stringValue: stats.latest.city }
+    latestCity: stats.latestCity
+      ? { stringValue: stats.latestCity }
       : { nullValue: null },
-    latestMessagePreview: stats.latest
-      ? { stringValue: stats.latest.messagePreview }
+    latestMessagePreview: stats.latestMessagePreview
+      ? { stringValue: stats.latestMessagePreview }
       : { nullValue: null },
-    latestCreatedAt: stats.latest
-      ? { timestampValue: stats.latest.createdAt }
+    latestCreatedAt: stats.latestCreatedAt
+      ? { timestampValue: stats.latestCreatedAt }
       : { nullValue: null },
   };
 
@@ -558,7 +593,7 @@ async function upsertLocationCluster(cluster: TraceLocationCluster) {
  * trace_locations docs so World Memory stars cannot linger after deletes.
  */
 async function rebuildAggregatesFromTraces(): Promise<{
-  stats: TraceStats;
+  stats: InternalTraceStats;
   locations: TraceLocationCluster[];
 }> {
   const records = await runTraceQuery({
@@ -638,36 +673,24 @@ async function deleteTraceDocumentAndDecrementLocation(
   return true;
 }
 
-async function readTraceStatsDoc(): Promise<TraceStats | null> {
+async function readTraceStatsDoc(): Promise<InternalTraceStats | null> {
   const response = await firestoreFetch(`documents/${TRACE_STATS_DOC}`);
   if (response.status === 404) return null;
   if (!response.ok) return null;
   const doc = (await response.json()) as FirestoreDocument;
-  const firstMiavId = readString(doc.fields, "firstMiavId");
-  const latestMiavId = readString(doc.fields, "latestMiavId");
-  const first: TraceFirstSummary | null = firstMiavId
-    ? {
-        miavId: firstMiavId,
-        createdAt: readTimestamp(doc.fields, "firstCreatedAt"),
-      }
-    : null;
-  const latest: TraceLatestSummary | null = latestMiavId
-    ? {
-        miavId: latestMiavId,
-        country: readString(doc.fields, "latestCountry"),
-        city: readString(doc.fields, "latestCity"),
-        messagePreview: readString(doc.fields, "latestMessagePreview"),
-        createdAt: readTimestamp(doc.fields, "latestCreatedAt"),
-      }
-    : null;
 
   return {
     countryCount: readNumber(doc.fields, "countryCount"),
     cityCount: readNumber(doc.fields, "cityCount"),
     permanentCount: readNumber(doc.fields, "permanentCount"),
     temporaryCount: readNumber(doc.fields, "temporaryCount"),
-    first,
-    latest,
+    firstMiavId: readString(doc.fields, "firstMiavId") || null,
+    firstCreatedAt: readNullableTimestamp(doc.fields, "firstCreatedAt"),
+    latestMiavId: readString(doc.fields, "latestMiavId") || null,
+    latestCountry: readString(doc.fields, "latestCountry") || null,
+    latestCity: readString(doc.fields, "latestCity") || null,
+    latestMessagePreview: readString(doc.fields, "latestMessagePreview") || null,
+    latestCreatedAt: readNullableTimestamp(doc.fields, "latestCreatedAt"),
   };
 }
 
@@ -879,9 +902,48 @@ export async function listLocationCountsForCountry(
 
 export async function getTraceStats(): Promise<TraceStats> {
   const existing = await readTraceStatsDoc();
-  if (existing) return existing;
+  if (existing) return toPublicStats(existing);
   const rebuilt = await rebuildAggregatesFromTraces();
-  return rebuilt.stats;
+  return toPublicStats(rebuilt.stats);
+}
+
+export async function listMemoryStars(): Promise<MemoryStar[]> {
+  const clusters = await listTraceLocations();
+  const byCanonical = new Map<string, number>();
+
+  for (const cluster of clusters) {
+    let canonical = cluster.locationId
+      ? canonicalPlaceId(cluster.locationId)
+      : null;
+    if (!canonical && cluster.country && cluster.city) {
+      const legacy = findLocationByNames({
+        country: cluster.country,
+        region: cluster.region,
+        city: cluster.city,
+      });
+      if (legacy) canonical = canonicalPlaceId(legacy.locationId);
+    }
+    if (!canonical) continue;
+    byCanonical.set(
+      canonical,
+      (byCanonical.get(canonical) || 0) + cluster.count,
+    );
+  }
+
+  return [...byCanonical.entries()]
+    .map(([locationId, count]) => {
+      const place = getPlaceById(locationId);
+      if (!place) return null;
+      return {
+        locationId,
+        country: place.country,
+        name: place.name,
+        lat: place.lat,
+        lng: place.lng,
+        count,
+      };
+    })
+    .filter((star): star is MemoryStar => Boolean(star && star.count > 0));
 }
 
 export async function listTracesByLocationId(input: {
@@ -894,55 +956,66 @@ export async function listTracesByLocationId(input: {
   hasMore: boolean;
 }> {
   const pageSize = input.limit ?? 50;
-  const loc = getLocationById(input.locationId);
-
-  async function pageFromRecords(records: TraceRecord[]) {
-    const page = records.slice(0, pageSize);
-    const hasMore = records.length > pageSize;
-    const last = page[page.length - 1];
-    return {
-      traces: page.map(pinFromRecord),
-      nextCursor: hasMore && last ? last.createdAt : null,
-      hasMore,
-    };
+  const place = getPlaceById(input.locationId);
+  if (!place) {
+    return { traces: [], nextCursor: null, hasMore: false };
   }
 
-  const byLocationIdQuery: Record<string, unknown> = {
-    from: [{ collectionId: TRACE_COLLECTION }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: "locationId" },
-        op: "EQUAL",
-        value: { stringValue: input.locationId },
-      },
-    },
-    orderBy: [
-      { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
-    ],
-    limit: pageSize + 1,
+  const legacyIds = legacyIdsForCanonical(input.locationId);
+  const merged = new Map<string, TraceRecord>();
+
+  for (const legacyId of legacyIds) {
+    try {
+      const records = await runTraceQuery({
+        from: [{ collectionId: TRACE_COLLECTION }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "locationId" },
+            op: "EQUAL",
+            value: { stringValue: legacyId },
+          },
+        },
+        orderBy: [
+          { field: { fieldPath: "createdAt" }, direction: "DESCENDING" },
+        ],
+        limit: 200,
+      });
+      for (const record of records) {
+        merged.set(record.id, record);
+      }
+    } catch {
+      // try next legacy id
+    }
+  }
+
+  if (merged.size === 0) {
+    return listTracesAtCityLegacy({
+      country: place.country,
+      region: "",
+      city: place.name,
+      limit: pageSize,
+      cursor: input.cursor,
+    });
+  }
+
+  const sorted = [...merged.values()].sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  const startIndex = input.cursor
+    ? sorted.findIndex((row) => row.createdAt === input.cursor) + 1
+    : 0;
+  const safeStart = Math.max(0, startIndex);
+  const page = sorted.slice(safeStart, safeStart + pageSize);
+  const hasMore = safeStart + pageSize < sorted.length;
+  const last = page[page.length - 1];
+
+  return {
+    traces: page.map(pinFromRecord),
+    nextCursor: hasMore && last ? last.createdAt : null,
+    hasMore,
   };
-  if (input.cursor) {
-    byLocationIdQuery.startAt = {
-      values: [{ timestampValue: input.cursor }],
-      before: true,
-    };
-  }
-
-  try {
-    const records = await runTraceQuery(byLocationIdQuery);
-    if (records.length > 0) return pageFromRecords(records);
-  } catch {
-    // Fall through to legacy place fields.
-  }
-
-  if (!loc) return { traces: [], nextCursor: null, hasMore: false };
-  return listTracesAtCityLegacy({
-    country: loc.country,
-    region: loc.region,
-    city: loc.city,
-    limit: pageSize,
-    cursor: input.cursor,
-  });
 }
 
 async function listTracesAtCityLegacy(input: {
@@ -1138,38 +1211,29 @@ export async function listTracesAtLocation(input: {
 }
 
 async function refreshStatsAfterMutation(changed: TraceRecord) {
-  const stats = await getTraceStats();
-  const next = { ...stats };
+  const stats = (await readTraceStatsDoc()) || emptyInternalStats();
 
-  if (!next.first) {
-    next.first = { miavId: changed.miavId, createdAt: changed.createdAt };
+  if (!stats.firstMiavId) {
+    stats.firstMiavId = changed.miavId;
+    stats.firstCreatedAt = changed.createdAt;
   } else if (
     new Date(changed.createdAt).getTime() <
-    new Date(next.first.createdAt).getTime()
+    new Date(stats.firstCreatedAt || changed.createdAt).getTime()
   ) {
-    next.first = { miavId: changed.miavId, createdAt: changed.createdAt };
+    stats.firstMiavId = changed.miavId;
+    stats.firstCreatedAt = changed.createdAt;
   }
 
-  if (
-    !next.latest ||
-    new Date(changed.updatedAt || changed.createdAt).getTime() >=
-      new Date(next.latest.createdAt).getTime() ||
-    changed.miavId === next.latest.miavId
-  ) {
-    next.latest = {
-      miavId: changed.miavId,
-      country: changed.country,
-      city: changed.city,
-      messagePreview: previewMessage(changed.message),
-      createdAt: changed.createdAt,
-    };
-  }
+  stats.latestMiavId = changed.miavId;
+  stats.latestCountry = changed.country;
+  stats.latestCity = changed.city;
+  stats.latestMessagePreview = previewMessage(changed.message);
+  stats.latestCreatedAt = changed.createdAt;
 
-  // Recompute counts from location docs when possible; else light rebuild.
   const locations = await listTraceLocations();
-  next.cityCount = locations.length;
-  next.countryCount = new Set(locations.map((l) => l.country)).size;
-  await writeTraceStats(next);
+  stats.cityCount = locations.length;
+  stats.countryCount = new Set(locations.map((l) => l.country)).size;
+  await writeTraceStats(stats);
 }
 
 export async function getTraceByUid(uid: string): Promise<TraceRecord | null> {
@@ -1199,7 +1263,11 @@ export async function createTrace(input: {
     throw new Error("TRACE_EXISTS");
   }
 
+  const place = input.locationId
+    ? getPlaceById(input.locationId)
+    : undefined;
   const matched =
+    place ||
     (input.locationId ? getLocationById(input.locationId) : undefined) ||
     findLocationByNames({
       country: input.country,
@@ -1207,7 +1275,7 @@ export async function createTrace(input: {
       city: input.city,
     });
   const coords = matched
-    ? { lat: matched.lat, lng: matched.lng, zoom: 11 }
+    ? { lat: matched.lat, lng: matched.lng }
     : resolveLocationCoords({
         country: input.country,
         region: input.region,
@@ -1218,8 +1286,14 @@ export async function createTrace(input: {
   }
   const locationId = matched?.locationId || input.locationId || null;
   const country = matched?.country || input.country;
-  const region = matched?.region || input.region;
-  const city = matched?.city || input.city;
+  const region = place
+    ? ""
+    : matched && "region" in matched
+      ? matched.region
+      : input.region;
+  const city =
+    place?.name ||
+    (matched && "city" in matched ? matched.city : input.city);
 
   const miavNumber = await allocateMiavNumber();
   const miavId = formatMiavId(miavNumber);
@@ -1279,19 +1353,19 @@ export async function createTrace(input: {
     1,
   );
 
-  const stats = (await readTraceStatsDoc()) || emptyStats();
+  const stats = (await readTraceStatsDoc()) || emptyInternalStats();
   stats.permanentCount += record.authType === "google" ? 1 : 0;
-  stats.temporaryCount += record.authType === "anonymous" ? 1 : 0;
-  if (!stats.first) {
-    stats.first = { miavId: record.miavId, createdAt: record.createdAt };
+  stats.temporaryCount +=
+    record.authType === "guest" || record.authType === "anonymous" ? 1 : 0;
+  if (!stats.firstMiavId) {
+    stats.firstMiavId = record.miavId;
+    stats.firstCreatedAt = record.createdAt;
   }
-  stats.latest = {
-    miavId: record.miavId,
-    country: record.country,
-    city: record.city,
-    messagePreview: previewMessage(record.message),
-    createdAt: record.createdAt,
-  };
+  stats.latestMiavId = record.miavId;
+  stats.latestCountry = record.country;
+  stats.latestCity = record.city;
+  stats.latestMessagePreview = previewMessage(record.message);
+  stats.latestCreatedAt = record.createdAt;
   const locations = await listTraceLocations();
   stats.cityCount = locations.length;
   stats.countryCount = new Set(locations.map((l) => l.country)).size;
@@ -1427,7 +1501,7 @@ export async function upgradeTraceToPermanent(
   const record = toTraceRecord(doc);
 
   if (existing.authType === "anonymous") {
-    const stats = (await readTraceStatsDoc()) || emptyStats();
+    const stats = (await readTraceStatsDoc()) || emptyInternalStats();
     stats.temporaryCount = Math.max(0, stats.temporaryCount - 1);
     stats.permanentCount += 1;
     await writeTraceStats(stats);

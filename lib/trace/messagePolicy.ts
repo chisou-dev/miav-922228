@@ -5,7 +5,8 @@
  */
 
 import {
-  MAX_TRACE_MESSAGE_LENGTH,
+  MAX_GUEST_MESSAGE_LENGTH,
+  MAX_GOOGLE_MESSAGE_LENGTH,
   MESSAGE_PREVIEW_LENGTH,
 } from "@/lib/trace/types";
 
@@ -76,7 +77,10 @@ function looksLikeSpam(message: string): boolean {
  * Validate + plain-text normalize a Memory for write paths.
  * Allows newlines; rejects HTML/script/iframe, external links, NG words, spam.
  */
-export function normalizeTraceMessage(raw: unknown): MessagePolicyResult {
+export function normalizeTraceMessage(
+  raw: unknown,
+  maxLength = MAX_GOOGLE_MESSAGE_LENGTH,
+): MessagePolicyResult {
   if (typeof raw !== "string") {
     return { ok: false, error: "Memory is required." };
   }
@@ -93,10 +97,10 @@ export function normalizeTraceMessage(raw: unknown): MessagePolicyResult {
   if (!message) {
     return { ok: false, error: "Memory is required." };
   }
-  if (message.length > MAX_TRACE_MESSAGE_LENGTH) {
+  if (message.length > maxLength) {
     return {
       ok: false,
-      error: `Memory must be ${MAX_TRACE_MESSAGE_LENGTH} characters or fewer.`,
+      error: `Memory must be ${maxLength} characters or fewer.`,
     };
   }
   if (EXTERNAL_LINK.test(message)) {
@@ -130,8 +134,13 @@ export function formatMessagePreview(
 }
 
 /** Detail card — plain text, newlines kept, capped at max length. */
-export function formatMessageFull(message: string): string {
+export function formatMessageFull(
+  message: string,
+  maxLength = MAX_GOOGLE_MESSAGE_LENGTH,
+): string {
   const text = toPlainTextMemory(message);
-  if (text.length <= MAX_TRACE_MESSAGE_LENGTH) return text;
-  return text.slice(0, MAX_TRACE_MESSAGE_LENGTH);
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength);
 }
+
+export { MAX_GUEST_MESSAGE_LENGTH, MAX_GOOGLE_MESSAGE_LENGTH };

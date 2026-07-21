@@ -1,45 +1,25 @@
 "use client";
 
-import { Fragment, useEffect } from "react";
+import { useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
+  Marker,
   Popup,
   useMap,
-  CircleMarker,
 } from "react-leaflet";
-import {
-  MAX_CITY_MAP_DOTS,
-  type TraceCityMarker,
-  type TraceRegionMarker,
-} from "@/lib/trace/types";
-import type { LocationCountryIndexEntry } from "@/lib/locations/types";
+import L from "leaflet";
+import { memoryStarSize } from "@/lib/places/starSize";
+import type { MemoryStar, PlaceScope } from "@/lib/trace/types";
 
-type Focus = {
-  lat: number;
-  lng: number;
-  zoom: number;
-} | null;
-
-type CityScope = {
-  locationId: string;
-  country: string;
-  region: string;
-  city: string;
-} | null;
+type Focus = { lat: number; lng: number; zoom: number } | null;
 
 type Props = {
-  countries: LocationCountryIndexEntry[];
+  stars: MemoryStar[];
   focus: Focus;
-  selectedCountry: string | null;
-  selectedRegion: string | null;
-  cityScope: CityScope;
-  regions: TraceRegionMarker[];
-  cities: TraceCityMarker[];
+  placeScope: PlaceScope | null;
   interactionsEnabled?: boolean;
-  onSelectCountry: (countryName: string) => void;
-  onSelectRegion: (regionName: string) => void;
-  onSelectCity: (cityName: string) => void;
+  onOpenMemories: (scope: PlaceScope) => void;
 };
 
 function FocusController({ focus }: { focus: Focus }) {
@@ -53,7 +33,6 @@ function FocusController({ focus }: { focus: Focus }) {
 
 function MapInteractionGate({ enabled }: { enabled: boolean }) {
   const map = useMap();
-
   useEffect(() => {
     if (enabled) {
       map.dragging.enable();
@@ -62,62 +41,35 @@ function MapInteractionGate({ enabled }: { enabled: boolean }) {
       map.scrollWheelZoom.enable();
       map.boxZoom.enable();
       map.keyboard.enable();
-      const container = map.getContainer();
-      container.style.cursor = "";
-      container.classList.remove("leaflet-interaction-off");
+      map.getContainer().classList.remove("leaflet-interaction-off");
       return;
     }
-
     map.dragging.disable();
     map.touchZoom.disable();
     map.doubleClickZoom.disable();
     map.scrollWheelZoom.disable();
     map.boxZoom.disable();
     map.keyboard.disable();
-    map.closePopup();
-    const container = map.getContainer();
-    container.style.cursor = "default";
-    container.classList.add("leaflet-interaction-off");
-
-    return () => {
-      map.dragging.enable();
-      map.touchZoom.enable();
-      map.doubleClickZoom.enable();
-      map.scrollWheelZoom.enable();
-      map.boxZoom.enable();
-      map.keyboard.enable();
-      container.style.cursor = "";
-      container.classList.remove("leaflet-interaction-off");
-    };
+    map.getContainer().classList.add("leaflet-interaction-off");
   }, [enabled, map]);
-
   return null;
 }
 
-function stackOffsets(count: number): number[] {
-  const dots = Math.min(Math.max(count, 0), MAX_CITY_MAP_DOTS);
-  if (dots <= 0) return [];
-  const step = 0.045;
-  const start = ((dots - 1) * step) / 2;
-  return Array.from({ length: dots }, (_, index) => start - index * step);
+function starIcon(size: number, active: boolean) {
+  return L.divIcon({
+    className: "miav-memory-star-wrap",
+    html: `<span class="miav-memory-star${active ? " miav-memory-star--active" : ""}" style="width:${size}px;height:${size}px"></span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 }
 
-/**
- * Hierarchical world map — Country → Region → City from static Location JSON.
- * Trace pins (stacked dots) appear only where Traces exist.
- */
 export function Map({
-  countries,
+  stars,
   focus,
-  selectedCountry,
-  selectedRegion,
-  cityScope,
-  regions,
-  cities,
+  placeScope,
   interactionsEnabled = true,
-  onSelectCountry,
-  onSelectRegion,
-  onSelectCity,
+  onOpenMemories,
 }: Props) {
   return (
     <div
@@ -130,7 +82,7 @@ export function Map({
         center={[20, 0]}
         zoom={2}
         minZoom={2}
-        maxZoom={12}
+        maxZoom={10}
         scrollWheelZoom={interactionsEnabled}
         dragging={interactionsEnabled}
         doubleClickZoom={interactionsEnabled}
@@ -147,127 +99,35 @@ export function Map({
         <FocusController focus={focus} />
         <MapInteractionGate enabled={interactionsEnabled} />
 
-        {countries.map((item) => {
-          const active = selectedCountry === item.name;
+        {stars.map((star) => {
+          const active = placeScope?.locationId === star.locationId;
+          const size = memoryStarSize(star.count);
           return (
-            <CircleMarker
-              key={item.code}
-              center={[item.lat, item.lng]}
-              radius={active ? 10 : 7}
-              pathOptions={{
-                color: active ? "#5b7c99" : "#9bb0c2",
-                weight: 1,
-                fillColor: active ? "#c5d6e6" : "#e8eef4",
-                fillOpacity: 0.85,
-              }}
+            <Marker
+              key={star.locationId}
+              position={[star.lat, star.lng]}
+              icon={starIcon(size, active)}
+              zIndexOffset={500 + star.count}
               eventHandlers={{
                 click: () => {
                   if (!interactionsEnabled) return;
-                  onSelectCountry(item.name);
+                  onOpenMemories({
+                    locationId: star.locationId,
+                    country: star.country,
+                    name: star.name,
+                  });
                 },
               }}
             >
               <Popup>
-                <span className="text-[0.8rem] tracking-[0.06em] text-[#243447]">
-                  {item.name}
+                <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
+                  {star.name}, {star.country}
+                  {star.count > 1 ? ` · ${star.count}` : ""}
                 </span>
               </Popup>
-            </CircleMarker>
+            </Marker>
           );
         })}
-
-        {selectedCountry
-          ? regions.map((region) => {
-              const active = selectedRegion === region.name;
-              return (
-                <CircleMarker
-                  key={`${selectedCountry}-${region.name}`}
-                  center={[region.lat, region.lng]}
-                  radius={active ? 8 : 5}
-                  pathOptions={{
-                    color: active ? "#4d6d88" : "#a9b9c8",
-                    weight: 1,
-                    fillColor: active ? "#d7e3ee" : "#f0f4f7",
-                    fillOpacity: 0.9,
-                  }}
-                  eventHandlers={{
-                    click: () => {
-                      if (!interactionsEnabled) return;
-                      onSelectRegion(region.name);
-                    },
-                  }}
-                />
-              );
-            })
-          : null}
-
-        {selectedRegion
-          ? cities.map((city) => {
-              const cityActive =
-                cityScope?.locationId === city.locationId ||
-                cityScope?.city === city.name;
-              const hasTraces = city.count > 0;
-              const pinOffsets = stackOffsets(city.count);
-
-              return (
-                <Fragment key={city.locationId || `${selectedRegion}-${city.name}`}>
-                  {!hasTraces ? (
-                    <CircleMarker
-                      center={[city.lat, city.lng]}
-                      radius={cityActive ? 4 : 3}
-                      pathOptions={{
-                        color: "#b7c5d1",
-                        weight: 1,
-                        fillColor: cityActive ? "#d7e3ee" : "#ffffff",
-                        fillOpacity: 0.75,
-                      }}
-                      eventHandlers={{
-                        click: () => {
-                          if (!interactionsEnabled) return;
-                          onSelectCity(city.name);
-                        },
-                      }}
-                    >
-                      <Popup>
-                        <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
-                          {city.name}
-                        </span>
-                      </Popup>
-                    </CircleMarker>
-                  ) : null}
-
-                  {pinOffsets.map((offset, index) => (
-                    <CircleMarker
-                      key={`${city.locationId}-pin-${index}`}
-                      center={[city.lat + offset, city.lng]}
-                      radius={cityActive ? 4.5 : 3.5}
-                      pathOptions={{
-                        color: "#6f8fa8",
-                        weight: 1,
-                        fillColor: cityActive ? "#d7e3ee" : "#ffffff",
-                        fillOpacity: 1,
-                      }}
-                      eventHandlers={{
-                        click: () => {
-                          if (!interactionsEnabled) return;
-                          onSelectCity(city.name);
-                        },
-                      }}
-                    >
-                      {index === 0 ? (
-                        <Popup>
-                          <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
-                            {city.name}
-                            {` · ${city.count}`}
-                          </span>
-                        </Popup>
-                      ) : null}
-                    </CircleMarker>
-                  ))}
-                </Fragment>
-              );
-            })
-          : null}
       </MapContainer>
     </div>
   );

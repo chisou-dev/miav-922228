@@ -3,10 +3,7 @@
 import {
   GoogleAuthProvider,
   getRedirectResult,
-  linkWithPopup,
-  linkWithRedirect,
   onAuthStateChanged,
-  signInAnonymously,
   signInWithPopup,
   signInWithRedirect,
   signOut,
@@ -23,12 +20,11 @@ export function watchAuth(callback: (user: User | null) => void) {
   return onAuthStateChanged(getFirebaseAuth(), callback);
 }
 
-export function getTraceAuthType(user: User | null): "anonymous" | "google" | null {
+export function getTraceAuthType(user: User | null): "google" | null {
   if (!user) return null;
   const providers = user.providerData.map((p) => p.providerId);
   if (providers.includes("google.com")) return "google";
-  if (user.isAnonymous) return "anonymous";
-  return providers.length ? "google" : "anonymous";
+  return null;
 }
 
 export function formatAuthError(error: unknown): string {
@@ -38,96 +34,47 @@ export function formatAuthError(error: unknown): string {
       : "";
 
   switch (code) {
-    case "auth/admin-restricted-operation":
-      return "Anonymous sign-in is blocked. In Firebase Console → Authentication → Sign-in method, enable Anonymous (and Google if you use it).";
-    case "auth/operation-not-allowed":
-      return "This sign-in method is not enabled in Firebase Console (Anonymous or Google).";
     case "auth/popup-blocked":
-      return "The sign-in popup was blocked. Allow popups, or try again (redirect will be used).";
+      return "The sign-in popup was blocked. Allow popups, or try again.";
     case "auth/popup-closed-by-user":
       return "The sign-in window was closed before completion.";
     case "auth/unauthorized-domain":
-      return "This domain is not authorized in Firebase Authentication → Settings → Authorized domains. Add miav-922228.com and www.miav-922228.com.";
-    case "auth/account-exists-with-different-credential":
-      return "This Google account is already linked to another sign-in method.";
-    case "auth/credential-already-in-use":
-      return "This Google account is already used by another Trace session.";
+      return "This domain is not authorized in Firebase Authentication.";
     case "auth/network-request-failed":
       return "Network error during sign-in. Please try again.";
-    default: {
-      const message =
-        error instanceof Error ? error.message : "Sign-in failed.";
-      return message;
-    }
+    default:
+      return error instanceof Error ? error.message : "Sign-in failed.";
   }
 }
 
 function googleProvider() {
   const provider = new GoogleAuthProvider();
-  // Identity only — do not add extra scopes.
   provider.setCustomParameters({ prompt: "select_account" });
   return provider;
 }
 
-export async function signInTraceAnonymous(): Promise<UserCredential> {
-  return signInAnonymously(getFirebaseAuth());
-}
-
-/**
- * Google Sign-In for Trace ownership only.
- * Tries popup first; falls back to redirect when popups are blocked.
- */
 export async function signInTraceGoogle(): Promise<UserCredential | null> {
   const auth = getFirebaseAuth();
   const provider = googleProvider();
 
-  const tryPopup = async () => {
-    if (auth.currentUser?.isAnonymous) {
-      try {
-        return await linkWithPopup(auth.currentUser, provider);
-      } catch (error) {
-        const code =
-          error && typeof error === "object" && "code" in error
-            ? String((error as { code?: string }).code || "")
-            : "";
-        // Fall through to fresh Google sign-in for common link conflicts.
-        if (
-          code !== "auth/credential-already-in-use" &&
-          code !== "auth/email-already-in-use" &&
-          code !== "auth/account-exists-with-different-credential"
-        ) {
-          throw error;
-        }
-      }
-    }
-    return signInWithPopup(auth, provider);
-  };
-
   try {
-    return await tryPopup();
+    return await signInWithPopup(auth, provider);
   } catch (error) {
     const code =
       error && typeof error === "object" && "code" in error
         ? String((error as { code?: string }).code || "")
         : "";
-
     if (
       code === "auth/popup-blocked" ||
       code === "auth/cancelled-popup-request"
     ) {
-      if (auth.currentUser?.isAnonymous) {
-        await linkWithRedirect(auth.currentUser, provider);
-      } else {
-        await signInWithRedirect(auth, provider);
-      }
-      return null; // page will navigate away
+      await signInWithRedirect(auth, provider);
+      return null;
     }
-
     throw error;
   }
 }
 
-/** Complete Google redirect sign-in after returning to the page. */
 export async function completeTraceRedirectSignIn(): Promise<UserCredential | null> {
   if (!isFirebaseClientConfigured()) return null;
   try {

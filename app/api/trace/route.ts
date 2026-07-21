@@ -1,176 +1,76 @@
 import { NextResponse } from "next/server";
 import { requireTraceUser } from "@/lib/trace/requireTraceUser";
-import {
-  TRACE_PAGE_SIZE,
-} from "@/lib/trace/types";
+import { getPlaceById } from "@/lib/places";
+import { TRACE_PAGE_SIZE } from "@/lib/trace/types";
 import {
   createTrace,
   getTraceByUid,
   getTraceStats,
-  listCitiesForRegion,
-  listLocationCountsForCountry,
-  listRegionsForCountry,
-  listTracesAtCity,
+  listMemoryStars,
   listTracesByLocationId,
   pinFromRecord,
-  updateTraceLocationMessage,
-  upgradeTraceToPermanent,
 } from "@/lib/trace/traceRest";
-import {
-  findCountry,
-  findRegion,
-  findCity,
-  getLocationById,
-} from "@/lib/locations";
 import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
-import { normalizeTraceMessage } from "@/lib/trace/messagePolicy";
 import {
-  getSiteControl,
-} from "@/lib/site-control/siteControlRest";
+  MAX_GUEST_MESSAGE_LENGTH,
+  MAX_GOOGLE_MESSAGE_LENGTH,
+} from "@/lib/trace/messagePolicy";
+import { normalizeTraceMessage } from "@/lib/trace/messagePolicy";
+import { getSiteControl } from "@/lib/site-control/siteControlRest";
 import { TRACE_DISABLED_MESSAGE } from "@/lib/site-control/types";
+import { isValidVisitorId } from "@/lib/trace/visitorId";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function validateLocation(body: {
-  country?: unknown;
-  region?: unknown;
-  city?: unknown;
-  locationId?: unknown;
-  message?: unknown;
-  lat?: unknown;
-  lng?: unknown;
-}) {
-  // Reject client-supplied coordinates — only Catalog places are accepted.
+function validatePostBody(body: Record<string, unknown>) {
   if (body.lat != null || body.lng != null) {
-    return { error: "Coordinates are not accepted; choose a catalog location." };
+    return { error: "Coordinates are not accepted; choose a catalog place." };
   }
+
   const locationId =
     typeof body.locationId === "string" ? body.locationId.trim() : "";
-  const country = typeof body.country === "string" ? body.country.trim() : "";
-  const region = typeof body.region === "string" ? body.region.trim() : "";
-  const city = typeof body.city === "string" ? body.city.trim() : "";
-  const messageResult = normalizeTraceMessage(body.message);
-  if (!messageResult.ok) return { error: messageResult.error };
-  const message = messageResult.message;
-
-  if (locationId) {
-    const loc = getLocationById(locationId);
-    if (!loc) return { error: "Unknown location." };
-    return {
-      locationId: loc.locationId,
-      country: loc.country,
-      region: loc.region,
-      city: loc.city,
-      message,
-    };
+  if (!locationId) {
+    return { error: "locationId is required." };
   }
 
-  if (!country || !region || !city) {
-    return { error: "Country, region, and city are required." };
+  const place = getPlaceById(locationId);
+  if (!place) {
+    return { error: "Unknown place." };
   }
 
-  const countryNode = findCountry(country);
-  if (!countryNode) return { error: "Unknown country." };
-  const regionNode = findRegion(countryNode, region);
-  if (!regionNode) return { error: "Unknown region." };
-  const cityNode = findCity(regionNode, city);
-  if (!cityNode) return { error: "Unknown city." };
-
-  return {
-    locationId: cityNode.locationId,
-    country: countryNode.name,
-    region: regionNode.name,
-    city: cityNode.name,
-    message,
-  };
-}
-
-async function resolveMine(request: Request) {
-  const header = request.headers.get("authorization") || "";
-  if (!/^Bearer\s+/i.test(header)) return null;
-  const auth = await requireTraceUser(request);
-  if (auth.error) return null;
-  const record = await getTraceByUid(auth.uid);
-  return record ? pinFromRecord(record) : null;
+  return { locationId: place.locationId, place };
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const view = searchParams.get("view")?.trim() || "overview";
-    const country = searchParams.get("country")?.trim() || "";
-    const region = searchParams.get("region")?.trim() || "";
-    const city = searchParams.get("city")?.trim() || "";
+    const view = searchParams.get("view")?.trim() || "map";
     const locationId = searchParams.get("locationId")?.trim() || "";
+    const visitorId = searchParams.get("visitorId")?.trim() || "";
     const cursor = searchParams.get("cursor")?.trim() || null;
     const limitRaw = Number(searchParams.get("limit") || TRACE_PAGE_SIZE);
     const limit = Number.isFinite(limitRaw)
       ? Math.min(Math.max(1, limitRaw), 100)
       : TRACE_PAGE_SIZE;
 
-    const mine = view === "overview" ? await resolveMine(request) : null;
-
-    if (view === "counts") {
-      if (!country) {
-        return NextResponse.json(
-          { error: "country is required for counts." },
-          { status: 400 },
-        );
-      }
-      const counts = await listLocationCountsForCountry(country);
-      return NextResponse.json({ counts });
+    if (view === "map") {
+      const [stars, stats] = await Promise.all([
+        listMemoryStars(),
+        getTraceStats(),
+      ]);
+      return NextResponse.json({ stars, stats });
     }
 
-    if (view === "regions") {
-      if (!country) {
+    if (view === "memories") {
+      if (!locationId) {
         return NextResponse.json(
-          { error: "country is required for regions." },
+          { error: "locationId is required." },
           { status: 400 },
         );
       }
-      const regions = await listRegionsForCountry(country);
-      return NextResponse.json({ regions });
-    }
-
-    if (view === "cities") {
-      if (!country || !region) {
-        return NextResponse.json(
-          { error: "country and region are required for cities." },
-          { status: 400 },
-        );
-      }
-      const cities = await listCitiesForRegion(country, region);
-      return NextResponse.json({ cities });
-    }
-
-    if (view === "traces") {
-      if (locationId) {
-        const page = await listTracesByLocationId({
-          locationId,
-          limit,
-          cursor,
-        });
-        return NextResponse.json({
-          traces: page.traces,
-          nextCursor: page.nextCursor,
-          hasMore: page.hasMore,
-          scope: { locationId },
-        });
-      }
-      if (!country || !region || !city) {
-        return NextResponse.json(
-          {
-            error:
-              "locationId or country, region, and city are required for traces.",
-          },
-          { status: 400 },
-        );
-      }
-      const page = await listTracesAtCity({
-        country,
-        region,
-        city,
+      const page = await listTracesByLocationId({
+        locationId,
         limit,
         cursor,
       });
@@ -178,24 +78,43 @@ export async function GET(request: Request) {
         traces: page.traces,
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
-        scope: { country, region, city },
+        scope: { locationId },
       });
     }
 
-    // overview — stats only; never load all traces or all locations.
-    const stats = await getTraceStats();
-    return NextResponse.json({ stats, mine });
+    if (view === "status") {
+      const header = request.headers.get("authorization") || "";
+      let mine = null;
+      if (/^Bearer\s+/i.test(header)) {
+        const auth = await requireTraceUser(request);
+        if (!auth.error) {
+          const record = await getTraceByUid(auth.uid);
+          mine = record ? pinFromRecord(record) : null;
+        }
+      }
+
+      let guestPosted = false;
+      if (visitorId && isValidVisitorId(visitorId)) {
+        const guest = await getTraceByUid(visitorId);
+        guestPosted = Boolean(guest);
+      }
+
+      return NextResponse.json({
+        posted: Boolean(mine) || guestPosted,
+        mine,
+        guestPosted,
+      });
+    }
+
+    return NextResponse.json({ error: "Unknown view." }, { status: 400 });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load traces.";
+      error instanceof Error ? error.message : "Unable to load memories.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
-  const auth = await requireTraceUser(request);
-  if (auth.error) return auth.error;
-
   let body: unknown;
   try {
     body = await request.json();
@@ -203,100 +122,137 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  if (body && typeof body === "object") {
-    const forbidden = bodyContainsForbiddenPii(body as Record<string, unknown>);
-    if (forbidden) {
-      return NextResponse.json(
-        {
-          error:
-            "Personal profile fields are not accepted. Only location and message may be saved.",
-          field: forbidden,
-        },
-        { status: 400 },
-      );
-    }
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const action =
-    body && typeof body === "object"
-      ? (body as Record<string, unknown>).action
-      : null;
+  const payload = body as Record<string, unknown>;
+  const forbidden = bodyContainsForbiddenPii(payload);
+  if (forbidden) {
+    return NextResponse.json(
+      {
+        error:
+          "Personal profile fields are not accepted. Only place and message may be saved.",
+        field: forbidden,
+      },
+      { status: 400 },
+    );
+  }
+
+  const header = request.headers.get("authorization") || "";
+  const hasBearer = /^Bearer\s+/i.test(header);
+  const visitorId =
+    typeof payload.visitorId === "string" ? payload.visitorId.trim() : "";
 
   try {
-    if (action === "upgrade") {
+    const locationResult = validatePostBody(payload);
+    if ("error" in locationResult) {
+      return NextResponse.json({ error: locationResult.error }, { status: 400 });
+    }
+
+    const { place, locationId } = locationResult;
+
+    if (hasBearer) {
+      const auth = await requireTraceUser(request);
+      if (auth.error) return auth.error;
       if (auth.authType !== "google") {
         return NextResponse.json(
-          { error: "Google sign-in required to make a Permanent Trace." },
+          { error: "Google sign-in is required for a long Memory." },
           { status: 400 },
         );
       }
-      const upgraded = await upgradeTraceToPermanent(auth.uid);
-      return NextResponse.json({
-        trace: pinFromRecord(upgraded),
-        ok: true,
-      });
-    }
 
-    const parsed = validateLocation(
-      body && typeof body === "object"
-        ? (body as Record<string, unknown>)
-        : {},
-    );
-    if ("error" in parsed && parsed.error) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
-    }
+      const messageResult = normalizeTraceMessage(
+        payload.message,
+        MAX_GOOGLE_MESSAGE_LENGTH,
+      );
+      if (!messageResult.ok) {
+        return NextResponse.json({ error: messageResult.error }, { status: 400 });
+      }
 
-    const location = parsed as {
-      locationId: string;
-      country: string;
-      region: string;
-      city: string;
-      message: string;
-    };
+      const existing = await getTraceByUid(auth.uid);
+      if (existing) {
+        return NextResponse.json(
+          { error: "You already left a Memory with this Google account." },
+          { status: 409 },
+        );
+      }
 
-    const existing = await getTraceByUid(auth.uid);
-    if (existing) {
-      const updated = await updateTraceLocationMessage({
+      const siteControl = await getSiteControl();
+      if (!siteControl.traceEnabled) {
+        return NextResponse.json(
+          { error: TRACE_DISABLED_MESSAGE, code: "TRACE_DISABLED" },
+          { status: 503 },
+        );
+      }
+
+      const created = await createTrace({
         uid: auth.uid,
-        ...location,
+        authType: "google",
+        locationId,
+        country: place.country,
+        region: "",
+        city: place.name,
+        message: messageResult.message,
       });
+
       return NextResponse.json({
-        trace: pinFromRecord(updated),
+        trace: pinFromRecord(created),
         ok: true,
-        mode: "update",
       });
+    }
+
+    if (!visitorId || !isValidVisitorId(visitorId)) {
+      return NextResponse.json(
+        { error: "A valid visitorId is required." },
+        { status: 400 },
+      );
+    }
+
+    const messageResult = normalizeTraceMessage(
+      payload.message,
+      MAX_GUEST_MESSAGE_LENGTH,
+    );
+    if (!messageResult.ok) {
+      return NextResponse.json({ error: messageResult.error }, { status: 400 });
+    }
+
+    const existing = await getTraceByUid(visitorId);
+    if (existing) {
+      return NextResponse.json(
+        { error: "You already left a Memory from this browser." },
+        { status: 409 },
+      );
     }
 
     const siteControl = await getSiteControl();
     if (!siteControl.traceEnabled) {
       return NextResponse.json(
-        {
-          error: TRACE_DISABLED_MESSAGE,
-          code: "TRACE_DISABLED",
-        },
+        { error: TRACE_DISABLED_MESSAGE, code: "TRACE_DISABLED" },
         { status: 503 },
       );
     }
 
     const created = await createTrace({
-      uid: auth.uid,
-      authType: auth.authType,
-      ...location,
+      uid: visitorId,
+      authType: "guest",
+      locationId,
+      country: place.country,
+      region: "",
+      city: place.name,
+      message: messageResult.message,
     });
 
     return NextResponse.json({
       trace: pinFromRecord(created),
       ok: true,
-      mode: "create",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to save trace.";
+    const message =
+      error instanceof Error ? error.message : "Unable to save memory.";
     if (message === "TRACE_EXISTS") {
       return NextResponse.json(
-        {
-          error:
-            "You already have a Trace. You may only edit location and message.",
-        },
+        { error: "You already left a Memory." },
         { status: 409 },
       );
     }

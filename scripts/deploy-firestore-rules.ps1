@@ -125,26 +125,20 @@ if ($credPath -and (Test-Path $credPath)) {
 }
 
 Write-Output "step=post_checks"
-$ov = Invoke-WebRequest -Uri "https://www.miav-922228.com/api/trace?view=overview" -UseBasicParsing -TimeoutSec 40
-Write-Output ("overview_status=" + $ov.StatusCode)
-$ovText = $ov.Content
-Write-Output ("overview_has_uid_key=" + [bool]($ovText -match '"uid"\s*:'))
+$map = Invoke-WebRequest -Uri "https://www.miav-922228.com/api/trace?view=map" -UseBasicParsing -TimeoutSec 40
+Write-Output ("map_status=" + $map.StatusCode)
+$mapText = $map.Content
+Write-Output ("map_has_stars_key=" + [bool]($mapText -match '"stars"\s*:'))
+Write-Output ("map_has_stats_key=" + [bool]($mapText -match '"stats"\s*:'))
+Write-Output ("map_has_uid_key=" + [bool]($mapText -match '"uid"\s*:'))
 
-$counts = Invoke-WebRequest -Uri "https://www.miav-922228.com/api/trace?view=counts&country=Japan" -UseBasicParsing -TimeoutSec 40
-Write-Output ("counts_status=" + $counts.StatusCode)
-
-$locPath = Join-Path $root "public\locations\countries\JP.json"
-if (Test-Path $locPath) {
-  $jp = Get-Content $locPath -Raw | ConvertFrom-Json
-  $lid = $jp.regions[0].cities[0].locationId
-  $trUri = "https://www.miav-922228.com/api/trace?view=traces&locationId=$([uri]::EscapeDataString($lid))&limit=5"
-  $tr = Invoke-WebRequest -Uri $trUri -UseBasicParsing -TimeoutSec 40
-  Write-Output ("traces_status=" + $tr.StatusCode)
-  $trText = $tr.Content
-  Write-Output ("traces_has_uid_key=" + [bool]($trText -match '"uid"\s*:'))
-  Write-Output ("traces_item_has_id_field=" + [bool]($trText -match '"traces"\s*:\s*\[[\s\S]*?"id"\s*:'))
-  Write-Output ("traces_has_miavId=" + [bool]($trText -match '"miavId"'))
-}
+$memUri = "https://www.miav-922228.com/api/trace?view=memories&locationId=$([uri]::EscapeDataString('JP:tokyo'))&limit=5"
+$mem = Invoke-WebRequest -Uri $memUri -UseBasicParsing -TimeoutSec 40
+Write-Output ("memories_status=" + $mem.StatusCode)
+$memText = $mem.Content
+Write-Output ("memories_has_uid_key=" + [bool]($memText -match '"uid"\s*:'))
+Write-Output ("memories_item_has_id_field=" + [bool]($memText -match '"traces"\s*:\s*\[[\s\S]*?"id"\s*:'))
+Write-Output ("memories_has_miavId=" + [bool]($memText -match '"miavId"'))
 
 Write-Output ("result=" + $(if ($deployExit -eq 0) { "deploy_ok" } else { "deploy_failed" }))
 exit $deployExit

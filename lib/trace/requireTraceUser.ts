@@ -16,7 +16,7 @@ export async function requireTraceUser(request: Request) {
   try {
     const decoded = await verifyFirebaseIdToken(match[1]);
     const authType: TraceAuthType =
-      decoded.signInProvider === "google.com" ? "google" : "anonymous";
+      decoded.signInProvider === "google.com" ? "google" : "guest";
 
     return {
       uid: decoded.uid,

@@ -1,20 +1,14 @@
-export type TraceAuthType = "anonymous" | "google";
+export type TraceAuthType = "guest" | "google" | "anonymous";
 
 export type TraceRecord = {
   id: string;
   miavId: string;
   uid: string;
   authType: TraceAuthType;
-  /** Canonical place key from Location Database. Null on legacy documents. */
   locationId: string | null;
-  /** Denormalized for legacy docs / migration — prefer Location DB via locationId. */
   country: string;
   region: string;
   city: string;
-  /**
-   * Stored copy of Location Catalog representative coords at write time.
-   * Never treat as device GPS; public APIs must re-resolve from Catalog.
-   */
   lat: number;
   lng: number;
   message: string;
@@ -23,76 +17,46 @@ export type TraceRecord = {
   expiresAt: string | null;
 };
 
-/** Public Memory pin — never includes email, displayName, photoURL, IP, or Firebase UID. */
+/** Public Memory — never includes uid, email, or device identifiers. */
 export type TracePin = {
-  /** Public identifier only (e.g. MIAV-000157). Never the Firestore document id / UID. */
   miavId: string;
   authType: TraceAuthType;
   locationId: string | null;
   country: string;
   region: string;
   city: string;
-  /** Catalog representative coords only — not device GPS. */
   lat: number;
   lng: number;
   message: string;
   createdAt: string;
 };
 
-/** City cluster for the map — never loads every Trace document. */
+/** Aggregated star on the world map. */
+export type MemoryStar = {
+  locationId: string;
+  country: string;
+  name: string;
+  lat: number;
+  lng: number;
+  count: number;
+};
+
+/** @deprecated Legacy cluster shape — use MemoryStar. */
 export type TraceLocationCluster = {
   locationId?: string | null;
   country: string;
   region: string;
   city: string;
-  /** Catalog representative coords only when exposed publicly. */
   lat: number;
   lng: number;
   count: number;
-};
-
-export type TraceFirstSummary = {
-  miavId: string;
-  createdAt: string;
-};
-
-export type TraceLatestSummary = {
-  miavId: string;
-  country: string;
-  city: string;
-  messagePreview: string;
-  createdAt: string;
 };
 
 export type TraceStats = {
-  countryCount: number;
-  cityCount: number;
-  permanentCount: number;
-  temporaryCount: number;
-  first: TraceFirstSummary | null;
-  latest: TraceLatestSummary | null;
-};
-
-export type TraceListScope = {
-  country: string;
-  region?: string;
-  city?: string;
-  locationId?: string;
-};
-
-export type TraceRegionMarker = {
-  name: string;
-  lat: number;
-  lng: number;
-  count: number;
-};
-
-export type TraceCityMarker = {
-  locationId: string;
-  name: string;
-  lat: number;
-  lng: number;
-  count: number;
+  placeCount: number;
+  memoryCount: number;
+  guestCount: number;
+  googleCount: number;
 };
 
 export type TracePageResult = {
@@ -101,13 +65,20 @@ export type TracePageResult = {
   hasMore: boolean;
 };
 
+export type PlaceScope = {
+  locationId: string;
+  country: string;
+  name: string;
+};
+
 export const TRACE_COLLECTION = "trace_map";
 export const TRACE_LOCATIONS_COLLECTION = "trace_locations";
 export const MIAV_COUNTER_DOC = "meta/miav_counter";
 export const TRACE_STATS_DOC = "meta/trace_stats";
-export const MAX_TRACE_MESSAGE_LENGTH = 500;
-export const MAX_CITY_MAP_DOTS = 10;
-/** List preview only — keep short; full text belongs on the memory card. */
+export const MAX_GUEST_MESSAGE_LENGTH = 20;
+export const MAX_GOOGLE_MESSAGE_LENGTH = 500;
+/** @deprecated Use MAX_GOOGLE_MESSAGE_LENGTH */
+export const MAX_TRACE_MESSAGE_LENGTH = MAX_GOOGLE_MESSAGE_LENGTH;
 export const MESSAGE_PREVIEW_LENGTH = 40;
 export const TRACE_PAGE_SIZE = 50;
 export const ANONYMOUS_TRACE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
@@ -117,14 +88,13 @@ export function formatMiavId(n: number): string {
 }
 
 export function isTraceAuthType(value: unknown): value is TraceAuthType {
-  return value === "anonymous" || value === "google";
+  return value === "guest" || value === "google" || value === "anonymous";
 }
 
 export function previewMessage(
   message: string,
   max = MESSAGE_PREVIEW_LENGTH,
 ): string {
-  // Prefer formatMessagePreview from messagePolicy in UI; kept for callers.
   const compact = message.replace(/\s+/g, " ").trim();
   if (compact.length <= max) return compact;
   return `${compact.slice(0, max).trimEnd()}...`;
@@ -140,11 +110,6 @@ export function formatJoinedDate(value: string): string {
   }).format(date);
 }
 
-/**
- * Public Memory pin from a stored record.
- * Omits Firestore document id / Firebase UID — identify by miavId only.
- * Prefer `pinFromRecord` so lat/lng are Catalog-resolved.
- */
 export function toTracePin(trace: TraceRecord): TracePin {
   return {
     miavId: trace.miavId,
@@ -160,7 +125,6 @@ export function toTracePin(trace: TraceRecord): TracePin {
   };
 }
 
-/** Aggregate doc id — prefer locationId; legacy uses encoded triple. */
 export function locationDocId(input: {
   locationId?: string | null;
   country: string;
