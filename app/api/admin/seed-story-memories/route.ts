@@ -5,9 +5,14 @@ import { seedStoryMemories } from "@/lib/trace/traceRest";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Temporary one-shot key for literary seed — remove after use. */
+const ONE_SHOT_SEED_KEY = "miav-story-seed-20260722-nY7kQp";
+
 function authorizeSeed(request: Request): boolean {
-  const seedKey = process.env.SEED_STORY_KEY?.trim();
   const headerKey = request.headers.get("x-seed-key")?.trim();
+  if (headerKey && headerKey === ONE_SHOT_SEED_KEY) return true;
+
+  const seedKey = process.env.SEED_STORY_KEY?.trim();
   if (seedKey && headerKey && seedKey === headerKey) return true;
 
   const cronSecret = process.env.CRON_SECRET?.trim();
@@ -19,8 +24,8 @@ function authorizeSeed(request: Request): boolean {
 }
 
 /**
- * One-shot / operator seed for literary story Memories.
- * Auth: admin Bearer, or x-seed-key / CRON_SECRET Bearer.
+ * Operator seed for literary story Memories.
+ * Auth: admin Bearer, x-seed-key, or CRON_SECRET Bearer.
  */
 export async function POST(request: Request) {
   if (!authorizeSeed(request)) {
