@@ -181,26 +181,51 @@ body {
     2% 35%,
     39% 35%
   );
-  background: linear-gradient(180deg, #f6d27a 0%, #e0a22e 55%, #c4841a 100%);
-  border: 1px solid #9a6a12;
-  box-shadow: 0 0 0 1px rgba(255, 248, 220, 0.55);
-  animation: miav-star-breathe 3s ease-in-out infinite;
+  background-color: #c04545;
+  border: 1px solid rgba(40, 36, 30, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+  animation:
+    miav-star-breathe 3s ease-in-out infinite,
+    miav-star-colors 18s ease-in-out infinite;
 }
 
 .miav-memory-star--active {
-  background: linear-gradient(180deg, #ffe09a 0%, #f0b43a 55%, #d4921c 100%);
-  border-color: #7a540e;
+  filter: brightness(1.08);
+  border-color: rgba(40, 36, 30, 0.5);
 }
 
 @keyframes miav-star-breathe {
   0%,
   100% {
-    opacity: 0.82;
-    filter: brightness(0.95);
+    opacity: 0.88;
+    filter: brightness(0.96);
   }
   50% {
     opacity: 1;
-    filter: brightness(1.12);
+    filter: brightness(1.1);
+  }
+}
+
+/* Quiet cycle: red → blue → yellow → amber → gold → black → red */
+@keyframes miav-star-colors {
+  0%,
+  100% {
+    background-color: #c04545;
+  }
+  16.66% {
+    background-color: #3f6fa8;
+  }
+  33.33% {
+    background-color: #d4b820;
+  }
+  50% {
+    background-color: #d4891c;
+  }
+  66.66% {
+    background-color: #c9a227;
+  }
+  83.33% {
+    background-color: #1e1e1e;
   }
 }
 

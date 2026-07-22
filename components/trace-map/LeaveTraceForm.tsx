@@ -18,7 +18,7 @@ import { TRACE_PRIVACY_BLURB } from "@/lib/trace/policyCopy";
 import { TRACE_DISABLED_MESSAGE } from "@/lib/site-control/types";
 import { GoogleSignInDialog } from "@/components/trace/GoogleSignInDialog";
 import { getOrCreateVisitorId } from "@/lib/trace/visitorId";
-import { WORLD_PLACES } from "@/lib/places/client";
+import { PlaceCascadePicker } from "@/components/trace-map/PlaceCascadePicker";
 
 type SelectedPlace = {
   locationId: string;
@@ -134,9 +134,9 @@ export function LeaveTraceForm({
             Leave a Memory
           </h2>
           <p className="mt-2 text-[0.82rem] leading-[1.8] text-[var(--map-muted)]">
-            Choose a place on the map. No login required — up to{" "}
-            {MAX_GUEST_MESSAGE_LENGTH} characters. Google sign-in allows up to{" "}
-            {MAX_GOOGLE_MESSAGE_LENGTH}.
+            Choose a continent, then a country, then a city. No login required —
+            up to {MAX_GUEST_MESSAGE_LENGTH} characters. Google sign-in allows
+            up to {MAX_GOOGLE_MESSAGE_LENGTH}.
           </p>
         </div>
         {!open && !alreadyPosted ? (
@@ -166,34 +166,20 @@ export function LeaveTraceForm({
             </p>
           ) : null}
 
-          <div>
-            <label className="block text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
-              Place
-            </label>
-            <select
-              value={selectedPlace?.locationId || ""}
-              onChange={(event) => {
-                const place = WORLD_PLACES.find(
-                  (p) => p.locationId === event.target.value,
-                );
-                if (!place) {
-                  onSelectPlace(null);
-                  return;
-                }
-                onSelectPlace(place);
-                onFocusLocation({ lat: place.lat, lng: place.lng, zoom: 5 });
-              }}
-              className="mt-2 w-full border border-[var(--map-line)] bg-white px-3 py-2.5 text-[0.85rem] text-[var(--map-ink)]"
-              required
-            >
-              <option value="">Select a place…</option>
-              {WORLD_PLACES.map((place) => (
-                <option key={place.locationId} value={place.locationId}>
-                  {place.name}, {place.country}
-                </option>
-              ))}
-            </select>
-          </div>
+          <PlaceCascadePicker
+            value={selectedPlace}
+            onChange={(place) => onSelectPlace(place)}
+            onFocusPlace={(place) =>
+              onFocusLocation({ lat: place.lat, lng: place.lng, zoom: 5 })
+            }
+          />
+          {/* Keep required semantics for form submit */}
+          <input
+            type="hidden"
+            name="locationId"
+            value={selectedPlace?.locationId || ""}
+            required
+          />
 
           <div>
             <label className="block text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
