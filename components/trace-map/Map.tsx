@@ -10,6 +10,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { memoryStarSize } from "@/lib/places/starSize";
+import { starMotionForId } from "@/lib/places/starMotion";
 import type { MemoryStar, PlaceScope } from "@/lib/trace/types";
 
 type Focus = { lat: number; lng: number; zoom: number } | null;
@@ -55,10 +56,19 @@ function MapInteractionGate({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function starIcon(size: number, active: boolean) {
+function starIcon(size: number, active: boolean, locationId: string) {
+  const motion = starMotionForId(locationId);
+  const style = [
+    `width:${size}px`,
+    `height:${size}px`,
+    `--star-breathe-dur:${motion.breatheDurationSec.toFixed(2)}s`,
+    `--star-breathe-delay:${motion.breatheDelaySec.toFixed(2)}s`,
+    `--star-color-dur:${motion.colorDurationSec.toFixed(2)}s`,
+    `--star-color-delay:${motion.colorDelaySec.toFixed(2)}s`,
+  ].join(";");
   return L.divIcon({
     className: "miav-memory-star-wrap",
-    html: `<span class="miav-memory-star${active ? " miav-memory-star--active" : ""}" style="width:${size}px;height:${size}px"></span>`,
+    html: `<span class="miav-memory-star${active ? " miav-memory-star--active" : ""}" style="${style}"></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -106,7 +116,7 @@ export function Map({
             <Marker
               key={star.locationId}
               position={[star.lat, star.lng]}
-              icon={starIcon(size, active)}
+              icon={starIcon(size, active, star.locationId)}
               zIndexOffset={500 + star.count}
               eventHandlers={{
                 click: () => {

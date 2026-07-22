@@ -185,8 +185,10 @@ body {
   border: 1px solid rgba(40, 36, 30, 0.35);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
   animation:
-    miav-star-breathe 3s ease-in-out infinite,
-    miav-star-colors 18s ease-in-out infinite;
+    miav-star-breathe var(--star-breathe-dur, 3s) ease-in-out
+      var(--star-breathe-delay, 0s) infinite,
+    miav-star-colors var(--star-color-dur, 18s) ease-in-out
+      var(--star-color-delay, 0s) infinite;
 }
 
 .miav-memory-star--active {
