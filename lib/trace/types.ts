@@ -82,7 +82,7 @@ export const TRACE_COLLECTION = "trace_map";
 export const TRACE_LOCATIONS_COLLECTION = "trace_locations";
 export const MIAV_COUNTER_DOC = "meta/miav_counter";
 export const TRACE_STATS_DOC = "meta/trace_stats";
-export const MAX_GUEST_MESSAGE_LENGTH = 20;
+export const MAX_GUEST_MESSAGE_LENGTH = 50;
 export const MAX_GOOGLE_MESSAGE_LENGTH = 500;
 /** @deprecated Use MAX_GOOGLE_MESSAGE_LENGTH */
 export const MAX_TRACE_MESSAGE_LENGTH = MAX_GOOGLE_MESSAGE_LENGTH;
