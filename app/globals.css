@@ -181,25 +181,26 @@ body {
     2% 35%,
     39% 35%
   );
-  background: linear-gradient(180deg, #e8eef4 0%, #c5d6e6 100%);
-  border: 1px solid #8fa8bc;
+  background: linear-gradient(180deg, #f6d27a 0%, #e0a22e 55%, #c4841a 100%);
+  border: 1px solid #9a6a12;
+  box-shadow: 0 0 0 1px rgba(255, 248, 220, 0.55);
   animation: miav-star-breathe 3s ease-in-out infinite;
 }
 
 .miav-memory-star--active {
-  background: linear-gradient(180deg, #f4f8fb 0%, #d7e3ee 100%);
-  border-color: #6f8fa8;
+  background: linear-gradient(180deg, #ffe09a 0%, #f0b43a 55%, #d4921c 100%);
+  border-color: #7a540e;
 }
 
 @keyframes miav-star-breathe {
   0%,
   100% {
-    opacity: 0.72;
-    filter: brightness(0.92);
+    opacity: 0.82;
+    filter: brightness(0.95);
   }
   50% {
     opacity: 1;
-    filter: brightness(1.08);
+    filter: brightness(1.12);
   }
 }
 

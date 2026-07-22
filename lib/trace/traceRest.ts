@@ -1578,6 +1578,160 @@ export async function deleteTraceById(id: string): Promise<boolean> {
   return true;
 }
 
+/** Literary story footprints — fixed MIAV IDs, city-level only. Idempotent. */
+const STORY_MEMORY_SEEDS: Array<{
+  uid: string;
+  miavId: string;
+  locationId: string;
+  country: string;
+  city: string;
+  lat: number;
+  lng: number;
+  message: string;
+}> = [
+  {
+    uid: "seed-miav-922228",
+    miavId: "MIAV-922228",
+    locationId: "US:nyc",
+    country: "United States",
+    city: "New York",
+    lat: 40.71,
+    lng: -74.01,
+    message: "What memory would you leave here?",
+  },
+  {
+    uid: "seed-miav-922229",
+    miavId: "MIAV-922229",
+    locationId: "JP:tokyo",
+    country: "Japan",
+    city: "Tokyo",
+    lat: 35.68,
+    lng: 139.76,
+    message: "I'm listening.",
+  },
+  {
+    uid: "seed-miav-922233",
+    miavId: "MIAV-922233",
+    locationId: "GB:london",
+    country: "United Kingdom",
+    city: "London",
+    lat: 51.51,
+    lng: -0.13,
+    message: "Thank you for always being there.",
+  },
+  {
+    uid: "seed-miav-922231",
+    miavId: "MIAV-922231",
+    locationId: "SG:singapore",
+    country: "Singapore",
+    city: "Singapore",
+    lat: 1.35,
+    lng: 103.82,
+    message: "Please, come this way.",
+  },
+  {
+    uid: "seed-miav-922250",
+    miavId: "MIAV-922250",
+    locationId: "AU:sydney",
+    country: "Australia",
+    city: "Sydney",
+    lat: -33.87,
+    lng: 151.21,
+    message: "Woof. I waited here, just like always.",
+  },
+];
+
+/**
+ * Insert story Memories with fixed miavIds, then rebuild map aggregates.
+ * Character names are never stored — message + place only.
+ */
+export async function seedStoryMemories(): Promise<{
+  created: string[];
+  skipped: string[];
+}> {
+  const created: string[] = [];
+  const skipped: string[] = [];
+  const now = new Date().toISOString();
+
+  for (const seed of STORY_MEMORY_SEEDS) {
+    const existing = await getTraceByUid(seed.uid);
+    if (existing) {
+      skipped.push(seed.miavId);
+      continue;
+    }
+
+    const fields: Record<string, FirestoreValue> = {
+      miavId: { stringValue: seed.miavId },
+      uid: { stringValue: seed.uid },
+      authType: { stringValue: "google" },
+      locationId: { stringValue: seed.locationId },
+      country: { stringValue: seed.country },
+      region: { stringValue: "" },
+      city: { stringValue: seed.city },
+      lat: { doubleValue: seed.lat },
+      lng: { doubleValue: seed.lng },
+      message: { stringValue: seed.message },
+      createdAt: { timestampValue: now },
+      updatedAt: { timestampValue: now },
+      expiresAt: { nullValue: null },
+    };
+
+    const response = await firestoreFetch(
+      `documents/${TRACE_COLLECTION}?documentId=${encodeURIComponent(seed.uid)}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ fields }),
+      },
+    );
+
+    if (response.status === 409) {
+      skipped.push(seed.miavId);
+      continue;
+    }
+    if (!response.ok) {
+      const err = (await response.json()) as { error?: { message?: string } };
+      throw new Error(
+        err.error?.message || `Failed to seed ${seed.miavId}.`,
+      );
+    }
+    created.push(seed.miavId);
+  }
+
+  await rebuildAggregatesFromTraces();
+
+  const maxSeed = Math.max(
+    ...STORY_MEMORY_SEEDS.map((s) => Number(s.miavId.replace("MIAV-", ""))),
+  );
+  const counterRes = await firestoreFetch("documents/meta/miav_counter");
+  let lastNumber = 0;
+  if (counterRes.ok) {
+    const doc = (await counterRes.json()) as FirestoreDocument;
+    lastNumber = readNumber(doc.fields, "lastNumber");
+  }
+  if (lastNumber < maxSeed) {
+    if (counterRes.status === 404) {
+      await firestoreFetch("documents/meta?documentId=miav_counter", {
+        method: "POST",
+        body: JSON.stringify({
+          fields: { lastNumber: { integerValue: String(maxSeed) } },
+        }),
+      });
+    } else if (counterRes.ok) {
+      await firestoreFetch(
+        "documents/meta/miav_counter?updateMask.fieldPaths=lastNumber",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            fields: { lastNumber: { integerValue: String(maxSeed) } },
+          }),
+        },
+      );
+    }
+  }
+
+  return { created, skipped };
+}
+
 /** @deprecated Prefer overview + location queries. Kept for emergency rebuild. */
 export async function listTracePins(): Promise<TracePin[]> {
   const records = await runTraceQuery({
