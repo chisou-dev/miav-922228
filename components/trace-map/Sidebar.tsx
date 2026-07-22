@@ -1,6 +1,9 @@
 "use client";
 
-import type { TraceStats } from "@/lib/trace/types";
+import {
+  formatJoinedDate,
+  type TraceStats,
+} from "@/lib/trace/types";
 
 type Props = {
   stats: TraceStats | null;
@@ -8,8 +11,10 @@ type Props = {
 };
 
 export function Sidebar({ stats, loading }: Props) {
+  const latest = stats?.latest ?? null;
+
   return (
-    <aside className="space-y-6 border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6">
+    <aside className="flex h-full min-h-[min(72vh,720px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6">
       <div>
         <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)]">
           Trace archive
@@ -24,11 +29,11 @@ export function Sidebar({ stats, loading }: Props) {
       </div>
 
       {loading ? (
-        <p className="text-[0.78rem] tracking-[0.1em] text-[var(--map-muted)]">
+        <p className="mt-6 text-[0.78rem] tracking-[0.1em] text-[var(--map-muted)]">
           Gathering…
         </p>
       ) : (
-        <dl className="grid gap-4 text-[0.78rem]">
+        <dl className="mt-6 grid gap-4 text-[0.78rem]">
           <div>
             <dt className="tracking-[0.14em] text-[var(--map-muted)]">
               Places with Memories
@@ -63,6 +68,50 @@ export function Sidebar({ stats, loading }: Props) {
           </div>
         </dl>
       )}
+
+      <div className="mt-auto border-t border-[var(--map-line)] pt-5">
+        <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
+          Latest Memory
+        </p>
+        {loading ? (
+          <p className="mt-3 text-[0.78rem] text-[var(--map-muted)]">…</p>
+        ) : latest ? (
+          <dl className="mt-3 space-y-3 text-[0.82rem] text-[var(--map-ink)]">
+            <div>
+              <dt className="sr-only">MIAV ID</dt>
+              <dd className="font-mono tracking-[0.04em] text-[var(--map-accent)]">
+                {latest.miavId}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                Place
+              </dt>
+              <dd className="mt-1">
+                {latest.city}, {latest.country}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                Memory
+              </dt>
+              <dd className="mt-1 leading-[1.7] text-[var(--map-muted)]">
+                {latest.messagePreview || "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                Left
+              </dt>
+              <dd className="mt-1">{formatJoinedDate(latest.createdAt)}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="mt-3 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
+            No Memories yet.
+          </p>
+        )}
+      </div>
     </aside>
   );
 }

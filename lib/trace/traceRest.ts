@@ -434,6 +434,19 @@ function toPublicStats(stats: InternalTraceStats): TraceStats {
     memoryCount: stats.permanentCount + stats.temporaryCount,
     guestCount: stats.temporaryCount,
     googleCount: stats.permanentCount,
+    latest:
+      stats.latestMiavId &&
+      stats.latestCountry &&
+      stats.latestCity &&
+      stats.latestCreatedAt
+        ? {
+            miavId: stats.latestMiavId,
+            country: stats.latestCountry,
+            city: stats.latestCity,
+            messagePreview: stats.latestMessagePreview || "",
+            createdAt: stats.latestCreatedAt,
+          }
+        : null,
   };
 }
 

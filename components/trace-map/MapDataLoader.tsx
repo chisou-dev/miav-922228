@@ -21,6 +21,7 @@ function emptyStats(): TraceStats {
     memoryCount: 0,
     guestCount: 0,
     googleCount: 0,
+    latest: null,
   };
 }
 

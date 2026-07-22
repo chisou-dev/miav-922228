@@ -57,6 +57,13 @@ export type TraceStats = {
   memoryCount: number;
   guestCount: number;
   googleCount: number;
+  latest: {
+    miavId: string;
+    country: string;
+    city: string;
+    messagePreview: string;
+    createdAt: string;
+  } | null;
 };
 
 export type TracePageResult = {

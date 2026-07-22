@@ -153,7 +153,7 @@ export function TraceMapApp() {
       </header>
 
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="order-2 lg:order-1">
+        <div className="order-2 lg:order-1 lg:self-stretch">
           <Sidebar stats={data.stats} loading={data.mapLoading} />
         </div>
 
