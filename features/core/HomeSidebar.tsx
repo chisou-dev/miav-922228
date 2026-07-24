@@ -1,5 +1,7 @@
 "use client";
 
+import { ReaderMemory } from "@/features/core/ReaderMemory";
+
 const categories = [
   { label: "Literary SF", href: "/#about" },
   { label: "Entertainment SF", href: "/books" },
@@ -39,6 +41,10 @@ export function HomeSidebar() {
               Reader traces preserved around the world.
             </span>
           </a>
+        </div>
+
+        <div className="mt-10">
+          <ReaderMemory workId="miav-922228" />
         </div>
       </div>
     </aside>

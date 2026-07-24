@@ -7,6 +7,7 @@ import {
   getTraceByUid,
   getTraceStats,
   listMemoryStars,
+  listTracePins,
   listTracesByLocationId,
   pinFromRecord,
 } from "@/features/world-memory/trace/traceRest";
@@ -52,11 +53,12 @@ export async function GET(request: Request) {
       : TRACE_PAGE_SIZE;
 
     if (view === "map") {
-      const [stars, stats] = await Promise.all([
+      const [stars, stats, recent] = await Promise.all([
         listMemoryStars(),
         getTraceStats(),
+        listTracePins({ limit: 20 }),
       ]);
-      return NextResponse.json({ stars, stats });
+      return NextResponse.json({ stars, stats, recent });
     }
 
     if (view === "memories") {

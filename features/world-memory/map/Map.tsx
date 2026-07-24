@@ -19,6 +19,8 @@ type Props = {
   stars: MemoryStar[];
   focus: Focus;
   placeScope: PlaceScope | null;
+  /** Extra marker highlight (e.g. Latest Memory navigation). */
+  highlightLocationId?: string | null;
   interactionsEnabled?: boolean;
   onOpenMemories: (scope: PlaceScope) => void;
 };
@@ -78,6 +80,7 @@ export function Map({
   stars,
   focus,
   placeScope,
+  highlightLocationId = null,
   interactionsEnabled = true,
   onOpenMemories,
 }: Props) {
@@ -110,14 +113,16 @@ export function Map({
         <MapInteractionGate enabled={interactionsEnabled} />
 
         {stars.map((star) => {
-          const active = placeScope?.locationId === star.locationId;
+          const active =
+            placeScope?.locationId === star.locationId ||
+            highlightLocationId === star.locationId;
           const size = memoryStarSize(star.count);
           return (
             <Marker
               key={star.locationId}
               position={[star.lat, star.lng]}
               icon={starIcon(size, active, star.locationId)}
-              zIndexOffset={500 + star.count}
+              zIndexOffset={500 + star.count + (active ? 200 : 0)}
               eventHandlers={{
                 click: () => {
                   if (!interactionsEnabled) return;

@@ -7,10 +7,16 @@ import type {
   ContinentName,
   LocationCountry,
   LocationCountryIndexEntry,
+  LocationRegion,
 } from "@/features/world-memory/location/locations/types";
 import { CONTINENTS } from "@/features/world-memory/location/locations/continents";
 
-export type { LocationCountry, LocationCountryIndexEntry, ContinentName };
+export type {
+  LocationCountry,
+  LocationCountryIndexEntry,
+  LocationRegion,
+  ContinentName,
+};
 export { CONTINENTS };
 
 export async function fetchLocationIndex(): Promise<

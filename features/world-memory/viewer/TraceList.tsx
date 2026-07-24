@@ -34,8 +34,8 @@ function quotePreview(message: string): string {
 
 /**
  * Reader memory list — miavId / date / preview only.
- * PC: hover previews a floating card; click pins it.
- * Mobile: tap pins; swipe on the card moves prev/next.
+ * Desktop: click/hover updates the docked SelectedTrace panel under the list.
+ * Mobile: tap pins; SelectedTrace floats as a bottom sheet; swipe moves prev/next.
  * Never uses or displays Firebase UID / trace.id.
  */
 export function TraceList({
@@ -243,20 +243,41 @@ export function TraceList({
       )}
 
       {activeTrace ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4 sm:bottom-6 sm:justify-end sm:pr-6">
-          <SelectedTrace
-            trace={activeTrace}
-            locationLabel={locationLabel}
-            pinned={pinned}
-            onClose={closeCard}
-            onHoverStay={() => keepHover(activeTrace.miavId)}
-            onHoverLeave={() => {
-              if (!pinnedMiavId) clearHoverSoon();
-            }}
-            onSwipePrev={() => movePinned(-1)}
-            onSwipeNext={() => movePinned(1)}
-          />
-        </div>
+        <>
+          {/* Mobile: floating bottom sheet over the list */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4 lg:hidden">
+            <SelectedTrace
+              trace={activeTrace}
+              locationLabel={locationLabel}
+              pinned={pinned}
+              variant="overlay"
+              onClose={closeCard}
+              onHoverStay={() => keepHover(activeTrace.miavId)}
+              onHoverLeave={() => {
+                if (!pinnedMiavId) clearHoverSoon();
+              }}
+              onSwipePrev={() => movePinned(-1)}
+              onSwipeNext={() => movePinned(1)}
+            />
+          </div>
+
+          {/* Desktop: docked selected memory under the list */}
+          <div className="hidden shrink-0 border-t border-[var(--map-line)] lg:block">
+            <SelectedTrace
+              trace={activeTrace}
+              locationLabel={locationLabel}
+              pinned={pinned}
+              variant="panel"
+              onClose={closeCard}
+              onHoverStay={() => keepHover(activeTrace.miavId)}
+              onHoverLeave={() => {
+                if (!pinnedMiavId) clearHoverSoon();
+              }}
+              onSwipePrev={() => movePinned(-1)}
+              onSwipeNext={() => movePinned(1)}
+            />
+          </div>
+        </>
       ) : null}
     </div>
   );

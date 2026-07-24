@@ -2613,6 +2613,501 @@
       "zoom": 5,
       "regions": [
         {
+          "name": "Aichi",
+          "lat": 35.1815,
+          "lng": 136.9066,
+          "cities": [
+            {
+              "name": "Nagoya",
+              "lat": 35.1815,
+              "lng": 136.9066
+            }
+          ]
+        },
+        {
+          "name": "Akita",
+          "lat": 39.7186,
+          "lng": 140.1024,
+          "cities": [
+            {
+              "name": "Akita",
+              "lat": 39.7186,
+              "lng": 140.1024
+            }
+          ]
+        },
+        {
+          "name": "Aomori",
+          "lat": 40.8244,
+          "lng": 140.74,
+          "cities": [
+            {
+              "name": "Aomori",
+              "lat": 40.8244,
+              "lng": 140.74
+            }
+          ]
+        },
+        {
+          "name": "Chiba",
+          "lat": 35.6074,
+          "lng": 140.1065,
+          "cities": [
+            {
+              "name": "Chiba",
+              "lat": 35.6074,
+              "lng": 140.1065
+            }
+          ]
+        },
+        {
+          "name": "Ehime",
+          "lat": 33.8416,
+          "lng": 132.7657,
+          "cities": [
+            {
+              "name": "Matsuyama",
+              "lat": 33.8416,
+              "lng": 132.7657
+            }
+          ]
+        },
+        {
+          "name": "Fukui",
+          "lat": 36.0652,
+          "lng": 136.2216,
+          "cities": [
+            {
+              "name": "Fukui",
+              "lat": 36.0652,
+              "lng": 136.2216
+            }
+          ]
+        },
+        {
+          "name": "Fukuoka",
+          "lat": 33.5904,
+          "lng": 130.4017,
+          "cities": [
+            {
+              "name": "Fukuoka",
+              "lat": 33.5904,
+              "lng": 130.4017
+            }
+          ]
+        },
+        {
+          "name": "Fukushima",
+          "lat": 37.7503,
+          "lng": 140.4676,
+          "cities": [
+            {
+              "name": "Fukushima",
+              "lat": 37.7503,
+              "lng": 140.4676
+            }
+          ]
+        },
+        {
+          "name": "Gifu",
+          "lat": 35.3912,
+          "lng": 136.7223,
+          "cities": [
+            {
+              "name": "Gifu",
+              "lat": 35.3912,
+              "lng": 136.7223
+            }
+          ]
+        },
+        {
+          "name": "Gunma",
+          "lat": 36.3911,
+          "lng": 139.0608,
+          "cities": [
+            {
+              "name": "Maebashi",
+              "lat": 36.3911,
+              "lng": 139.0608
+            }
+          ]
+        },
+        {
+          "name": "Hiroshima",
+          "lat": 34.3853,
+          "lng": 132.4553,
+          "cities": [
+            {
+              "name": "Hiroshima",
+              "lat": 34.3853,
+              "lng": 132.4553
+            }
+          ]
+        },
+        {
+          "name": "Hokkaido",
+          "lat": 43.06,
+          "lng": 141.35,
+          "cities": [
+            {
+              "name": "Sapporo",
+              "lat": 43.0618,
+              "lng": 141.3545
+            },
+            {
+              "name": "Hakodate",
+              "lat": 41.7687,
+              "lng": 140.729
+            }
+          ]
+        },
+        {
+          "name": "Hyogo",
+          "lat": 34.6901,
+          "lng": 135.1955,
+          "cities": [
+            {
+              "name": "Kobe",
+              "lat": 34.6901,
+              "lng": 135.1955
+            }
+          ]
+        },
+        {
+          "name": "Ibaraki",
+          "lat": 36.3418,
+          "lng": 140.4468,
+          "cities": [
+            {
+              "name": "Mito",
+              "lat": 36.3418,
+              "lng": 140.4468
+            }
+          ]
+        },
+        {
+          "name": "Ishikawa",
+          "lat": 36.5613,
+          "lng": 136.6562,
+          "cities": [
+            {
+              "name": "Kanazawa",
+              "lat": 36.5613,
+              "lng": 136.6562
+            }
+          ]
+        },
+        {
+          "name": "Iwate",
+          "lat": 39.7036,
+          "lng": 141.1527,
+          "cities": [
+            {
+              "name": "Morioka",
+              "lat": 39.7036,
+              "lng": 141.1527
+            }
+          ]
+        },
+        {
+          "name": "Kagawa",
+          "lat": 34.3401,
+          "lng": 134.0434,
+          "cities": [
+            {
+              "name": "Takamatsu",
+              "lat": 34.3401,
+              "lng": 134.0434
+            }
+          ]
+        },
+        {
+          "name": "Kagoshima",
+          "lat": 31.5966,
+          "lng": 130.5571,
+          "cities": [
+            {
+              "name": "Kagoshima",
+              "lat": 31.5966,
+              "lng": 130.5571
+            }
+          ]
+        },
+        {
+          "name": "Kanagawa",
+          "lat": 35.4437,
+          "lng": 139.638,
+          "cities": [
+            {
+              "name": "Yokohama",
+              "lat": 35.4437,
+              "lng": 139.638
+            }
+          ]
+        },
+        {
+          "name": "Kochi",
+          "lat": 33.5597,
+          "lng": 133.5311,
+          "cities": [
+            {
+              "name": "Kochi",
+              "lat": 33.5597,
+              "lng": 133.5311
+            }
+          ]
+        },
+        {
+          "name": "Kumamoto",
+          "lat": 32.8031,
+          "lng": 130.7079,
+          "cities": [
+            {
+              "name": "Kumamoto",
+              "lat": 32.8031,
+              "lng": 130.7079
+            }
+          ]
+        },
+        {
+          "name": "Kyoto",
+          "lat": 35.01,
+          "lng": 135.77,
+          "cities": [
+            {
+              "name": "Kyoto",
+              "lat": 35.0116,
+              "lng": 135.7681
+            },
+            {
+              "name": "Gion",
+              "lat": 35.0037,
+              "lng": 135.778
+            }
+          ]
+        },
+        {
+          "name": "Mie",
+          "lat": 34.7303,
+          "lng": 136.5086,
+          "cities": [
+            {
+              "name": "Tsu",
+              "lat": 34.7303,
+              "lng": 136.5086
+            }
+          ]
+        },
+        {
+          "name": "Miyagi",
+          "lat": 38.2682,
+          "lng": 140.8694,
+          "cities": [
+            {
+              "name": "Sendai",
+              "lat": 38.2682,
+              "lng": 140.8694
+            }
+          ]
+        },
+        {
+          "name": "Miyazaki",
+          "lat": 31.9077,
+          "lng": 131.4202,
+          "cities": [
+            {
+              "name": "Miyazaki",
+              "lat": 31.9077,
+              "lng": 131.4202
+            }
+          ]
+        },
+        {
+          "name": "Nagano",
+          "lat": 36.6513,
+          "lng": 138.181,
+          "cities": [
+            {
+              "name": "Nagano",
+              "lat": 36.6513,
+              "lng": 138.181
+            }
+          ]
+        },
+        {
+          "name": "Nagasaki",
+          "lat": 32.7503,
+          "lng": 129.8779,
+          "cities": [
+            {
+              "name": "Nagasaki",
+              "lat": 32.7503,
+              "lng": 129.8779
+            }
+          ]
+        },
+        {
+          "name": "Nara",
+          "lat": 34.6851,
+          "lng": 135.8048,
+          "cities": [
+            {
+              "name": "Nara",
+              "lat": 34.6851,
+              "lng": 135.8048
+            }
+          ]
+        },
+        {
+          "name": "Niigata",
+          "lat": 37.9161,
+          "lng": 139.0364,
+          "cities": [
+            {
+              "name": "Niigata",
+              "lat": 37.9161,
+              "lng": 139.0364
+            }
+          ]
+        },
+        {
+          "name": "Oita",
+          "lat": 33.2382,
+          "lng": 131.6126,
+          "cities": [
+            {
+              "name": "Oita",
+              "lat": 33.2382,
+              "lng": 131.6126
+            }
+          ]
+        },
+        {
+          "name": "Okayama",
+          "lat": 34.6551,
+          "lng": 133.9195,
+          "cities": [
+            {
+              "name": "Okayama",
+              "lat": 34.6551,
+              "lng": 133.9195
+            }
+          ]
+        },
+        {
+          "name": "Okinawa",
+          "lat": 26.2124,
+          "lng": 127.6809,
+          "cities": [
+            {
+              "name": "Naha",
+              "lat": 26.2124,
+              "lng": 127.6809
+            }
+          ]
+        },
+        {
+          "name": "Osaka",
+          "lat": 34.69,
+          "lng": 135.5,
+          "cities": [
+            {
+              "name": "Osaka",
+              "lat": 34.6937,
+              "lng": 135.5023
+            },
+            {
+              "name": "Namba",
+              "lat": 34.665,
+              "lng": 135.501
+            }
+          ]
+        },
+        {
+          "name": "Saga",
+          "lat": 33.2494,
+          "lng": 130.2988,
+          "cities": [
+            {
+              "name": "Saga",
+              "lat": 33.2494,
+              "lng": 130.2988
+            }
+          ]
+        },
+        {
+          "name": "Saitama",
+          "lat": 35.8617,
+          "lng": 139.6455,
+          "cities": [
+            {
+              "name": "Saitama",
+              "lat": 35.8617,
+              "lng": 139.6455
+            }
+          ]
+        },
+        {
+          "name": "Shiga",
+          "lat": 35.0045,
+          "lng": 135.8686,
+          "cities": [
+            {
+              "name": "Otsu",
+              "lat": 35.0045,
+              "lng": 135.8686
+            }
+          ]
+        },
+        {
+          "name": "Shimane",
+          "lat": 35.4723,
+          "lng": 133.0505,
+          "cities": [
+            {
+              "name": "Matsue",
+              "lat": 35.4723,
+              "lng": 133.0505
+            }
+          ]
+        },
+        {
+          "name": "Shizuoka",
+          "lat": 34.9756,
+          "lng": 138.3828,
+          "cities": [
+            {
+              "name": "Shizuoka",
+              "lat": 34.9756,
+              "lng": 138.3828
+            }
+          ]
+        },
+        {
+          "name": "Tochigi",
+          "lat": 36.5551,
+          "lng": 139.8828,
+          "cities": [
+            {
+              "name": "Utsunomiya",
+              "lat": 36.5551,
+              "lng": 139.8828
+            }
+          ]
+        },
+        {
+          "name": "Tokushima",
+          "lat": 34.0658,
+          "lng": 134.5593,
+          "cities": [
+            {
+              "name": "Tokushima",
+              "lat": 34.0658,
+              "lng": 134.5593
+            }
+          ]
+        },
+        {
           "name": "Tokyo",
           "lat": 35.68,
           "lng": 139.76,
@@ -2635,53 +3130,74 @@
           ]
         },
         {
-          "name": "Osaka",
-          "lat": 34.69,
-          "lng": 135.5,
+          "name": "Tottori",
+          "lat": 35.5011,
+          "lng": 134.2351,
           "cities": [
             {
-              "name": "Osaka",
-              "lat": 34.6937,
-              "lng": 135.5023
-            },
-            {
-              "name": "Namba",
-              "lat": 34.665,
-              "lng": 135.501
+              "name": "Tottori",
+              "lat": 35.5011,
+              "lng": 134.2351
             }
           ]
         },
         {
-          "name": "Kyoto",
-          "lat": 35.01,
-          "lng": 135.77,
+          "name": "Toyama",
+          "lat": 36.6953,
+          "lng": 137.2113,
           "cities": [
             {
-              "name": "Kyoto",
-              "lat": 35.0116,
-              "lng": 135.7681
-            },
-            {
-              "name": "Gion",
-              "lat": 35.0037,
-              "lng": 135.778
+              "name": "Toyama",
+              "lat": 36.6953,
+              "lng": 137.2113
             }
           ]
         },
         {
-          "name": "Hokkaido",
-          "lat": 43.06,
-          "lng": 141.35,
+          "name": "Wakayama",
+          "lat": 34.2305,
+          "lng": 135.1708,
           "cities": [
             {
-              "name": "Sapporo",
-              "lat": 43.0618,
-              "lng": 141.3545
-            },
+              "name": "Wakayama",
+              "lat": 34.2305,
+              "lng": 135.1708
+            }
+          ]
+        },
+        {
+          "name": "Yamagata",
+          "lat": 38.2404,
+          "lng": 140.3633,
+          "cities": [
             {
-              "name": "Hakodate",
-              "lat": 41.7687,
-              "lng": 140.729
+              "name": "Yamagata",
+              "lat": 38.2404,
+              "lng": 140.3633
+            }
+          ]
+        },
+        {
+          "name": "Yamaguchi",
+          "lat": 34.1859,
+          "lng": 131.4714,
+          "cities": [
+            {
+              "name": "Yamaguchi",
+              "lat": 34.1859,
+              "lng": 131.4714
+            }
+          ]
+        },
+        {
+          "name": "Yamanashi",
+          "lat": 35.6642,
+          "lng": 138.5684,
+          "cities": [
+            {
+              "name": "Kofu",
+              "lat": 35.6642,
+              "lng": 138.5684
             }
           ]
         }
@@ -5565,14 +6081,50 @@
       "zoom": 4,
       "regions": [
         {
-          "name": "District of Columbia",
-          "lat": 38.9,
-          "lng": -77,
+          "name": "Alabama",
+          "lat": 32.3792,
+          "lng": -86.3077,
           "cities": [
             {
-              "name": "Washington, D.C.",
-              "lat": 38.9072,
-              "lng": -77.0369
+              "name": "Montgomery",
+              "lat": 32.3792,
+              "lng": -86.3077
+            }
+          ]
+        },
+        {
+          "name": "Alaska",
+          "lat": 58.3019,
+          "lng": -134.4197,
+          "cities": [
+            {
+              "name": "Juneau",
+              "lat": 58.3019,
+              "lng": -134.4197
+            }
+          ]
+        },
+        {
+          "name": "Arizona",
+          "lat": 33.4484,
+          "lng": -112.074,
+          "cities": [
+            {
+              "name": "Phoenix",
+              "lat": 33.4484,
+              "lng": -112.074
+            }
+          ]
+        },
+        {
+          "name": "Arkansas",
+          "lat": 34.7465,
+          "lng": -92.2896,
+          "cities": [
+            {
+              "name": "Little Rock",
+              "lat": 34.7465,
+              "lng": -92.2896
             }
           ]
         },
@@ -5581,6 +6133,11 @@
           "lat": 36.8,
           "lng": -119.4,
           "cities": [
+            {
+              "name": "Sacramento",
+              "lat": 38.5816,
+              "lng": -121.4944
+            },
             {
               "name": "Los Angeles",
               "lat": 34.0522,
@@ -5599,10 +6156,344 @@
           ]
         },
         {
+          "name": "Colorado",
+          "lat": 39.7392,
+          "lng": -104.9903,
+          "cities": [
+            {
+              "name": "Denver",
+              "lat": 39.7392,
+              "lng": -104.9903
+            }
+          ]
+        },
+        {
+          "name": "Connecticut",
+          "lat": 41.7658,
+          "lng": -72.6734,
+          "cities": [
+            {
+              "name": "Hartford",
+              "lat": 41.7658,
+              "lng": -72.6734
+            }
+          ]
+        },
+        {
+          "name": "Delaware",
+          "lat": 39.1582,
+          "lng": -75.5244,
+          "cities": [
+            {
+              "name": "Dover",
+              "lat": 39.1582,
+              "lng": -75.5244
+            }
+          ]
+        },
+        {
+          "name": "District of Columbia",
+          "lat": 38.9,
+          "lng": -77,
+          "cities": [
+            {
+              "name": "Washington, D.C.",
+              "lat": 38.9072,
+              "lng": -77.0369
+            }
+          ]
+        },
+        {
+          "name": "Florida",
+          "lat": 30.4383,
+          "lng": -84.2807,
+          "cities": [
+            {
+              "name": "Tallahassee",
+              "lat": 30.4383,
+              "lng": -84.2807
+            }
+          ]
+        },
+        {
+          "name": "Georgia",
+          "lat": 33.749,
+          "lng": -84.388,
+          "cities": [
+            {
+              "name": "Atlanta",
+              "lat": 33.749,
+              "lng": -84.388
+            }
+          ]
+        },
+        {
+          "name": "Hawaii",
+          "lat": 21.3069,
+          "lng": -157.8583,
+          "cities": [
+            {
+              "name": "Honolulu",
+              "lat": 21.3069,
+              "lng": -157.8583
+            }
+          ]
+        },
+        {
+          "name": "Idaho",
+          "lat": 43.615,
+          "lng": -116.2023,
+          "cities": [
+            {
+              "name": "Boise",
+              "lat": 43.615,
+              "lng": -116.2023
+            }
+          ]
+        },
+        {
+          "name": "Illinois",
+          "lat": 40,
+          "lng": -89,
+          "cities": [
+            {
+              "name": "Springfield",
+              "lat": 39.7817,
+              "lng": -89.6501
+            },
+            {
+              "name": "Chicago",
+              "lat": 41.8781,
+              "lng": -87.6298
+            }
+          ]
+        },
+        {
+          "name": "Indiana",
+          "lat": 39.7684,
+          "lng": -86.1581,
+          "cities": [
+            {
+              "name": "Indianapolis",
+              "lat": 39.7684,
+              "lng": -86.1581
+            }
+          ]
+        },
+        {
+          "name": "Iowa",
+          "lat": 41.5868,
+          "lng": -93.625,
+          "cities": [
+            {
+              "name": "Des Moines",
+              "lat": 41.5868,
+              "lng": -93.625
+            }
+          ]
+        },
+        {
+          "name": "Kansas",
+          "lat": 39.0473,
+          "lng": -95.6752,
+          "cities": [
+            {
+              "name": "Topeka",
+              "lat": 39.0473,
+              "lng": -95.6752
+            }
+          ]
+        },
+        {
+          "name": "Kentucky",
+          "lat": 38.2009,
+          "lng": -84.8733,
+          "cities": [
+            {
+              "name": "Frankfort",
+              "lat": 38.2009,
+              "lng": -84.8733
+            }
+          ]
+        },
+        {
+          "name": "Louisiana",
+          "lat": 30.4515,
+          "lng": -91.1871,
+          "cities": [
+            {
+              "name": "Baton Rouge",
+              "lat": 30.4515,
+              "lng": -91.1871
+            }
+          ]
+        },
+        {
+          "name": "Maine",
+          "lat": 44.3106,
+          "lng": -69.7795,
+          "cities": [
+            {
+              "name": "Augusta",
+              "lat": 44.3106,
+              "lng": -69.7795
+            }
+          ]
+        },
+        {
+          "name": "Maryland",
+          "lat": 38.9784,
+          "lng": -76.4922,
+          "cities": [
+            {
+              "name": "Annapolis",
+              "lat": 38.9784,
+              "lng": -76.4922
+            }
+          ]
+        },
+        {
+          "name": "Massachusetts",
+          "lat": 42.3601,
+          "lng": -71.0589,
+          "cities": [
+            {
+              "name": "Boston",
+              "lat": 42.3601,
+              "lng": -71.0589
+            }
+          ]
+        },
+        {
+          "name": "Michigan",
+          "lat": 42.7325,
+          "lng": -84.5555,
+          "cities": [
+            {
+              "name": "Lansing",
+              "lat": 42.7325,
+              "lng": -84.5555
+            }
+          ]
+        },
+        {
+          "name": "Minnesota",
+          "lat": 44.9537,
+          "lng": -93.09,
+          "cities": [
+            {
+              "name": "Saint Paul",
+              "lat": 44.9537,
+              "lng": -93.09
+            }
+          ]
+        },
+        {
+          "name": "Mississippi",
+          "lat": 32.2988,
+          "lng": -90.1848,
+          "cities": [
+            {
+              "name": "Jackson",
+              "lat": 32.2988,
+              "lng": -90.1848
+            }
+          ]
+        },
+        {
+          "name": "Missouri",
+          "lat": 38.5767,
+          "lng": -92.1735,
+          "cities": [
+            {
+              "name": "Jefferson City",
+              "lat": 38.5767,
+              "lng": -92.1735
+            }
+          ]
+        },
+        {
+          "name": "Montana",
+          "lat": 46.5891,
+          "lng": -112.0391,
+          "cities": [
+            {
+              "name": "Helena",
+              "lat": 46.5891,
+              "lng": -112.0391
+            }
+          ]
+        },
+        {
+          "name": "Nebraska",
+          "lat": 40.8136,
+          "lng": -96.7026,
+          "cities": [
+            {
+              "name": "Lincoln",
+              "lat": 40.8136,
+              "lng": -96.7026
+            }
+          ]
+        },
+        {
+          "name": "Nevada",
+          "lat": 39.1638,
+          "lng": -119.7674,
+          "cities": [
+            {
+              "name": "Carson City",
+              "lat": 39.1638,
+              "lng": -119.7674
+            }
+          ]
+        },
+        {
+          "name": "New Hampshire",
+          "lat": 43.2081,
+          "lng": -71.5376,
+          "cities": [
+            {
+              "name": "Concord",
+              "lat": 43.2081,
+              "lng": -71.5376
+            }
+          ]
+        },
+        {
+          "name": "New Jersey",
+          "lat": 40.2206,
+          "lng": -74.7597,
+          "cities": [
+            {
+              "name": "Trenton",
+              "lat": 40.2206,
+              "lng": -74.7597
+            }
+          ]
+        },
+        {
+          "name": "New Mexico",
+          "lat": 35.687,
+          "lng": -105.9378,
+          "cities": [
+            {
+              "name": "Santa Fe",
+              "lat": 35.687,
+              "lng": -105.9378
+            }
+          ]
+        },
+        {
           "name": "New York",
           "lat": 43,
           "lng": -75,
           "cities": [
+            {
+              "name": "Albany",
+              "lat": 42.6526,
+              "lng": -73.7562
+            },
             {
               "name": "New York City",
               "lat": 40.7128,
@@ -5616,10 +6507,183 @@
           ]
         },
         {
+          "name": "North Carolina",
+          "lat": 35.7796,
+          "lng": -78.6382,
+          "cities": [
+            {
+              "name": "Raleigh",
+              "lat": 35.7796,
+              "lng": -78.6382
+            }
+          ]
+        },
+        {
+          "name": "North Dakota",
+          "lat": 46.8083,
+          "lng": -100.7837,
+          "cities": [
+            {
+              "name": "Bismarck",
+              "lat": 46.8083,
+              "lng": -100.7837
+            }
+          ]
+        },
+        {
+          "name": "Ohio",
+          "lat": 39.9612,
+          "lng": -82.9988,
+          "cities": [
+            {
+              "name": "Columbus",
+              "lat": 39.9612,
+              "lng": -82.9988
+            }
+          ]
+        },
+        {
+          "name": "Oklahoma",
+          "lat": 35.4676,
+          "lng": -97.5164,
+          "cities": [
+            {
+              "name": "Oklahoma City",
+              "lat": 35.4676,
+              "lng": -97.5164
+            }
+          ]
+        },
+        {
+          "name": "Oregon",
+          "lat": 44.9429,
+          "lng": -123.0351,
+          "cities": [
+            {
+              "name": "Salem",
+              "lat": 44.9429,
+              "lng": -123.0351
+            }
+          ]
+        },
+        {
+          "name": "Pennsylvania",
+          "lat": 40.2732,
+          "lng": -76.8867,
+          "cities": [
+            {
+              "name": "Harrisburg",
+              "lat": 40.2732,
+              "lng": -76.8867
+            }
+          ]
+        },
+        {
+          "name": "Rhode Island",
+          "lat": 41.824,
+          "lng": -71.4128,
+          "cities": [
+            {
+              "name": "Providence",
+              "lat": 41.824,
+              "lng": -71.4128
+            }
+          ]
+        },
+        {
+          "name": "South Carolina",
+          "lat": 34.0007,
+          "lng": -81.0348,
+          "cities": [
+            {
+              "name": "Columbia",
+              "lat": 34.0007,
+              "lng": -81.0348
+            }
+          ]
+        },
+        {
+          "name": "South Dakota",
+          "lat": 44.3683,
+          "lng": -100.351,
+          "cities": [
+            {
+              "name": "Pierre",
+              "lat": 44.3683,
+              "lng": -100.351
+            }
+          ]
+        },
+        {
+          "name": "Tennessee",
+          "lat": 36.1627,
+          "lng": -86.7816,
+          "cities": [
+            {
+              "name": "Nashville",
+              "lat": 36.1627,
+              "lng": -86.7816
+            }
+          ]
+        },
+        {
+          "name": "Texas",
+          "lat": 30.2672,
+          "lng": -97.7431,
+          "cities": [
+            {
+              "name": "Austin",
+              "lat": 30.2672,
+              "lng": -97.7431
+            }
+          ]
+        },
+        {
+          "name": "Utah",
+          "lat": 40.7608,
+          "lng": -111.891,
+          "cities": [
+            {
+              "name": "Salt Lake City",
+              "lat": 40.7608,
+              "lng": -111.891
+            }
+          ]
+        },
+        {
+          "name": "Vermont",
+          "lat": 44.2601,
+          "lng": -72.5754,
+          "cities": [
+            {
+              "name": "Montpelier",
+              "lat": 44.2601,
+              "lng": -72.5754
+            }
+          ]
+        },
+        {
+          "name": "Virginia",
+          "lat": 37.5407,
+          "lng": -77.436,
+          "cities": [
+            {
+              "name": "Richmond",
+              "lat": 37.5407,
+              "lng": -77.436
+            }
+          ]
+        },
+        {
           "name": "Washington",
           "lat": 47.4,
           "lng": -120.5,
           "cities": [
+            {
+              "name": "Olympia",
+              "lat": 47.0379,
+              "lng": -122.9007
+            },
             {
               "name": "Seattle",
               "lat": 47.6062,
@@ -5633,14 +6697,38 @@
           ]
         },
         {
-          "name": "Illinois",
-          "lat": 40,
-          "lng": -89,
+          "name": "West Virginia",
+          "lat": 38.3498,
+          "lng": -81.6326,
           "cities": [
             {
-              "name": "Chicago",
-              "lat": 41.8781,
-              "lng": -87.6298
+              "name": "Charleston",
+              "lat": 38.3498,
+              "lng": -81.6326
+            }
+          ]
+        },
+        {
+          "name": "Wisconsin",
+          "lat": 43.0731,
+          "lng": -89.4012,
+          "cities": [
+            {
+              "name": "Madison",
+              "lat": 43.0731,
+              "lng": -89.4012
+            }
+          ]
+        },
+        {
+          "name": "Wyoming",
+          "lat": 41.14,
+          "lng": -104.8202,
+          "cities": [
+            {
+              "name": "Cheyenne",
+              "lat": 41.14,
+              "lng": -104.8202
             }
           ]
         }

@@ -2,19 +2,54 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  PLACE_CONTINENTS,
-  countriesForContinent,
-  findPlaceCascade,
-  placesForCountry,
-  type PlaceContinent,
-  type WorldPlace,
-} from "@/features/world-memory/location/places/client";
+  CONTINENTS,
+  countriesInContinent,
+  fetchCountryLocations,
+  fetchLocationIndex,
+  type ContinentName,
+  type LocationCountry,
+  type LocationCountryIndexEntry,
+  type LocationRegion,
+} from "@/features/world-memory/location/locations/client";
+import { WORLD_PLACES } from "@/features/world-memory/location/places/places-data";
+import type { WorldPlace } from "@/features/world-memory/location/places/types";
 
 type Props = {
   value: WorldPlace | null;
   onChange: (place: WorldPlace | null) => void;
   onFocusPlace?: (place: WorldPlace) => void;
 };
+
+function slugKey(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+/** Prefer curated CC:slug ids when city name matches (migration-safe). */
+function placeFromCatalogCity(
+  countryName: string,
+  city: { locationId: string; name: string; lat: number; lng: number },
+): WorldPlace {
+  const cityKey = slugKey(city.name);
+  const curated = WORLD_PLACES.find((place) => {
+    if (place.country !== countryName) return false;
+    return (
+      slugKey(place.name) === cityKey ||
+      slugKey(place.locationId.split(":").slice(1).join("")) === cityKey
+    );
+  });
+  if (curated) return curated;
+  return {
+    locationId: city.locationId,
+    country: countryName,
+    name: city.name,
+    lat: city.lat,
+    lng: city.lng,
+  };
+}
 
 function Column({
   label,
@@ -66,69 +101,89 @@ function Row({
 }
 
 /**
- * Miller-column place picker: Continent → Country → City.
- * Quiet list rows, not button clusters.
+ * Miller-column place picker: Continent → Country → Region → City.
+ * Loads index first; country JSON (regions + cities) only after country select.
  */
 export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
-  const initial = value ? findPlaceCascade(value.locationId) : null;
-  const [continent, setContinent] = useState<PlaceContinent | null>(
-    initial?.continent ?? null,
-  );
-  const [country, setCountry] = useState<string | null>(
-    initial?.country ?? null,
-  );
+  const [index, setIndex] = useState<LocationCountryIndexEntry[]>([]);
+  const [continent, setContinent] = useState<ContinentName | null>(null);
+  const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [countryData, setCountryData] = useState<LocationCountry | null>(null);
+  const [regionName, setRegionName] = useState<string | null>(null);
+  const [loadingCountry, setLoadingCountry] = useState(false);
 
   useEffect(() => {
-    if (!value) return;
-    const path = findPlaceCascade(value.locationId);
-    if (!path) return;
-    setContinent(path.continent);
-    setCountry(path.country);
-  }, [value]);
+    let cancelled = false;
+    fetchLocationIndex().then((countries) => {
+      if (!cancelled) setIndex(countries);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!countryCode) {
+      setCountryData(null);
+      return;
+    }
+    let cancelled = false;
+    setLoadingCountry(true);
+    fetchCountryLocations(countryCode).then((data) => {
+      if (cancelled) return;
+      setCountryData(data);
+      setLoadingCountry(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [countryCode]);
 
   const countries = useMemo(
-    () => (continent ? countriesForContinent(continent) : []),
-    [continent],
+    () => (continent ? countriesInContinent(index, continent) : []),
+    [continent, index],
   );
-  const cities = useMemo(
-    () => (country ? placesForCountry(country) : []),
-    [country],
-  );
+
+  const regions: LocationRegion[] = countryData?.regions ?? [];
+  const selectedRegion = regions.find((r) => r.name === regionName) ?? null;
+  const cities = selectedRegion?.cities ?? [];
 
   return (
     <div className="space-y-2">
       <p className="text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
         Place
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-nowrap">
         <Column label="Continent">
-          {PLACE_CONTINENTS.map((name) => (
+          {CONTINENTS.filter((c) => c.id !== "Antarctica").map((c) => (
             <Row
-              key={name}
-              selected={continent === name}
+              key={c.id}
+              selected={continent === c.id}
               onSelect={() => {
-                setContinent(name);
-                setCountry(null);
+                setContinent(c.id);
+                setCountryCode(null);
+                setRegionName(null);
                 onChange(null);
               }}
             >
-              {name}
+              {c.name}
             </Row>
           ))}
         </Column>
 
         <Column label="Country">
           {continent ? (
-            countries.map((name) => (
+            countries.map((entry) => (
               <Row
-                key={name}
-                selected={country === name}
+                key={entry.code}
+                selected={countryCode === entry.code}
                 onSelect={() => {
-                  setCountry(name);
+                  setCountryCode(entry.code);
+                  setRegionName(null);
                   onChange(null);
                 }}
               >
-                {name}
+                {entry.name}
               </Row>
             ))
           ) : (
@@ -138,23 +193,61 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
           )}
         </Column>
 
-        <Column label="City">
-          {country ? (
-            cities.map((place) => (
-              <Row
-                key={place.locationId}
-                selected={value?.locationId === place.locationId}
-                onSelect={() => {
-                  onChange(place);
-                  onFocusPlace?.(place);
-                }}
-              >
-                {place.name}
-              </Row>
-            ))
+        <Column label="Region">
+          {countryCode ? (
+            loadingCountry ? (
+              <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
+                Loading…
+              </li>
+            ) : regions.length > 0 ? (
+              regions.map((region) => (
+                <Row
+                  key={region.name}
+                  selected={regionName === region.name}
+                  onSelect={() => {
+                    setRegionName(region.name);
+                    onChange(null);
+                  }}
+                >
+                  {region.name}
+                </Row>
+              ))
+            ) : (
+              <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
+                No regions
+              </li>
+            )
           ) : (
             <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
               {continent ? "Choose a country" : "—"}
+            </li>
+          )}
+        </Column>
+
+        <Column label="City">
+          {regionName ? (
+            cities.map((city) => {
+              const place = placeFromCatalogCity(
+                countryData?.name ?? "",
+                city,
+              );
+              const selected = value?.locationId === place.locationId;
+              return (
+                <Row
+                  key={city.locationId}
+                  selected={selected}
+                  onSelect={() => {
+                    onChange(place);
+                    onFocusPlace?.(place);
+                  }}
+                >
+                  {city.name}
+                </Row>
+              );
+            })
+          ) : (
+            <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
+              {countryCode ? "Choose a region" : "—"}
             </li>
           )}
         </Column>
@@ -163,6 +256,7 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
       {value ? (
         <p className="text-[0.8rem] tracking-[0.04em] text-[var(--map-muted)]">
           Selected: {value.name}, {value.country}
+          {regionName ? ` · ${regionName}` : ""}
         </p>
       ) : null}
     </div>

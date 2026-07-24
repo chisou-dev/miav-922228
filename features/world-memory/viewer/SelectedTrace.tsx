@@ -13,6 +13,8 @@ type Props = {
   onHoverLeave?: () => void;
   onSwipePrev?: () => void;
   onSwipeNext?: () => void;
+  /** overlay = floating sheet (mobile); panel = docked sidebar detail (desktop). */
+  variant?: "overlay" | "panel";
 };
 
 /**
@@ -28,9 +30,11 @@ export function SelectedTrace({
   onHoverLeave,
   onSwipePrev,
   onSwipeNext,
+  variant = "overlay",
 }: Props) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const fullMemory = formatMessageFull(trace.message);
+  const isPanel = variant === "panel";
 
   function onTouchStart(event: TouchEvent) {
     const touch = event.changedTouches[0];
@@ -57,13 +61,17 @@ export function SelectedTrace({
       role="dialog"
       aria-label={`Memory ${trace.miavId}`}
       aria-modal={pinned || undefined}
-      className="pointer-events-auto w-[min(100%,22rem)] border border-[var(--map-line)] bg-[var(--map-panel)] shadow-[0_12px_40px_rgba(36,52,71,0.14)]"
+      className={
+        isPanel
+          ? "w-full bg-[var(--map-panel)]"
+          : "pointer-events-auto w-[min(100%,22rem)] border border-[var(--map-line)] bg-[var(--map-panel)] shadow-[0_12px_40px_rgba(36,52,71,0.14)]"
+      }
       onMouseEnter={onHoverStay}
       onMouseLeave={onHoverLeave}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <div className="flex items-start justify-between gap-3 border-b border-[var(--map-line)] px-4 py-3">
+      <div className="flex items-start justify-between gap-3 border-b border-[var(--map-line)] px-4 py-3 sm:px-5">
         <div>
           <p className="font-mono text-[0.92rem] tracking-[0.06em] text-[var(--map-accent)]">
             {trace.miavId}
@@ -86,7 +94,13 @@ export function SelectedTrace({
         </button>
       </div>
 
-      <div className="max-h-[min(40vh,20rem)] overflow-y-auto px-4 py-4">
+      <div
+        className={
+          isPanel
+            ? "max-h-[min(28vh,14rem)] overflow-y-auto px-4 py-4 sm:px-5"
+            : "max-h-[min(40vh,20rem)] overflow-y-auto px-4 py-4"
+        }
+      >
         <p className="text-[0.62rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
           Memory
         </p>
@@ -99,9 +113,11 @@ export function SelectedTrace({
         )}
       </div>
 
-      <p className="border-t border-[var(--map-line)] px-4 py-2.5 text-[0.68rem] tracking-[0.08em] text-[var(--map-muted)] md:hidden">
-        Swipe left / right for more memories
-      </p>
+      {!isPanel ? (
+        <p className="border-t border-[var(--map-line)] px-4 py-2.5 text-[0.68rem] tracking-[0.08em] text-[var(--map-muted)] md:hidden">
+          Swipe left / right for more memories
+        </p>
+      ) : null}
     </div>
   );
 }

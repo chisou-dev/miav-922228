@@ -1,5 +1,6 @@
 import { SiteShell } from "@/features/shared/SiteShell";
 import { HomeSidebar } from "@/features/core/HomeSidebar";
+import { ReaderMemory } from "@/features/core/ReaderMemory";
 
 const sections = [
   {
@@ -59,6 +60,10 @@ export function HomePage() {
               aria-label="Introduction"
               className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-24 sm:py-32"
             >
+              {/* Mobile: keep Reader Memory in the center intro */}
+              <div className="lg:hidden">
+                <ReaderMemory workId="miav-922228" />
+              </div>
               <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
                 MIAV-922228
               </h1>

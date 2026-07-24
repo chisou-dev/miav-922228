@@ -9,6 +9,7 @@ import { LeaveTraceForm } from "@/features/world-memory/trace/ui/LeaveTraceForm"
 import { TraceViewer } from "@/features/world-memory/viewer/TraceViewer";
 import { useMapDataLoader } from "@/features/world-memory/map/MapDataLoader";
 import { WelcomeDialog } from "@/features/world-memory/trace/ui/WelcomeDialog";
+import type { TracePin } from "@/features/world-memory/trace/types";
 import {
   completeTraceRedirectSignIn,
   getTraceAuthType,
@@ -46,6 +47,9 @@ export function TraceMapApp() {
     zoom: number;
   } | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(
+    null,
+  );
+  const [highlightLocationId, setHighlightLocationId] = useState<string | null>(
     null,
   );
 
@@ -102,6 +106,21 @@ export function TraceMapApp() {
 
   const viewerOpen = Boolean(data.placeScope);
 
+  const leaveTraceFormProps = {
+    user,
+    posted: data.posted,
+    mine: data.mine,
+    selectedPlace,
+    onSelectPlace: setSelectedPlace,
+    onFocusLocation: setFocus,
+    onSaved: (trace: TracePin) => {
+      data.setMine(trace);
+      data.setPosted(true);
+      void data.loadMap();
+      if (data.placeScope) void data.loadMemories(data.placeScope);
+    },
+  };
+
   return (
     <div className="trace-map-shell">
       <WelcomeDialog
@@ -152,31 +171,61 @@ export function TraceMapApp() {
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="order-2 lg:order-1 lg:self-stretch">
-          <Sidebar stats={data.stats} loading={data.mapLoading} />
-        </div>
-
-        <div className="order-1 space-y-8 lg:order-2">
-          <div
-            className={`grid gap-6 ${
-              viewerOpen ? "xl:grid-cols-[minmax(0,1fr)_minmax(300px,380px)]" : ""
-            }`}
-          >
-            <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-              <Map
-                stars={data.stars}
-                focus={focus}
-                placeScope={data.placeScope}
-                interactionsEnabled={!welcomeOpen}
-                onOpenMemories={onOpenMemories}
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-5 py-8 sm:px-8">
+        {/*
+          Page-shell layout: map column and TraceViewer are siblings.
+          Desktop (lg+): Map + LeaveTraceForm | Reader Memories.
+          Mobile: map only until a star is opened; then viewer stacks below;
+          LeaveTraceForm stays after the mobile viewer (unchanged).
+        */}
+        <div className="desktop-shell grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
+          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
+            <div className="order-2 lg:order-1 lg:self-stretch">
+              <Sidebar
+                stats={data.stats}
+                loading={data.mapLoading}
+                recent={data.recent}
+                onFocusMemory={(memory) => {
+                  if (
+                    memory.lat != null &&
+                    memory.lng != null &&
+                    Number.isFinite(memory.lat) &&
+                    Number.isFinite(memory.lng)
+                  ) {
+                    setFocus({
+                      lat: memory.lat,
+                      lng: memory.lng,
+                      zoom: 5,
+                    });
+                  }
+                  setHighlightLocationId(memory.locationId);
+                }}
               />
-              <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                Stars mark places where readers left a Memory. Click a star to
-                read them — no GPS, no address.
-              </p>
             </div>
+            <div className="order-1 space-y-4 lg:order-2 lg:self-start">
+              {/* Desktop: Leave a Memory above the map so Write a Memory stays in view */}
+              <div className="hidden lg:block">
+                <LeaveTraceForm {...leaveTraceFormProps} />
+              </div>
+              <div className="lg:sticky lg:top-4">
+                <Map
+                  stars={data.stars}
+                  focus={focus}
+                  placeScope={data.placeScope}
+                  highlightLocationId={highlightLocationId}
+                  interactionsEnabled={!welcomeOpen}
+                  onOpenMemories={onOpenMemories}
+                />
+                <p className="mt-4 text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
+                  Stars mark places where readers left a Memory. Click a star to
+                  read them — no GPS, no address.
+                </p>
+              </div>
+            </div>
+          </div>
 
+          {/* Desktop: always reserve the right panel */}
+          <div className="hidden lg:block">
             {viewerOpen && data.placeScope ? (
               <TraceViewer
                 city={data.placeScope.name}
@@ -188,23 +237,31 @@ export function TraceMapApp() {
                 onLoadMore={() => void data.loadMoreMemories()}
                 onClose={data.closeViewer}
               />
-            ) : null}
+            ) : (
+              <TraceViewer idle />
+            )}
           </div>
+        </div>
 
-          <LeaveTraceForm
-            user={user}
-            posted={data.posted}
-            mine={data.mine}
-            selectedPlace={selectedPlace}
-            onSelectPlace={setSelectedPlace}
-            onFocusLocation={setFocus}
-            onSaved={(trace) => {
-              data.setMine(trace);
-              data.setPosted(true);
-              void data.loadMap();
-              if (data.placeScope) void data.loadMemories(data.placeScope);
-            }}
-          />
+        {/* Mobile: keep stacked viewer only after a star is selected */}
+        {viewerOpen && data.placeScope ? (
+          <div className="lg:hidden">
+            <TraceViewer
+              city={data.placeScope.name}
+              country={data.placeScope.country}
+              traces={data.traces}
+              loading={data.tracesLoading}
+              loadingMore={data.tracesLoadingMore}
+              hasMore={data.hasMore}
+              onLoadMore={() => void data.loadMoreMemories()}
+              onClose={data.closeViewer}
+            />
+          </div>
+        ) : null}
+
+        {/* Mobile: Leave a Memory remains below the shell / viewer */}
+        <div className="lg:hidden">
+          <LeaveTraceForm {...leaveTraceFormProps} />
         </div>
       </div>
     </div>

@@ -28,6 +28,7 @@ function emptyStats(): TraceStats {
 export function useMapDataLoader() {
   const [stars, setStars] = useState<MemoryStar[]>([]);
   const [stats, setStats] = useState<TraceStats | null>(null);
+  const [recent, setRecent] = useState<TracePin[]>([]);
   const [mapLoading, setMapLoading] = useState(true);
 
   const [posted, setPosted] = useState(false);
@@ -47,14 +48,17 @@ export function useMapDataLoader() {
       const data = (await response.json().catch(() => null)) as {
         stars?: MemoryStar[];
         stats?: TraceStats;
+        recent?: TracePin[];
       } | null;
       if (!response.ok) {
         setStars([]);
         setStats(emptyStats());
+        setRecent([]);
         return;
       }
       setStars(data?.stars || []);
       setStats(data?.stats || emptyStats());
+      setRecent(Array.isArray(data?.recent) ? data.recent.slice(0, 20) : []);
     } finally {
       setMapLoading(false);
     }
@@ -141,6 +145,7 @@ export function useMapDataLoader() {
   return {
     stars,
     stats,
+    recent,
     mapLoading,
     loadMap,
     posted,

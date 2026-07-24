@@ -1,7 +1,10 @@
 import flatCatalog from "@/data/locations/locations.json";
 import { getLocationById as getLegacyLocationById } from "@/features/world-memory/location/locations";
 import { WORLD_PLACES } from "@/features/world-memory/location/places/places-data";
-import { getPlaceById } from "@/features/world-memory/location/places/index";
+import {
+  getCuratedPlaceById,
+  getPlaceById,
+} from "@/features/world-memory/location/places/index";
 
 /** Legacy CC:region prefix → new catalog locationId */
 const PREFIX_TO_CANONICAL: Record<string, string> = {
@@ -145,7 +148,9 @@ function matchPlaceByName(country: string, name: string, countryCode?: string) {
 export function canonicalPlaceId(legacyId: string | null | undefined): string | null {
   const id = (legacyId || "").trim();
   if (!id) return null;
-  if (getPlaceById(id)) return id;
+  // Curated ids stay canonical; do not short-circuit on hierarchical catalog hits
+  // so PREFIX / name mapping can still coalesce legacy memories onto curated stars.
+  if (getCuratedPlaceById(id)) return id;
 
   const parts = id.split(":");
   if (parts.length >= 2) {
@@ -159,7 +164,7 @@ export function canonicalPlaceId(legacyId: string | null | undefined): string | 
     }
 
     const mapped = PREFIX_TO_CANONICAL[prefix];
-    if (mapped && getPlaceById(mapped)) return mapped;
+    if (mapped && getCuratedPlaceById(mapped)) return mapped;
   }
 
   const legacy = getLegacyLocationById(id);
@@ -187,6 +192,9 @@ export function canonicalPlaceId(legacyId: string | null | undefined): string | 
     },
   );
   if (bySuffix) return bySuffix.locationId;
+
+  // New catalog cities without a curated twin keep their hierarchical id.
+  if (getPlaceById(legacy.locationId)) return legacy.locationId;
 
   return null;
 }

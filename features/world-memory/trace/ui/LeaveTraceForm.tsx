@@ -133,10 +133,13 @@ export function LeaveTraceForm({
           <h2 className="text-[1rem] font-medium tracking-[0.14em] text-[var(--map-ink)] uppercase">
             Leave a Memory
           </h2>
-          <p className="mt-2 text-[0.82rem] leading-[1.8] text-[var(--map-muted)]">
-            Choose a continent, then a country, then a city. No login required  E            up to {MAX_GUEST_MESSAGE_LENGTH} characters. Google sign-in allows
-            up to {MAX_GOOGLE_MESSAGE_LENGTH}.
-          </p>
+          {!alreadyPosted ? (
+            <p className="mt-2 text-[0.82rem] leading-[1.8] text-[var(--map-muted)]">
+              Choose a continent, then a country, then a city. No login required
+              — up to {MAX_GUEST_MESSAGE_LENGTH} characters. Google sign-in
+              allows up to {MAX_GOOGLE_MESSAGE_LENGTH}.
+            </p>
+          ) : null}
         </div>
         {!open && !alreadyPosted ? (
           <button
@@ -145,7 +148,7 @@ export function LeaveTraceForm({
             onClick={() => setOpen(true)}
             className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] text-[var(--map-ink)] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Leave a Memory
+            Write a Memory
           </button>
         ) : null}
       </div>
@@ -153,7 +156,7 @@ export function LeaveTraceForm({
       {alreadyPosted && mine ? (
         <p className="mt-4 text-[0.85rem] leading-[1.8] text-[var(--map-muted)]">
           Your Memory is at {mine.city}, {mine.country}. One Memory per browser
-          or Google account  Eediting is not available.
+          or Google account — editing is not available.
         </p>
       ) : null}
 

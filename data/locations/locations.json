@@ -3258,6 +3258,436 @@
       "lng": -76.792
     },
     {
+      "locationId": "JP:aichi:nagoya",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Aichi",
+      "city": "Nagoya",
+      "lat": 35.1815,
+      "lng": 136.9066
+    },
+    {
+      "locationId": "JP:akita:akita",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Akita",
+      "city": "Akita",
+      "lat": 39.7186,
+      "lng": 140.1024
+    },
+    {
+      "locationId": "JP:aomori:aomori",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Aomori",
+      "city": "Aomori",
+      "lat": 40.8244,
+      "lng": 140.74
+    },
+    {
+      "locationId": "JP:chiba:chiba",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Chiba",
+      "city": "Chiba",
+      "lat": 35.6074,
+      "lng": 140.1065
+    },
+    {
+      "locationId": "JP:ehime:matsuyama",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Ehime",
+      "city": "Matsuyama",
+      "lat": 33.8416,
+      "lng": 132.7657
+    },
+    {
+      "locationId": "JP:fukui:fukui",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Fukui",
+      "city": "Fukui",
+      "lat": 36.0652,
+      "lng": 136.2216
+    },
+    {
+      "locationId": "JP:fukuoka:fukuoka",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Fukuoka",
+      "city": "Fukuoka",
+      "lat": 33.5904,
+      "lng": 130.4017
+    },
+    {
+      "locationId": "JP:fukushima:fukushima",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Fukushima",
+      "city": "Fukushima",
+      "lat": 37.7503,
+      "lng": 140.4676
+    },
+    {
+      "locationId": "JP:gifu:gifu",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Gifu",
+      "city": "Gifu",
+      "lat": 35.3912,
+      "lng": 136.7223
+    },
+    {
+      "locationId": "JP:gunma:maebashi",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Gunma",
+      "city": "Maebashi",
+      "lat": 36.3911,
+      "lng": 139.0608
+    },
+    {
+      "locationId": "JP:hiroshima:hiroshima",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Hiroshima",
+      "city": "Hiroshima",
+      "lat": 34.3853,
+      "lng": 132.4553
+    },
+    {
+      "locationId": "JP:hokkaido:sapporo",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Hokkaido",
+      "city": "Sapporo",
+      "lat": 43.0618,
+      "lng": 141.3545
+    },
+    {
+      "locationId": "JP:hokkaido:hakodate",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Hokkaido",
+      "city": "Hakodate",
+      "lat": 41.7687,
+      "lng": 140.729
+    },
+    {
+      "locationId": "JP:hyogo:kobe",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Hyogo",
+      "city": "Kobe",
+      "lat": 34.6901,
+      "lng": 135.1955
+    },
+    {
+      "locationId": "JP:ibaraki:mito",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Ibaraki",
+      "city": "Mito",
+      "lat": 36.3418,
+      "lng": 140.4468
+    },
+    {
+      "locationId": "JP:ishikawa:kanazawa",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Ishikawa",
+      "city": "Kanazawa",
+      "lat": 36.5613,
+      "lng": 136.6562
+    },
+    {
+      "locationId": "JP:iwate:morioka",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Iwate",
+      "city": "Morioka",
+      "lat": 39.7036,
+      "lng": 141.1527
+    },
+    {
+      "locationId": "JP:kagawa:takamatsu",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kagawa",
+      "city": "Takamatsu",
+      "lat": 34.3401,
+      "lng": 134.0434
+    },
+    {
+      "locationId": "JP:kagoshima:kagoshima",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kagoshima",
+      "city": "Kagoshima",
+      "lat": 31.5966,
+      "lng": 130.5571
+    },
+    {
+      "locationId": "JP:kanagawa:yokohama",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kanagawa",
+      "city": "Yokohama",
+      "lat": 35.4437,
+      "lng": 139.638
+    },
+    {
+      "locationId": "JP:kochi:kochi",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kochi",
+      "city": "Kochi",
+      "lat": 33.5597,
+      "lng": 133.5311
+    },
+    {
+      "locationId": "JP:kumamoto:kumamoto",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kumamoto",
+      "city": "Kumamoto",
+      "lat": 32.8031,
+      "lng": 130.7079
+    },
+    {
+      "locationId": "JP:kyoto:kyoto",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kyoto",
+      "city": "Kyoto",
+      "lat": 35.0116,
+      "lng": 135.7681
+    },
+    {
+      "locationId": "JP:kyoto:gion",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Kyoto",
+      "city": "Gion",
+      "lat": 35.0037,
+      "lng": 135.778
+    },
+    {
+      "locationId": "JP:mie:tsu",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Mie",
+      "city": "Tsu",
+      "lat": 34.7303,
+      "lng": 136.5086
+    },
+    {
+      "locationId": "JP:miyagi:sendai",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Miyagi",
+      "city": "Sendai",
+      "lat": 38.2682,
+      "lng": 140.8694
+    },
+    {
+      "locationId": "JP:miyazaki:miyazaki",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Miyazaki",
+      "city": "Miyazaki",
+      "lat": 31.9077,
+      "lng": 131.4202
+    },
+    {
+      "locationId": "JP:nagano:nagano",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Nagano",
+      "city": "Nagano",
+      "lat": 36.6513,
+      "lng": 138.181
+    },
+    {
+      "locationId": "JP:nagasaki:nagasaki",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Nagasaki",
+      "city": "Nagasaki",
+      "lat": 32.7503,
+      "lng": 129.8779
+    },
+    {
+      "locationId": "JP:nara:nara",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Nara",
+      "city": "Nara",
+      "lat": 34.6851,
+      "lng": 135.8048
+    },
+    {
+      "locationId": "JP:niigata:niigata",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Niigata",
+      "city": "Niigata",
+      "lat": 37.9161,
+      "lng": 139.0364
+    },
+    {
+      "locationId": "JP:oita:oita",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Oita",
+      "city": "Oita",
+      "lat": 33.2382,
+      "lng": 131.6126
+    },
+    {
+      "locationId": "JP:okayama:okayama",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Okayama",
+      "city": "Okayama",
+      "lat": 34.6551,
+      "lng": 133.9195
+    },
+    {
+      "locationId": "JP:okinawa:naha",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Okinawa",
+      "city": "Naha",
+      "lat": 26.2124,
+      "lng": 127.6809
+    },
+    {
+      "locationId": "JP:osaka:osaka",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Osaka",
+      "city": "Osaka",
+      "lat": 34.6937,
+      "lng": 135.5023
+    },
+    {
+      "locationId": "JP:osaka:namba",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Osaka",
+      "city": "Namba",
+      "lat": 34.665,
+      "lng": 135.501
+    },
+    {
+      "locationId": "JP:saga:saga",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Saga",
+      "city": "Saga",
+      "lat": 33.2494,
+      "lng": 130.2988
+    },
+    {
+      "locationId": "JP:saitama:saitama",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Saitama",
+      "city": "Saitama",
+      "lat": 35.8617,
+      "lng": 139.6455
+    },
+    {
+      "locationId": "JP:shiga:otsu",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Shiga",
+      "city": "Otsu",
+      "lat": 35.0045,
+      "lng": 135.8686
+    },
+    {
+      "locationId": "JP:shimane:matsue",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Shimane",
+      "city": "Matsue",
+      "lat": 35.4723,
+      "lng": 133.0505
+    },
+    {
+      "locationId": "JP:shizuoka:shizuoka",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Shizuoka",
+      "city": "Shizuoka",
+      "lat": 34.9756,
+      "lng": 138.3828
+    },
+    {
+      "locationId": "JP:tochigi:utsunomiya",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Tochigi",
+      "city": "Utsunomiya",
+      "lat": 36.5551,
+      "lng": 139.8828
+    },
+    {
+      "locationId": "JP:tokushima:tokushima",
+      "continent": "Asia",
+      "countryCode": "JP",
+      "country": "Japan",
+      "region": "Tokushima",
+      "city": "Tokushima",
+      "lat": 34.0658,
+      "lng": 134.5593
+    },
+    {
       "locationId": "JP:tokyo:tokyo",
       "continent": "Asia",
       "countryCode": "JP",
@@ -3288,64 +3718,64 @@
       "lng": 139.7034
     },
     {
-      "locationId": "JP:osaka:osaka",
+      "locationId": "JP:tottori:tottori",
       "continent": "Asia",
       "countryCode": "JP",
       "country": "Japan",
-      "region": "Osaka",
-      "city": "Osaka",
-      "lat": 34.6937,
-      "lng": 135.5023
+      "region": "Tottori",
+      "city": "Tottori",
+      "lat": 35.5011,
+      "lng": 134.2351
     },
     {
-      "locationId": "JP:osaka:namba",
+      "locationId": "JP:toyama:toyama",
       "continent": "Asia",
       "countryCode": "JP",
       "country": "Japan",
-      "region": "Osaka",
-      "city": "Namba",
-      "lat": 34.665,
-      "lng": 135.501
+      "region": "Toyama",
+      "city": "Toyama",
+      "lat": 36.6953,
+      "lng": 137.2113
     },
     {
-      "locationId": "JP:kyoto:kyoto",
+      "locationId": "JP:wakayama:wakayama",
       "continent": "Asia",
       "countryCode": "JP",
       "country": "Japan",
-      "region": "Kyoto",
-      "city": "Kyoto",
-      "lat": 35.0116,
-      "lng": 135.7681
+      "region": "Wakayama",
+      "city": "Wakayama",
+      "lat": 34.2305,
+      "lng": 135.1708
     },
     {
-      "locationId": "JP:kyoto:gion",
+      "locationId": "JP:yamagata:yamagata",
       "continent": "Asia",
       "countryCode": "JP",
       "country": "Japan",
-      "region": "Kyoto",
-      "city": "Gion",
-      "lat": 35.0037,
-      "lng": 135.778
+      "region": "Yamagata",
+      "city": "Yamagata",
+      "lat": 38.2404,
+      "lng": 140.3633
     },
     {
-      "locationId": "JP:hokkaido:sapporo",
+      "locationId": "JP:yamaguchi:yamaguchi",
       "continent": "Asia",
       "countryCode": "JP",
       "country": "Japan",
-      "region": "Hokkaido",
-      "city": "Sapporo",
-      "lat": 43.0618,
-      "lng": 141.3545
+      "region": "Yamaguchi",
+      "city": "Yamaguchi",
+      "lat": 34.1859,
+      "lng": 131.4714
     },
     {
-      "locationId": "JP:hokkaido:hakodate",
+      "locationId": "JP:yamanashi:kofu",
       "continent": "Asia",
       "countryCode": "JP",
       "country": "Japan",
-      "region": "Hokkaido",
-      "city": "Hakodate",
-      "lat": 41.7687,
-      "lng": 140.729
+      "region": "Yamanashi",
+      "city": "Kofu",
+      "lat": 35.6642,
+      "lng": 138.5684
     },
     {
       "locationId": "JE:saint-helier:saint-helier",
@@ -4768,14 +5198,54 @@
       "lng": -4.2518
     },
     {
-      "locationId": "US:district-of-columbia:washington-d-c",
+      "locationId": "US:alabama:montgomery",
       "continent": "North America",
       "countryCode": "US",
       "country": "United States",
-      "region": "District of Columbia",
-      "city": "Washington, D.C.",
-      "lat": 38.9072,
-      "lng": -77.0369
+      "region": "Alabama",
+      "city": "Montgomery",
+      "lat": 32.3792,
+      "lng": -86.3077
+    },
+    {
+      "locationId": "US:alaska:juneau",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Alaska",
+      "city": "Juneau",
+      "lat": 58.3019,
+      "lng": -134.4197
+    },
+    {
+      "locationId": "US:arizona:phoenix",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Arizona",
+      "city": "Phoenix",
+      "lat": 33.4484,
+      "lng": -112.074
+    },
+    {
+      "locationId": "US:arkansas:little-rock",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Arkansas",
+      "city": "Little Rock",
+      "lat": 34.7465,
+      "lng": -92.2896
+    },
+    {
+      "locationId": "US:california:sacramento",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "California",
+      "city": "Sacramento",
+      "lat": 38.5816,
+      "lng": -121.4944
     },
     {
       "locationId": "US:california:los-angeles",
@@ -4808,6 +5278,296 @@
       "lng": -117.1611
     },
     {
+      "locationId": "US:colorado:denver",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Colorado",
+      "city": "Denver",
+      "lat": 39.7392,
+      "lng": -104.9903
+    },
+    {
+      "locationId": "US:connecticut:hartford",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Connecticut",
+      "city": "Hartford",
+      "lat": 41.7658,
+      "lng": -72.6734
+    },
+    {
+      "locationId": "US:delaware:dover",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Delaware",
+      "city": "Dover",
+      "lat": 39.1582,
+      "lng": -75.5244
+    },
+    {
+      "locationId": "US:district-of-columbia:washington-d-c",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "District of Columbia",
+      "city": "Washington, D.C.",
+      "lat": 38.9072,
+      "lng": -77.0369
+    },
+    {
+      "locationId": "US:florida:tallahassee",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Florida",
+      "city": "Tallahassee",
+      "lat": 30.4383,
+      "lng": -84.2807
+    },
+    {
+      "locationId": "US:georgia:atlanta",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Georgia",
+      "city": "Atlanta",
+      "lat": 33.749,
+      "lng": -84.388
+    },
+    {
+      "locationId": "US:hawaii:honolulu",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Hawaii",
+      "city": "Honolulu",
+      "lat": 21.3069,
+      "lng": -157.8583
+    },
+    {
+      "locationId": "US:idaho:boise",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Idaho",
+      "city": "Boise",
+      "lat": 43.615,
+      "lng": -116.2023
+    },
+    {
+      "locationId": "US:illinois:springfield",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Illinois",
+      "city": "Springfield",
+      "lat": 39.7817,
+      "lng": -89.6501
+    },
+    {
+      "locationId": "US:illinois:chicago",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Illinois",
+      "city": "Chicago",
+      "lat": 41.8781,
+      "lng": -87.6298
+    },
+    {
+      "locationId": "US:indiana:indianapolis",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Indiana",
+      "city": "Indianapolis",
+      "lat": 39.7684,
+      "lng": -86.1581
+    },
+    {
+      "locationId": "US:iowa:des-moines",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Iowa",
+      "city": "Des Moines",
+      "lat": 41.5868,
+      "lng": -93.625
+    },
+    {
+      "locationId": "US:kansas:topeka",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Kansas",
+      "city": "Topeka",
+      "lat": 39.0473,
+      "lng": -95.6752
+    },
+    {
+      "locationId": "US:kentucky:frankfort",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Kentucky",
+      "city": "Frankfort",
+      "lat": 38.2009,
+      "lng": -84.8733
+    },
+    {
+      "locationId": "US:louisiana:baton-rouge",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Louisiana",
+      "city": "Baton Rouge",
+      "lat": 30.4515,
+      "lng": -91.1871
+    },
+    {
+      "locationId": "US:maine:augusta",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Maine",
+      "city": "Augusta",
+      "lat": 44.3106,
+      "lng": -69.7795
+    },
+    {
+      "locationId": "US:maryland:annapolis",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Maryland",
+      "city": "Annapolis",
+      "lat": 38.9784,
+      "lng": -76.4922
+    },
+    {
+      "locationId": "US:massachusetts:boston",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Massachusetts",
+      "city": "Boston",
+      "lat": 42.3601,
+      "lng": -71.0589
+    },
+    {
+      "locationId": "US:michigan:lansing",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Michigan",
+      "city": "Lansing",
+      "lat": 42.7325,
+      "lng": -84.5555
+    },
+    {
+      "locationId": "US:minnesota:saint-paul",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Minnesota",
+      "city": "Saint Paul",
+      "lat": 44.9537,
+      "lng": -93.09
+    },
+    {
+      "locationId": "US:mississippi:jackson",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Mississippi",
+      "city": "Jackson",
+      "lat": 32.2988,
+      "lng": -90.1848
+    },
+    {
+      "locationId": "US:missouri:jefferson-city",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Missouri",
+      "city": "Jefferson City",
+      "lat": 38.5767,
+      "lng": -92.1735
+    },
+    {
+      "locationId": "US:montana:helena",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Montana",
+      "city": "Helena",
+      "lat": 46.5891,
+      "lng": -112.0391
+    },
+    {
+      "locationId": "US:nebraska:lincoln",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Nebraska",
+      "city": "Lincoln",
+      "lat": 40.8136,
+      "lng": -96.7026
+    },
+    {
+      "locationId": "US:nevada:carson-city",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Nevada",
+      "city": "Carson City",
+      "lat": 39.1638,
+      "lng": -119.7674
+    },
+    {
+      "locationId": "US:new-hampshire:concord",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "New Hampshire",
+      "city": "Concord",
+      "lat": 43.2081,
+      "lng": -71.5376
+    },
+    {
+      "locationId": "US:new-jersey:trenton",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "New Jersey",
+      "city": "Trenton",
+      "lat": 40.2206,
+      "lng": -74.7597
+    },
+    {
+      "locationId": "US:new-mexico:santa-fe",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "New Mexico",
+      "city": "Santa Fe",
+      "lat": 35.687,
+      "lng": -105.9378
+    },
+    {
+      "locationId": "US:new-york:albany",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "New York",
+      "city": "Albany",
+      "lat": 42.6526,
+      "lng": -73.7562
+    },
+    {
       "locationId": "US:new-york:new-york-city",
       "continent": "North America",
       "countryCode": "US",
@@ -4826,6 +5586,156 @@
       "city": "Buffalo",
       "lat": 42.8864,
       "lng": -78.8784
+    },
+    {
+      "locationId": "US:north-carolina:raleigh",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "North Carolina",
+      "city": "Raleigh",
+      "lat": 35.7796,
+      "lng": -78.6382
+    },
+    {
+      "locationId": "US:north-dakota:bismarck",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "North Dakota",
+      "city": "Bismarck",
+      "lat": 46.8083,
+      "lng": -100.7837
+    },
+    {
+      "locationId": "US:ohio:columbus",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Ohio",
+      "city": "Columbus",
+      "lat": 39.9612,
+      "lng": -82.9988
+    },
+    {
+      "locationId": "US:oklahoma:oklahoma-city",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Oklahoma",
+      "city": "Oklahoma City",
+      "lat": 35.4676,
+      "lng": -97.5164
+    },
+    {
+      "locationId": "US:oregon:salem",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Oregon",
+      "city": "Salem",
+      "lat": 44.9429,
+      "lng": -123.0351
+    },
+    {
+      "locationId": "US:pennsylvania:harrisburg",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Pennsylvania",
+      "city": "Harrisburg",
+      "lat": 40.2732,
+      "lng": -76.8867
+    },
+    {
+      "locationId": "US:rhode-island:providence",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Rhode Island",
+      "city": "Providence",
+      "lat": 41.824,
+      "lng": -71.4128
+    },
+    {
+      "locationId": "US:south-carolina:columbia",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "South Carolina",
+      "city": "Columbia",
+      "lat": 34.0007,
+      "lng": -81.0348
+    },
+    {
+      "locationId": "US:south-dakota:pierre",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "South Dakota",
+      "city": "Pierre",
+      "lat": 44.3683,
+      "lng": -100.351
+    },
+    {
+      "locationId": "US:tennessee:nashville",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Tennessee",
+      "city": "Nashville",
+      "lat": 36.1627,
+      "lng": -86.7816
+    },
+    {
+      "locationId": "US:texas:austin",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Texas",
+      "city": "Austin",
+      "lat": 30.2672,
+      "lng": -97.7431
+    },
+    {
+      "locationId": "US:utah:salt-lake-city",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Utah",
+      "city": "Salt Lake City",
+      "lat": 40.7608,
+      "lng": -111.891
+    },
+    {
+      "locationId": "US:vermont:montpelier",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Vermont",
+      "city": "Montpelier",
+      "lat": 44.2601,
+      "lng": -72.5754
+    },
+    {
+      "locationId": "US:virginia:richmond",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Virginia",
+      "city": "Richmond",
+      "lat": 37.5407,
+      "lng": -77.436
+    },
+    {
+      "locationId": "US:washington:olympia",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Washington",
+      "city": "Olympia",
+      "lat": 47.0379,
+      "lng": -122.9007
     },
     {
       "locationId": "US:washington:seattle",
@@ -4848,14 +5758,34 @@
       "lng": -117.426
     },
     {
-      "locationId": "US:illinois:chicago",
+      "locationId": "US:west-virginia:charleston",
       "continent": "North America",
       "countryCode": "US",
       "country": "United States",
-      "region": "Illinois",
-      "city": "Chicago",
-      "lat": 41.8781,
-      "lng": -87.6298
+      "region": "West Virginia",
+      "city": "Charleston",
+      "lat": 38.3498,
+      "lng": -81.6326
+    },
+    {
+      "locationId": "US:wisconsin:madison",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Wisconsin",
+      "city": "Madison",
+      "lat": 43.0731,
+      "lng": -89.4012
+    },
+    {
+      "locationId": "US:wyoming:cheyenne",
+      "continent": "North America",
+      "countryCode": "US",
+      "country": "United States",
+      "region": "Wyoming",
+      "city": "Cheyenne",
+      "lat": 41.14,
+      "lng": -104.8202
     },
     {
       "locationId": "UY:montevideo:montevideo",

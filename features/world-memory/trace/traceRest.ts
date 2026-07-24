@@ -1745,8 +1745,15 @@ export async function seedStoryMemories(): Promise<{
   return { created, skipped };
 }
 
-/** @deprecated Prefer overview + location queries. Kept for emergency rebuild. */
-export async function listTracePins(): Promise<TracePin[]> {
+/** @deprecated Prefer overview + location queries. Kept for emergency rebuild / bounded recent. */
+export async function listTracePins(input?: {
+  limit?: number;
+}): Promise<TracePin[]> {
+  const limit =
+    typeof input?.limit === "number" && Number.isFinite(input.limit)
+      ? Math.max(1, Math.floor(input.limit))
+      : undefined;
+
   const records = await runTraceQuery({
     from: [{ collectionId: TRACE_COLLECTION }],
     orderBy: [
@@ -1755,6 +1762,7 @@ export async function listTracePins(): Promise<TracePin[]> {
         direction: "DESCENDING",
       },
     ],
+    ...(limit ? { limit } : {}),
   });
   return records.map(pinFromRecord);
 }
