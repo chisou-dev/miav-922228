@@ -61,11 +61,86 @@ export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
 
   return (
     <aside className="flex h-full min-h-[min(72vh,720px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6">
-      <div>
-        <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)]">
-          Trace archive
-        </p>
-        <h2 className="mt-2 text-[1.05rem] font-medium tracking-[0.1em] text-[var(--map-ink)]">
+      <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)]">
+        Trace archive
+      </p>
+
+      <div className="mt-5 border-b border-[var(--map-line)] pb-5">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={goPrevious}
+            disabled={!canPrevious || loading}
+            aria-label="Previous memory"
+            className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
+              canPrevious && !loading
+                ? "cursor-pointer"
+                : "invisible pointer-events-none"
+            }`}
+          >
+            ←
+          </button>
+          <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
+            Latest Memory
+          </p>
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={!canNext || loading}
+            aria-label="Next memory"
+            className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
+              canNext && !loading
+                ? "cursor-pointer"
+                : "invisible pointer-events-none"
+            }`}
+          >
+            →
+          </button>
+        </div>
+        {loading ? (
+          <p className="mt-3 text-[0.78rem] text-[var(--map-muted)]">…</p>
+        ) : current ? (
+          <dl className="mt-3 space-y-3 text-[0.82rem] text-[var(--map-ink)]">
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                MIAV ID
+              </dt>
+              <dd className="mt-1 font-mono tracking-[0.04em] text-[var(--map-accent)]">
+                {current.miavId}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                Place
+              </dt>
+              <dd className="mt-1">
+                {current.city}, {current.country}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                Memory
+              </dt>
+              <dd className="mt-1 leading-[1.7] text-[var(--map-muted)]">
+                {previewMessage(current.message, 20) || "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                Left
+              </dt>
+              <dd className="mt-1">{formatJoinedDate(current.createdAt)}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="mt-3 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
+            No Memories yet.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-5">
+        <h2 className="text-[1.05rem] font-medium tracking-[0.1em] text-[var(--map-ink)]">
           Presence
         </h2>
         <p className="mt-3 text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
@@ -114,78 +189,6 @@ export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
           </div>
         </dl>
       )}
-
-      <div className="mt-auto border-t border-[var(--map-line)] pt-5">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={goPrevious}
-            disabled={!canPrevious || loading}
-            aria-label="Previous memory"
-            className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
-              canPrevious && !loading
-                ? "cursor-pointer"
-                : "invisible pointer-events-none"
-            }`}
-          >
-            ←
-          </button>
-          <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
-            Latest Memory
-          </p>
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={!canNext || loading}
-            aria-label="Next memory"
-            className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
-              canNext && !loading
-                ? "cursor-pointer"
-                : "invisible pointer-events-none"
-            }`}
-          >
-            →
-          </button>
-        </div>
-        {loading ? (
-          <p className="mt-3 text-[0.78rem] text-[var(--map-muted)]">…</p>
-        ) : current ? (
-          <dl className="mt-3 space-y-3 text-[0.82rem] text-[var(--map-ink)]">
-            <div>
-              <dt className="sr-only">MIAV ID</dt>
-              <dd className="font-mono tracking-[0.04em] text-[var(--map-accent)]">
-                {current.miavId}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                Place
-              </dt>
-              <dd className="mt-1">
-                {current.city}, {current.country}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                Memory
-              </dt>
-              <dd className="mt-1 leading-[1.7] text-[var(--map-muted)]">
-                {previewMessage(current.message, 20) || "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                Left
-              </dt>
-              <dd className="mt-1">{formatJoinedDate(current.createdAt)}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="mt-3 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
-            No Memories yet.
-          </p>
-        )}
-      </div>
     </aside>
   );
 }

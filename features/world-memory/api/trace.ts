@@ -96,6 +96,10 @@ export async function GET(request: Request) {
       if (visitorId && isValidVisitorId(visitorId)) {
         const guest = await getTraceByUid(visitorId);
         guestPosted = Boolean(guest);
+        // Guests must receive mine too — otherwise Leave a Memory shows title only.
+        if (!mine && guest) {
+          mine = pinFromRecord(guest);
+        }
       }
 
       return NextResponse.json({

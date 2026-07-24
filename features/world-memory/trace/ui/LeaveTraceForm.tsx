@@ -58,6 +58,7 @@ export function LeaveTraceForm({
   const maxLength =
     authType === "google" ? MAX_GOOGLE_MESSAGE_LENGTH : MAX_GUEST_MESSAGE_LENGTH;
   const alreadyPosted = posted || Boolean(mine);
+  const canWrite = traceEnabled && !alreadyPosted;
 
   useEffect(() => {
     void (async () => {
@@ -70,14 +71,14 @@ export function LeaveTraceForm({
           setTraceEnabled(data.traceEnabled);
         }
       } catch {
-        // non-fatal
+        // non-fatal — keep default enabled
       }
     })();
   }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (alreadyPosted || !selectedPlace || !traceEnabled) return;
+    if (!canWrite || !selectedPlace) return;
 
     setBusy(true);
     setError(null);
@@ -133,7 +134,7 @@ export function LeaveTraceForm({
           <h2 className="text-[1rem] font-medium tracking-[0.14em] text-[var(--map-ink)] uppercase">
             Leave a Memory
           </h2>
-          {!alreadyPosted ? (
+          {canWrite ? (
             <p className="mt-2 text-[0.82rem] leading-[1.8] text-[var(--map-muted)]">
               Choose a continent, then a country, then a city. No login required
               — up to {MAX_GUEST_MESSAGE_LENGTH} characters. Google sign-in
@@ -141,33 +142,33 @@ export function LeaveTraceForm({
             </p>
           ) : null}
         </div>
-        {!open && !alreadyPosted ? (
+        {canWrite && !open ? (
           <button
             type="button"
-            disabled={!traceEnabled}
             onClick={() => setOpen(true)}
-            className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] text-[var(--map-ink)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] text-[var(--map-ink)]"
           >
             Write a Memory
           </button>
         ) : null}
       </div>
 
-      {alreadyPosted && mine ? (
+      {!traceEnabled ? (
         <p className="mt-4 text-[0.85rem] leading-[1.8] text-[var(--map-muted)]">
-          Your Memory is at {mine.city}, {mine.country}. One Memory per browser
-          or Google account — editing is not available.
+          {TRACE_DISABLED_MESSAGE}
         </p>
       ) : null}
 
-      {open && !alreadyPosted ? (
-        <form onSubmit={(e) => void submit(e)} className="mt-6 space-y-5">
-          {!traceEnabled ? (
-            <p className="text-[0.85rem] text-[var(--map-muted)]">
-              {TRACE_DISABLED_MESSAGE}
-            </p>
-          ) : null}
+      {traceEnabled && alreadyPosted ? (
+        <p className="mt-4 text-[0.85rem] leading-[1.8] text-[var(--map-muted)]">
+          {mine
+            ? `Your Memory is at ${mine.city}, ${mine.country}. One Memory per browser or Google account — editing is not available.`
+            : "You have already left a Memory. One Memory per browser or Google account — editing is not available."}
+        </p>
+      ) : null}
 
+      {canWrite && open ? (
+        <form onSubmit={(e) => void submit(e)} className="mt-6 space-y-5">
           <PlaceCascadePicker
             value={selectedPlace}
             onChange={(place) => onSelectPlace(place)}
@@ -175,7 +176,6 @@ export function LeaveTraceForm({
               onFocusLocation({ lat: place.lat, lng: place.lng, zoom: 5 })
             }
           />
-          {/* Keep required semantics for form submit */}
           <input
             type="hidden"
             name="locationId"
@@ -216,7 +216,7 @@ export function LeaveTraceForm({
           <div className="flex flex-wrap gap-3">
             <button
               type="submit"
-              disabled={busy || !traceEnabled || !selectedPlace || !message.trim()}
+              disabled={busy || !selectedPlace || !message.trim()}
               className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Saving…" : "Save Memory"}
