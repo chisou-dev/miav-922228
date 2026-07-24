@@ -100,11 +100,12 @@ body {
   border-right: 1px solid var(--line);
   background: color-mix(in srgb, var(--background-deep) 72%, transparent);
   backdrop-filter: blur(8px);
+  overflow-y: auto;
 }
 
 .home-sidebar-inner {
-  position: sticky;
-  top: 2.5rem;
+  position: relative;
+  top: 0;
 }
 
 .home-main {

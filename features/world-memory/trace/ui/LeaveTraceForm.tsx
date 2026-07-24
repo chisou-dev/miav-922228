@@ -36,6 +36,8 @@ type Props = {
   onSelectPlace: (place: SelectedPlace | null) => void;
   onFocusLocation: (focus: { lat: number; lng: number; zoom: number }) => void;
   onSaved: (trace: TracePin) => void;
+  /** When set, panel is shown below the map — Close dismisses the panel. */
+  onClose?: () => void;
 };
 
 export function LeaveTraceForm({
@@ -46,8 +48,9 @@ export function LeaveTraceForm({
   onSelectPlace,
   onFocusLocation,
   onSaved,
+  onClose,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +120,7 @@ export function LeaveTraceForm({
 
       if (data?.trace) {
         onSaved(data.trace);
-        setOpen(false);
+        setComposerOpen(false);
         setMessage("");
       }
     } catch (err) {
@@ -142,15 +145,26 @@ export function LeaveTraceForm({
             </p>
           ) : null}
         </div>
-        {canWrite && !open ? (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] text-[var(--map-ink)]"
-          >
-            Write a Memory
-          </button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-3">
+          {canWrite && !composerOpen ? (
+            <button
+              type="button"
+              onClick={() => setComposerOpen(true)}
+              className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] text-[var(--map-ink)]"
+            >
+              Write a Memory
+            </button>
+          ) : null}
+          {onClose ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[44px] cursor-pointer px-3 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.35em]"
+            >
+              Close
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {!traceEnabled ? (
@@ -167,7 +181,7 @@ export function LeaveTraceForm({
         </p>
       ) : null}
 
-      {canWrite && open ? (
+      {canWrite && composerOpen ? (
         <form onSubmit={(e) => void submit(e)} className="mt-6 space-y-5">
           <PlaceCascadePicker
             value={selectedPlace}
@@ -223,7 +237,10 @@ export function LeaveTraceForm({
             </button>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setComposerOpen(false);
+                if (onClose) onClose();
+              }}
               className="min-h-[44px] cursor-pointer px-3 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]"
             >
               Cancel

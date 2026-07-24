@@ -233,20 +233,24 @@ export function ReaderMemory({ workId }: ReaderMemoryProps) {
 
   return (
     <div
-      className="mb-8 max-w-xl text-[0.8rem] leading-relaxed tracking-[0.08em] text-[var(--foreground-muted)] sm:mb-10 sm:text-[0.85rem]"
+      className="mb-6 max-w-[11.5rem] text-[var(--foreground-muted)]"
       aria-live="polite"
     >
-      <p className="whitespace-pre-line">{state.greeting}</p>
+      <p className="whitespace-pre-line text-[0.8rem] leading-relaxed tracking-[0.08em] sm:text-[0.85rem]">
+        {state.greeting}
+      </p>
 
-      <p className="mt-5 whitespace-pre-line sm:mt-6">
+      <p className="mt-3 whitespace-pre-line text-[0.68rem] leading-[1.65] tracking-[0.06em] sm:mt-3.5">
         {`You first visited\n${state.daysSinceFirst} days ago.`}
       </p>
 
-      <p className="mt-5 whitespace-pre-line sm:mt-6">
+      <p className="mt-3 whitespace-pre-line text-[0.68rem] leading-[1.65] tracking-[0.06em] sm:mt-3.5">
         {`You've read\n${state.chaptersRead} chapters.`}
       </p>
 
-      <p className="mt-5 whitespace-pre-line sm:mt-6">{traceMessage}</p>
+      <p className="mt-3 whitespace-pre-line text-[0.68rem] leading-[1.65] tracking-[0.06em] sm:mt-3.5">
+        {traceMessage}
+      </p>
     </div>
   );
 }

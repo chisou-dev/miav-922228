@@ -41,6 +41,7 @@ type SelectedPlace = {
 export function TraceMapApp() {
   const [user, setUser] = useState<User | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [leavePanelOpen, setLeavePanelOpen] = useState(false);
   const [focus, setFocus] = useState<{
     lat: number;
     lng: number;
@@ -119,6 +120,7 @@ export function TraceMapApp() {
       void data.loadMap();
       if (data.placeScope) void data.loadMemories(data.placeScope);
     },
+    onClose: () => setLeavePanelOpen(false),
   };
 
   return (
@@ -144,6 +146,13 @@ export function TraceMapApp() {
             <p className="mt-4 text-[0.95rem] leading-[1.9] tracking-[0.02em] text-[var(--map-muted)]">
               Reader footprints left around the world — city by city.
             </p>
+            <button
+              type="button"
+              onClick={() => setLeavePanelOpen(true)}
+              className="mt-6 min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-6 text-[0.78rem] tracking-[0.16em] text-[var(--map-ink)]"
+            >
+              Leave a Memory
+            </button>
           </div>
           <div className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]">
             <a href="/" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
@@ -172,12 +181,6 @@ export function TraceMapApp() {
       </header>
 
       <div className="mx-auto w-full max-w-6xl space-y-8 px-5 py-8 sm:px-8">
-        {/*
-          Page-shell layout: map column and TraceViewer are siblings.
-          Desktop (lg+): Map + LeaveTraceForm | Reader Memories.
-          Mobile: map only until a star is opened; then viewer stacks below;
-          LeaveTraceForm stays after the mobile viewer (unchanged).
-        */}
         <div className="desktop-shell grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
           <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
             <div className="order-2 lg:order-1 lg:self-stretch">
@@ -202,29 +205,22 @@ export function TraceMapApp() {
                 }}
               />
             </div>
-            <div className="order-1 space-y-4 lg:order-2 lg:self-start">
-              {/* Desktop: Leave a Memory above the map so Write a Memory stays in view */}
-              <div className="hidden lg:block">
-                <LeaveTraceForm {...leaveTraceFormProps} />
-              </div>
-              <div className="lg:sticky lg:top-4">
-                <Map
-                  stars={data.stars}
-                  focus={focus}
-                  placeScope={data.placeScope}
-                  highlightLocationId={highlightLocationId}
-                  interactionsEnabled={!welcomeOpen}
-                  onOpenMemories={onOpenMemories}
-                />
-                <p className="mt-4 text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                  Stars mark places where readers left a Memory. Click a star to
-                  read them — no GPS, no address.
-                </p>
-              </div>
+            <div className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-4 lg:self-start">
+              <Map
+                stars={data.stars}
+                focus={focus}
+                placeScope={data.placeScope}
+                highlightLocationId={highlightLocationId}
+                interactionsEnabled={!welcomeOpen}
+                onOpenMemories={onOpenMemories}
+              />
+              <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
+                Stars mark places where readers left a Memory. Click a star to
+                read them — no GPS, no address.
+              </p>
             </div>
           </div>
 
-          {/* Desktop: always reserve the right panel */}
           <div className="hidden lg:block">
             {viewerOpen && data.placeScope ? (
               <TraceViewer
@@ -243,7 +239,6 @@ export function TraceMapApp() {
           </div>
         </div>
 
-        {/* Mobile: keep stacked viewer only after a star is selected */}
         {viewerOpen && data.placeScope ? (
           <div className="lg:hidden">
             <TraceViewer
@@ -259,10 +254,8 @@ export function TraceMapApp() {
           </div>
         ) : null}
 
-        {/* Mobile: Leave a Memory remains below the shell / viewer */}
-        <div className="lg:hidden">
-          <LeaveTraceForm {...leaveTraceFormProps} />
-        </div>
+        {/* Expand below map / shell only when header button is pressed */}
+        {leavePanelOpen ? <LeaveTraceForm {...leaveTraceFormProps} /> : null}
       </div>
     </div>
   );
