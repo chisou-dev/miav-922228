@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import {
   deleteContactMessage,
   updateContactMessageStatus,
-} from "@/lib/firebase/admin";
-import { requireAdmin } from "@/lib/firebase/requireAdmin";
-import { isContactStatus } from "@/lib/contact/types";
+} from "@/features/firebase/admin";
+import { requireAdmin } from "@/features/firebase/requireAdmin";
+import { isContactStatus } from "@/features/contact/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

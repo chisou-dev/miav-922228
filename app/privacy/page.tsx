@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SiteShell } from "@/components/SiteShell";
-import { PrivacyPageContent } from "@/components/trace/PrivacyPageContent";
+import { SiteShell } from "@/features/shared/SiteShell";
+import { PrivacyPageContent } from "@/features/world-memory/trace/ui/PrivacyPageContent";
 
 export const metadata: Metadata = {
   title: "Privacy | MIAV-922228",

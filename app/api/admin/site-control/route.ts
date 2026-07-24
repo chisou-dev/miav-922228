@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/firebase/requireAdmin";
+import { requireAdmin } from "@/features/firebase/requireAdmin";
 import {
   getSiteControl,
   setSiteControl,
-} from "@/lib/site-control/siteControlRest";
+} from "@/features/dashboard/site-control/siteControlRest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

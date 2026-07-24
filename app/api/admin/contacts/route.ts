@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { listContactMessages } from "@/lib/firebase/admin";
-import { requireAdmin } from "@/lib/firebase/requireAdmin";
+import { listContactMessages } from "@/features/firebase/admin";
+import { requireAdmin } from "@/features/firebase/requireAdmin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import {
   createContactMessage,
   isFirebaseAdminConfigured,
-} from "@/lib/firebase/admin";
+} from "@/features/firebase/admin";
 import {
   consumeContactRateLimit,
   getRequestIp,
-} from "@/lib/contact/rateLimit";
-import { getSiteControl } from "@/lib/site-control/siteControlRest";
-import { CONTACT_DISABLED_MESSAGE } from "@/lib/site-control/types";
+} from "@/features/contact/rateLimit";
+import { getSiteControl } from "@/features/dashboard/site-control/siteControlRest";
+import { CONTACT_DISABLED_MESSAGE } from "@/features/dashboard/site-control/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

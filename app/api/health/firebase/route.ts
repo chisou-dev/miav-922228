@@ -3,14 +3,14 @@ import {
   getMissingFirebaseClientEnvKeys,
   isAdminUidConfigured,
   isFirebaseClientEnvReady,
-} from "@/lib/firebase/env";
+} from "@/features/firebase/env";
 import {
   areAdminUidEnvVarsAligned,
   getAdminUidFromEnv,
   isFirebaseAdminEnvConfigured,
   normalizeAdminUid,
-} from "@/lib/firebase/serviceAccount";
-import { getSiteUrl } from "@/lib/site";
+} from "@/features/firebase/serviceAccount";
+import { getSiteUrl } from "@/features/shared/site";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

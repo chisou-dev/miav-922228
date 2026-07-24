@@ -1,0 +1,31 @@
+{
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/out/**": true,
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/coverage/**": true,
+    "**/.vercel/**": true,
+    "**/.turbo/**": true,
+    "**/.cache/**": true,
+    "**/*.tsbuildinfo": true,
+    "**/firebase-export-*/**": true,
+    "**/firestore-export/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/out": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.vercel": true,
+    "**/package-lock.json": true,
+    "**/*.tsbuildinfo": true
+  },
+  "files.exclude": {
+    "**/.next": true,
+    "**/coverage": true
+  }
+}

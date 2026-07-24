@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SiteShell } from "@/components/SiteShell";
-import { SitePolicyPageContent } from "@/components/trace/SitePolicyPageContent";
+import { SiteShell } from "@/features/shared/SiteShell";
+import { SitePolicyPageContent } from "@/features/world-memory/trace/ui/SitePolicyPageContent";
 
 export const metadata: Metadata = {
   title: "Site Policy | MIAV-922228",

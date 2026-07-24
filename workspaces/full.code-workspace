@@ -1,0 +1,18 @@
+{
+  "folders": [
+    { "name": "miav-922228", "path": ".." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true,
+      "**/data/locations/locations.json": true,
+      "**/package-lock.json": true
+    }
+  }
+}

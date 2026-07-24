@@ -1,0 +1,22 @@
+{
+  "folders": [
+    { "name": "novels", "path": "../features/novels" },
+    { "name": "stories", "path": "../features/stories" },
+    { "name": "shared", "path": "../features/shared" },
+    { "name": "app-books", "path": "../app/books" },
+    { "name": "repo-root", "path": ".." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true,
+      "**/data/locations/locations.json": true
+    }
+  }
+}

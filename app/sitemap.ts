@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { getAllChapters } from "@/lib/content/chapters";
-import { getContentLocale } from "@/lib/locale";
-import { getSiteUrl } from "@/lib/site";
+import { getAllChapters } from "@/features/stories/miav/chapters";
+import { getContentLocale } from "@/features/shared/locale";
+import { getSiteUrl } from "@/features/shared/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();

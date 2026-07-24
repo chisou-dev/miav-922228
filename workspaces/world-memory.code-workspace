@@ -1,0 +1,28 @@
+{
+  "folders": [
+    { "name": "world-memory", "path": "../features/world-memory" },
+    { "name": "firebase", "path": "../features/firebase" },
+    { "name": "auth", "path": "../features/auth" },
+    { "name": "shared", "path": "../features/shared" },
+    { "name": "app-world-map", "path": "../app/world-map" },
+    { "name": "app-api-trace", "path": "../app/api/trace" },
+    { "name": "app-api-geo", "path": "../app/api/geo" },
+    { "name": "app-api-cron", "path": "../app/api/cron" },
+    { "name": "data-locations-source", "path": "../data/locations" },
+    { "name": "scripts", "path": "../scripts" },
+    { "name": "repo-root", "path": ".." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true,
+      "**/data/locations/locations.json": true
+    }
+  }
+}

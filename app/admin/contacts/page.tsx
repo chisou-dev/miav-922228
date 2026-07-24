@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminContactsClient } from "./AdminContactsClient";
+import { AdminContactsClient } from "@/features/dashboard/AdminContactsClient";
 
 export const metadata: Metadata = {
   title: "Admin | MIAV-922228",

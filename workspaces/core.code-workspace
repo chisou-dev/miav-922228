@@ -1,0 +1,21 @@
+{
+  "folders": [
+    { "name": "core", "path": "../features/core" },
+    { "name": "shared", "path": "../features/shared" },
+    { "name": "app-home", "path": "../app" },
+    { "name": "repo-root", "path": ".." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true,
+      "**/data/locations/locations.json": true
+    }
+  }
+}

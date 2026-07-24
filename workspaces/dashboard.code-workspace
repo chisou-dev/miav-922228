@@ -1,0 +1,27 @@
+{
+  "folders": [
+    { "name": "dashboard", "path": "../features/dashboard" },
+    { "name": "contact", "path": "../features/contact" },
+    { "name": "firebase", "path": "../features/firebase" },
+    { "name": "auth", "path": "../features/auth" },
+    { "name": "shared", "path": "../features/shared" },
+    { "name": "app-admin", "path": "../app/admin" },
+    { "name": "app-api-admin", "path": "../app/api/admin" },
+    { "name": "app-api-site-control", "path": "../app/api/site-control" },
+    { "name": "app-contact", "path": "../app/contact" },
+    { "name": "repo-root", "path": ".." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true,
+      "**/data/locations/locations.json": true
+    }
+  }
+}

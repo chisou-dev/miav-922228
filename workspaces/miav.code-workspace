@@ -1,0 +1,24 @@
+{
+  "folders": [
+    { "name": "miav", "path": "../features/stories/miav" },
+    { "name": "stories", "path": "../features/stories" },
+    { "name": "shared", "path": "../features/shared" },
+    { "name": "content-chapters", "path": "../content/chapters" },
+    { "name": "app-chapters", "path": "../app/chapters" },
+    { "name": "app-author", "path": "../app/author" },
+    { "name": "repo-root", "path": ".." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/public/locations": true,
+      "**/data/locations/locations.json": true
+    }
+  }
+}

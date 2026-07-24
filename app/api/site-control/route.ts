@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSiteControl } from "@/lib/site-control/siteControlRest";
+import { getSiteControl } from "@/features/dashboard/site-control/siteControlRest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
