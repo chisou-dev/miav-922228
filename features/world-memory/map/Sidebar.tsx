@@ -3,7 +3,7 @@
 import {
   formatJoinedDate,
   type TraceStats,
-} from "@/lib/trace/types";
+} from "@/features/world-memory/trace/types";
 
 type Props = {
   stats: TraceStats | null;

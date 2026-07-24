@@ -8,14 +8,14 @@ import { Sidebar } from "@/features/world-memory/map/Sidebar";
 import { LeaveTraceForm } from "@/features/world-memory/trace/ui/LeaveTraceForm";
 import { TraceViewer } from "@/features/world-memory/viewer/TraceViewer";
 import { useMapDataLoader } from "@/features/world-memory/map/MapDataLoader";
-import { WelcomeDialog } from "@/components/trace/WelcomeDialog";
+import { WelcomeDialog } from "@/features/world-memory/trace/ui/WelcomeDialog";
 import {
   completeTraceRedirectSignIn,
   getTraceAuthType,
   signOutTrace,
   watchAuth,
-} from "@/lib/trace/auth";
-import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/lib/trace/policyCopy";
+} from "@/features/world-memory/trace/auth";
+import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/features/world-memory/trace/policyCopy";
 
 const Map = dynamic(
   () => import("@/features/world-memory/map/Map").then((mod) => mod.Map),

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { requireTraceUser } from "@/lib/trace/requireTraceUser";
+import { requireTraceUser } from "@/features/world-memory/trace/requireTraceUser";
 import { getPlaceById } from "@/features/world-memory/location/places";
-import { TRACE_PAGE_SIZE } from "@/lib/trace/types";
+import { TRACE_PAGE_SIZE } from "@/features/world-memory/trace/types";
 import {
   createTrace,
   getTraceByUid,
@@ -9,16 +9,16 @@ import {
   listMemoryStars,
   listTracesByLocationId,
   pinFromRecord,
-} from "@/lib/trace/traceRest";
-import { bodyContainsForbiddenPii } from "@/lib/trace/privacy";
+} from "@/features/world-memory/trace/traceRest";
+import { bodyContainsForbiddenPii } from "@/features/world-memory/trace/privacy";
 import {
   MAX_GUEST_MESSAGE_LENGTH,
   MAX_GOOGLE_MESSAGE_LENGTH,
-} from "@/lib/trace/messagePolicy";
-import { normalizeTraceMessage } from "@/lib/trace/messagePolicy";
+} from "@/features/world-memory/trace/messagePolicy";
+import { normalizeTraceMessage } from "@/features/world-memory/trace/messagePolicy";
 import { getSiteControl } from "@/features/dashboard/site-control/siteControlRest";
 import { TRACE_DISABLED_MESSAGE } from "@/features/dashboard/site-control/types";
-import { isValidVisitorId } from "@/lib/trace/visitorId";
+import { isValidVisitorId } from "@/features/world-memory/trace/visitorId";
 
 function validatePostBody(body: Record<string, unknown>) {
   if (body.lat != null || body.lng != null) {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, type TouchEvent } from "react";
-import { formatJoinedDate, type TracePin } from "@/lib/trace/types";
-import { formatMessageFull } from "@/lib/trace/messagePolicy";
+import { formatJoinedDate, type TracePin } from "@/features/world-memory/trace/types";
+import { formatMessageFull } from "@/features/world-memory/trace/messagePolicy";
 
 type Props = {
   trace: TracePin;

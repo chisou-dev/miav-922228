@@ -11,7 +11,7 @@ import {
 import L from "leaflet";
 import { memoryStarSize } from "@/features/world-memory/location/places/starSize";
 import { starMotionForId } from "@/features/world-memory/location/places/starMotion";
-import type { MemoryStar, PlaceScope } from "@/lib/trace/types";
+import type { MemoryStar, PlaceScope } from "@/features/world-memory/trace/types";
 
 type Focus = { lat: number; lng: number; zoom: number } | null;
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteExpiredAnonymousTraces } from "@/lib/trace/traceRest";
+import { deleteExpiredAnonymousTraces } from "@/features/world-memory/trace/traceRest";
 
 /**
  * Cleanup Temporary (anonymous) Traces past expiresAt.

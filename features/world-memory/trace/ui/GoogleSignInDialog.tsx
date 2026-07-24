@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GOOGLE_SIGNIN_DIALOG } from "@/lib/trace/policyCopy";
+import { GOOGLE_SIGNIN_DIALOG } from "@/features/world-memory/trace/policyCopy";
 import {
   TraceDialogFrame,
   TraceDialogPrimaryButton,

@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatJoinedDate,
   type TracePin,
-} from "@/lib/trace/types";
-import { formatMessagePreview } from "@/lib/trace/messagePolicy";
+} from "@/features/world-memory/trace/types";
+import { formatMessagePreview } from "@/features/world-memory/trace/messagePolicy";
 import { SelectedTrace } from "@/features/world-memory/viewer/SelectedTrace";
 
 type Props = {

@@ -3,7 +3,7 @@
 import {
   formatJoinedDate,
   type TracePin,
-} from "@/lib/trace/types";
+} from "@/features/world-memory/trace/types";
 
 type Props = {
   /** Current user's Trace only — never another visitor's. */

@@ -6,18 +6,18 @@ import {
   MAX_GUEST_MESSAGE_LENGTH,
   MAX_GOOGLE_MESSAGE_LENGTH,
   type TracePin,
-} from "@/lib/trace/types";
+} from "@/features/world-memory/trace/types";
 import {
   formatAuthError,
   getIdTokenOrNull,
   getTraceAuthType,
   signInTraceGoogle,
-} from "@/lib/trace/auth";
+} from "@/features/world-memory/trace/auth";
 import { isFirebaseClientConfigured } from "@/features/firebase/client";
-import { TRACE_PRIVACY_BLURB } from "@/lib/trace/policyCopy";
+import { TRACE_PRIVACY_BLURB } from "@/features/world-memory/trace/policyCopy";
 import { TRACE_DISABLED_MESSAGE } from "@/features/dashboard/site-control/types";
 import { GoogleSignInDialog } from "@/features/world-memory/trace/ui/GoogleSignInDialog";
-import { getOrCreateVisitorId } from "@/lib/trace/visitorId";
+import { getOrCreateVisitorId } from "@/features/world-memory/trace/visitorId";
 import { PlaceCascadePicker } from "@/features/world-memory/map/PlaceCascadePicker";
 
 type SelectedPlace = {

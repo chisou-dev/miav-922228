@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/features/firebase/requireAdmin";
-import { deleteTraceById } from "@/lib/trace/traceRest";
+import { deleteTraceById } from "@/features/world-memory/trace/traceRest";
 
 type Props = {
   params: Promise<{ id: string }>;

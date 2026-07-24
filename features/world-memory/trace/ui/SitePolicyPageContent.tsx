@@ -1,4 +1,4 @@
-import { SITE_POLICY_PAGE } from "@/lib/trace/policyCopy";
+import { SITE_POLICY_PAGE } from "@/features/world-memory/trace/policyCopy";
 
 export function SitePolicyPageContent() {
   return (

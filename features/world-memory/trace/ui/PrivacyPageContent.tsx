@@ -1,4 +1,4 @@
-import { PRIVACY_PAGE_PARAGRAPHS } from "@/lib/trace/policyCopy";
+import { PRIVACY_PAGE_PARAGRAPHS } from "@/features/world-memory/trace/policyCopy";
 
 export function PrivacyPageContent() {
   return (

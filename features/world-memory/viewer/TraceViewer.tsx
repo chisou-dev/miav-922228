@@ -1,7 +1,7 @@
 "use client";
 
 import { TraceList } from "@/features/world-memory/viewer/TraceList";
-import type { TracePin } from "@/lib/trace/types";
+import type { TracePin } from "@/features/world-memory/trace/types";
 
 type Props = {
   city: string;

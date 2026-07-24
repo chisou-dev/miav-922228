@@ -2,18 +2,18 @@
 
 import { useCallback, useState } from "react";
 import type { User } from "firebase/auth";
-import { getIdTokenOrNull } from "@/lib/trace/auth";
+import { getIdTokenOrNull } from "@/features/world-memory/trace/auth";
 import {
   TRACE_PAGE_SIZE,
   type MemoryStar,
   type PlaceScope,
   type TracePin,
   type TraceStats,
-} from "@/lib/trace/types";
+} from "@/features/world-memory/trace/types";
 import {
   getOrCreateVisitorId,
   readVisitorId,
-} from "@/lib/trace/visitorId";
+} from "@/features/world-memory/trace/visitorId";
 
 function emptyStats(): TraceStats {
   return {

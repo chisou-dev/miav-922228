@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/features/firebase/requireAdmin";
-import { seedStoryMemories } from "@/lib/trace/traceRest";
+import { seedStoryMemories } from "@/features/world-memory/trace/traceRest";
 
 function authorizeSeed(request: Request): boolean {
   const seedKey = process.env.SEED_STORY_KEY?.trim();
