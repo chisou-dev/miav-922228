@@ -84,22 +84,31 @@ export async function GET(request: Request) {
     if (view === "status") {
       const header = request.headers.get("authorization") || "";
       let mine = null;
+      let guestPosted = false;
+      let guestRecord = null;
+
+      if (visitorId && isValidVisitorId(visitorId)) {
+        guestRecord = await getTraceByUid(visitorId);
+        guestPosted = Boolean(guestRecord);
+      }
+
       if (/^Bearer\s+/i.test(header)) {
         const auth = await requireTraceUser(request);
         if (!auth.error) {
           const record = await getTraceByUid(auth.uid);
           mine = record ? pinFromRecord(record) : null;
         }
+        // Google posted state is based on Google uid only.
+        // guestPosted is still returned so the UI can explain a prior Guest Memory.
+        return NextResponse.json({
+          posted: Boolean(mine),
+          mine,
+          guestPosted,
+        });
       }
 
-      let guestPosted = false;
-      if (visitorId && isValidVisitorId(visitorId)) {
-        const guest = await getTraceByUid(visitorId);
-        guestPosted = Boolean(guest);
-        // Guests must receive mine too — otherwise Leave a Memory shows title only.
-        if (!mine && guest) {
-          mine = pinFromRecord(guest);
-        }
+      if (guestRecord) {
+        mine = pinFromRecord(guestRecord);
       }
 
       return NextResponse.json({

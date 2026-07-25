@@ -32,6 +32,7 @@ export function useMapDataLoader() {
   const [mapLoading, setMapLoading] = useState(true);
 
   const [posted, setPosted] = useState(false);
+  const [guestPosted, setGuestPosted] = useState(false);
   const [mine, setMine] = useState<TracePin | null>(null);
 
   const [placeScope, setPlaceScope] = useState<PlaceScope | null>(null);
@@ -73,10 +74,12 @@ export function useMapDataLoader() {
     });
     const data = (await response.json().catch(() => null)) as {
       posted?: boolean;
+      guestPosted?: boolean;
       mine?: TracePin | null;
     } | null;
     if (!response.ok) return;
     setPosted(Boolean(data?.posted));
+    setGuestPosted(Boolean(data?.guestPosted));
     setMine(data?.mine || null);
   }, []);
 
@@ -149,6 +152,7 @@ export function useMapDataLoader() {
     mapLoading,
     loadMap,
     posted,
+    guestPosted,
     mine,
     setMine,
     setPosted,
