@@ -29,6 +29,8 @@ export type Series = {
   title: string;
   summary: string;
   featured?: boolean;
+  /** Optional note for the /works Featured slot */
+  worksFeaturedNote?: string;
   chapters: readonly SeriesChapter[];
 };
 
@@ -51,13 +53,13 @@ export const categories: readonly Category[] = [
     id: "entertainment-sf",
     path: "/entertainment-sf",
     title: "Entertainment SF",
-    summary: "Speculative adventures and lighter science fiction series.",
+    summary: "Speculative fiction focused on story and adventure.",
   },
   {
     id: "flash-fiction",
     path: "/flash-fiction",
     title: "Flash Fiction",
-    summary: "Short standalone pieces — read in a few quiet minutes.",
+    summary: "Short stories that can be read in a few minutes.",
   },
 ] as const;
 
@@ -120,14 +122,23 @@ export const seriesList: readonly Series[] = [
     summary:
       "A literary SF series exploring memory, technology, and quiet forms of human existence.",
     featured: true,
+    worksFeaturedNote: "The latest chapter is available.",
     chapters: miavChapters,
   },
   {
     id: "japan-8000hz",
     categoryId: "literary-sf",
     title: "JAPAN 8000Hz",
-    summary: "A forthcoming literary SF series. Placeholder entry for the library.",
-    chapters: placeholderChapters("JAPAN 8000Hz", 3),
+    summary:
+      "A literary SF series from the station platform — schedules, signals, and what resumes.",
+    chapters: [
+      {
+        number: 1,
+        pathSlug: "chapter-1",
+        title: "Estimated Time of Resumption",
+        contentSlug: "estimated-time-of-resumption",
+      },
+    ],
   },
   {
     id: "fourth-period",
@@ -202,6 +213,15 @@ export function getFeaturedSeries(
   categoryId: Exclude<CategoryId, "flash-fiction">,
 ): Series | null {
   return listSeriesByCategory(categoryId).find((s) => s.featured) ?? null;
+}
+
+/** Primary Featured title for the /works homepage (literary first). */
+export function getWorksFeatured(): Series | null {
+  return (
+    seriesList.find((s) => s.featured && s.categoryId === "literary-sf") ??
+    seriesList.find((s) => s.featured) ??
+    null
+  );
 }
 
 export function getOtherSeries(

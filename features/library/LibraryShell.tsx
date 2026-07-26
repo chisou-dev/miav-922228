@@ -51,11 +51,13 @@ export function LibraryListItem({
   title,
   meta,
   description,
+  actionLabel = "Read →",
 }: {
   href: string;
   title: string;
   meta?: string;
   description?: string;
+  actionLabel?: string;
 }) {
   return (
     <a
@@ -67,7 +69,7 @@ export function LibraryListItem({
           {title}
         </h2>
         <span className="shrink-0 text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)]">
-          Read →
+          {actionLabel}
         </span>
       </div>
       {meta ? (

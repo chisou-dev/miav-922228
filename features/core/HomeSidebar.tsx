@@ -2,30 +2,22 @@
 
 import { ReaderMemory } from "@/features/core/ReaderMemory";
 
-const categories = [
-  { label: "Literary SF", href: "/literary-sf" },
-  { label: "Entertainment SF", href: "/entertainment-sf" },
-  { label: "Flash Fiction", href: "/flash-fiction" },
-] as const;
-
 export function HomeSidebar() {
   return (
     <aside className="home-sidebar hidden lg:block">
       <div className="home-sidebar-inner">
         <p className="text-[0.68rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
-          Categories
+          Works
         </p>
         <ul className="mt-6 space-y-4">
-          {categories.map((item) => (
-            <li key={item.label}>
-              <a
-                href={item.href}
-                className="text-[0.82rem] tracking-[0.1em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
-              >
-                {item.label}
-              </a>
-            </li>
-          ))}
+          <li>
+            <a
+              href="/works"
+              className="text-[0.82rem] tracking-[0.1em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
+            >
+              Works
+            </a>
+          </li>
         </ul>
 
         <div className="mt-12 border-t border-[var(--line)] pt-8">

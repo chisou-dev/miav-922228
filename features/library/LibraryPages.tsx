@@ -12,6 +12,7 @@ import {
   seriesHref,
   seriesList,
 } from "@/features/library/catalog";
+import { getSeriesStoryChapter } from "@/features/library/seriesContent";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 
 function Prose({ text }: { text: string }) {
@@ -110,10 +111,20 @@ export async function SeriesChapterPage({
   let bodyText: string | null = chapter.body ?? null;
 
   if (chapter.contentSlug) {
-    const doc = await getChapterBySlug(chapter.contentSlug, locale);
-    if (doc) {
-      bodyHtml = doc.bodyHtml;
+    const seriesDoc = await getSeriesStoryChapter(
+      series.id,
+      chapter.contentSlug,
+      locale,
+    );
+    if (seriesDoc) {
+      bodyHtml = seriesDoc.bodyHtml;
       bodyText = null;
+    } else {
+      const doc = await getChapterBySlug(chapter.contentSlug, locale);
+      if (doc) {
+        bodyHtml = doc.bodyHtml;
+        bodyText = null;
+      }
     }
   }
 
