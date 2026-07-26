@@ -3,9 +3,9 @@
 import { ReaderMemory } from "@/features/core/ReaderMemory";
 
 const categories = [
-  { label: "Literary SF", href: "/#about" },
-  { label: "Entertainment SF", href: "/books" },
-  { label: "Flash Fiction", href: "/chapters" },
+  { label: "Literary SF", href: "/literary-sf" },
+  { label: "Entertainment SF", href: "/entertainment-sf" },
+  { label: "Flash Fiction", href: "/flash-fiction" },
 ] as const;
 
 export function HomeSidebar() {
