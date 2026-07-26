@@ -13,6 +13,7 @@ import {
   seriesList,
 } from "@/features/library/catalog";
 import { getSeriesStoryChapter } from "@/features/library/seriesContent";
+import { BookContinueCard } from "@/features/library/BookContinueCard";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 
 function Prose({ text }: { text: string }) {
@@ -109,8 +110,9 @@ export async function SeriesChapterPage({
 
   let bodyHtml: string | null = null;
   let bodyText: string | null = chapter.body ?? null;
+  const continueReading = chapter.continueReading;
 
-  if (chapter.contentSlug) {
+  if (!continueReading && chapter.contentSlug) {
     const seriesDoc = await getSeriesStoryChapter(
       series.id,
       chapter.contentSlug,
@@ -151,7 +153,13 @@ export async function SeriesChapterPage({
           </a>
         </p>
 
-        {bodyHtml ? (
+        {continueReading ? (
+          <BookContinueCard
+            description={continueReading.description}
+            amazonUrl={continueReading.amazonUrl}
+            buttonLabel={continueReading.buttonLabel}
+          />
+        ) : bodyHtml ? (
           <article
             className="chapter-prose mt-12 sm:mt-16"
             aria-label="Chapter text"

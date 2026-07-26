@@ -3,6 +3,8 @@
  * Future: replace this module with JSON / CMS loaders that return the same shapes.
  */
 
+import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
+
 export type CategoryId = "literary-sf" | "entertainment-sf" | "flash-fiction";
 
 export type Category = {
@@ -21,6 +23,15 @@ export type SeriesChapter = {
   contentSlug?: string;
   /** Placeholder body when no markdown is wired yet */
   body?: string;
+  /**
+   * Kindle (or storefront) continue landing — not a substitute chapter body.
+   * When set, the chapter page shows BookContinueCard instead of prose.
+   */
+  continueReading?: {
+    description: string;
+    amazonUrl: string;
+    buttonLabel?: string;
+  };
 };
 
 export type Series = {
@@ -137,6 +148,20 @@ export const seriesList: readonly Series[] = [
         pathSlug: "chapter-1",
         title: "Estimated Time of Resumption",
         contentSlug: "estimated-time-of-resumption",
+      },
+      {
+        number: 2,
+        pathSlug: "chapter-2",
+        title: "Commute",
+        continueReading: {
+          description: [
+            'In Japan, people often speak of "reading the air."',
+            "Much of daily life is guided not by rules, but by invisible expectations.",
+            "JAPAN 8000Hz was written from that quiet sense of discomfort—one that many people experience, yet rarely put into words.",
+          ].join("\n\n"),
+          amazonUrl: japan8000hzKindle.href,
+          buttonLabel: japan8000hzKindle.linkLabel,
+        },
       },
     ],
   },
