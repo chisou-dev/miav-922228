@@ -23,7 +23,7 @@ export function AuthorPage() {
           </h1>
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
-            Literary SF writer and creator of MIAV-922228.
+            A writer of literary science fiction.
           </p>
         </header>
 
@@ -33,13 +33,11 @@ export function AuthorPage() {
           </h2>
           <div className="mt-10 space-y-8 text-[1.02rem] leading-[2.3] tracking-[0.012em] text-[var(--foreground)] sm:mt-12 sm:text-[1.1rem] sm:leading-[2.45]">
             <p>
-              Takashi Yabe writes speculative fiction exploring the relationship
-              between technology and human existence.
+              Takashi Yabe is a writer of literary science fiction.
             </p>
             <p>
-              Through literary science fiction, he examines themes of artificial
-              intelligence, memory, emotion, identity, and the quiet changes that
-              occur in everyday life.
+              His work explores memory, artificial intelligence, loneliness,
+              technology, and human existence through quiet speculative fiction.
             </p>
           </div>
         </section>

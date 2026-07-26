@@ -101,11 +101,11 @@ export const worksLibrary = {
 export const aboutPage = {
   title: AUTHOR_NAME,
   summary:
-    "Japanese writer of literary science fiction.\n\nHis work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
+    "A writer of literary science fiction.\n\nHis work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
   seo: {
     title: "About | Takashi Yabe",
     description:
-      "Takashi Yabe is a Japanese writer of literary science fiction exploring memory, AI, and human existence.",
+      "Takashi Yabe is a writer of literary science fiction. His work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
   },
 } as const satisfies { title: string; summary: string; seo: PageSeo };
 

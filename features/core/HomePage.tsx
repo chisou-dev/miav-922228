@@ -25,7 +25,7 @@ const sections = [
   {
     id: "author",
     title: "Author",
-    body: "Takashi Yabe is a literary SF writer and the creator of MIAV-922228. His work explores the relationship between technology and human existence—memory, emotion, identity, and the quiet changes of everyday life.",
+    body: "Takashi Yabe is a writer of literary science fiction and the creator of MIAV-922228. His work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
     linkHref: "/author",
     linkLabel: "Author profile",
   },
