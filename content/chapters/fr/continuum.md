@@ -2,10 +2,10 @@
 number: 12
 slug: continuum
 title: Continuum
-summary: Les chapitres suivants sont en préparation.
+summary: The next entry is still being written.
 published: "2026-07-26"
 locale: fr
 presentation: threshold
 ---
 
-En préparation.
+Log update in progress.

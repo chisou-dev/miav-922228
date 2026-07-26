@@ -100,11 +100,14 @@ function ChapterNav({
   );
 }
 
-function ThresholdBody() {
+function ThresholdBody({ chapter }: { chapter: ChapterDocument }) {
+  const line =
+    chapter.bodyMarkdown.trim() || "The archive continues.";
+
   return (
     <div className="mx-auto mt-24 max-w-sm text-center sm:mt-32">
       <p className="text-[1.05rem] leading-[2.4] tracking-[0.02em] text-[var(--foreground)] sm:text-[1.125rem] sm:leading-[2.5]">
-        The archive continues.
+        {line}
       </p>
 
       <p className="mt-20 text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase sm:mt-24">
@@ -151,7 +154,11 @@ export async function ChapterPage({ params }: Props) {
       <main className="pb-24 sm:pb-32">
         <ChapterHeader chapter={chapter} />
 
-        {isThreshold ? <ThresholdBody /> : <ReadingBody chapter={chapter} />}
+        {isThreshold ? (
+          <ThresholdBody chapter={chapter} />
+        ) : (
+          <ReadingBody chapter={chapter} />
+        )}
 
         <ChapterNav previous={previous} next={isThreshold ? null : next} />
       </main>
