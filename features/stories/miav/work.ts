@@ -13,4 +13,11 @@ export const miavChapterSlugs = [
   "preemption",
   "absence",
   "selection",
+  "substituted-memory",
+  "standardization",
+  "dehumanization",
+  "time",
+  "photo-and-distortion",
+  "family",
+  "continuum",
 ] as const;
