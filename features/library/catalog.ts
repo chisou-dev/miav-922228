@@ -4,6 +4,7 @@
  */
 
 import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
+import { fourthPeriodKindle } from "@/features/stories/fourth-period/store";
 
 export type CategoryId = "literary-sf" | "entertainment-sf" | "flash-fiction";
 
@@ -23,6 +24,22 @@ export type Category = {
   seo: PageSeo;
 };
 
+export type ContinueReadingLanding = {
+  description: string;
+  amazonUrl: string;
+  buttonLabel?: string;
+  /**
+   * Page eyebrow. Defaults to "Continue Reading" (no chapter number).
+   * Set explicitly (e.g. "Chapter 5") when the landing should still look like a numbered chapter.
+   */
+  eyebrow?: string;
+  /**
+   * Page H1. Defaults to the series title.
+   * Set explicitly when the landing has its own title (e.g. "Why I Wrote Fourth Period").
+   */
+  title?: string;
+};
+
 export type SeriesChapter = {
   number: number;
   /** URL segment, e.g. chapter-1 */
@@ -35,12 +52,9 @@ export type SeriesChapter = {
   /**
    * Kindle (or storefront) continue landing — not a substitute chapter body.
    * When set, the chapter page shows BookContinueCard instead of prose.
+   * Series lists show this entry as "Continue Reading →" (no chapter number).
    */
-  continueReading?: {
-    description: string;
-    amazonUrl: string;
-    buttonLabel?: string;
-  };
+  continueReading?: ContinueReadingLanding;
 };
 
 export type Series = {
@@ -53,6 +67,8 @@ export type Series = {
   genre: string;
   seo: PageSeo;
   featured?: boolean;
+  /** Listed but not yet readable — show Coming Soon instead of Read. */
+  comingSoon?: boolean;
   /** Optional note for the /works Featured slot */
   worksFeaturedNote?: string;
   chapters: readonly SeriesChapter[];
@@ -165,21 +181,6 @@ const miavChapters: readonly SeriesChapter[] = [
   { number: 12, pathSlug: "chapter-12", title: "Continuum", contentSlug: "continuum" },
 ];
 
-function placeholderChapters(
-  prefix: string,
-  count: number,
-): readonly SeriesChapter[] {
-  return Array.from({ length: count }, (_, i) => {
-    const n = i + 1;
-    return {
-      number: n,
-      pathSlug: `chapter-${n}`,
-      title: `Chapter ${n}`,
-      body: `${prefix} — Chapter ${n}.\n\nThis entry is a placeholder for the works library skeleton.`,
-    };
-  });
-}
-
 export const seriesList: readonly Series[] = [
   {
     id: "miav-922228",
@@ -219,7 +220,7 @@ export const seriesList: readonly Series[] = [
       {
         number: 2,
         pathSlug: "chapter-2",
-        title: "Commute",
+        title: "Continue Reading",
         continueReading: {
           description: [
             'In Japan, people often speak of "reading the air."',
@@ -269,34 +270,42 @@ export const seriesList: readonly Series[] = [
         title: "Milk",
         contentSlug: "milk",
       },
+      {
+        number: 5,
+        pathSlug: "chapter-5",
+        title: "Why I Wrote Fourth Period",
+        continueReading: {
+          eyebrow: "Chapter 5",
+          title: "Why I Wrote Fourth Period",
+          description: [
+            "As children, we are often told that every story has a lesson.",
+            "But life rarely offers only one answer.",
+            "Two people can make different choices for the same reason.",
+            "Both may be sincere.",
+            "Both may leave behind regret.",
+            "Fourth Period was written from that uncertainty.",
+            "Not to decide what is right—",
+            "but to ask why we believe it is.",
+          ].join("\n\n"),
+          amazonUrl: fourthPeriodKindle.href,
+          buttonLabel: fourthPeriodKindle.linkLabel,
+        },
+      },
     ],
   },
   {
-    id: "orbit-signal",
+    id: "cradle-of-the-stars",
     categoryId: "entertainment-sf",
-    title: "Orbit Signal",
-    summary: "An entertainment SF series about signals, distance, and pursuit across orbit.",
+    title: "Cradle of the Stars",
+    summary: "A journey beyond Earth begins.",
     genre: "Science Fiction",
+    comingSoon: true,
     seo: {
-      title: "Orbit Signal | Entertainment Science Fiction",
+      title: "Cradle of the Stars | Entertainment Science Fiction",
       description:
-        "An entertainment science fiction series about signals, distance, and pursuit across orbit.",
+        "Cradle of the Stars — an entertainment science fiction journey beyond Earth. Coming soon.",
     },
-    featured: true,
-    chapters: placeholderChapters("Orbit Signal", 5),
-  },
-  {
-    id: "night-relay",
-    categoryId: "entertainment-sf",
-    title: "Night Relay",
-    summary: "A night-time relay of messages, cities, and what cannot wait until morning.",
-    genre: "Science Fiction",
-    seo: {
-      title: "Night Relay | Entertainment Science Fiction",
-      description:
-        "An entertainment science fiction series about a night-time relay of messages and cities.",
-    },
-    chapters: placeholderChapters("Night Relay", 4),
+    chapters: [],
   },
 ];
 
@@ -432,6 +441,199 @@ export const flashPieces: readonly FlashPiece[] = [
       "One second at a time.",
     ].join("\n\n"),
   },
+  {
+    id: "the-day-i-couldnt-find-anyone",
+    slug: "the-day-i-couldnt-find-anyone",
+    title: "The Day I Couldn't Find Anyone",
+    minutes: 4,
+    blurb:
+      "A quiet story about losing a phone — and losing every address, number, and face that lived inside it.",
+    genre: "Flash Fiction",
+    seo: {
+      title: "The Day I Couldn't Find Anyone | Flash Fiction",
+      description:
+        "A quiet flash fiction story about a lost phone, a hillside suburb, and becoming unreachable as a person.",
+    },
+    body: [
+      "I realized I was no longer reachable as a person the moment I lost my phone.",
+      "Not lost in the usual sense.",
+      "Without it, I couldn’t remember anyone’s address.",
+      "I got off the bus and turned back.",
+      "The blue bus was already going down the slope,",
+      "reflected light flickering across its windows,",
+      "then disappearing around the corner.",
+      "The bus stop was empty. Just me.",
+      "A low sound from an air conditioner behind a house continued without pause.",
+      "I’d never been here before. He had invited me months ago.",
+      "The suburb had been cut into the hillside. Rows of houses stretched across the hillside.",
+      "Same color walls.",
+      "Same narrow driveways.",
+      "Same height of shrubs.",
+      "Only the names on the mailboxes were different.",
+      "A wind passed through.",
+      "Somewhere, a shutter closed.",
+      "I started walking toward a friend’s house.",
+      "But the route was unclear.",
+      "Third right.",
+      "Left at the park.",
+      "White house.",
+      "That was all I remembered.",
+      "I walked.",
+      "Turned a corner.",
+      "The same houses again.",
+      "White walls.",
+      "Black cars.",
+      "Artificial grass.",
+      "Delivery boxes.",
+      "Small trees.",
+      "A man in a garden held a hose.",
+      "“Excuse me,” I said.",
+      "He looked at me.",
+      "I told him my friend’s name.",
+      "“Do you know them?”",
+      "He thought for a moment.",
+      "“No, I don’t think so.”",
+      "Water ran across the ground.",
+      "“Are they new here?”",
+      "“I’m not sure.”",
+      "I left.",
+      "Walked again.",
+      "Same corners.",
+      "Same stairs.",
+      "Even the position of the mailboxes felt identical.",
+      "A woman walking a dog didn’t know.",
+      "A woman on a bicycle with a child shook her head.",
+      "“Everyone moved in around the same time here,” she said, and left.",
+      "Evening came.",
+      "Streetlights turned on one by one.",
+      "Windows began to light up.",
+      "Shadows moved behind curtains.",
+      "Dinner smells.",
+      "Television noise.",
+      "Laughter.",
+      "Life, aligned in rows.",
+      "A park appeared.",
+      "It felt familiar.",
+      "Slide.",
+      "Yellow fence.",
+      "Vending machine.",
+      "Bus stop.",
+      "The place I got off.",
+      "I had circled back.",
+      "I sat on a bench.",
+      "Called the bus company.",
+      "A public phone.",
+      "I inserted coins.",
+      "“I think I left my phone on the bus.”",
+      "They asked for the vehicle number.",
+      "I didn’t know.",
+      "The time.",
+      "I gave it.",
+      "Waited.",
+      "“We checked. Nothing was found.”",
+      "“Ah,” I said.",
+      "There was another call ringing in the background.",
+      "“Sir, if it is found we’ll — ”",
+      "I realized I didn’t even have a number they could reach me at.",
+      "Silence.",
+      "“Hello?”",
+      "“It’s fine,” I said, and hung up.",
+      "Coins returned.",
+      "I put them in my pocket.",
+      "There was nothing left to do.",
+      "I stood up.",
+      "Walked along the edge of the suburb.",
+      "Guardrails.",
+      "Empty construction land.",
+      "Blue tarps.",
+      "Exposed hillside.",
+      "A supermarket sign in the distance.",
+      "Water moving through drainage channels.",
+      "While walking, I tried to remember my friend’s face.",
+      "I hadn’t seen him since his wedding.",
+      "Even his child’s name was unclear.",
+      "The address was inside my phone messages.",
+      "The number, I never knew.",
+      "All shared friends existed only on screens.",
+      "A faint rectangle of light flickered beneath the water.",
+      "It was my phone.",
+      "Half-submerged in muddy water.",
+      "Only the screen was still lit.",
+      "I picked it up.",
+      "Cracked glass.",
+      "Notifications lined up.",
+      "“Where are you?”",
+      "“Did you arrive?”",
+      "“It’s cold, go inside first.”",
+      "“Bus stop?”",
+      "I tapped.",
+      "The screen stayed frozen.",
+      "In the suburb, I was slightly out of alignment with everything else.",
+    ].join("\n\n"),
+  },
+  {
+    id: "lost-property",
+    slug: "lost-property",
+    title: "Lost Property",
+    minutes: 2,
+    blurb:
+      "A quiet story about reporting a loss from thirty years ago — and finding something gray waiting in the back.",
+    genre: "Flash Fiction",
+    seo: {
+      title: "Lost Property | Flash Fiction",
+      description:
+        "A quiet flash fiction story about a lost property office, thirty years of weight, and something gray waiting in the back.",
+    },
+    body: [
+      "“I lost something.”",
+      "The receptionist does not look up from the registry.",
+      "“When?”",
+      "“Thirty years ago.”",
+      "Her finger stops once, then moves again.",
+      "“What kind of item?”",
+      "“Weight.”",
+      "The man remains still, one hand inside his right pocket.",
+      "“When I woke up this morning, I was lighter.",
+      "Every time I walk, my body falls slightly behind.”",
+      "“I don’t know what I lost.”",
+      "The woman looks only at the notebook.",
+      "A page is turned.",
+      "No sound.",
+      "“We have it.”",
+      "That is all she says.",
+      "Her eyes do not rise.",
+      "“In the back.”",
+      "In the corner of the room, at a distance where it can already be seen, something gray rests there.",
+      "Something like a stone.",
+      "The man approaches.",
+      "The distance closes a moment too late.",
+      "He reaches out.",
+      "Touches it. Cold.",
+      "Pushes. It does not move.",
+      "Pulls away.",
+      "Only his fingertips return a fraction later.",
+      "The man sits down where he is.",
+      "No sound.",
+      "His right shoulder lowers slightly.",
+      "The receptionist calls the next person.",
+      "“Next.”",
+      "Someone passes beside him.",
+      "Only footsteps remain.",
+      "Only the fact of having passed remains.",
+      "The man stays there.",
+      "It is unclear whether he is touching it or not.",
+      "The gray object appears to be the same as before.",
+      "It also appears not to be.",
+      "Outside the window, a bird cries.",
+      "The sound enters the room once, then leaves.",
+      "After a while, the man puts his right hand into his pocket.",
+      "There is nothing inside.",
+      "Only the sensation of putting it there remains.",
+      "The receptionist turns another page of the registry.",
+      "“Next.”",
+      "Only the voice continues.",
+    ].join("\n\n"),
+  },
 ];
 
 export function getCategory(id: CategoryId): Category | null {
@@ -500,6 +702,16 @@ export function chapterSeo(
   series: Series,
   chapter: SeriesChapter,
 ): PageSeo {
+  if (chapter.continueReading) {
+    const landingTitle =
+      chapter.continueReading.title ?? series.title;
+    return {
+      title: `${landingTitle} | ${series.title}`,
+      description:
+        chapter.continueReading.description.split(/\n\n+/)[0] ??
+        series.seo.description,
+    };
+  }
   return {
     title: `Chapter ${chapter.number}｜${chapter.title} | ${series.title}`,
     description: series.seo.description,

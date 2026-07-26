@@ -21,7 +21,7 @@ export function LibraryShell({
   categoryNavHref?: string;
 }) {
   return (
-    <div className="relative z-10 mx-auto w-full max-w-[700px] px-5 sm:px-8">
+    <div className="relative z-10 mx-auto w-full max-w-[760px] px-5 sm:px-8">
       <main className="pb-28 sm:pb-36">
         {categoryNavHref ? (
           <WorksCategoryNav activeHref={categoryNavHref} />
@@ -71,17 +71,14 @@ export function LibraryListItem({
   description,
   actionLabel = "Read →",
 }: {
-  href: string;
+  href?: string;
   title: string;
   meta?: string;
   description?: string;
   actionLabel?: string;
 }) {
-  return (
-    <a
-      href={href}
-      className="block border-b border-[var(--line)] py-8 transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)] sm:py-10"
-    >
+  const body = (
+    <>
       <div className="flex items-baseline justify-between gap-6">
         <h2 className="text-[1.05rem] font-medium tracking-[0.06em] text-[var(--foreground)]">
           {title}
@@ -100,6 +97,21 @@ export function LibraryListItem({
           {description}
         </p>
       ) : null}
+    </>
+  );
+
+  if (!href) {
+    return (
+      <div className="block border-b border-[var(--line)] py-8 sm:py-10">{body}</div>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      className="block border-b border-[var(--line)] py-8 transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)] sm:py-10"
+    >
+      {body}
     </a>
   );
 }

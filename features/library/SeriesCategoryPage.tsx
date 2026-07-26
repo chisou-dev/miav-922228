@@ -49,9 +49,10 @@ export function SeriesCategoryPage({
               Featured Series
             </p>
             <LibraryListItem
-              href={seriesHref(featured.id)}
+              href={featured.comingSoon ? undefined : seriesHref(featured.id)}
               title={featured.title}
               description={featured.summary}
+              actionLabel={featured.comingSoon ? "Coming Soon." : "Read →"}
             />
             <p className="pt-10 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
               Other Series
@@ -64,9 +65,10 @@ export function SeriesCategoryPage({
               otherSeries.map((series) => (
                 <LibraryListItem
                   key={series.id}
-                  href={seriesHref(series.id)}
+                  href={series.comingSoon ? undefined : seriesHref(series.id)}
                   title={series.title}
                   description={series.summary}
+                  actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
                 />
               ))
             )}
@@ -76,9 +78,10 @@ export function SeriesCategoryPage({
             {otherSeries.map((series) => (
               <LibraryListItem
                 key={series.id}
-                href={seriesHref(series.id)}
+                href={series.comingSoon ? undefined : seriesHref(series.id)}
                 title={series.title}
                 description={series.summary}
+                actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
               />
             ))}
           </div>

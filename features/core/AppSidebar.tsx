@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { ReaderMemory } from "@/features/core/ReaderMemory";
 
 const NAV = [
   { href: "/", label: "Home", match: (path: string) => path === "/" },
@@ -31,7 +32,7 @@ type Props = {
 
 /**
  * Site-wide navigation — Home / World Memory / Works only.
- * Collapse control lives in the header row; brand text links home.
+ * Reader Memory sits quietly below the nav (hidden when the rail is collapsed).
  */
 export function AppSidebar({
   collapsed,
@@ -92,6 +93,10 @@ export function AppSidebar({
             })}
           </ul>
         </nav>
+
+        <div className="app-sidebar-memory">
+          <ReaderMemory workId="miav-922228" />
+        </div>
       </div>
     </aside>
   );

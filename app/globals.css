@@ -50,11 +50,11 @@ body {
 }
 
 .chapter-prose {
-  max-width: 700px;
-  margin-inline: auto;
-  color: var(--foreground);
+  max-width: none;
+  margin-inline: 0;
+  color: inherit;
   font-size: 1.02rem;
-  line-height: 2.3;
+  line-height: 1.9;
   letter-spacing: 0.012em;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -62,18 +62,18 @@ body {
 
 @media (min-width: 640px) {
   .chapter-prose {
-    font-size: 1.1rem;
-    line-height: 2.45;
+    font-size: 1.08rem;
+    line-height: 1.9;
   }
 }
 
 .chapter-prose p {
   margin: 0;
-  color: var(--foreground);
+  color: inherit;
 }
 
 .chapter-prose p + p {
-  margin-top: 2.1em;
+  margin-top: 1.55em;
 }
 
 .chapter-prose em {
@@ -82,6 +82,84 @@ body {
 
 .chapter-prose strong {
   font-weight: 600;
+}
+
+/* Reading surface — paper for chapter / flash / Kindle landings only */
+.reading-layout {
+  --reading-paper: #fafaf8;
+  --reading-ink: #2b2b2b;
+  --reading-ink-muted: #4a4a4a;
+  --reading-line: color-mix(in srgb, var(--reading-ink) 18%, transparent);
+
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  margin-top: 2.5rem;
+  padding: 1.75rem 1.125rem 2.25rem;
+  background: var(--reading-paper);
+  color: var(--reading-ink);
+}
+
+@media (min-width: 640px) {
+  .reading-layout {
+    margin-top: 3.5rem;
+    padding: 2.75rem 2.5rem 3.25rem;
+  }
+}
+
+.reading-layout .story-content {
+  max-width: none;
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.9;
+  letter-spacing: 0.012em;
+  color: var(--reading-ink);
+}
+
+@media (min-width: 640px) {
+  .reading-layout .story-content {
+    font-size: 1.08rem;
+  }
+}
+
+.reading-layout .story-content p {
+  margin: 0;
+  color: inherit;
+}
+
+.reading-layout .story-content p + p {
+  margin-top: 1.55em;
+}
+
+.reading-layout .story-content--center {
+  text-align: center;
+}
+
+.reading-layout .story-content--center p + p {
+  margin-top: 1.35em;
+}
+
+.reading-layout .reading-kindle-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--reading-line);
+  background: color-mix(in srgb, var(--reading-ink) 4%, transparent);
+  padding: 0 1.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: var(--reading-ink);
+  transition: border-color 300ms, background-color 300ms;
+}
+
+.reading-layout .reading-kindle-button:hover {
+  border-color: color-mix(in srgb, var(--reading-ink) 40%, transparent);
+  background: color-mix(in srgb, var(--reading-ink) 7%, transparent);
+}
+
+.reading-layout h2 {
+  color: var(--reading-ink);
 }
 
 /* Site-wide app sidebar */
@@ -174,6 +252,12 @@ body {
   color: var(--foreground);
 }
 
+.app-sidebar-memory {
+  margin-top: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
 .app-main {
   min-width: 0;
   transition: padding-left 180ms ease;
@@ -204,8 +288,10 @@ body {
 
   .app-layout[data-collapsed="true"] .app-sidebar-title,
   .app-layout[data-collapsed="true"] .app-sidebar-nav,
+  .app-layout[data-collapsed="true"] .app-sidebar-memory,
   html[data-sidebar-collapsed="true"] .app-layout .app-sidebar-title,
-  html[data-sidebar-collapsed="true"] .app-layout .app-sidebar-nav {
+  html[data-sidebar-collapsed="true"] .app-layout .app-sidebar-nav,
+  html[data-sidebar-collapsed="true"] .app-layout .app-sidebar-memory {
     opacity: 0;
     pointer-events: none;
     width: 0;
@@ -268,9 +354,10 @@ body {
     cursor: pointer;
   }
 
-  /* Always show title + nav in the mobile drawer */
+  /* Always show title + nav + memory in the mobile drawer */
   .app-sidebar-title,
-  .app-sidebar-nav {
+  .app-sidebar-nav,
+  .app-sidebar-memory {
     opacity: 1 !important;
     pointer-events: auto !important;
     width: auto !important;

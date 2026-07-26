@@ -16,6 +16,7 @@ import {
 import { getSeriesStoryChapter } from "@/features/library/seriesContent";
 import { BookContinueCard } from "@/features/library/BookContinueCard";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
+import { ReadingLayout } from "@/features/library/ReadingLayout";
 import {
   BookJsonLd,
   BreadcrumbJsonLd,
@@ -25,7 +26,7 @@ import {
 function Prose({ text }: { text: string }) {
   const blocks = text.split(/\n\n+/).filter(Boolean);
   return (
-    <div className="mx-auto mt-10 max-w-prose space-y-6 text-[0.98rem] leading-[2.05] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-14 sm:text-[1.02rem] sm:leading-[2.15]">
+    <div className="story-content">
       {blocks.map((paragraph, index) => (
         <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>
       ))}
@@ -106,26 +107,41 @@ export function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               </a>
             </p>
           ) : null}
-          <ul className="mt-6">
-            {series.chapters.map((chapter) => (
-              <li key={chapter.pathSlug}>
-                <a
-                  href={chapterHref(series.id, chapter.pathSlug)}
-                  className="flex items-baseline justify-between gap-4 border-b border-[var(--line)] py-5 text-[0.92rem] tracking-[0.04em] text-[var(--foreground)] transition-colors duration-300 hover:text-[var(--foreground-muted)]"
-                >
-                  <span>
-                    Chapter {chapter.number}
-                    <span className="mt-1 block text-[0.8rem] tracking-[0.06em] text-[var(--foreground-muted)] sm:ml-4 sm:mt-0 sm:inline">
-                      {chapter.title}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
-                    →
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          {series.comingSoon || series.chapters.length === 0 ? (
+            <p className="mt-10 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)]">
+              Coming Soon.
+            </p>
+          ) : (
+            <ul className="mt-6">
+              {series.chapters.map((chapter) => {
+                const isContinue = Boolean(chapter.continueReading);
+                return (
+                  <li key={chapter.pathSlug}>
+                    <a
+                      href={chapterHref(series.id, chapter.pathSlug)}
+                      className="flex items-baseline justify-between gap-4 border-b border-[var(--line)] py-5 text-[0.92rem] tracking-[0.04em] text-[var(--foreground)] transition-colors duration-300 hover:text-[var(--foreground-muted)]"
+                    >
+                      <span>
+                        {isContinue ? (
+                          "Continue Reading"
+                        ) : (
+                          <>
+                            Chapter {chapter.number}
+                            <span className="mt-1 block text-[0.8rem] tracking-[0.06em] text-[var(--foreground-muted)] sm:ml-4 sm:mt-0 sm:inline">
+                              {chapter.title}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+                        →
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </LibraryShell>
     </>
@@ -181,7 +197,9 @@ export async function SeriesChapterPage({
       : []),
     { label: series.title, href: seriesHref(series.id) },
     {
-      label: `Chapter ${chapter.number}`,
+      label: continueReading
+        ? (continueReading.eyebrow ?? "Continue Reading")
+        : `Chapter ${chapter.number}`,
       href: chapterHref(series.id, chapter.pathSlug),
     },
   );
@@ -189,19 +207,26 @@ export async function SeriesChapterPage({
   const bookDescription =
     continueReading?.description.split(/\n\n+/)[0] ?? series.summary;
 
+  const pageEyebrow = continueReading
+    ? (continueReading.eyebrow ?? "Continue Reading")
+    : `Chapter ${chapter.number}`;
+  const pageTitle = continueReading
+    ? (continueReading.title ?? series.title)
+    : chapter.title;
+
   return (
     <>
       <BreadcrumbJsonLd items={breadcrumbs} />
       <BookJsonLd
-        title={`${chapter.title} — ${series.title}`}
+        title={`${pageTitle} — ${series.title}`}
         description={bookDescription}
         genre={series.genre}
         url={chapterHref(series.id, chapter.pathSlug)}
       />
       <LibraryShell
-        eyebrow={`Chapter ${chapter.number}`}
-        title={chapter.title}
-        summary={series.title}
+        eyebrow={pageEyebrow}
+        title={pageTitle}
+        summary={continueReading ? undefined : series.title}
         breadcrumbs={breadcrumbs}
       >
         <div className="pt-8">
@@ -212,44 +237,70 @@ export async function SeriesChapterPage({
               buttonLabel={continueReading.buttonLabel}
             />
           ) : bodyHtml ? (
-            <article
-              className="chapter-prose mt-12 sm:mt-16"
-              aria-label="Chapter text"
-              dangerouslySetInnerHTML={{ __html: bodyHtml }}
-            />
+            <ReadingLayout label="Chapter text">
+              <article
+                className="chapter-prose"
+                dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              />
+            </ReadingLayout>
           ) : bodyText ? (
-            <Prose text={bodyText} />
+            <ReadingLayout label="Chapter text">
+              <Prose text={bodyText} />
+            </ReadingLayout>
           ) : (
             <p className="mt-12 text-[0.95rem] text-[var(--foreground-muted)]">
               Log update in progress.
             </p>
           )}
 
-          <nav
-            aria-label="Chapter navigation"
-            className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"
-          >
-            <div>
-              {previous ? (
-                <a
-                  href={chapterHref(series.id, previous.pathSlug)}
-                  className="block text-[0.85rem] tracking-[0.08em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
-                >
-                  ← Previous Chapter
-                </a>
-              ) : null}
-            </div>
-            <div className="sm:text-right">
-              {next ? (
-                <a
-                  href={chapterHref(series.id, next.pathSlug)}
-                  className="block text-[0.85rem] tracking-[0.08em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
-                >
-                  Next Chapter →
-                </a>
-              ) : null}
-            </div>
-          </nav>
+          {!continueReading ? (
+            <nav
+              aria-label="Chapter navigation"
+              className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"
+            >
+              <div>
+                {previous ? (
+                  <a
+                    href={chapterHref(series.id, previous.pathSlug)}
+                    className="block text-[0.85rem] tracking-[0.08em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
+                  >
+                    {previous.continueReading
+                      ? "← Continue Reading"
+                      : "← Previous Chapter"}
+                  </a>
+                ) : null}
+              </div>
+              <div className="sm:text-right">
+                {next ? (
+                  <a
+                    href={chapterHref(series.id, next.pathSlug)}
+                    className="block text-[0.85rem] tracking-[0.08em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
+                  >
+                    {next.continueReading
+                      ? "Continue Reading →"
+                      : "Next Chapter →"}
+                  </a>
+                ) : null}
+              </div>
+            </nav>
+          ) : (
+            <nav
+              aria-label="Chapter navigation"
+              className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"
+            >
+              <div>
+                {previous && !previous.continueReading ? (
+                  <a
+                    href={chapterHref(series.id, previous.pathSlug)}
+                    className="block text-[0.85rem] tracking-[0.08em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
+                  >
+                    ← Previous Chapter
+                  </a>
+                ) : null}
+              </div>
+              <div />
+            </nav>
+          )}
         </div>
       </LibraryShell>
     </>
@@ -294,7 +345,9 @@ export function FlashPiecePage({ slug }: { slug: string }) {
           <p className="mt-4 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
             {piece.minutes} min read
           </p>
-          <Prose text={piece.body} />
+          <ReadingLayout label="Flash fiction text">
+            <Prose text={piece.body} />
+          </ReadingLayout>
         </div>
       </LibraryShell>
     </>

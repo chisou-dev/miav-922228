@@ -6,6 +6,7 @@ import {
   type ChapterMeta,
 } from "@/features/stories/miav/chapters";
 import { getContentLocale } from "@/features/shared/locale";
+import { ReadingLayout } from "@/features/library/ReadingLayout";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -132,11 +133,12 @@ function ThresholdBody({ chapter }: { chapter: ChapterDocument }) {
 
 function ReadingBody({ chapter }: { chapter: ChapterDocument }) {
   return (
-    <article
-      className="chapter-prose mt-16 sm:mt-24"
-      aria-label="Chapter text"
-      dangerouslySetInnerHTML={{ __html: chapter.bodyHtml }}
-    />
+    <ReadingLayout label="Chapter text">
+      <article
+        className="chapter-prose"
+        dangerouslySetInnerHTML={{ __html: chapter.bodyHtml }}
+      />
+    </ReadingLayout>
   );
 }
 
@@ -150,7 +152,7 @@ export async function ChapterPage({ params }: Props) {
   const isThreshold = chapter.presentation === "threshold";
 
   return (
-    <div className="relative z-10 mx-auto w-full max-w-[700px] px-5 sm:px-8">
+    <div className="relative z-10 mx-auto w-full max-w-[760px] px-5 sm:px-8">
       <main className="pb-24 sm:pb-32">
         <ChapterHeader chapter={chapter} />
 
