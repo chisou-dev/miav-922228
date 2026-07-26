@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { SeriesCategoryPage } from "@/features/library/SeriesCategoryPage";
+import { getCategory } from "@/features/library/catalog";
+
+const category = getCategory("entertainment-sf");
 
 export const metadata: Metadata = {
-  title: "Entertainment SF | MIAV-922228",
-  description: "Entertainment science fiction series from MIAV-922228.",
+  title: category?.seo.title ?? "Entertainment SF | Takashi Yabe",
+  description: category?.seo.description,
 };
 
 export default function EntertainmentSfPage() {

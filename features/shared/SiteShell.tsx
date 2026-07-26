@@ -9,7 +9,7 @@ const navLinks = [
 
 export function SiteHeader() {
   return (
-    <header className="flex flex-col gap-8 pt-10 sm:flex-row sm:items-baseline sm:justify-between sm:gap-10 sm:pt-14">
+    <header className="flex flex-col gap-8 pt-10 pl-11 sm:flex-row sm:items-baseline sm:justify-between sm:gap-10 sm:pt-14 lg:pl-0">
       <a
         href="/"
         className="text-[0.8rem] tracking-[0.18em] text-[var(--foreground)]"

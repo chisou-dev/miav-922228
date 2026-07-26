@@ -16,11 +16,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { series: seriesId } = await params;
   const series = getSeries(seriesId);
+  if (!series) return { title: "Series | Takashi Yabe" };
   return {
-    title: series
-      ? `${series.title} | MIAV-922228`
-      : "Series | MIAV-922228",
-    description: series?.summary,
+    title: series.seo.title,
+    description: series.seo.description,
   };
 }
 

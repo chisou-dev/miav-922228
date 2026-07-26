@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import type { BreadcrumbItem } from "@/features/library/catalog";
+import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
+import { WorksCategoryNav } from "@/features/library/WorksCategoryNav";
 
 /** Quiet page shell for the works library — matches site typography, no new chrome. */
 export function LibraryShell({
@@ -6,16 +9,28 @@ export function LibraryShell({
   eyebrow,
   title,
   summary,
+  breadcrumbs,
+  categoryNavHref,
 }: {
   children: ReactNode;
   eyebrow?: string;
   title: string;
   summary?: string;
+  breadcrumbs?: BreadcrumbItem[];
+  /** When set, shows Works / Literary SF / Entertainment SF / Flash Fiction hops. */
+  categoryNavHref?: string;
 }) {
   return (
     <div className="relative z-10 mx-auto w-full max-w-[700px] px-5 sm:px-8">
       <main className="pb-28 sm:pb-36">
-        <header className="pt-14 text-center sm:pt-20">
+        {categoryNavHref ? (
+          <WorksCategoryNav activeHref={categoryNavHref} />
+        ) : null}
+        <header
+          className={`pl-11 text-center lg:pl-0 ${
+            categoryNavHref ? "pt-10 sm:pt-12" : "pt-14 sm:pt-20"
+          }`}
+        >
           <p>
             <a
               href="/"
@@ -33,12 +48,15 @@ export function LibraryShell({
             {title}
           </h1>
           {summary ? (
-            <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
-              {summary}
-            </p>
+            <div className="mx-auto mt-10 max-w-md space-y-5 text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
+              {summary.split(/\n\n+/).map((paragraph) => (
+                <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+              ))}
+            </div>
           ) : null}
         </header>
         <section className="mt-16 border-t border-[var(--line)] sm:mt-20">
+          {breadcrumbs ? <LibraryBreadcrumbs items={breadcrumbs} /> : null}
           {children}
         </section>
       </main>

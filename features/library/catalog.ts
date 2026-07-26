@@ -7,11 +7,20 @@ import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
 
 export type CategoryId = "literary-sf" | "entertainment-sf" | "flash-fiction";
 
+/** Page title + meta description — managed here for future JSON/CMS parity. */
+export type PageSeo = {
+  title: string;
+  description: string;
+};
+
+export const AUTHOR_NAME = "Takashi Yabe";
+
 export type Category = {
   id: CategoryId;
   path: `/${CategoryId}`;
   title: string;
   summary: string;
+  seo: PageSeo;
 };
 
 export type SeriesChapter = {
@@ -38,7 +47,11 @@ export type Series = {
   id: string;
   categoryId: Exclude<CategoryId, "flash-fiction">;
   title: string;
+  /** Short intro shown on category lists and series pages (2–3 lines). */
   summary: string;
+  /** Schema.org genre */
+  genre: string;
+  seo: PageSeo;
   featured?: boolean;
   /** Optional note for the /works Featured slot */
   worksFeaturedNote?: string;
@@ -50,8 +63,35 @@ export type FlashPiece = {
   slug: string;
   title: string;
   minutes: number;
+  /** One-line intro for the Flash Fiction index. */
+  blurb: string;
+  genre: string;
+  seo: PageSeo;
   body: string;
 };
+
+/** /works landing copy + SEO (catalog-managed). */
+export const worksLibrary = {
+  title: "Works",
+  summary:
+    "A collection of literary science fiction, speculative fiction, and short stories exploring memory, technology, and human existence.",
+  seo: {
+    title: "Works | Takashi Yabe",
+    description:
+      "Literary science fiction, speculative fiction, and flash fiction by Takashi Yabe.",
+  },
+} as const satisfies { title: string; summary: string; seo: PageSeo };
+
+export const aboutPage = {
+  title: AUTHOR_NAME,
+  summary:
+    "Japanese writer of literary science fiction.\n\nHis work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
+  seo: {
+    title: "About | Takashi Yabe",
+    description:
+      "Takashi Yabe is a Japanese writer of literary science fiction exploring memory, AI, and human existence.",
+  },
+} as const satisfies { title: string; summary: string; seo: PageSeo };
 
 export const categories: readonly Category[] = [
   {
@@ -59,18 +99,33 @@ export const categories: readonly Category[] = [
     path: "/literary-sf",
     title: "Literary SF",
     summary: "Stories exploring memory, technology, and human existence.",
+    seo: {
+      title: "Literary SF | Takashi Yabe",
+      description:
+        "Literary science fiction series by Takashi Yabe exploring memory, technology, and human existence.",
+    },
   },
   {
     id: "entertainment-sf",
     path: "/entertainment-sf",
     title: "Entertainment SF",
     summary: "Speculative fiction focused on story and adventure.",
+    seo: {
+      title: "Entertainment SF | Takashi Yabe",
+      description:
+        "Entertainment science fiction and speculative adventure stories by Takashi Yabe.",
+    },
   },
   {
     id: "flash-fiction",
     path: "/flash-fiction",
     title: "Flash Fiction",
     summary: "Short stories that can be read in a few minutes.",
+    seo: {
+      title: "Flash Fiction | Takashi Yabe",
+      description:
+        "Short speculative fiction by Takashi Yabe — quiet stories readable in a few minutes.",
+    },
   },
 ] as const;
 
@@ -131,7 +186,13 @@ export const seriesList: readonly Series[] = [
     categoryId: "literary-sf",
     title: "MIAV-922228",
     summary:
-      "A literary SF series exploring memory, technology, and quiet forms of human existence.",
+      "A literary science fiction series exploring memory, artificial intelligence, and the future of human relationships.",
+    genre: "Literary Science Fiction",
+    seo: {
+      title: "MIAV-922228 | Literary Science Fiction",
+      description:
+        "A literary science fiction series exploring memory, AI, and human relationships.",
+    },
     featured: true,
     worksFeaturedNote: "The latest chapter is available.",
     chapters: miavChapters,
@@ -141,7 +202,13 @@ export const seriesList: readonly Series[] = [
     categoryId: "literary-sf",
     title: "JAPAN 8000Hz",
     summary:
-      "A literary SF series from the station platform — schedules, signals, and what resumes.",
+      "A literary novel about invisible social pressure and the quiet discomfort of modern Japan.",
+    genre: "Literary Fiction",
+    seo: {
+      title: "JAPAN 8000Hz | Literary Fiction",
+      description:
+        "A literary novel inspired by the quiet discomfort of modern Japanese society.",
+    },
     chapters: [
       {
         number: 1,
@@ -169,14 +236,52 @@ export const seriesList: readonly Series[] = [
     id: "fourth-period",
     categoryId: "literary-sf",
     title: "Fourth Period",
-    summary: "A forthcoming literary SF series. Placeholder entry for the library.",
-    chapters: placeholderChapters("Fourth Period", 3),
+    summary:
+      "A series of quiet stories inspired by moral education and childhood memories.",
+    genre: "Literary Science Fiction",
+    seo: {
+      title: "Fourth Period | Literary Science Fiction",
+      description:
+        "A literary SF series of quiet stories inspired by moral education and childhood memories.",
+    },
+    chapters: [
+      {
+        number: 1,
+        pathSlug: "chapter-1",
+        title: "The Tortoise and the Hare",
+        contentSlug: "the-tortoise-and-the-hare",
+      },
+      {
+        number: 2,
+        pathSlug: "chapter-2",
+        title: "The Honest Woodcutter",
+        contentSlug: "the-honest-woodcutter",
+      },
+      {
+        number: 3,
+        pathSlug: "chapter-3",
+        title: "The Ant and the Grasshopper",
+        contentSlug: "the-ant-and-the-grasshopper",
+      },
+      {
+        number: 4,
+        pathSlug: "chapter-4",
+        title: "Milk",
+        contentSlug: "milk",
+      },
+    ],
   },
   {
     id: "orbit-signal",
     categoryId: "entertainment-sf",
     title: "Orbit Signal",
-    summary: "An entertainment SF series placeholder for future installments.",
+    summary: "An entertainment SF series about signals, distance, and pursuit across orbit.",
+    genre: "Science Fiction",
+    seo: {
+      title: "Orbit Signal | Entertainment Science Fiction",
+      description:
+        "An entertainment science fiction series about signals, distance, and pursuit across orbit.",
+    },
     featured: true,
     chapters: placeholderChapters("Orbit Signal", 5),
   },
@@ -184,7 +289,13 @@ export const seriesList: readonly Series[] = [
     id: "night-relay",
     categoryId: "entertainment-sf",
     title: "Night Relay",
-    summary: "Another entertainment SF series placeholder.",
+    summary: "A night-time relay of messages, cities, and what cannot wait until morning.",
+    genre: "Science Fiction",
+    seo: {
+      title: "Night Relay | Entertainment Science Fiction",
+      description:
+        "An entertainment science fiction series about a night-time relay of messages and cities.",
+    },
     chapters: placeholderChapters("Night Relay", 4),
   },
 ];
@@ -195,6 +306,14 @@ export const flashPieces: readonly FlashPiece[] = [
     slug: "the-silver-thread",
     title: "The Silver Thread",
     minutes: 5,
+    blurb:
+      "A quiet story about a mountain thread that grows by one second at a time — and the wishes that vanish with it.",
+    genre: "Flash Fiction",
+    seo: {
+      title: "The Silver Thread | Flash Fiction",
+      description:
+        "A quiet speculative flash fiction story about a silver thread, vanished wishes, and what can no longer be agreed upon.",
+    },
     body: [
       "The thread appeared one morning in a place no one remembered.",
       "It rose through the exposed rock of a mountain summit, a silver fiber as thick as a human arm. Its surface vibrated faintly. It was neither warm nor cold to the touch.",
@@ -375,4 +494,25 @@ export function chapterHref(seriesId: string, pathSlug: string) {
 
 export function flashHref(slug: string) {
   return `/flash/${slug}`;
+}
+
+export function chapterSeo(
+  series: Series,
+  chapter: SeriesChapter,
+): PageSeo {
+  return {
+    title: `Chapter ${chapter.number}｜${chapter.title} | ${series.title}`,
+    description: series.seo.description,
+  };
+}
+
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
+
+export function worksBreadcrumbs(
+  ...trail: BreadcrumbItem[]
+): BreadcrumbItem[] {
+  return [{ label: "Home", href: "/" }, { label: "Works", href: "/works" }, ...trail];
 }

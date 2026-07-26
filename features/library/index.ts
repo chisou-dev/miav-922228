@@ -11,6 +11,8 @@ export {
   categories,
   seriesList,
   flashPieces,
+  worksLibrary,
+  aboutPage,
   getCategory,
   getSeries,
   getFlashPiece,

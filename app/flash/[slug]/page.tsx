@@ -16,8 +16,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const piece = getFlashPiece(slug);
+  if (!piece) return { title: "Flash Fiction | Takashi Yabe" };
   return {
-    title: piece ? `${piece.title} | Flash Fiction` : "Flash Fiction | MIAV-922228",
+    title: piece.seo.title,
+    description: piece.seo.description,
   };
 }
 

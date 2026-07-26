@@ -1,5 +1,4 @@
 import { SiteShell } from "@/features/shared/SiteShell";
-import { HomeSidebar } from "@/features/core/HomeSidebar";
 import { ReaderMemory } from "@/features/core/ReaderMemory";
 
 const sections = [
@@ -42,67 +41,50 @@ const sections = [
 
 export function HomePage() {
   return (
-    <div className="home-with-sidebar">
-      <HomeSidebar />
-      <div className="home-main">
-        <div className="px-5 pt-6 lg:hidden">
-          <a
-            href="/world-map"
-            className="inline-flex items-center gap-2 text-[0.78rem] tracking-[0.1em] text-[var(--foreground-muted)]"
-          >
-            <span aria-hidden>🌍</span>
-            World Memory
-          </a>
-        </div>
-        <SiteShell>
-          <main>
+    <SiteShell>
+      <main>
+        <section
+          aria-label="Introduction"
+          className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-24 sm:py-32"
+        >
+          <ReaderMemory workId="miav-922228" />
+          <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
+            MIAV-922228
+          </h1>
+          <p className="mt-10 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:text-lg sm:leading-8">
+            A Literary SF Project by Takashi Yabe
+          </p>
+          <p className="mt-16 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-20 sm:text-base sm:leading-[2]">
+            A speculative fiction project exploring AI, memory, emotion, and
+            human existence.
+          </p>
+        </section>
+
+        <div className="pb-32 sm:pb-40">
+          {sections.map((section) => (
             <section
-              aria-label="Introduction"
-              className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-24 sm:py-32"
+              key={section.id}
+              id={section.id}
+              className="scroll-mt-24 border-t border-[var(--line)] py-24 sm:py-32"
             >
-              {/* Mobile: keep Reader Memory in the center intro */}
-              <div className="lg:hidden">
-                <ReaderMemory workId="miav-922228" />
-              </div>
-              <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
-                MIAV-922228
-              </h1>
-              <p className="mt-10 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:text-lg sm:leading-8">
-                A Literary SF Project by Takashi Yabe
+              <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
+                {section.title}
+              </h2>
+              <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
+                {section.body}
               </p>
-              <p className="mt-16 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-20 sm:text-base sm:leading-[2]">
-                A speculative fiction project exploring AI, memory, emotion, and
-                human existence.
+              <p className="mt-12 sm:mt-14">
+                <a
+                  href={section.linkHref}
+                  className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
+                >
+                  {section.linkLabel}
+                </a>
               </p>
             </section>
-
-            <div className="pb-32 sm:pb-40">
-              {sections.map((section) => (
-                <section
-                  key={section.id}
-                  id={section.id}
-                  className="scroll-mt-24 border-t border-[var(--line)] py-24 sm:py-32"
-                >
-                  <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
-                    {section.title}
-                  </h2>
-                  <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
-                    {section.body}
-                  </p>
-                  <p className="mt-12 sm:mt-14">
-                    <a
-                      href={section.linkHref}
-                      className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
-                    >
-                      {section.linkLabel}
-                    </a>
-                  </p>
-                </section>
-              ))}
-            </div>
-          </main>
-        </SiteShell>
-      </div>
-    </div>
+          ))}
+        </div>
+      </main>
+    </SiteShell>
   );
 }

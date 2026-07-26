@@ -151,7 +151,7 @@ export function TraceMapApp() {
         onClose={dismissWelcome}
       />
 
-      <header className="border-b border-[var(--map-line)] px-5 py-5 sm:px-8 sm:py-6">
+      <header className="border-b border-[var(--map-line)] px-5 py-5 pl-14 sm:px-8 sm:py-6 lg:pl-8">
         <div className="mx-auto w-full max-w-6xl">
           {/* Row 1: title + nav */}
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
@@ -162,9 +162,6 @@ export function TraceMapApp() {
               aria-label="World Memory links"
               className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]"
             >
-              <a href="/" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
-                Home
-              </a>
               <a href="/privacy" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
                 Privacy
               </a>
@@ -174,24 +171,26 @@ export function TraceMapApp() {
               {user && getTraceAuthType(user) === "google" ? (
                 <>
                   <span className="inline-flex max-w-[14rem] flex-col items-end gap-0.5 text-right text-[var(--map-ink)] sm:max-w-[18rem]">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span
-                        aria-hidden="true"
-                        className="inline-block h-2 w-2 rounded-full bg-[#4285F4]"
-                      />
-                      Google ✓
-                    </span>
-                    {user.displayName?.trim() || user.email ? (
-                      <span className="truncate text-[0.7rem] tracking-[0.04em] text-[var(--map-muted)]">
-                        {user.displayName?.trim() ||
-                          (user.email
-                            ? user.email.replace(
-                                /^(.{1,3}).*(@.*)$/,
-                                (_, a: string, b: string) => `${a}****${b}`,
-                              )
-                            : "")}
-                      </span>
-                    ) : null}
+                    {data.mine?.authType === "google" && data.mine.miavId ? (
+                      <>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span aria-hidden="true" className="text-[#4a7c59]">
+                            ✓
+                          </span>
+                          Permanent Memory
+                        </span>
+                        <span className="truncate font-mono text-[0.7rem] tracking-[0.04em] text-[var(--map-ink)]">
+                          {data.mine.miavId}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Permanent Memory</span>
+                        <span className="text-[0.7rem] tracking-[0.04em] text-[var(--map-muted)]">
+                          ✓ Verified with Google
+                        </span>
+                      </>
+                    )}
                   </span>
                   <button
                     type="button"

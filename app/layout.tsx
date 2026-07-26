@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Shippori_Mincho } from "next/font/google";
+import { AppLayout } from "@/features/core/AppLayout";
 import "./globals.css";
 
 const shipporiMincho = Shippori_Mincho({
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
   },
 };
 
+const sidebarBootScript = `(function(){try{var v=localStorage.getItem("sidebarCollapsed");if(v==="true")document.documentElement.dataset.sidebarCollapsed="true";else document.documentElement.dataset.sidebarCollapsed="false";}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${shipporiMincho.variable} h-full`}>
       <body className={`${shipporiMincho.className} min-h-full antialiased`}>
-        <div className="site-canvas relative">{children}</div>
+        <script dangerouslySetInnerHTML={{ __html: sidebarBootScript }} />
+        <div className="site-canvas relative">
+          <AppLayout>{children}</AppLayout>
+        </div>
       </body>
     </html>
   );
