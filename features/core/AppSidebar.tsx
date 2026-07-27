@@ -11,11 +11,10 @@ const NAV = [
     match: (path: string) => path === "/world-map" || path.startsWith("/world-map/"),
   },
   {
-    href: "/works/entry",
+    href: "/works",
     label: "Works",
     match: (path: string) =>
       path === "/works" ||
-      path.startsWith("/works/") ||
       path.startsWith("/literary-sf") ||
       path.startsWith("/entertainment-sf") ||
       path.startsWith("/flash-fiction") ||
