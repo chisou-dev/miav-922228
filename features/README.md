@@ -18,4 +18,5 @@ Domain modules for the single Next.js app at the repo root.
 | `dashboard/` | Admin UI and site-control |
 | `novels/` | `/books` archive UI + story registry |
 | `stories/` | One module per literary work |
+| `miav-games/` | Interactive games (`/game`, Home preview) |
 | `world-memory/` | Trace Map product (`/world-map`) |

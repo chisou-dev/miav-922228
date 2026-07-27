@@ -1,5 +1,5 @@
 import { SiteShell } from "@/features/shared/SiteShell";
-import { BinaryGamePreview } from "@/features/binary-game/BinaryGamePreview";
+import { BinaryGamePreview } from "@/features/miav-games";
 
 const sections = [
   {

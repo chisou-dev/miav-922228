@@ -23,7 +23,7 @@ import {
   vortexOffset,
   type BitGrid,
   type GridPos,
-} from "@/features/binary-game/gridUtils";
+} from "@/features/miav-games/preview/gridUtils";
 
 type Phase = "live" | "freeze" | "vortex" | "game";
 

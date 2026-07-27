@@ -3,7 +3,7 @@ import {
   GAME_PATTERN,
   GAME_PATTERN_COLS,
   GAME_PATTERN_ROWS,
-} from "@/features/binary-game/gamePattern";
+} from "@/features/miav-games/preview/gamePattern";
 
 export const PREVIEW_COLS = 12;
 export const PREVIEW_ROWS = 7;
@@ -21,10 +21,6 @@ const IDLE_SEED = [
   "011010011010",
   "010101101001",
 ] as const;
-
-export function randomBit(): "0" | "1" {
-  return Math.random() < 0.5 ? "0" : "1";
-}
 
 export function buildIdleGrid(): BitGrid {
   return IDLE_SEED.map((row) =>
