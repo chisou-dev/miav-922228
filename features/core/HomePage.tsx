@@ -1,4 +1,5 @@
 import { SiteShell } from "@/features/shared/SiteShell";
+import { BinaryGamePreview } from "@/features/binary-game/BinaryGamePreview";
 
 const sections = [
   {
@@ -46,16 +47,21 @@ export function HomePage() {
           aria-label="Introduction"
           className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-24 sm:py-32"
         >
-          <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
-            MIAV-922228
-          </h1>
-          <p className="mt-10 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:text-lg sm:leading-8">
-            A Literary Science Fiction Project by Takashi Yabe
-          </p>
-          <p className="mt-16 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-20 sm:text-base sm:leading-[2]">
-            Stories exploring memory, artificial intelligence, emotion, and
-            human existence.
-          </p>
+          <div className="home-intro-layout">
+            <div>
+              <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
+                MIAV-922228
+              </h1>
+              <p className="mt-10 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:text-lg sm:leading-8">
+                A Literary Science Fiction Project by Takashi Yabe
+              </p>
+              <p className="mt-16 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-20 sm:text-base sm:leading-[2]">
+                Stories exploring memory, artificial intelligence, emotion, and
+                human existence.
+              </p>
+            </div>
+            <BinaryGamePreview />
+          </div>
         </section>
 
         <div className="pb-32 sm:pb-40">

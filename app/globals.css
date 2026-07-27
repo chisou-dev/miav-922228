@@ -501,3 +501,165 @@ body {
 .trace-dialog-root {
   z-index: 10000;
 }
+
+/* Home — binary GAME preview (right of hero on large screens) */
+.home-intro-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+  .home-intro-layout {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2.5rem;
+  }
+
+  .home-intro-layout > div:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.binary-game-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  align-self: center;
+  opacity: 0.82;
+}
+
+@media (min-width: 1024px) {
+  .binary-game-preview-wrap {
+    flex-shrink: 0;
+    width: 11.5rem;
+    align-self: center;
+  }
+}
+
+.binary-game-preview {
+  width: 100%;
+  margin: 0;
+  padding: 0.85rem 0.75rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--background-deep) 35%, transparent);
+  cursor: pointer;
+  transition: border-color 300ms ease, opacity 300ms ease;
+}
+
+.binary-game-preview:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--foreground-muted) 45%, transparent);
+  opacity: 1;
+}
+
+.binary-game-preview:disabled {
+  cursor: default;
+}
+
+.binary-game-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--preview-cols), 1fr);
+  grid-template-rows: repeat(var(--preview-rows), 1fr);
+  width: 100%;
+  aspect-ratio: 12 / 7;
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+  font-size: 0.58rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+@media (min-width: 640px) {
+  .binary-game-preview-grid {
+    font-size: 0.62rem;
+  }
+}
+
+.binary-game-preview-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 280ms ease, opacity 280ms ease;
+}
+
+.binary-game-preview-bit {
+  color: color-mix(in srgb, var(--foreground-muted) 70%, transparent);
+}
+
+.binary-game-preview-node {
+  display: block;
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 1px;
+  background: color-mix(in srgb, #a8cce8 85%, var(--foreground));
+  box-shadow: 0 0 4px color-mix(in srgb, #a8cce8 35%, transparent);
+  animation: binary-node-pulse 1.6s ease-in-out infinite;
+}
+
+.binary-game-preview-node--hold {
+  animation: binary-node-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes binary-node-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+.binary-game-preview-grid--vortex .binary-game-preview-cell {
+  animation: binary-preview-vortex 0.9s ease-in forwards;
+}
+
+@keyframes binary-preview-vortex {
+  to {
+    transform: translate(var(--vortex-x), var(--vortex-y)) scale(0);
+    opacity: 0;
+  }
+}
+
+.binary-game-preview-grid--game .binary-game-preview-bit {
+  color: color-mix(in srgb, var(--foreground-muted) 88%, transparent);
+  transition: color 400ms ease;
+}
+
+.binary-game-preview-cta {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.15rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 500ms ease, color 300ms ease;
+}
+
+.binary-game-preview-cta--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.binary-game-preview-cta:hover {
+  color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .binary-game-preview-cell,
+  .binary-game-preview-node {
+    animation: none !important;
+    transition: none;
+  }
+
+  .binary-game-preview-grid--vortex .binary-game-preview-cell {
+    opacity: 0;
+  }
+}
