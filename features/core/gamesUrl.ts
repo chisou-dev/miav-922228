@@ -3,7 +3,7 @@ export function getGamesBaseUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_GAMES_BASE_URL?.replace(/\/$/, "");
   if (fromEnv) return fromEnv;
   if (process.env.NODE_ENV === "production") {
-    return "https://games.miav-922228.com";
+    return "https://miav-games.vercel.app";
   }
   return "http://localhost:3001";
 }
