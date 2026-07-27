@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { ReaderMemory } from "@/features/core/ReaderMemory";
+import { gamesLibraryUrl } from "@/features/core/gamesUrl";
 
 const NAV = [
   { href: "/", label: "Home", match: (path: string) => path === "/" },
@@ -31,8 +32,8 @@ type Props = {
 };
 
 /**
- * Site-wide navigation — Home / World Memory / Works only.
- * Reader Memory sits quietly below the nav (hidden when the rail is collapsed).
+ * Site-wide navigation — Home / World Memory / Works / Game.
+ * Game opens the external miav-games project. Reader Memory sits below the nav.
  */
 export function AppSidebar({
   collapsed,
@@ -41,6 +42,7 @@ export function AppSidebar({
   onNavigate,
 }: Props) {
   const pathname = usePathname() || "/";
+  const gameHref = gamesLibraryUrl();
 
   return (
     <aside
@@ -91,6 +93,15 @@ export function AppSidebar({
                 </li>
               );
             })}
+            <li>
+              <a
+                href={gameHref}
+                className="app-sidebar-link"
+                onClick={onNavigate}
+              >
+                Game
+              </a>
+            </li>
           </ul>
         </nav>
 
