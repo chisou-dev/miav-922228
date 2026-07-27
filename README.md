@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# miav-games
 
-## Getting Started
+MIAV-922228 のゲーム専用リポジトリです。小説サイト（`miav-site` / `miav-922228`）とは完全に独立しています。
 
-First, run the development server:
+## 方針
+
+- **miav-site** — 小説・World Memory・Works・About のみ
+- **miav-games** — ゲームのみ（本リポジトリ）
+- ゲームは `games/` 配下で 1 本ずつ独立開発し、完成したものだけ `lib/catalog.ts` と `games/registry.ts` に追加
+
+## 技術
+
+Next.js · React · TypeScript · Tailwind CSS（最小構成）
+
+## ディレクトリ
+
+| パス | 役割 |
+|------|------|
+| `app/` | ルーティング（`/game`, `/game/[slug]`） |
+| `components/` | サイト共通 UI |
+| `engine/` | 全ゲーム共有のエンジン層 |
+| `games/` | 各ゲーム（他ゲームを import しない） |
+| `hooks/` | React フック |
+| `lib/` | カタログ・設定 |
+| `styles/` | グローバル CSS |
+| `types/` | 共有型 |
+
+## 開発
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+デフォルト: http://localhost:3001
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 新しいゲームを追加する手順
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `games/<slug>/` を作成（`Game.tsx`, `config.ts`, `types.ts`, `assets/`）
+2. `games/registry.ts` に lazy loader を 1 行追加
+3. `lib/catalog.ts` の `GAME_LIBRARY` にエントリを追加
 
-## Learn More
+ゲーム本体のコードは他ゲームや miav-site にコピーしません。
 
-To learn more about Next.js, take a look at the following resources:
+## サイトとの連携
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+miav-site の Game ボタンは `NEXT_PUBLIC_GAMES_BASE_URL`（例: `http://localhost:3001` / `https://games.miav-922228.com`）の `/game` へリンクするだけです。

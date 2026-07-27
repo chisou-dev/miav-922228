@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+:root {
+  --background: #1a2f4a;
+  --background-deep: #122438;
+  --foreground: #f4efe4;
+  --foreground-muted: #c9c2b3;
+  --line: color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Shippori Mincho", serif;
+}
+
+.site-canvas {
+  min-height: 100%;
+  background: linear-gradient(
+    165deg,
+    var(--background-deep) 0%,
+    var(--background) 42%,
+    #1e3554 100%
+  );
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  margin-inline: auto;
+  width: 100%;
+  max-width: 42rem;
+  padding: 3.5rem 1.75rem 5rem;
+}
+
+.shell-header {
+  text-align: center;
+}
+
+.shell-header--center {
+  padding-top: 1.5rem;
+}
+
+.shell-brand a {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  transition: color 300ms ease;
+}
+
+.shell-brand a:hover {
+  color: var(--foreground);
+}
+
+.shell-back {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  transition: color 300ms ease;
+}
+
+.shell-back:hover {
+  color: var(--foreground);
+}
+
+.shell-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+
+.shell-title--library {
+  margin-top: 3rem;
+}
+
+.shell-main {
+  margin-top: 3rem;
+}
+
+.library-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.library-item + .library-item {
+  border-top: 1px solid var(--line);
+}
+
+.library-link {
+  display: block;
+  padding: 1.35rem 0;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: color 300ms ease;
+}
+
+.library-link:hover {
+  color: var(--foreground-muted);
+}
+
+.library-link--muted {
+  color: var(--foreground-muted);
+  cursor: default;
+}
+
+.game-layout {
+  text-align: center;
+  padding: 2rem 0 4rem;
+}
+
+.game-title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.game-placeholder {
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--foreground-muted);
+}
+
+.game-loading {
+  text-align: center;
+  padding: 3rem 0;
+  color: var(--foreground-muted);
+  letter-spacing: 0.08em;
+}
