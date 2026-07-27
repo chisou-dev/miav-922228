@@ -41,14 +41,14 @@ const sections = [
 
 export function HomePage() {
   return (
-    <SiteShell>
+    <SiteShell className="max-w-[54rem]">
       <main>
         <section
           aria-label="Introduction"
           className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-24 sm:py-32"
         >
           <div className="home-intro-layout">
-            <div>
+            <div className="home-intro-copy">
               <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
                 MIAV-922228
               </h1>
@@ -60,7 +60,9 @@ export function HomePage() {
                 human existence.
               </p>
             </div>
-            <BinaryGamePreview />
+            <aside className="home-intro-preview" aria-label="Binary data preview">
+              <BinaryGamePreview />
+            </aside>
           </div>
         </section>
 

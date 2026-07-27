@@ -502,24 +502,32 @@ body {
   z-index: 10000;
 }
 
-/* Home — binary GAME preview (right of hero on large screens) */
+/* Home — binary GAME preview beside hero copy */
 .home-intro-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
 }
 
-@media (min-width: 1024px) {
+.home-intro-copy {
+  min-width: 0;
+}
+
+.home-intro-preview {
+  justify-self: center;
+  width: min(100%, 12rem);
+}
+
+@media (min-width: 768px) {
   .home-intro-layout {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(9.5rem, 12rem);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
   }
 
-  .home-intro-layout > div:first-child {
-    flex: 1;
-    min-width: 0;
+  .home-intro-preview {
+    justify-self: end;
+    align-self: center;
   }
 }
 
@@ -528,16 +536,8 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.85rem;
-  align-self: center;
-  opacity: 0.82;
-}
-
-@media (min-width: 1024px) {
-  .binary-game-preview-wrap {
-    flex-shrink: 0;
-    width: 11.5rem;
-    align-self: center;
-  }
+  width: 100%;
+  opacity: 0.9;
 }
 
 .binary-game-preview {
@@ -566,7 +566,7 @@ body {
   width: 100%;
   aspect-ratio: 12 / 7;
   font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   line-height: 1;
   letter-spacing: 0.02em;
   user-select: none;

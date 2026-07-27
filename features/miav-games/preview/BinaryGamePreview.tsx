@@ -31,6 +31,8 @@ const FREEZE_MS = 300;
 const VORTEX_MS = 900;
 const GAME_HOLD_MS = 5200;
 
+type PreviewTimer = number;
+
 /**
  * Quiet live binary field for the Home page — click to resolve into GAME.
  * Reusable scaffold for a future full game experience.
@@ -44,7 +46,7 @@ export function BinaryGamePreview() {
   const phaseRef = useRef<Phase>("live");
   const nodeRef = useRef<GridPos>(gridCenter());
   const moversRef = useRef<GridPos[]>([]);
-  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetTimerRef = useRef<PreviewTimer | null>(null);
 
   const resetLive = useCallback(() => {
     if (resetTimerRef.current) {
@@ -73,7 +75,7 @@ export function BinaryGamePreview() {
     if (phase !== "live") return;
 
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer: PreviewTimer | undefined;
 
     const tick = () => {
       if (cancelled || phaseRef.current !== "live") return;
@@ -101,10 +103,10 @@ export function BinaryGamePreview() {
       });
 
       setNodePos({ ...nodeRef.current });
-      timer = setTimeout(tick, randomMoveDelayMs());
+      timer = window.setTimeout(tick, randomMoveDelayMs());
     };
 
-    timer = setTimeout(tick, randomMoveDelayMs());
+    timer = window.setTimeout(tick, randomMoveDelayMs());
 
     return () => {
       cancelled = true;

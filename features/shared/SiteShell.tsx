@@ -56,9 +56,18 @@ export function SiteFooter() {
   );
 }
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export function SiteShell({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  /** Optional width override, e.g. Home hero needs room for the binary preview. */
+  className?: string;
+}) {
   return (
-    <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col px-8 sm:px-12">
+    <div
+      className={`relative z-10 mx-auto flex w-full flex-col px-8 sm:px-12 ${className ?? "max-w-3xl"}`}
+    >
       <SiteHeader />
       {children}
       <SiteFooter />
