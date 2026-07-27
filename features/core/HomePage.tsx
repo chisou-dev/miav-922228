@@ -1,5 +1,5 @@
 import { SiteShell } from "@/features/shared/SiteShell";
-import { BinaryGamePreview } from "@/features/miav-games";
+import { GameLink } from "@/features/core/GameLink";
 
 const sections = [
   {
@@ -60,8 +60,8 @@ export function HomePage() {
                 human existence.
               </p>
             </div>
-            <aside className="home-intro-preview" aria-label="Binary data preview">
-              <BinaryGamePreview />
+            <aside className="home-intro-preview" aria-label="Games">
+              <GameLink />
             </aside>
           </div>
         </section>

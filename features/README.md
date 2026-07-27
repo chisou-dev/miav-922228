@@ -10,7 +10,7 @@ Domain modules for the single Next.js app at the repo root.
 
 | Folder | Role |
 |--------|------|
-| `core/` | Homepage composition |
+| `core/` | Homepage composition, external games link |
 | `shared/` | Site chrome and cross-cutting helpers |
 | `firebase/` | Firebase client/admin infra |
 | `auth/` | Shared ID-token verification |
@@ -18,5 +18,6 @@ Domain modules for the single Next.js app at the repo root.
 | `dashboard/` | Admin UI and site-control |
 | `novels/` | `/books` archive UI + story registry |
 | `stories/` | One module per literary work |
-| `miav-games/` | Interactive games (`/game`, Home preview) |
 | `world-memory/` | Trace Map product (`/world-map`) |
+
+Games live in the separate **miav-games** repository — miav-site only links out via `features/core/gamesUrl.ts`.
