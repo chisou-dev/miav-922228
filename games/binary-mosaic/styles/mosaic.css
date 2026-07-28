@@ -1,0 +1,384 @@
+/* Binary Mosaic — glass binary blocks */
+
+.mosaic-root {
+  --mosaic-bg: #f7f8fa;
+  --mosaic-ink: #101418;
+  --mosaic-muted: #5c6570;
+  --mosaic-line: #d5dbe3;
+  --mosaic-glass: color-mix(in srgb, #9ec5ff 22%, transparent);
+  --mosaic-glass-edge: color-mix(in srgb, #6aa0e8 55%, #ffffff);
+
+  margin: -1rem -0.5rem 0;
+  padding: 1.25rem 1rem 2.5rem;
+  background: var(--mosaic-bg);
+  color: var(--mosaic-ink);
+  text-align: left;
+  border: 1px solid #dde1e6;
+}
+
+.mosaic-lead {
+  margin: 0 0 1.75rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--mosaic-muted);
+  letter-spacing: 0.02em;
+}
+
+.mosaic-level-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #dde1e6;
+}
+
+.mosaic-level-btn {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border: 0;
+  border-bottom: 1px solid #dde1e6;
+  background: transparent;
+  color: var(--mosaic-ink);
+  font: inherit;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mosaic-level-btn:hover {
+  color: var(--mosaic-muted);
+}
+
+.mosaic-level-meta {
+  font-size: 0.75rem;
+  color: var(--mosaic-muted);
+  letter-spacing: 0.08em;
+}
+
+.mosaic-play-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.mosaic-level-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.mosaic-play-spacer {
+  width: 4.5rem;
+}
+
+.mosaic-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.mosaic-hud-item {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.mosaic-hud-label {
+  color: var(--mosaic-muted);
+}
+
+.mosaic-btn {
+  border: 1px solid var(--mosaic-ink);
+  background: var(--mosaic-ink);
+  color: #fff;
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+}
+
+.mosaic-btn--ghost {
+  background: transparent;
+  color: var(--mosaic-ink);
+}
+
+.mosaic-btn--ghost.is-on {
+  background: var(--mosaic-ink);
+  color: #fff;
+}
+
+.mosaic-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mosaic-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+@media (min-width: 720px) {
+  .mosaic-stage {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2rem;
+  }
+}
+
+.mosaic-board {
+  position: relative;
+  flex-shrink: 0;
+  border: 1px solid #9aa3ad;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #eef2f6 100%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 70%, transparent);
+  touch-action: none;
+}
+
+.mosaic-board-cell {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid #e4e8ec;
+  pointer-events: none;
+}
+
+.mosaic-on-board,
+.mosaic-hint {
+  position: absolute;
+  z-index: 2;
+}
+
+.mosaic-hint {
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.mosaic-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  max-width: 22rem;
+}
+
+.mosaic-tray-slot {
+  position: relative;
+  min-width: 3rem;
+  min-height: 3rem;
+}
+
+.mosaic-tray-slot.is-empty {
+  display: none;
+}
+
+.mosaic-rotate-mini {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.35rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid #c5ccd4;
+  background: #fff;
+  color: var(--mosaic-ink);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mosaic-piece {
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.mosaic-piece.is-selected {
+  outline: 1px dashed #7a8794;
+  outline-offset: 3px;
+}
+
+.mosaic-cell {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #0d131a;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #ffffff 55%, transparent) 0%,
+    color-mix(in srgb, #b7d4ff 28%, transparent) 48%,
+    color-mix(in srgb, #8eb6ef 20%, transparent) 100%
+  );
+  border: 1px solid color-mix(in srgb, #6f9fdc 50%, #ffffff);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 70%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #4d7eb8 18%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.mosaic-piece.is-ghost .mosaic-cell {
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+  color: #6a7682;
+}
+
+.mosaic-piece.is-glow .mosaic-cell {
+  filter: brightness(1.2);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 80%, transparent),
+    0 0 12px color-mix(in srgb, #9ec5ff 65%, transparent);
+}
+
+.mosaic-piece.is-dissolve .mosaic-cell {
+  animation: mosaic-dissolve 0.7s ease-in forwards;
+}
+
+@keyframes mosaic-dissolve {
+  to {
+    transform: translateY(6px) scale(0.9);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+.mosaic-drag-layer {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.96;
+}
+
+.mosaic-clear {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mosaic-clear--stream,
+.mosaic-clear--reveal,
+.mosaic-clear--done {
+  pointer-events: auto;
+  background: color-mix(in srgb, #f7f8fa 90%, transparent);
+}
+
+.mosaic-stream {
+  position: absolute;
+  inset: 10% 8%;
+  overflow: hidden;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  letter-spacing: 0.12em;
+  color: #1a2330;
+  opacity: 0.5;
+  animation: mosaic-stream-in 1s ease both;
+}
+
+.mosaic-stream-row {
+  white-space: nowrap;
+}
+
+.mosaic-hello {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(2rem, 8vw, 3.4rem);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: #101418;
+  animation: mosaic-hello-in 0.8s ease both;
+}
+
+.mosaic-result {
+  position: relative;
+  z-index: 3;
+  margin-top: 2rem;
+  min-width: min(18rem, 90vw);
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #101418;
+  background: #fff;
+  color: #101418;
+  text-align: left;
+}
+
+.mosaic-result dl {
+  margin: 0 0 1.25rem;
+}
+
+.mosaic-result dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+}
+
+.mosaic-result dt {
+  color: #5c6570;
+}
+
+.mosaic-result-score {
+  margin-top: 0.5rem;
+  border-top: 1px solid #dde1e6;
+  padding-top: 0.65rem !important;
+  font-size: 1rem !important;
+}
+
+.mosaic-result .mosaic-btn {
+  width: 100%;
+}
+
+@keyframes mosaic-stream-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 0.5;
+    transform: none;
+  }
+}
+
+@keyframes mosaic-hello-in {
+  from {
+    opacity: 0;
+    letter-spacing: 0.5em;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.28em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mosaic-piece.is-dissolve .mosaic-cell,
+  .mosaic-stream,
+  .mosaic-hello {
+    animation: none;
+  }
+}

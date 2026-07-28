@@ -3,6 +3,11 @@ import type { GameCatalogItem } from "@/types/game";
 /** Single source for the Game Library UI. Add finished games here only. */
 export const GAME_LIBRARY: GameCatalogItem[] = [
   {
+    slug: "binary-mosaic",
+    title: "Binary Mosaic",
+    status: "available",
+  },
+  {
     slug: "binary-run",
     title: "Binary Run",
     status: "available",

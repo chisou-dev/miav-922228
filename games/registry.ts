@@ -11,6 +11,7 @@ export type GameLoader = () => Promise<GameModule>;
  * Add a new line here when a game ships; do not import game code elsewhere.
  */
 const loaders: Record<string, GameLoader> = {
+  "binary-mosaic": () => import("@/games/binary-mosaic/Game"),
   "binary-run": () => import("@/games/binary-run/Game"),
 };
 
