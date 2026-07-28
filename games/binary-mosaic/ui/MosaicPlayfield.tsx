@@ -27,11 +27,23 @@ import {
   buildPatternResult,
   formatTime,
 } from "@/games/binary-mosaic/puzzle/scoring";
+import {
+  allPiecesPlaced,
+  buildPieceExpectations,
+  findWrongPlacedPieces,
+} from "@/games/binary-mosaic/puzzle/validation";
 import type {
   ClearPhase,
   PatternResult,
   PieceRuntime,
 } from "@/games/binary-mosaic/types";
+
+type RejectMarker = {
+  row: number;
+  col: number;
+  bit: 0 | 1;
+  pieceIndex: number;
+};
 import { ClearSequence } from "@/games/binary-mosaic/ui/ClearSequence";
 import { PieceView } from "@/games/binary-mosaic/ui/PieceView";
 
@@ -95,6 +107,10 @@ function MosaicPlayfield({
 }) {
   const level = getLevel(levelId)!;
   const meta = useMemo(() => extractPiecesFromLevel(level), [level]);
+  const expectations = useMemo(
+    () => buildPieceExpectations(level),
+    [level],
+  );
   const activeMask = useMemo(
     () => buildActiveMask(level.solution),
     [level.solution],
@@ -117,6 +133,7 @@ function MosaicPlayfield({
   const [clearPhase, setClearPhase] = useState<ClearPhase>("idle");
   const [result, setResult] = useState<PatternResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [rejectMarkers, setRejectMarkers] = useState<RejectMarker[]>([]);
   const startRef = useRef(performance.now());
   const clearedRef = useRef(false);
 
@@ -136,6 +153,7 @@ function MosaicPlayfield({
     setClearPhase("idle");
     setResult(null);
     setSelectedId(null);
+    setRejectMarkers([]);
     startRef.current = performance.now();
   }, [levelId]);
 
@@ -182,10 +200,63 @@ function MosaicPlayfield({
       }),
     );
     setClearing(true);
-    setClearPhase("glow");
+    setClearPhase("fireworks");
   }, [decodedReady, running, moves, hintUsed, pieces.length]);
 
   const bumpMove = () => setMoves((m) => m + 1);
+
+  const rejectWrongPieces = useCallback(
+    (current: PieceRuntime[]) => {
+      const wrong = findWrongPlacedPieces(current, expectations);
+      if (wrong.length === 0) return current;
+
+      const byIndex = new Map(
+        expectations.map((e) => [e.pieceIndex, e]),
+      );
+      const markers: RejectMarker[] = wrong.map((piece) => {
+        const exp = byIndex.get(piece.pieceIndex)!;
+        return {
+          row: exp.anchor.row,
+          col: exp.anchor.col,
+          bit: exp.anchor.bit,
+          pieceIndex: piece.pieceIndex,
+        };
+      });
+
+      setRejectMarkers((prev) => {
+        const next = [...prev];
+        for (const marker of markers) {
+          if (
+            !next.some(
+              (m) =>
+                m.pieceIndex === marker.pieceIndex &&
+                m.row === marker.row &&
+                m.col === marker.col,
+            )
+          ) {
+            next.push(marker);
+          }
+        }
+        return next;
+      });
+
+      const wrongIds = new Set(wrong.map((p) => p.id));
+      return current.map((p) =>
+        wrongIds.has(p.id) ? { ...p, placed: null } : p,
+      );
+    },
+    [expectations],
+  );
+
+  const afterPlacement = useCallback(
+    (nextPieces: PieceRuntime[]) => {
+      if (!allPiecesPlaced(nextPieces)) return nextPieces;
+      const flat = readBoardBits(level, nextPieces);
+      if (flat && bitsToText(flat) === level.targetText) return nextPieces;
+      return rejectWrongPieces(nextPieces);
+    },
+    [level, rejectWrongPieces],
+  );
 
   const rotatePiece = (pieceId: string) => {
     setPieces((prev) =>
@@ -286,9 +357,14 @@ function MosaicPlayfield({
       });
 
       if (ok) {
+        setRejectMarkers((prev) =>
+          prev.filter((m) => m.pieceIndex !== piece.pieceIndex),
+        );
         setPieces((prev) =>
-          prev.map((p) =>
-            p.id === current.pieceId ? { ...p, placed: origin } : p,
+          afterPlacement(
+            prev.map((p) =>
+              p.id === current.pieceId ? { ...p, placed: origin } : p,
+            ),
           ),
         );
       }
@@ -301,7 +377,14 @@ function MosaicPlayfield({
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [drag, cellPx, level.rows, level.cols, occupiedExcept, activeMask]);
+  }, [
+    drag,
+    cellPx,
+    level,
+    occupiedExcept,
+    activeMask,
+    afterPlacement,
+  ]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -364,11 +447,15 @@ function MosaicPlayfield({
 
       <div className="mosaic-stage">
         <div
-          ref={boardRef}
-          className="mosaic-board"
-          style={{ width: boardW, height: boardH }}
-          aria-label="Binary frame"
+          className="mosaic-board-wrap"
+          style={{ width: boardW, minWidth: boardW }}
         >
+          <div
+            ref={boardRef}
+            className="mosaic-board"
+            style={{ width: boardW, height: boardH }}
+            aria-label="Binary frame"
+          >
           {Array.from({ length: level.rows * level.cols }).map((_, i) => {
             const row = Math.floor(i / level.cols);
             const col = i % level.cols;
@@ -387,6 +474,21 @@ function MosaicPlayfield({
             );
           })}
 
+          {rejectMarkers.map((marker) => (
+            <span
+              key={`reject-${marker.pieceIndex}-${marker.row}-${marker.col}`}
+              className="mosaic-reject-marker"
+              style={{
+                left: marker.col * cellPx,
+                top: marker.row * cellPx,
+                width: cellPx,
+                height: cellPx,
+              }}
+            >
+              {marker.bit}
+            </span>
+          ))}
+
           {hintOn &&
             meta.pieces.map((def) => {
               const runtime = pieces.find(
@@ -404,7 +506,7 @@ function MosaicPlayfield({
                 >
                   <PieceView
                     shape={def.baseShape}
-                    rotation={0}
+                    rotation={def.targetRotation}
                     cellPx={cellPx}
                     ghost
                   />
@@ -434,36 +536,41 @@ function MosaicPlayfield({
               </div>
             );
           })}
+          </div>
         </div>
 
         <div className="mosaic-tray" aria-label="Binary pieces">
           {pieces.map((piece) => {
-            if (piece.placed || drag?.pieceId === piece.id) {
-              return (
-                <div key={piece.id} className="mosaic-tray-slot is-empty" />
-              );
-            }
+            const isDragging = drag?.pieceId === piece.id;
+            const isPlaced = piece.placed != null && !isDragging;
             return (
-              <div key={piece.id} className="mosaic-tray-slot">
-                <PieceView
-                  shape={piece.baseShape}
-                  rotation={piece.rotation}
-                  cellPx={cellPx}
-                  className={selectedId === piece.id ? "is-selected" : ""}
-                  onPointerDown={(e) => onPiecePointerDown(e, piece)}
-                />
-                <button
-                  type="button"
-                  className="mosaic-rotate-mini"
-                  aria-label="Rotate piece"
-                  disabled={clearing}
-                  onClick={() => {
-                    setSelectedId(piece.id);
-                    rotatePiece(piece.id);
-                  }}
-                >
-                  ⟲
-                </button>
+              <div
+                key={piece.id}
+                className={`mosaic-tray-slot${isPlaced ? " is-empty" : ""}`}
+              >
+                {!isPlaced ? (
+                  <>
+                    <PieceView
+                      shape={piece.baseShape}
+                      rotation={piece.rotation}
+                      cellPx={cellPx}
+                      className={selectedId === piece.id ? "is-selected" : ""}
+                      onPointerDown={(e) => onPiecePointerDown(e, piece)}
+                    />
+                    <button
+                      type="button"
+                      className="mosaic-rotate-mini"
+                      aria-label="Rotate piece"
+                      disabled={clearing}
+                      onClick={() => {
+                        setSelectedId(piece.id);
+                        rotatePiece(piece.id);
+                      }}
+                    >
+                      ⟲
+                    </button>
+                  </>
+                ) : null}
               </div>
             );
           })}

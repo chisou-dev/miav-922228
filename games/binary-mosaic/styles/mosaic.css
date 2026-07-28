@@ -138,12 +138,14 @@
   }
 }
 
+.mosaic-board-wrap {
+  flex-shrink: 0;
+}
+
 .mosaic-board {
   position: relative;
-  flex-shrink: 0;
   border: 1px solid #9aa3ad;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #eef2f6 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #eef2f6 100%);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 70%, transparent);
   touch-action: none;
 }
@@ -167,22 +169,53 @@
   opacity: 0.35;
 }
 
+.mosaic-reject-marker {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #101418;
+  background: color-mix(in srgb, #ffe08a 55%, #ffffff);
+  border: 1px dashed #101418;
+  pointer-events: none;
+  animation: mosaic-reject-in 0.35s ease both;
+}
+
+@keyframes mosaic-reject-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .mosaic-tray {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
-  max-width: 22rem;
+  width: min(100%, 22rem);
+  min-height: 6rem;
 }
 
 .mosaic-tray-slot {
   position: relative;
-  min-width: 3rem;
-  min-height: 3rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  flex-shrink: 0;
 }
 
 .mosaic-tray-slot.is-empty {
-  display: none;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .mosaic-rotate-mini {
@@ -279,11 +312,57 @@
   pointer-events: none;
 }
 
+.mosaic-clear--fireworks {
+  background: color-mix(in srgb, #0a121c 18%, transparent);
+}
+
 .mosaic-clear--stream,
 .mosaic-clear--reveal,
 .mosaic-clear--done {
   pointer-events: auto;
   background: color-mix(in srgb, #f7f8fa 90%, transparent);
+}
+
+.mosaic-fireworks {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mosaic-firework {
+  position: absolute;
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  color: #101418;
+  line-height: 1;
+  opacity: 0;
+  transform: translate(0, 0) rotate(0deg) scale(0.4);
+  animation-name: mosaic-firework-burst;
+  animation-duration: var(--fw-duration, 2000ms);
+  animation-timing-function: cubic-bezier(0.12, 0.7, 0.2, 1);
+  animation-fill-mode: forwards;
+  text-shadow: 0 0 10px color-mix(in srgb, #9ec5ff 55%, transparent);
+  will-change: transform, opacity;
+}
+
+@keyframes mosaic-firework-burst {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg) scale(0.35);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(0, -2vh) rotate(calc(var(--fw-spin) * 0.15)) scale(1);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--fw-dx), var(--fw-dy)) rotate(var(--fw-spin))
+      scale(0.85);
+  }
 }
 
 .mosaic-stream {
@@ -378,7 +457,12 @@
 @media (prefers-reduced-motion: reduce) {
   .mosaic-piece.is-dissolve .mosaic-cell,
   .mosaic-stream,
-  .mosaic-hello {
+  .mosaic-hello,
+  .mosaic-firework {
     animation: none;
+  }
+
+  .mosaic-firework {
+    opacity: 0.7;
   }
 }

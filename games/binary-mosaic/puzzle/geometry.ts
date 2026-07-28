@@ -49,6 +49,7 @@ export function extractPiecesFromLevel(options: {
     pieceIndex: number;
     baseShape: Shape;
     target: Cell;
+    targetRotation: 0 | 1 | 2 | 3;
   }[];
 } {
   const { rows, cols, bits, solution } = options;
@@ -93,6 +94,7 @@ export function extractPiecesFromLevel(options: {
         pieceIndex,
         baseShape: normalizeShape(cells),
         target: { row: minRow, col: minCol },
+        targetRotation: 0 as const,
       };
     });
 

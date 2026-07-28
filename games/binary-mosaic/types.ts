@@ -53,6 +53,7 @@ export type PieceRuntime = {
 
 export type ClearPhase =
   | "idle"
+  | "fireworks"
   | "glow"
   | "dissolve"
   | "stream"
