@@ -8,6 +8,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { Bit8Audio } from "@/features/audio";
 import {
   binaryMosaicConfig,
   getAllLevels,
@@ -21,8 +22,10 @@ import {
   canPlaceOnBoard,
   extractPiecesFromLevel,
   rotateShape,
+  shapeBounds,
   snapOrigin,
 } from "@/games/binary-mosaic/puzzle/geometry";
+import { decodeBoardRows } from "@/games/binary-mosaic/puzzle/rowDecode";
 import {
   buildPatternResult,
   formatTime,
@@ -31,12 +34,19 @@ import {
   allPiecesPlaced,
   buildPieceExpectations,
   findWrongPlacedPieces,
+  isPieceCorrectlyPlaced,
+  nextHintCellAnywhere,
+  nextHintCellForPiece,
 } from "@/games/binary-mosaic/puzzle/validation";
 import type {
   ClearPhase,
   PatternResult,
   PieceRuntime,
 } from "@/games/binary-mosaic/types";
+import { ClearSequence } from "@/games/binary-mosaic/ui/ClearSequence";
+import { PieceView } from "@/games/binary-mosaic/ui/PieceView";
+import { SoundToggleIcon } from "@/games/binary-mosaic/ui/SoundToggleIcon";
+import { useBit8Audio } from "@/hooks/useBit8Audio";
 
 type RejectMarker = {
   row: number;
@@ -44,8 +54,6 @@ type RejectMarker = {
   bit: 0 | 1;
   pieceIndex: number;
 };
-import { ClearSequence } from "@/games/binary-mosaic/ui/ClearSequence";
-import { PieceView } from "@/games/binary-mosaic/ui/PieceView";
 
 type DragState = {
   pieceId: string;
@@ -53,6 +61,13 @@ type DragState = {
   grabOffsetY: number;
   x: number;
   y: number;
+};
+
+type DropPreview = {
+  origin: { row: number; col: number };
+  valid: boolean;
+  rows: number;
+  cols: number;
 };
 
 function createPieces(levelId: number): PieceRuntime[] {
@@ -116,6 +131,7 @@ function MosaicPlayfield({
     [level.solution],
   );
   const cellPx = binaryMosaicConfig.cellPx;
+  const rotationAllowed = level.id >= binaryMosaicConfig.rotateFromLevel;
   const boardRef = useRef<HTMLDivElement>(null);
   const piecesRef = useRef<PieceRuntime[]>([]);
   const dragRef = useRef<DragState | null>(null);
@@ -129,13 +145,52 @@ function MosaicPlayfield({
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(true);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [dropPreview, setDropPreview] = useState<DropPreview | null>(null);
   const [clearing, setClearing] = useState(false);
   const [clearPhase, setClearPhase] = useState<ClearPhase>("idle");
   const [result, setResult] = useState<PatternResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [rejectMarkers, setRejectMarkers] = useState<RejectMarker[]>([]);
+  const [soundOn, setSoundOn] = useState(false);
   const startRef = useRef(performance.now());
   const clearedRef = useRef(false);
+  const dragRafRef = useRef<number | null>(null);
+  const pendingDragRef = useRef<{ x: number; y: number; clientX: number; clientY: number } | null>(null);
+  const audio = Bit8Audio.getInstance();
+
+  useEffect(() => {
+    audio.setMuted(!soundOn);
+  }, [soundOn, audio]);
+
+  useBit8Audio(running && !clearing && soundOn, levelId);
+
+  const toggleSound = useCallback(() => {
+    setSoundOn((prev) => {
+      const next = !prev;
+      audio.setMuted(!next);
+      if (next) {
+        void audio.unlock().then(() => {
+          if (running && !clearing) void audio.startBgm(levelId);
+        });
+        void audio.play("button");
+      } else {
+        audio.stopBgm();
+      }
+      return next;
+    });
+  }, [audio, running, clearing]);
+
+  const handleClearPhase = useCallback((phase: ClearPhase) => {
+    setClearPhase(phase);
+  }, []);
+
+  const handleClearDone = useCallback(() => {
+    void audio.play("button");
+    const nextId = getNextLevelId(levelId);
+    setClearing(false);
+    setClearPhase("idle");
+    onClearContinue(nextId);
+  }, [audio, levelId, onClearContinue]);
 
   piecesRef.current = pieces;
   dragRef.current = drag;
@@ -149,6 +204,7 @@ function MosaicPlayfield({
     setElapsed(0);
     setRunning(true);
     setDrag(null);
+    setDropPreview(null);
     setClearing(false);
     setClearPhase("idle");
     setResult(null);
@@ -200,7 +256,7 @@ function MosaicPlayfield({
       }),
     );
     setClearing(true);
-    setClearPhase("fireworks");
+    setClearPhase("reveal");
   }, [decodedReady, running, moves, hintUsed, pieces.length]);
 
   const bumpMove = () => setMoves((m) => m + 1);
@@ -210,32 +266,23 @@ function MosaicPlayfield({
       const wrong = findWrongPlacedPieces(current, expectations);
       if (wrong.length === 0) return current;
 
-      const byIndex = new Map(
-        expectations.map((e) => [e.pieceIndex, e]),
-      );
-      const markers: RejectMarker[] = wrong.map((piece) => {
-        const exp = byIndex.get(piece.pieceIndex)!;
-        return {
-          row: exp.anchor.row,
-          col: exp.anchor.col,
-          bit: exp.anchor.bit,
-          pieceIndex: piece.pieceIndex,
-        };
-      });
-
+      // One new permanent bit hint per rejected piece — markers never shrink.
       setRejectMarkers((prev) => {
+        const revealed = new Set(prev.map((m) => `${m.row},${m.col}`));
         const next = [...prev];
-        for (const marker of markers) {
-          if (
-            !next.some(
-              (m) =>
-                m.pieceIndex === marker.pieceIndex &&
-                m.row === marker.row &&
-                m.col === marker.col,
-            )
-          ) {
-            next.push(marker);
-          }
+        for (const piece of wrong) {
+          const hint =
+            nextHintCellForPiece(level, piece.pieceIndex, revealed) ??
+            nextHintCellAnywhere(level, revealed);
+          if (!hint) continue;
+          const key = `${hint.row},${hint.col}`;
+          revealed.add(key);
+          next.push({
+            row: hint.row,
+            col: hint.col,
+            bit: hint.bit,
+            pieceIndex: hint.pieceIndex,
+          });
         }
         return next;
       });
@@ -245,7 +292,7 @@ function MosaicPlayfield({
         wrongIds.has(p.id) ? { ...p, placed: null } : p,
       );
     },
-    [expectations],
+    [expectations, level],
   );
 
   const afterPlacement = useCallback(
@@ -259,6 +306,7 @@ function MosaicPlayfield({
   );
 
   const rotatePiece = (pieceId: string) => {
+    if (!rotationAllowed) return;
     setPieces((prev) =>
       prev.map((piece) => {
         if (piece.id !== pieceId) return piece;
@@ -285,6 +333,7 @@ function MosaicPlayfield({
     piece: PieceRuntime,
   ) => {
     if (clearing) return;
+    void audio.unlock();
     event.preventDefault();
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     setSelectedId(piece.id);
@@ -304,15 +353,81 @@ function MosaicPlayfield({
   };
 
   useEffect(() => {
-    if (!drag) return;
+    if (!drag) {
+      setDropPreview(null);
+      return;
+    }
+
+    const updatePreview = (clientX: number, clientY: number) => {
+      const board = boardRef.current;
+      const current = dragRef.current;
+      if (!board || !current) {
+        setDropPreview(null);
+        return;
+      }
+      const piece = piecesRef.current.find((p) => p.id === current.pieceId);
+      if (!piece) {
+        setDropPreview(null);
+        return;
+      }
+      const shape = rotateShape(piece.baseShape, piece.rotation);
+      const bounds = shapeBounds(shape);
+      const boardRect = board.getBoundingClientRect();
+      const localX = clientX - boardRect.left;
+      const localY = clientY - boardRect.top;
+      const inside =
+        localX >= -cellPx &&
+        localY >= -cellPx &&
+        localX <= boardRect.width + cellPx &&
+        localY <= boardRect.height + cellPx;
+
+      if (!inside) {
+        setDropPreview(null);
+        return;
+      }
+
+      const origin = snapOrigin(
+        shape,
+        level.rows,
+        level.cols,
+        (current.y - boardRect.top) / cellPx,
+        (current.x - boardRect.left) / cellPx,
+      );
+      const valid = canPlaceOnBoard({
+        rows: level.rows,
+        cols: level.cols,
+        shape,
+        origin,
+        occupied: occupiedExcept(current.pieceId),
+        activeMask,
+      });
+      setDropPreview({
+        origin,
+        valid,
+        rows: bounds.rows,
+        cols: bounds.cols,
+      });
+    };
 
     const onMove = (event: PointerEvent) => {
       const current = dragRef.current;
       if (!current) return;
-      setDrag({
-        ...current,
+      pendingDragRef.current = {
         x: event.clientX - current.grabOffsetX,
         y: event.clientY - current.grabOffsetY,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      };
+      if (dragRafRef.current != null) return;
+      dragRafRef.current = requestAnimationFrame(() => {
+        dragRafRef.current = null;
+        const pending = pendingDragRef.current;
+        const live = dragRef.current;
+        if (!pending || !live) return;
+        const next = { ...live, x: pending.x, y: pending.y };
+        dragRef.current = next;
+        setDrag(next);
+        updatePreview(pending.clientX, pending.clientY);
       });
     };
 
@@ -320,6 +435,7 @@ function MosaicPlayfield({
       const current = dragRef.current;
       const board = boardRef.current;
       setDrag(null);
+      setDropPreview(null);
       if (!board || !current) return;
       const piece = piecesRef.current.find((p) => p.id === current.pieceId);
       if (!piece) return;
@@ -339,6 +455,7 @@ function MosaicPlayfield({
         return;
       }
 
+      // Exact snap only — never place on occupied cells (no nearby auto-shift).
       const origin = snapOrigin(
         shape,
         level.rows,
@@ -357,16 +474,20 @@ function MosaicPlayfield({
       });
 
       if (ok) {
-        setRejectMarkers((prev) =>
-          prev.filter((m) => m.pieceIndex !== piece.pieceIndex),
-        );
-        setPieces((prev) =>
-          afterPlacement(
-            prev.map((p) =>
-              p.id === current.pieceId ? { ...p, placed: origin } : p,
-            ),
-          ),
-        );
+        setPieces((prev) => {
+          const placed = prev.map((p) =>
+            p.id === current.pieceId ? { ...p, placed: origin } : p,
+          );
+          const beforeIds = new Set(
+            placed.filter((p) => p.placed).map((p) => p.id),
+          );
+          const next = afterPlacement(placed);
+          const rejected = next.some(
+            (p) => beforeIds.has(p.id) && !p.placed,
+          );
+          void audio.play(rejected ? "reject" : "snap");
+          return next;
+        });
       }
       bumpMove();
     };
@@ -376,6 +497,10 @@ function MosaicPlayfield({
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      if (dragRafRef.current != null) {
+        cancelAnimationFrame(dragRafRef.current);
+        dragRafRef.current = null;
+      }
     };
   }, [
     drag,
@@ -384,11 +509,17 @@ function MosaicPlayfield({
     occupiedExcept,
     activeMask,
     afterPlacement,
+    audio,
   ]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "r" && selectedId && !clearing) {
+      if (
+        rotationAllowed &&
+        event.key.toLowerCase() === "r" &&
+        selectedId &&
+        !clearing
+      ) {
         rotatePiece(selectedId);
       }
     };
@@ -401,6 +532,55 @@ function MosaicPlayfield({
   const draggingPiece = drag
     ? pieces.find((p) => p.id === drag.pieceId)
     : null;
+
+  const solvedCells = useMemo(() => {
+    const covered = new Set<string>();
+    const byIndex = new Map(expectations.map((e) => [e.pieceIndex, e]));
+    for (const piece of pieces) {
+      if (!piece.placed || drag?.pieceId === piece.id) continue;
+      const exp = byIndex.get(piece.pieceIndex);
+      if (!exp || !isPieceCorrectlyPlaced(piece, exp)) continue;
+      const shape = rotateShape(piece.baseShape, piece.rotation);
+      for (const cell of absoluteCells(shape, piece.placed)) {
+        covered.add(`${cell.row},${cell.col}`);
+      }
+    }
+    return covered;
+  }, [pieces, expectations, drag]);
+
+  const boardBits = useMemo(() => {
+    const grid: ((0 | 1) | null)[][] = Array.from({ length: level.rows }, () =>
+      Array.from({ length: level.cols }, () => null),
+    );
+    for (const piece of pieces) {
+      if (!piece.placed || drag?.pieceId === piece.id) continue;
+      const shape = rotateShape(piece.baseShape, piece.rotation);
+      for (const cell of absoluteCells(shape, piece.placed)) {
+        if (
+          cell.row >= 0 &&
+          cell.row < level.rows &&
+          cell.col >= 0 &&
+          cell.col < level.cols
+        ) {
+          grid[cell.row][cell.col] = cell.bit;
+        }
+      }
+    }
+    return grid;
+  }, [pieces, level, drag]);
+
+  const rowDecodes = useMemo(
+    () =>
+      decodeBoardRows({
+        cols: level.cols,
+        rows: level.rows,
+        targetBits: level.bits,
+        board: boardBits,
+      }),
+    [level, boardBits],
+  );
+
+  const showRowLetters = level.cols === 8;
 
   return (
     <div className="mosaic-play">
@@ -417,11 +597,22 @@ function MosaicPlayfield({
           <span className="mosaic-hud-label">Moves</span>
           <span>{moves}</span>
         </div>
+        <button
+          type="button"
+          className={`mosaic-btn mosaic-btn--ghost mosaic-btn--icon ${soundOn ? "is-on" : ""}`}
+          onClick={toggleSound}
+          aria-pressed={soundOn}
+          aria-label={soundOn ? "Sound on" : "Sound off"}
+          title={soundOn ? "Sound on" : "Sound off"}
+        >
+          <SoundToggleIcon muted={!soundOn} className="mosaic-sound-icon" />
+        </button>
         {level.hintAllowed ? (
           <button
             type="button"
             className={`mosaic-btn mosaic-btn--ghost ${hintOn ? "is-on" : ""}`}
             onClick={() => {
+              void audio.play("button");
               setHintOn((v) => {
                 const next = !v;
                 if (next) setHintUsed(true);
@@ -433,11 +624,14 @@ function MosaicPlayfield({
             Hint
           </button>
         ) : null}
-        {selectedId ? (
+        {rotationAllowed && selectedId ? (
           <button
             type="button"
             className="mosaic-btn mosaic-btn--ghost"
-            onClick={() => rotatePiece(selectedId)}
+            onClick={() => {
+              void audio.play("button");
+              rotatePiece(selectedId);
+            }}
             disabled={clearing}
           >
             Rotate
@@ -446,13 +640,32 @@ function MosaicPlayfield({
       </header>
 
       <div className="mosaic-stage">
-        <div
-          className="mosaic-board-wrap"
-          style={{ width: boardW, minWidth: boardW }}
-        >
+        <div className="mosaic-board-cluster">
+          {showRowLetters ? (
+            <div
+              className="mosaic-row-letters"
+              style={{ height: boardH }}
+              aria-label="Decoded row characters"
+            >
+              {rowDecodes.map((row, idx) => (
+                <span
+                  key={idx}
+                  className={`mosaic-row-letter is-${row.status}`}
+                  style={{ height: cellPx, lineHeight: `${cellPx}px` }}
+                >
+                  {row.glyph || (row.status === "partial" ? "·" : "")}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          <div
+            className="mosaic-board-wrap"
+            style={{ width: boardW, minWidth: boardW }}
+          >
           <div
             ref={boardRef}
-            className="mosaic-board"
+            className={`mosaic-board${drag ? " is-dragging" : ""}`}
             style={{ width: boardW, height: boardH }}
             aria-label="Binary frame"
           >
@@ -474,22 +687,39 @@ function MosaicPlayfield({
             );
           })}
 
-          {rejectMarkers.map((marker) => (
-            <span
-              key={`reject-${marker.pieceIndex}-${marker.row}-${marker.col}`}
-              className="mosaic-reject-marker"
+          {rejectMarkers.map((marker) => {
+            const key = `${marker.row},${marker.col}`;
+            const met = solvedCells.has(key);
+            return (
+              <span
+                key={`reject-${marker.pieceIndex}-${marker.row}-${marker.col}`}
+                className={`mosaic-reject-marker${met ? " is-met" : ""}`}
+                style={{
+                  left: marker.col * cellPx,
+                  top: marker.row * cellPx,
+                  width: cellPx,
+                  height: cellPx,
+                }}
+              >
+                {marker.bit}
+              </span>
+            );
+          })}
+
+          {dropPreview ? (
+            <div
+              className={`mosaic-drop-preview${dropPreview.valid ? "" : " is-invalid"}`}
               style={{
-                left: marker.col * cellPx,
-                top: marker.row * cellPx,
-                width: cellPx,
-                height: cellPx,
+                left: dropPreview.origin.col * cellPx,
+                top: dropPreview.origin.row * cellPx,
+                width: dropPreview.cols * cellPx,
+                height: dropPreview.rows * cellPx,
               }}
-            >
-              {marker.bit}
-            </span>
-          ))}
+            />
+          ) : null}
 
           {hintOn &&
+            !drag &&
             meta.pieces.map((def) => {
               const runtime = pieces.find(
                 (p) => p.pieceIndex === def.pieceIndex,
@@ -538,17 +768,24 @@ function MosaicPlayfield({
           })}
           </div>
         </div>
+        </div>
 
         <div className="mosaic-tray" aria-label="Binary pieces">
           {pieces.map((piece) => {
             const isDragging = drag?.pieceId === piece.id;
             const isPlaced = piece.placed != null && !isDragging;
+            if (isPlaced) return null;
+            const oriented = rotateShape(piece.baseShape, piece.rotation);
+            const bounds = shapeBounds(oriented);
+            const slotW = Math.max(bounds.cols * cellPx, cellPx * 2);
+            const slotH = Math.max(bounds.rows * cellPx, cellPx * 2);
             return (
               <div
                 key={piece.id}
-                className={`mosaic-tray-slot${isPlaced ? " is-empty" : ""}`}
+                className="mosaic-tray-slot"
+                style={{ width: slotW, height: slotH }}
               >
-                {!isPlaced ? (
+                {!isDragging ? (
                   <>
                     <PieceView
                       shape={piece.baseShape}
@@ -557,18 +794,20 @@ function MosaicPlayfield({
                       className={selectedId === piece.id ? "is-selected" : ""}
                       onPointerDown={(e) => onPiecePointerDown(e, piece)}
                     />
-                    <button
-                      type="button"
-                      className="mosaic-rotate-mini"
-                      aria-label="Rotate piece"
-                      disabled={clearing}
-                      onClick={() => {
-                        setSelectedId(piece.id);
-                        rotatePiece(piece.id);
-                      }}
-                    >
-                      ⟲
-                    </button>
+                    {rotationAllowed ? (
+                      <button
+                        type="button"
+                        className="mosaic-rotate-mini"
+                        aria-label="Rotate piece"
+                        disabled={clearing}
+                        onClick={() => {
+                          setSelectedId(piece.id);
+                          rotatePiece(piece.id);
+                        }}
+                      >
+                        ⟲
+                      </button>
+                    ) : null}
                   </>
                 ) : null}
               </div>
@@ -580,7 +819,7 @@ function MosaicPlayfield({
       {draggingPiece && drag ? (
         <div
           className="mosaic-drag-layer"
-          style={{ left: drag.x, top: drag.y }}
+          style={{ transform: `translate3d(${drag.x}px, ${drag.y}px, 0)` }}
         >
           <PieceView
             shape={draggingPiece.baseShape}
@@ -592,14 +831,10 @@ function MosaicPlayfield({
 
       <ClearSequence
         active={clearing}
-        boardCells={level.rows * level.cols}
         result={result}
-        onPhase={setClearPhase}
-        onDone={() => {
-          setClearing(false);
-          setClearPhase("idle");
-          onClearContinue(getNextLevelId(levelId));
-        }}
+        soundEnabled={soundOn}
+        onPhase={handleClearPhase}
+        onDone={handleClearDone}
       />
     </div>
   );
@@ -613,6 +848,12 @@ export function BinaryMosaicGame() {
   if (screen === "select") {
     return (
       <div className="mosaic-root">
+        <div className="mosaic-chrome">
+          <a href="/game" className="mosaic-chrome-link">
+            Game Library
+          </a>
+          <span className="mosaic-chrome-title">Binary Mosaic</span>
+        </div>
         <p className="mosaic-lead">
           Assemble glass binary fragments into a clean bit field. Each finished
           board decodes to real ASCII text — not decoration.
@@ -624,6 +865,7 @@ export function BinaryMosaicGame() {
                 type="button"
                 className="mosaic-level-btn"
                 onClick={() => {
+                  void Bit8Audio.getInstance().play("button");
                   setLevelId(level.id);
                   setScreen("play");
                 }}
@@ -638,9 +880,9 @@ export function BinaryMosaicGame() {
           ))}
         </ul>
         <p className="mosaic-lead" style={{ marginTop: "2rem" }}>
+          Rotation unlocks from Level {binaryMosaicConfig.rotateFromLevel}.
           From around Level {binaryMosaicConfig.silhouetteFromLevel}, frames can
-          become silhouettes (dog and other shapes) that resolve into binary
-          pictures.
+          become silhouettes (dog and other shapes).
         </p>
       </div>
     );
@@ -648,6 +890,12 @@ export function BinaryMosaicGame() {
 
   return (
     <div className="mosaic-root">
+      <div className="mosaic-chrome">
+        <a href="/game" className="mosaic-chrome-link">
+          Game Library
+        </a>
+        <span className="mosaic-chrome-title">Binary Mosaic</span>
+      </div>
       <div className="mosaic-play-top">
         <button
           type="button"

@@ -68,3 +68,44 @@ export function findWrongPlacedPieces(
 export function allPiecesPlaced(pieces: PieceRuntime[]): boolean {
   return pieces.length > 0 && pieces.every((p) => p.placed != null);
 }
+
+/** Next unrevealed solution cell for a piece (row-major within the piece). */
+export function nextHintCellForPiece(
+  level: LevelDef,
+  pieceIndex: number,
+  revealedKeys: Set<string>,
+): { row: number; col: number; bit: 0 | 1; pieceIndex: number } | null {
+  const cells: { row: number; col: number; bit: 0 | 1 }[] = [];
+  for (let r = 0; r < level.rows; r += 1) {
+    for (let c = 0; c < level.cols; c += 1) {
+      if (level.solution[r][c] !== pieceIndex) continue;
+      cells.push({ row: r, col: c, bit: level.bits[r][c] });
+    }
+  }
+  cells.sort((a, b) => a.row - b.row || a.col - b.col);
+  for (const cell of cells) {
+    const key = `${cell.row},${cell.col}`;
+    if (!revealedKeys.has(key)) {
+      return { ...cell, pieceIndex };
+    }
+  }
+  return null;
+}
+
+/** Fallback: any unrevealed board cell. */
+export function nextHintCellAnywhere(
+  level: LevelDef,
+  revealedKeys: Set<string>,
+): { row: number; col: number; bit: 0 | 1; pieceIndex: number } | null {
+  for (let r = 0; r < level.rows; r += 1) {
+    for (let c = 0; c < level.cols; c += 1) {
+      const pieceIndex = level.solution[r][c];
+      if (pieceIndex < 0) continue;
+      const key = `${r},${c}`;
+      if (!revealedKeys.has(key)) {
+        return { row: r, col: c, bit: level.bits[r][c], pieceIndex };
+      }
+    }
+  }
+  return null;
+}

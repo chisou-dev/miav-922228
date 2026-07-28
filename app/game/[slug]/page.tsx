@@ -35,7 +35,7 @@ export default async function GameSlugPage({ params }: Props) {
   });
 
   return (
-    <GameShell title={entry.title}>
+    <GameShell title={entry.title} compact={slug === "binary-mosaic"}>
       <LoadedGame />
     </GameShell>
   );

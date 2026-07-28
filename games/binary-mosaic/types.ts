@@ -53,11 +53,12 @@ export type PieceRuntime = {
 
 export type ClearPhase =
   | "idle"
+  | "reveal"
   | "fireworks"
+  | "victory"
   | "glow"
   | "dissolve"
   | "stream"
-  | "reveal"
   | "done";
 
 export type PatternResult = {

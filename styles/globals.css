@@ -38,6 +38,15 @@ body {
   padding: 3.5rem 1.75rem 5rem;
 }
 
+.shell--compact {
+  max-width: 58rem;
+  padding: 1rem 1rem 2rem;
+}
+
+.shell-main--compact {
+  margin-top: 0;
+}
+
 .shell-header {
   text-align: center;
 }

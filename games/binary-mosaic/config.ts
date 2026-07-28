@@ -11,10 +11,13 @@ import type { LevelDef } from "@/games/binary-mosaic/types";
 export const binaryMosaicConfig = {
   slug: "binary-mosaic",
   title: "Binary Mosaic",
-  cellPx: 40,
+  /** Board cell size in px — keep compact so more pieces stay readable. */
+  cellPx: 34,
   maxDesignedLevels: 30,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
+  /** Rotation unlocks from this level onward. */
+  rotateFromLevel: 20,
 } as const;
 
 const levels = levelsJson as LevelDef[];
@@ -31,6 +34,20 @@ for (const level of levels) {
   if (level.id <= 3 && pieces.length !== expectedCount) {
     throw new Error(
       `Level ${level.id}: expected ${expectedCount} pieces, got ${pieces.length}`,
+    );
+  }
+
+  let filledRects = 0;
+  for (const piece of pieces) {
+    const rows = Math.max(...piece.baseShape.map((c) => c.row)) + 1;
+    const cols = Math.max(...piece.baseShape.map((c) => c.col)) + 1;
+    const isBar = rows === 1 || cols === 1;
+    const isFilledRect = !isBar && piece.baseShape.length === rows * cols;
+    if (isFilledRect) filledRects += 1;
+  }
+  if (filledRects > 1) {
+    throw new Error(
+      `Level ${level.id}: too many solid rectangles (${filledRects}); keep 0–1`,
     );
   }
 }

@@ -1,0 +1,54 @@
+.luna-sprite {
+  display: inline-block;
+  flex-shrink: 0;
+  image-rendering: auto;
+  pointer-events: none;
+  user-select: none;
+  background-color: transparent;
+}
+
+.luna-companion {
+  pointer-events: none;
+  user-select: none;
+}
+
+.luna-companion--corner {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.25rem;
+  z-index: 2;
+  opacity: 0.92;
+}
+
+.luna-companion--library {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+.luna-companion--inline {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.game-layout {
+  position: relative;
+}
+
+.game-layout .luna-companion--corner {
+  right: 0.75rem;
+  bottom: 0.75rem;
+}
+
+.shell .luna-companion--corner {
+  right: 1rem;
+  bottom: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .luna-companion--corner {
+    opacity: 0.78;
+    transform: scale(0.88);
+    transform-origin: bottom right;
+  }
+}
