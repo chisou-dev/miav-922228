@@ -116,9 +116,13 @@ function readBoardBits(
 function MosaicPlayfield({
   levelId,
   onClearContinue,
+  soundOn,
+  setSoundOn,
 }: {
   levelId: number;
   onClearContinue: (nextLevelId: number | null) => void;
+  soundOn: boolean;
+  setSoundOn: (next: boolean) => void;
 }) {
   const level = getLevel(levelId)!;
   const meta = useMemo(() => extractPiecesFromLevel(level), [level]);
@@ -151,7 +155,6 @@ function MosaicPlayfield({
   const [result, setResult] = useState<PatternResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [rejectMarkers, setRejectMarkers] = useState<RejectMarker[]>([]);
-  const [soundOn, setSoundOn] = useState(false);
   const startRef = useRef(performance.now());
   const clearedRef = useRef(false);
   const dragRafRef = useRef<number | null>(null);
@@ -165,20 +168,18 @@ function MosaicPlayfield({
   useBit8Audio(running && !clearing && soundOn, levelId);
 
   const toggleSound = useCallback(() => {
-    setSoundOn((prev) => {
-      const next = !prev;
-      audio.setMuted(!next);
-      if (next) {
-        void audio.unlock().then(() => {
-          if (running && !clearing) void audio.startBgm(levelId);
-        });
-        void audio.play("button");
-      } else {
-        audio.stopBgm();
-      }
-      return next;
-    });
-  }, [audio, running, clearing]);
+    const next = !soundOn;
+    audio.setMuted(!next);
+    if (next) {
+      void audio.unlock().then(() => {
+        if (running && !clearing) void audio.startBgm(levelId);
+      });
+      void audio.play("button");
+    } else {
+      audio.stopBgm();
+    }
+    setSoundOn(next);
+  }, [audio, running, clearing, soundOn, setSoundOn, levelId]);
 
   const handleClearPhase = useCallback((phase: ClearPhase) => {
     setClearPhase(phase);
@@ -844,12 +845,31 @@ export function BinaryMosaicGame() {
   const levels = getAllLevels();
   const [levelId, setLevelId] = useState(levels[0]?.id ?? 1);
   const [screen, setScreen] = useState<"select" | "play">("select");
+  const [soundOn, setSoundOn] = useState(false);
+  const audio = Bit8Audio.getInstance();
+
+  // ページが非表示になったら BGM を止め、戻ったら再開
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        audio.stopBgm();
+      } else if (soundOn && screen === "play") {
+        void audio.startBgm(levelId);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      // ゲーム画面を離れるときも必ず止める
+      audio.stopBgm();
+    };
+  }, [audio, soundOn, screen, levelId]);
 
   if (screen === "select") {
     return (
       <div className="mosaic-root">
         <div className="mosaic-chrome">
-          <a href="/game" className="mosaic-chrome-link">
+          <a href="/game" className="mosaic-chrome-link" onClick={() => audio.stopBgm()}>
             Game Library
           </a>
           <span className="mosaic-chrome-title">Binary Mosaic</span>
@@ -891,7 +911,7 @@ export function BinaryMosaicGame() {
   return (
     <div className="mosaic-root">
       <div className="mosaic-chrome">
-        <a href="/game" className="mosaic-chrome-link">
+        <a href="/game" className="mosaic-chrome-link" onClick={() => audio.stopBgm()}>
           Game Library
         </a>
         <span className="mosaic-chrome-title">Binary Mosaic</span>
@@ -910,6 +930,8 @@ export function BinaryMosaicGame() {
       <MosaicPlayfield
         key={levelId}
         levelId={levelId}
+        soundOn={soundOn}
+        setSoundOn={setSoundOn}
         onClearContinue={(nextId) => {
           if (nextId != null) {
             setLevelId(nextId);
