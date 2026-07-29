@@ -37,7 +37,7 @@ Before **any** new feature, re-read this list. Fix regressions first.
 | # | Criterion | Status |
 |---|-----------|--------|
 | 1 | Levels 1–10 are all clearable | ✅ Verified by playtest |
-| 2 | Difficulty rises naturally | ✅ Monotonic piece curve (3→9); rotation from L6 |
+| 2 | Difficulty rises naturally | ✅ Monotonic piece curve (3→9); rotation from L20 |
 | 3 | Zero known bugs | ✅ Production build clean; input/drag fixes applied |
 | 4 | Stable FPS during play & clear FX | ✅ Drag uses rAF + direct DOM transform |
 | 5 | Light first load (minimal initial JS) | ✅ ClearSequence dynamically imported |

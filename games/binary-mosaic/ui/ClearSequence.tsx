@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createDecoded,
@@ -33,14 +32,6 @@ const PHASES: { phase: ClearPhase; ms: number }[] = [
 ];
 
 const FIREWORKS_MS = 1600;
-
-const LunaClearCompanion = dynamic(
-  () =>
-    import("@/games/binary-mosaic/ui/LunaClearCompanion").then((m) => ({
-      default: m.LunaClearCompanion,
-    })),
-  { ssr: false },
-);
 
 function waitMs(ms: number) {
   return new Promise<void>((resolve) => {
@@ -134,8 +125,6 @@ export function ClearSequence({
       {showDecoded && word ? (
         <div className="mosaic-hello mosaic-hello--decoded">{word}</div>
       ) : null}
-
-      <LunaClearCompanion phase={phase} />
 
       {phase === "done" && result && (
         <div className="mosaic-result">

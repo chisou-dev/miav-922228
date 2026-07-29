@@ -16,8 +16,8 @@ export const binaryMosaicConfig = {
   maxDesignedLevels: 30,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
-  /** Rotation unlocks from this level onward (Phase 1 difficulty curve). */
-  rotateFromLevel: 6,
+  /** Rotation unlocks from this level onward. */
+  rotateFromLevel: 20,
 } as const;
 
 const levels = levelsJson as LevelDef[];

@@ -10,10 +10,25 @@ import {
   unmuteBgm,
 } from "@/features/audio/soundEngine";
 
-const BASE_BPM = 96;
 const BGM_MELODY_GAIN = SE_GAIN * 0.72;
 const BGM_BASS_GAIN = SE_GAIN * 0.9;
 const BGM_NOISE_GAIN = SE_GAIN * 0.22;
+
+/**
+ * Discrete tempo bands by level — always the same for a given range,
+ * so returning from L20 to L1 restores the slow band (no leftover speed).
+ * Caps stay comfortable (never frantic).
+ *
+ * 1–5 → 96 · 6–10 → 104 · 11–15 → 112 · 16–20 → 120
+ */
+export function bpmForLevel(level: number): number {
+  const n = Math.max(1, Math.floor(level));
+  if (n <= 5) return 96;
+  if (n <= 10) return 104;
+  if (n <= 15) return 112;
+  if (n <= 20) return 120;
+  return 124;
+}
 
 const MELODY: [string, number][] = [
   ["C5", 0.125],
@@ -49,7 +64,7 @@ export type GameLoopHandle = {
 };
 
 /**
- * Procedural loop BGM — melody fixed, BPM scales with stage only.
+ * Procedural loop BGM — melody fixed, BPM by level band (not linear per level).
  * Square + Triangle + occasional noise. No audio files.
  */
 export function createGameLoop(initialStage = 1): GameLoopHandle {
@@ -62,7 +77,7 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
   let running = false;
   let loopMuted = isSoundMuted();
 
-  const bpm = () => Math.min(168, BASE_BPM + stage * 3);
+  const bpm = () => bpmForLevel(stage);
 
   const eighthSec = () => 60 / bpm() / 2;
   const quarterSec = () => 60 / bpm();
@@ -118,7 +133,8 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
     tickBass();
     beatTimer = window.setInterval(tickMelody, eighthMs);
     bassTimer = window.setInterval(tickBass, quarterMs);
-    if (stage >= 15) {
+    // Soft noise layer only in the fastest band (16+)
+    if (stage >= 16) {
       noiseTimer = window.setInterval(tickNoise, quarterMs * 2);
     }
   };
@@ -137,8 +153,16 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
       clearTimers();
     },
     setStage(nextStage: number) {
-      stage = Math.max(1, nextStage);
-      if (running) armTimers();
+      const next = Math.max(1, nextStage);
+      const bandChanged = bpmForLevel(stage) !== bpmForLevel(next);
+      stage = next;
+      if (running) {
+        if (bandChanged) {
+          melodyIndex = 0;
+          bassIndex = 0;
+        }
+        armTimers();
+      }
     },
     setMuted(muted: boolean) {
       loopMuted = muted;

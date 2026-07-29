@@ -42,6 +42,7 @@ export {
   getActiveGameLoop,
   setActiveGameLoop,
   stopActiveGameLoop,
+  bpmForLevel,
   type GameLoopHandle,
 } from "@/features/audio/ambient";
 
