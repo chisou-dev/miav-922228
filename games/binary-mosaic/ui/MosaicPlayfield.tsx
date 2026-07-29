@@ -192,6 +192,13 @@ function MosaicPlayfield({
     onClearContinue(getNextLevelId(levelId));
   }, [audio, levelId, onClearContinue]);
 
+  const handleBackToLevels = useCallback(() => {
+    void audio.play("button");
+    audio.stopBgm();
+    setClearing(false);
+    onClearContinue(null);
+  }, [audio, onClearContinue]);
+
   piecesRef.current = pieces;
 
   useEffect(() => {
@@ -1002,6 +1009,7 @@ function MosaicPlayfield({
         result={result}
         soundEnabled={soundOn}
         onDone={handleClearDone}
+        onBackToLevels={handleBackToLevels}
       />
     </div>
   );

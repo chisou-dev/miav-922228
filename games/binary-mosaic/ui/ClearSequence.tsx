@@ -15,6 +15,7 @@ import type { ClearPhase, PatternResult } from "@/games/binary-mosaic/types";
 type Props = {
   active: boolean;
   onDone: () => void;
+  onBackToLevels: () => void;
   /** When false, Victory Jingle is skipped (muted). */
   soundEnabled?: boolean;
   result: PatternResult | null;
@@ -42,6 +43,7 @@ function waitMs(ms: number) {
 export function ClearSequence({
   active,
   onDone,
+  onBackToLevels,
   soundEnabled = false,
   result,
 }: Props) {
@@ -150,9 +152,18 @@ export function ClearSequence({
               <dd>{result.patternScore}</dd>
             </div>
           </dl>
-          <button type="button" className="mosaic-btn" onClick={onDone}>
-            Continue
-          </button>
+          <div className="mosaic-result-actions">
+            <button type="button" className="mosaic-btn" onClick={onDone}>
+              Continue
+            </button>
+            <button
+              type="button"
+              className="mosaic-btn--levels"
+              onClick={onBackToLevels}
+            >
+              Back to Levels
+            </button>
+          </div>
         </div>
       )}
     </div>

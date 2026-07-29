@@ -97,9 +97,10 @@
 .mosaic-level-best--neon {
   color: #ff8c2a;
   text-shadow:
-    0 0 4px rgba(255, 154, 60, 0.95),
-    0 0 10px rgba(255, 106, 0, 0.85),
-    0 0 18px rgba(255, 80, 0, 0.55);
+    -1px -1px 0 #2e7bcb,
+    1px -1px 0 #2e7bcb,
+    -1px 1px 0 #2e7bcb,
+    1px 1px 0 #2e7bcb;
 }
 
 .mosaic-play-top {
@@ -529,8 +530,31 @@
   font-size: 1rem !important;
 }
 
+.mosaic-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
 .mosaic-result .mosaic-btn {
   width: 100%;
+}
+
+.mosaic-result .mosaic-btn--levels {
+  width: auto;
+  align-self: center;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid #c5ccd4;
+  background: transparent;
+  color: #5c6570;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.mosaic-result .mosaic-btn--levels:hover {
+  color: #101418;
+  border-color: #101418;
 }
 
 @keyframes mosaic-hello-in {
