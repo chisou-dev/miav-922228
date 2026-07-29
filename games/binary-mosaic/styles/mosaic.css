@@ -96,11 +96,10 @@
 
 .mosaic-level-best--neon {
   color: #ff8c2a;
-  text-shadow:
-    -1px -1px 0 #2e7bcb,
-    1px -1px 0 #2e7bcb,
-    -1px 1px 0 #2e7bcb,
-    1px 1px 0 #2e7bcb;
+  -webkit-text-fill-color: #ff8c2a;
+  border: 1px solid #2e7bcb;
+  padding: 0.1em 0.35em;
+  text-shadow: none;
 }
 
 .mosaic-play-top {
