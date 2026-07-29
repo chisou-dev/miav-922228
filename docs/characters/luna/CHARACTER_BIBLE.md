@@ -112,16 +112,7 @@ When creating derivatives, match these layouts and keep all immutable features.
 
 ## Runtime spritesheet (site-wide)
 
-| Asset | Path |
-|-------|------|
-| Spritesheet WebP (transparent) | `public/characters/luna/spritesheet.webp` |
-| Atlas + clips | `engine/luna/atlas.ts` |
-| React component | `engine/luna/LunaSprite.tsx` |
-
-- **One image** for all games — load via `preloadLunaSpritesheet()`; never copy per game.
-- Rebuild sheet from bible: `npm run build:luna`
-- Animations (`sit`, `walk`, `tail_wag`, `bark`, `sleep`) switch frames from the single sheet.
-- In games: `import { LunaSprite } from "@/engine/luna"` and set the `animation` prop only.
+Runtime Luna assets are currently **removed** from the game (no `public/characters/luna/` spritesheet, no `engine/luna` module). Rebuild later with `scripts/build-luna-spritesheet.py` when Phase 3 is re-enabled.
 
 ## Image generation prompt (stable baseline)
 

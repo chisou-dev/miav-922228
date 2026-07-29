@@ -1082,7 +1082,16 @@ export function BinaryMosaicGame() {
                     {cleared && bestScore != null && bestTime != null ? (
                       <>
                         {" "}
-                        · Best {bestScore} · {formatTime(bestTime)}
+                        ·{" "}
+                        <span
+                          className={
+                            bestScore >= 90
+                              ? "mosaic-level-best mosaic-level-best--neon"
+                              : "mosaic-level-best"
+                          }
+                        >
+                          Best Score {bestScore} · {formatTime(bestTime)}
+                        </span>
                       </>
                     ) : null}
                   </span>

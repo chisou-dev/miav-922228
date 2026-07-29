@@ -1,34 +1,33 @@
 ---
-description: Binary Block phase scope — currently Phase 3 Luna clear celebration
+description: Binary Block phase scope — currently Phase 2 local save
 globs:
   - games/binary-mosaic/**
   - docs/binary-block/**
   - features/audio/**
-  - engine/luna/**
 ---
 
-# Binary Block — Phase 3 (v1)
+# Binary Block — Phase 2
 
-Read `docs/binary-block/PHASES.md`. **Current phase: 3.**
+Read `docs/binary-block/PHASES.md`. **Current phase: 2.**
 
-## Phase 3 v1 scope
+## Phase 2 scope
 
-Luna on **clear screen only** — dynamic import, WebP spritesheet loaded on clear:
+Device-only progress via `localStorage` (`binary_block_progress`):
 
-- `sit` · `tail_wag` · `bark` animations synced to clear phases
-- Module: `games/binary-mosaic/ui/LunaClearCompanion.tsx`
-- Shared assets: `engine/luna/*`, `public/characters/luna/spritesheet.webp`
+- Cleared levels
+- Best Pattern Score per level
+- Best time per level
 
-## Forbidden (Phase 3 v1)
+Module: `games/binary-mosaic/progress/storage.ts`
 
-Top-page Luna · in-play idle Luna · level-select Luna · Firebase · ranking · new animation libraries · huge images
+## Forbidden
+
+Firebase · Google login · ranking UI · network / `fetch` · user IDs · World Memory · Luna images / spritesheet · Phase 3+ stubs
 
 ## Do not change
 
-Phase 1 puzzle logic · Phase 2 `localStorage` save · level data · clear SE/BGM logic
+Phase 1 puzzle logic · clear FX · SE/BGM · core playfield UI (unless user requests)
 
 ## Capacity
 
-- Luna JS + WebP must not load on initial game entry — only when clear starts
-- Use `dynamic import` for Luna companion chunk
-- No new npm dependencies
+No Luna assets in the game bundle · no new npm dependencies · minimal save payload

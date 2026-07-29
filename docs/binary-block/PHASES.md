@@ -13,6 +13,7 @@ export const BINARY_BLOCK_PHASE = 2 as const;
 ```
 
 Phase 1 checklist complete. Phase 2 adds **device-only** `localStorage` progress.
+Runtime Luna assets are removed until Phase 3 is explicitly re-enabled.
 
 ---
 
@@ -74,7 +75,7 @@ Verified: empty start · save on clear · reload restore · independent best sco
 
 ## Phase 3 — Luna
 
-Mascot in-game. Dynamic import when this phase starts.
+Mascot in-game (deferred). No runtime spritesheet / UI until re-enabled.
 
 ## Phase 4 — Ranking UI (dummy)
 

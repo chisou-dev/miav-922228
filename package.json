@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev --port 3001",
     "build": "next build --webpack",
-    "build:luna": "python scripts/build-luna-spritesheet.py",
     "start": "next start --port 3001",
     "lint": "eslint"
   },

@@ -90,6 +90,18 @@
   letter-spacing: 0.08em;
 }
 
+.mosaic-level-best {
+  color: inherit;
+}
+
+.mosaic-level-best--neon {
+  color: #ff8c2a;
+  text-shadow:
+    0 0 4px rgba(255, 154, 60, 0.95),
+    0 0 10px rgba(255, 106, 0, 0.85),
+    0 0 18px rgba(255, 80, 0, 0.55);
+}
+
 .mosaic-play-top {
   display: flex;
   align-items: center;
