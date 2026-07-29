@@ -29,12 +29,13 @@ for (const level of levels) {
   const mask = buildActiveMask(level.solution);
   assertBitsMatchText(level.bits, level.targetText, mask);
   const { pieces } = extractPiecesFromLevel(level);
-  const expectedCount =
-    level.id <= 3 ? level.id + 2 : pieces.length; // L1=3, L2=4, L3=5
-  if (level.id <= 3 && pieces.length !== expectedCount) {
-    throw new Error(
-      `Level ${level.id}: expected ${expectedCount} pieces, got ${pieces.length}`,
-    );
+  if (level.id <= 3) {
+    const expectedCount = level.id + 2; // L1=3, L2=4, L3=5
+    if (pieces.length !== expectedCount) {
+      throw new Error(
+        `Level ${level.id}: expected ${expectedCount} pieces, got ${pieces.length}`,
+      );
+    }
   }
 
   let filledRects = 0;
