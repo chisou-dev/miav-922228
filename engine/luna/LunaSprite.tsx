@@ -1,55 +1,30 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
-import { SpriteAnimation } from "@/engine/Animation";
-import {
-  getLunaFrameRect,
+  getLunaClip,
   LUNA_CELL_PX,
   LUNA_SHEET_HEIGHT,
   LUNA_SHEET_WIDTH,
   LUNA_SPRITESHEET_URL,
-  resolveLunaAnimation,
   type LunaAnimationId,
 } from "@/engine/luna/atlas";
-import { preloadLunaSpritesheet } from "@/engine/luna/preload";
-import { useGameLoop } from "@/hooks/useGameLoop";
+import {
+  isLunaSpritesheetReady,
+  preloadLunaSpritesheet,
+} from "@/engine/luna/preload";
 
-export type LunaSpriteProps = {
-  animation?: LunaAnimationId | "idle" | "blink" | "happy" | "side";
-  /** Display scale (1 = 160px cell). */
+type Props = {
+  animation: LunaAnimationId;
   scale?: number;
   className?: string;
-  style?: CSSProperties;
-  playing?: boolean;
-  "aria-label"?: string;
 };
 
-export function LunaSprite({
-  animation = "sit",
-  scale = 0.42,
-  className,
-  style,
-  playing = true,
-  "aria-label": ariaLabel = "Luna",
-}: LunaSpriteProps) {
-  const clip = useMemo(() => resolveLunaAnimation(animation), [animation]);
-  const anim = useMemo(() => new SpriteAnimation(clip), [clip]);
-  const animRef = useRef(anim);
-  animRef.current = anim;
-
-  const [frameId, setFrameId] = useState(clip.frames[0]);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    animRef.current.reset();
-    setFrameId(clip.frames[0]);
-  }, [clip]);
+/** Single-image Luna sprite — frame animation via background-position. */
+export function LunaSprite({ animation, scale = 0.5, className }: Props) {
+  const [ready, setReady] = useState(isLunaSpritesheetReady());
+  const [frameIndex, setFrameIndex] = useState(0);
+  const clip = useMemo(() => getLunaClip(animation), [animation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,43 +32,47 @@ export function LunaSprite({
       .then(() => {
         if (!cancelled) setReady(true);
       })
-      .catch(() => {
-        if (!cancelled) setReady(true);
-      });
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, []);
 
-  useGameLoop(
-    (deltaMs) => {
-      const next = animRef.current.advance(deltaMs);
-      setFrameId((prev) => (prev === next ? prev : next));
-    },
-    playing && ready,
-  );
+  useEffect(() => {
+    if (!ready) return;
+    setFrameIndex(0);
+    const msPerFrame = 1000 / clip.fps;
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      if (clip.loop) {
+        setFrameIndex(i % clip.frames.length);
+      } else {
+        setFrameIndex(Math.min(i, clip.frames.length - 1));
+      }
+    }, msPerFrame);
+    return () => window.clearInterval(id);
+  }, [animation, clip.fps, clip.frames.length, clip.loop, ready]);
 
-  const rect = getLunaFrameRect(frameId);
+  if (!ready) return null;
+
+  const sheetIndex = clip.frames[frameIndex] ?? clip.frames[0];
   const displayW = LUNA_CELL_PX * scale;
   const displayH = LUNA_CELL_PX * scale;
 
-  const spriteStyle: CSSProperties = {
-    width: displayW,
-    height: displayH,
-    backgroundImage: ready ? `url(${LUNA_SPRITESHEET_URL})` : undefined,
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: `-${rect.x * scale}px -${rect.y * scale}px`,
-    backgroundSize: `${LUNA_SHEET_WIDTH * scale}px ${LUNA_SHEET_HEIGHT * scale}px`,
-    ...style,
-  };
-
   return (
-    <span
-      className={["luna-sprite", className].filter(Boolean).join(" ")}
-      style={spriteStyle}
+    <div
+      className={className}
       role="img"
-      aria-label={ariaLabel}
-      aria-hidden={ariaLabel ? undefined : true}
+      aria-label="Luna"
+      style={{
+        width: displayW,
+        height: displayH,
+        backgroundImage: `url(${LUNA_SPRITESHEET_URL})`,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: `${LUNA_SHEET_WIDTH * scale}px ${LUNA_SHEET_HEIGHT * scale}px`,
+        backgroundPosition: `${-sheetIndex * LUNA_CELL_PX * scale}px 0`,
+      }}
     />
   );
 }

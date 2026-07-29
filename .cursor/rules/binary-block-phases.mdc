@@ -1,0 +1,34 @@
+---
+description: Binary Block phase scope — currently Phase 3 Luna clear celebration
+globs:
+  - games/binary-mosaic/**
+  - docs/binary-block/**
+  - features/audio/**
+  - engine/luna/**
+---
+
+# Binary Block — Phase 3 (v1)
+
+Read `docs/binary-block/PHASES.md`. **Current phase: 3.**
+
+## Phase 3 v1 scope
+
+Luna on **clear screen only** — dynamic import, WebP spritesheet loaded on clear:
+
+- `sit` · `tail_wag` · `bark` animations synced to clear phases
+- Module: `games/binary-mosaic/ui/LunaClearCompanion.tsx`
+- Shared assets: `engine/luna/*`, `public/characters/luna/spritesheet.webp`
+
+## Forbidden (Phase 3 v1)
+
+Top-page Luna · in-play idle Luna · level-select Luna · Firebase · ranking · new animation libraries · huge images
+
+## Do not change
+
+Phase 1 puzzle logic · Phase 2 `localStorage` save · level data · clear SE/BGM logic
+
+## Capacity
+
+- Luna JS + WebP must not load on initial game entry — only when clear starts
+- Use `dynamic import` for Luna companion chunk
+- No new npm dependencies

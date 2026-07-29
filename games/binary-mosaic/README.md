@@ -1,14 +1,23 @@
-# Binary Mosaic
+# Binary Block (slug: `binary-mosaic`)
 
 Glass binary packing puzzle. Fragments of `0` / `1` assemble into an ASCII bit field.
 
-## Levels 1–3 (now)
+**Current phase:** 1 — see checklist in [`docs/binary-block/PHASES.md`](../../docs/binary-block/PHASES.md).
 
-| Level | Target | Grid | Layout |
-|------:|--------|------|--------|
-| 1 | `HI` | 2×8 | 1 row = 1 character |
-| 2 | `HEL` | 3×8 | 1 row = 1 character |
-| 3 | `HELLO` | 5×8 | 1 row = 1 character |
+## Levels 1–10
+
+| Level | Target |
+|------:|--------|
+| 1 | `HI` |
+| 2 | `HEL` |
+| 3 | `HELLO` |
+| 4 | `ROBOT` |
+| 5 | `BINARY` |
+| 6 | `MEMORY` |
+| 7 | `HUMAN` |
+| 8 | `LUNA` |
+| 9 | `MIAV` |
+| 10 | `DECODED` |
 
 Bits are real 8-bit ASCII. Clear only when the assembled field decodes to `targetText`.
 

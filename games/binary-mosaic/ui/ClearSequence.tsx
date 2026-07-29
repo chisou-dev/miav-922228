@@ -1,10 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createDecoded,
   createFirework,
   createVictoryJingle,
+  stopActiveGameLoop,
 } from "@/features/audio";
 import { textToBits } from "@/games/binary-mosaic/puzzle/binaryText";
 import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
@@ -14,7 +16,6 @@ import type { ClearPhase, PatternResult } from "@/games/binary-mosaic/types";
 type Props = {
   active: boolean;
   onDone: () => void;
-  onPhase?: (phase: ClearPhase) => void;
   /** When false, Victory Jingle is skipped (muted). */
   soundEnabled?: boolean;
   result: PatternResult | null;
@@ -22,6 +23,7 @@ type Props = {
 
 /**
  * Decoded + white flash → fireworks → Victory Jingle → Continue
+ * Clear SE plays sequentially (no overlap); BGM is stopped before SE start.
  */
 const PHASES: { phase: ClearPhase; ms: number }[] = [
   { phase: "reveal", ms: 550 },
@@ -32,10 +34,23 @@ const PHASES: { phase: ClearPhase; ms: number }[] = [
 
 const FIREWORKS_MS = 1600;
 
+const LunaClearCompanion = dynamic(
+  () =>
+    import("@/games/binary-mosaic/ui/LunaClearCompanion").then((m) => ({
+      default: m.LunaClearCompanion,
+    })),
+  { ssr: false },
+);
+
+function waitMs(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 export function ClearSequence({
   active,
   onDone,
-  onPhase,
   soundEnabled = false,
   result,
 }: Props) {
@@ -45,9 +60,7 @@ export function ClearSequence({
     () => (word ? textToBits(word) : []),
     [word],
   );
-  const onPhaseRef = useRef(onPhase);
   const soundRef = useRef(soundEnabled);
-  onPhaseRef.current = onPhase;
   soundRef.current = soundEnabled;
 
   useEffect(() => {
@@ -57,53 +70,42 @@ export function ClearSequence({
     }
 
     let cancelled = false;
-    let timer: number | undefined;
-    let i = 0;
 
     const run = async () => {
-      if (cancelled) return;
-      const step = PHASES[i];
-      if (!step) return;
-      setPhase(step.phase);
-      onPhaseRef.current?.(step.phase);
+      stopActiveGameLoop();
 
-      if (step.phase === "reveal") {
-        if (soundRef.current) {
-          void createDecoded();
-        }
-      }
-
-      if (step.phase === "fireworks") {
-        if (soundRef.current) {
-          void createFirework();
-        }
-      }
-
-      if (step.phase === "victory") {
-        if (soundRef.current) {
-          await createVictoryJingle();
-        } else {
-          await new Promise<void>((resolve) => {
-            timer = window.setTimeout(resolve, step.ms);
-          });
-        }
+      for (const step of PHASES) {
         if (cancelled) return;
-        i += 1;
-        void run();
-        return;
-      }
+        if (step.phase === "done") {
+          setPhase("done");
+          return;
+        }
 
-      if (step.phase === "done") return;
-      i += 1;
-      timer = window.setTimeout(() => {
-        void run();
-      }, step.ms);
+        setPhase(step.phase);
+
+        if (step.phase === "reveal") {
+          await Promise.all([
+            waitMs(step.ms),
+            soundRef.current ? createDecoded() : Promise.resolve(),
+          ]);
+        } else if (step.phase === "fireworks") {
+          await Promise.all([
+            waitMs(step.ms),
+            soundRef.current ? createFirework() : Promise.resolve(),
+          ]);
+        } else if (step.phase === "victory") {
+          if (soundRef.current) {
+            await createVictoryJingle();
+          } else {
+            await waitMs(step.ms);
+          }
+        }
+      }
     };
 
     void run();
     return () => {
       cancelled = true;
-      if (timer) window.clearTimeout(timer);
     };
   }, [active]);
 
@@ -132,6 +134,8 @@ export function ClearSequence({
       {showDecoded && word ? (
         <div className="mosaic-hello mosaic-hello--decoded">{word}</div>
       ) : null}
+
+      <LunaClearCompanion phase={phase} />
 
       {phase === "done" && result && (
         <div className="mosaic-result">

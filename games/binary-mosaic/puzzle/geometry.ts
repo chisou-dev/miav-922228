@@ -164,56 +164,6 @@ export function snapOrigin(
   };
 }
 
-/**
- * Prefer the snapped origin; if it overlaps, search nearby empty fits
- * so pieces never stack on each other.
- */
-export function findFreeOrigin(options: {
-  shape: Shape;
-  rows: number;
-  cols: number;
-  preferred: Cell;
-  occupied: Set<string>;
-  activeMask: Set<string> | null;
-}): Cell | null {
-  const { shape, rows, cols, preferred, occupied, activeMask } = options;
-  const bounds = shapeBounds(shape);
-  const maxRow = rows - bounds.rows;
-  const maxCol = cols - bounds.cols;
-  if (maxRow < 0 || maxCol < 0) return null;
-
-  const candidates: Cell[] = [];
-  for (let radius = 0; radius <= Math.max(rows, cols); radius += 1) {
-    for (let dr = -radius; dr <= radius; dr += 1) {
-      for (let dc = -radius; dc <= radius; dc += 1) {
-        if (radius > 0 && Math.max(Math.abs(dr), Math.abs(dc)) !== radius) {
-          continue;
-        }
-        const row = preferred.row + dr;
-        const col = preferred.col + dc;
-        if (row < 0 || col < 0 || row > maxRow || col > maxCol) continue;
-        candidates.push({ row, col });
-      }
-    }
-    for (const origin of candidates) {
-      if (
-        canPlaceOnBoard({
-          rows,
-          cols,
-          shape,
-          origin,
-          occupied,
-          activeMask,
-        })
-      ) {
-        return origin;
-      }
-    }
-    candidates.length = 0;
-  }
-  return null;
-}
-
 export function buildActiveMask(
   solution: number[][],
 ): Set<string> | null {

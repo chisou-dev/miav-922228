@@ -85,6 +85,7 @@ export async function createFirework() {
       attack: 0.002,
     });
   });
+  await waitMs(320);
 }
 
 /** Failure — low electronic tone. */

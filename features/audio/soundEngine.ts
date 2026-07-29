@@ -7,6 +7,7 @@ export const SE_GAIN = 0.055;
 
 let sharedContext: AudioContext | null = null;
 let masterGain: GainNode | null = null;
+let bgmGain: GainNode | null = null;
 let unlockPromise: Promise<AudioContext | null> | null = null;
 let noiseBuffer: AudioBuffer | null = null;
 let muted = true;
@@ -51,7 +52,36 @@ function ensureMasterGain(ctx: AudioContext): GainNode {
     masterGain.gain.value = muted ? 0 : 1;
     masterGain.connect(ctx.destination);
   }
+  if (!bgmGain) {
+    bgmGain = ctx.createGain();
+    bgmGain.gain.value = muted ? 0 : 1;
+    bgmGain.connect(masterGain);
+  }
   return masterGain;
+}
+
+function ensureBgmGain(ctx: AudioContext): GainNode {
+  ensureMasterGain(ctx);
+  return bgmGain!;
+}
+
+/** Cut BGM immediately — scheduled oscillators on the BGM bus go silent. */
+export function muteBgmImmediate() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const bus = ensureBgmGain(ctx);
+  bus.gain.cancelScheduledValues(ctx.currentTime);
+  bus.gain.setValueAtTime(0, ctx.currentTime);
+}
+
+/** Restore BGM bus level after a fresh loop start. */
+export function unmuteBgm() {
+  if (muted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const bus = ensureBgmGain(ctx);
+  bus.gain.cancelScheduledValues(ctx.currentTime);
+  bus.gain.setValueAtTime(1, ctx.currentTime);
 }
 
 export function isSoundMuted() {
@@ -105,6 +135,8 @@ export type ToneOpts = {
   gain: number;
   attack?: number;
   when?: number;
+  /** Route to BGM bus (default: SE / master). */
+  route?: "se" | "bgm";
 };
 
 /** Schedule a tone on the shared master bus. */
@@ -112,7 +144,10 @@ export function scheduleTone(opts: ToneOpts) {
   if (muted) return;
   const ctx = getAudioContext();
   if (!ctx) return;
-  const bus = ensureMasterGain(ctx);
+  const bus =
+    opts.route === "bgm"
+      ? ensureBgmGain(ctx)
+      : ensureMasterGain(ctx);
   const when = opts.when ?? ctx.currentTime;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -136,11 +171,13 @@ export function scheduleNoiseBurst(
   duration: number,
   gainValue: number,
   highpassHz = 1200,
+  route: "se" | "bgm" = "se",
 ) {
   if (muted) return;
   const ctx = getAudioContext();
   if (!ctx) return;
-  const bus = ensureMasterGain(ctx);
+  const bus =
+    route === "bgm" ? ensureBgmGain(ctx) : ensureMasterGain(ctx);
   const src = ctx.createBufferSource();
   src.buffer = getNoiseBuffer(ctx, duration);
   const filter = ctx.createBiquadFilter();
@@ -169,6 +206,7 @@ export function disposeSoundEngine() {
   }
   sharedContext = null;
   masterGain = null;
+  bgmGain = null;
   noiseBuffer = null;
   unlockPromise = null;
 }

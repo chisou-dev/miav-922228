@@ -79,6 +79,11 @@
   color: var(--mosaic-muted);
 }
 
+.mosaic-level-btn.is-cleared .mosaic-level-meta::before {
+  content: "✓ ";
+  color: var(--mosaic-ink);
+}
+
 .mosaic-level-meta {
   font-size: 0.75rem;
   color: var(--mosaic-muted);
@@ -132,6 +137,8 @@
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   cursor: pointer;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
 }
 
 .mosaic-btn--ghost {
@@ -331,12 +338,12 @@
   position: absolute;
   right: -0.35rem;
   bottom: -0.35rem;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 1px solid #c5ccd4;
   background: #fff;
   color: var(--mosaic-ink);
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
 }
@@ -382,24 +389,6 @@
   border-style: dashed;
   box-shadow: none;
   color: #6a7682;
-}
-
-.mosaic-piece.is-glow .mosaic-cell {
-  filter: brightness(1.2);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 80%, transparent),
-    0 0 12px color-mix(in srgb, #9ec5ff 65%, transparent);
-}
-
-.mosaic-piece.is-dissolve .mosaic-cell {
-  animation: mosaic-dissolve 0.7s ease-in forwards;
-}
-
-@keyframes mosaic-dissolve {
-  to {
-    transform: translateY(6px) scale(0.9);
-    opacity: 0;
-  }
 }
 
 .mosaic-drag-layer {
@@ -466,47 +455,70 @@
   z-index: 2;
 }
 
+.mosaic-clear-luna {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.75rem;
+  pointer-events: none;
+  animation: mosaic-clear-luna-in 0.45s ease both;
+}
+
+.mosaic-clear-luna--done {
+  margin-top: 0.5rem;
+  margin-bottom: -0.5rem;
+}
+
+.mosaic-clear-luna-bark {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.35rem;
+  z-index: 1;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid #2e7bcb;
+  border-radius: 999px;
+  background: #fff;
+  color: #2e7bcb;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  animation: mosaic-clear-luna-bark 0.55s ease both;
+}
+
+@keyframes mosaic-clear-luna-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.65rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mosaic-clear-luna-bark {
+  0% {
+    opacity: 0;
+    transform: scale(0.72) translateY(0.25rem);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.06) translateY(-0.08rem);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .mosaic-fireworks-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-}
-
-.mosaic-stream {
-  position: absolute;
-  inset: 12% 10% auto;
-  max-width: 28rem;
-  margin-inline: auto;
-  left: 0;
-  right: 0;
-  overflow: hidden;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 0.95rem;
-  line-height: 1.55;
-  letter-spacing: 0.18em;
-  color: #1a2330;
-  text-align: center;
-  opacity: 0.85;
-  animation: mosaic-stream-in 0.8s ease both;
-}
-
-.mosaic-stream--true {
-  background: color-mix(in srgb, #ffffff 70%, transparent);
-  border: 1px solid #c5ccd4;
-  padding: 0.85rem 1rem 1rem;
-}
-
-.mosaic-stream-label {
-  margin: 0 0 0.55rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  color: #5c6570;
-}
-
-.mosaic-stream-row {
-  white-space: nowrap;
 }
 
 .mosaic-hello {
@@ -559,17 +571,6 @@
   width: 100%;
 }
 
-@keyframes mosaic-stream-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 0.5;
-    transform: none;
-  }
-}
-
 @keyframes mosaic-hello-in {
   from {
     opacity: 0;
@@ -581,9 +582,36 @@
   }
 }
 
+@media (max-width: 640px) {
+  .mosaic-root {
+    padding: 0.5rem 0.5rem 1.25rem;
+  }
+
+  .mosaic-stage {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .mosaic-tray {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .mosaic-hud {
+    gap: 0.5rem 0.75rem;
+  }
+
+  .mosaic-level-btn {
+    min-height: 2.75rem;
+    padding: 0.85rem 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .mosaic-piece.is-dissolve .mosaic-cell,
-  .mosaic-stream,
   .mosaic-hello,
   .mosaic-clear-flash {
     animation: none;

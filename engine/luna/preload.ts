@@ -3,7 +3,7 @@ import { LUNA_SPRITESHEET_URL } from "@/engine/luna/atlas";
 let preloadPromise: Promise<void> | null = null;
 let cachedReady = false;
 
-/** Preload the shared Luna spritesheet once for the whole site. */
+/** Load the shared Luna spritesheet once per session. */
 export function preloadLunaSpritesheet(): Promise<void> {
   if (cachedReady) return Promise.resolve();
   if (typeof window === "undefined") return Promise.resolve();
@@ -26,6 +26,6 @@ export function preloadLunaSpritesheet(): Promise<void> {
   return preloadPromise;
 }
 
-export function isLunaSpritesheetReady() {
+export function isLunaSpritesheetReady(): boolean {
   return cachedReady;
 }

@@ -13,8 +13,6 @@ type Props = {
   className?: string;
   style?: CSSProperties;
   ghost?: boolean;
-  glowing?: boolean;
-  dissolving?: boolean;
   onPointerDown?: (event: PointerEvent<HTMLDivElement>) => void;
 };
 
@@ -25,8 +23,6 @@ export function PieceView({
   className = "",
   style,
   ghost = false,
-  glowing = false,
-  dissolving = false,
   onPointerDown,
 }: Props) {
   const oriented = rotateShape(shape, rotation);
@@ -35,7 +31,7 @@ export function PieceView({
 
   return (
     <div
-      className={`mosaic-piece ${ghost ? "is-ghost" : ""} ${glowing ? "is-glow" : ""} ${dissolving ? "is-dissolve" : ""} ${className}`}
+      className={`mosaic-piece ${ghost ? "is-ghost" : ""} ${className}`}
       style={{ width: cols * cellPx, height: rows * cellPx, ...style }}
       onPointerDown={onPointerDown}
     >

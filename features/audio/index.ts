@@ -12,10 +12,14 @@ export {
   ensureAudioReady,
   getAudioContext,
   isSoundMuted,
+  muteBgmImmediate,
   noteToFrequency,
   setSoundMuted,
   unlockAudio,
+  unmuteBgm,
 } from "@/features/audio/soundEngine";
+
+export { isBgmSuppressed, suppressBgm } from "@/features/audio/bgmControl";
 
 export { createButtonClick, createHover } from "@/features/audio/ui";
 
@@ -47,6 +51,7 @@ import {
   setActiveGameLoop,
   stopActiveGameLoop,
 } from "@/features/audio/ambient";
+import { isBgmSuppressed } from "@/features/audio/bgmControl";
 import {
   createBlockRotate,
   createBlockSnap,
@@ -159,7 +164,7 @@ export class MiavSound {
   }
 
   async startBgm(stage = 1) {
-    if (isSoundMuted()) return;
+    if (isSoundMuted() || isBgmSuppressed()) return;
     const loop = createGameLoop(stage);
     setActiveGameLoop(loop);
     await loop.start();

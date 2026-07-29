@@ -56,9 +56,6 @@ export type ClearPhase =
   | "reveal"
   | "fireworks"
   | "victory"
-  | "glow"
-  | "dissolve"
-  | "stream"
   | "done";
 
 export type PatternResult = {

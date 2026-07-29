@@ -1,138 +1,57 @@
-/** Shared Luna sprite sheet — single transparent WebP, uniform grid cells. */
+/** Shared Luna sprite sheet — single WebP, uniform grid cells. */
 
 export const LUNA_SPRITESHEET_URL = "/characters/luna/spritesheet.webp";
 
 export const LUNA_CELL_PX = 160;
-
-export type LunaFrameId =
-  | "sit_0"
-  | "sit_1"
-  | "walk_0"
-  | "walk_1"
-  | "walk_2"
-  | "walk_3"
-  | "tail_0"
-  | "tail_1"
-  | "tail_2"
-  | "bark_0"
-  | "bark_1"
-  | "sleep_0";
-
-export type LunaFrameRect = {
-  id: LunaFrameId;
-  index: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-
-/** Must match `FRAME_ORDER` in scripts/build-luna-spritesheet.py */
-const FRAME_ORDER: LunaFrameId[] = [
-  "sit_0",
-  "sit_1",
-  "walk_0",
-  "walk_1",
-  "walk_2",
-  "walk_3",
-  "tail_0",
-  "tail_1",
-  "tail_2",
-  "bark_0",
-  "bark_1",
-  "sleep_0",
-];
-
-export const LUNA_FRAMES: Record<LunaFrameId, LunaFrameRect> = Object.fromEntries(
-  FRAME_ORDER.map((id, index) => [
-    id,
-    {
-      id,
-      index,
-      x: index * LUNA_CELL_PX,
-      y: 0,
-      w: LUNA_CELL_PX,
-      h: LUNA_CELL_PX,
-    },
-  ]),
-) as Record<LunaFrameId, LunaFrameRect>;
-
-export const LUNA_SHEET_WIDTH = LUNA_CELL_PX * FRAME_ORDER.length;
+export const LUNA_FRAME_COUNT = 12;
+export const LUNA_SHEET_WIDTH = LUNA_CELL_PX * LUNA_FRAME_COUNT;
 export const LUNA_SHEET_HEIGHT = LUNA_CELL_PX;
 
-export type LunaAnimationId =
-  | "sit"
-  | "walk"
-  | "tail_wag"
-  | "bark"
-  | "sleep";
+export type LunaAnimationId = "sit" | "walk" | "tail_wag" | "bark" | "sleep";
 
-/** @deprecated Use `sit` */
-export type LunaAnimationIdLegacy = LunaAnimationId | "idle" | "blink" | "happy" | "side";
-
-export type LunaAnimationClip = {
-  id: LunaAnimationId;
-  frames: LunaFrameId[];
-  frameDurationMs: number;
+export type LunaClip = {
+  /** Column indices in the spritesheet (0-based). */
+  frames: number[];
+  fps: number;
   loop: boolean;
 };
 
-export const LUNA_ANIMATIONS: Record<LunaAnimationId, LunaAnimationClip> = {
-  sit: {
-    id: "sit",
-    frames: ["sit_0", "sit_1"],
-    frameDurationMs: 900,
-    loop: true,
-  },
+/** Frame column indices — must match `scripts/build-luna-spritesheet.py` FRAME_ORDER. */
+const FRAME: Record<string, number> = {
+  sit_0: 0,
+  sit_1: 1,
+  walk_0: 2,
+  walk_1: 3,
+  walk_2: 4,
+  walk_3: 5,
+  tail_0: 6,
+  tail_1: 7,
+  tail_2: 8,
+  bark_0: 9,
+  bark_1: 10,
+  sleep_0: 11,
+};
+
+export const LUNA_CLIPS: Record<LunaAnimationId, LunaClip> = {
+  sit: { frames: [FRAME.sit_0, FRAME.sit_1], fps: 3, loop: true },
   walk: {
-    id: "walk",
-    frames: ["walk_0", "walk_1", "walk_2", "walk_3"],
-    frameDurationMs: 180,
+    frames: [FRAME.walk_0, FRAME.walk_1, FRAME.walk_2, FRAME.walk_3],
+    fps: 8,
     loop: true,
   },
   tail_wag: {
-    id: "tail_wag",
-    frames: ["tail_0", "tail_1", "tail_2", "tail_1"],
-    frameDurationMs: 140,
+    frames: [FRAME.tail_0, FRAME.tail_1, FRAME.tail_2, FRAME.tail_1],
+    fps: 10,
     loop: true,
   },
   bark: {
-    id: "bark",
-    frames: ["bark_0", "bark_1", "bark_0"],
-    frameDurationMs: 120,
+    frames: [FRAME.bark_0, FRAME.bark_1, FRAME.bark_0, FRAME.bark_1],
+    fps: 6,
     loop: true,
   },
-  sleep: {
-    id: "sleep",
-    frames: ["sleep_0"],
-    frameDurationMs: 1200,
-    loop: true,
-  },
+  sleep: { frames: [FRAME.sleep_0], fps: 1, loop: true },
 };
 
-export function getLunaFrameRect(frameId: LunaFrameId): LunaFrameRect {
-  return LUNA_FRAMES[frameId];
-}
-
-export function resolveLunaAnimation(
-  animation: LunaAnimationId | "idle" | "blink" | "happy" | "side",
-): LunaAnimationClip {
-  switch (animation) {
-    case "idle":
-    case "sit":
-      return LUNA_ANIMATIONS.sit;
-    case "walk":
-    case "side":
-      return LUNA_ANIMATIONS.walk;
-    case "tail_wag":
-    case "happy":
-      return LUNA_ANIMATIONS.tail_wag;
-    case "blink":
-    case "bark":
-      return LUNA_ANIMATIONS.bark;
-    case "sleep":
-      return LUNA_ANIMATIONS.sleep;
-    default:
-      return LUNA_ANIMATIONS.sit;
-  }
+export function getLunaClip(animation: LunaAnimationId): LunaClip {
+  return LUNA_CLIPS[animation];
 }

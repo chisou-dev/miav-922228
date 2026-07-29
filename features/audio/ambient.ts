@@ -2,12 +2,18 @@ import {
   ensureAudioReady,
   getAudioContext,
   isSoundMuted,
+  muteBgmImmediate,
   noteToFrequency,
   scheduleNoiseBurst,
   scheduleTone,
+  SE_GAIN,
+  unmuteBgm,
 } from "@/features/audio/soundEngine";
 
 const BASE_BPM = 96;
+const BGM_MELODY_GAIN = SE_GAIN * 0.72;
+const BGM_BASS_GAIN = SE_GAIN * 0.9;
+const BGM_NOISE_GAIN = SE_GAIN * 0.22;
 
 const MELODY: [string, number][] = [
   ["C5", 0.125],
@@ -68,7 +74,8 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
       type: "square",
       freq: noteToFrequency(note),
       duration: dur * eighthSec(),
-      gain: 0.04,
+      gain: BGM_MELODY_GAIN,
+      route: "bgm",
     });
     melodyIndex = (melodyIndex + 1) % MELODY.length;
   };
@@ -80,7 +87,8 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
       type: "triangle",
       freq: noteToFrequency(note),
       duration: quarterSec() * 0.95,
-      gain: 0.05,
+      gain: BGM_BASS_GAIN,
+      route: "bgm",
     });
     bassIndex = (bassIndex + 1) % BASS.length;
   };
@@ -89,7 +97,7 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
     if (loopMuted || isSoundMuted()) return;
     const ctx = getAudioContext();
     if (!ctx) return;
-    scheduleNoiseBurst(ctx.currentTime, 0.025, 0.012, 2000);
+    scheduleNoiseBurst(ctx.currentTime, 0.025, BGM_NOISE_GAIN, 2000, "bgm");
   };
 
   const clearTimers = () => {
@@ -121,6 +129,7 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
       running = true;
       melodyIndex = 0;
       bassIndex = 0;
+      unmuteBgm();
       armTimers();
     },
     stop() {
@@ -151,4 +160,5 @@ export function setActiveGameLoop(loop: GameLoopHandle | null) {
 export function stopActiveGameLoop() {
   activeLoop?.stop();
   activeLoop = null;
+  muteBgmImmediate();
 }

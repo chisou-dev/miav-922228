@@ -16,8 +16,8 @@ export const binaryMosaicConfig = {
   maxDesignedLevels: 30,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
-  /** Rotation unlocks from this level onward. */
-  rotateFromLevel: 20,
+  /** Rotation unlocks from this level onward (Phase 1 difficulty curve). */
+  rotateFromLevel: 6,
 } as const;
 
 const levels = levelsJson as LevelDef[];
@@ -37,6 +37,17 @@ for (const level of levels) {
       );
     }
   }
+}
+
+let prevPieceCount = 0;
+for (const level of [...levels].sort((a, b) => a.id - b.id)) {
+  const { pieces } = extractPiecesFromLevel(level);
+  if (pieces.length < prevPieceCount) {
+    throw new Error(
+      `Level ${level.id}: piece count ${pieces.length} < previous ${prevPieceCount}`,
+    );
+  }
+  prevPieceCount = pieces.length;
 
   let filledRects = 0;
   for (const piece of pieces) {

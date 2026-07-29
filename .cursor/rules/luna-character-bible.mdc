@@ -1,0 +1,31 @@
+---
+description: MIAV mascot Luna — enforce Character Bible, prevent design drift
+globs: docs/characters/**,assets/characters/**,games/**/assets/**,public/**/luna/**
+alwaysApply: true
+---
+
+# Luna Character Bible
+
+When generating, illustrating, or implementing **Luna (ルナ)**, the MIAV mascot:
+
+1. Read `docs/characters/luna/CHARACTER_BIBLE.md` and use `docs/characters/luna/reference.png` as the authoritative visual reference.
+2. **No design drift** — every output must depict the same character.
+
+## Immutable features (never change)
+
+- Floppy ears — **never upright**
+- Medium-blue round nose `#58A7E6`
+- Blue paw pads `#58A7E6`
+- Small blue mesh on forehead/fringe only `#CFE6FF` (subtle)
+- Thin dark-blue ring on **left front leg only** `#2E7BCB` — not a collar
+- Shiba-like curled cream tail
+- Base fur `#FFF5EC` / shadow `#F1E7D6`
+- Ordinary-dog appearance — no robot/cyber styling
+
+## Forbidden (NG)
+
+Robot parts, LED eyes, metal joints, mecha ears, collar/leash, armor, cyber aesthetic, upright ears, rings on other legs, excessive head mesh, palette drift from official hex codes.
+
+## On conflict
+
+Reference image > Character Bible text > general MIAV style.
