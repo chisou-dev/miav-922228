@@ -96,18 +96,64 @@
   color: inherit;
 }
 
-.mosaic-level-best--neon {
+.mosaic-level-best-star {
+  display: inline-block;
+  background-image: linear-gradient(
+    180deg,
+    #cfe6ff 0%,
+    #58a7e6 45%,
+    #2e7bcb 75%,
+    #1a4f8c 100%
+  );
+  background-size: 100% 220%;
+  background-position: 0 0%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  font-size: 0.95em;
+  line-height: 1;
+  animation: mosaic-star-pulse 10s ease-in-out infinite;
+  will-change: background-position, opacity;
+}
+
+.mosaic-level-best-star--perfect {
+  background-image: none;
+  background-clip: border-box;
+  -webkit-background-clip: border-box;
+  color: #1a4f8c;
+  -webkit-text-fill-color: #1a4f8c;
+  font-size: 1.2em;
+  font-weight: 700;
+  animation: none;
+  opacity: 1;
+  will-change: auto;
+}
+
+.mosaic-level-best--high {
   color: #2e7bcb;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 
-.mosaic-level-best--neon .mosaic-level-best-num {
+.mosaic-level-best--high .mosaic-level-best-num {
   font-family: "Orbitron", ui-monospace, "Cascadia Code", Consolas, monospace;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
   color: #2e7bcb;
+}
+
+@keyframes mosaic-star-pulse {
+  0%,
+  100% {
+    background-position: 0 0%;
+    opacity: 0.45;
+  }
+  50% {
+    background-position: 0 100%;
+    opacity: 1;
+  }
 }
 
 .mosaic-play-top {
@@ -611,15 +657,21 @@
     white-space: nowrap;
   }
 
-  .mosaic-level-best--neon {
+  .mosaic-level-best--high {
     padding: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mosaic-hello,
-  .mosaic-clear-flash {
+  .mosaic-clear-flash,
+  .mosaic-level-best-star {
     animation: none;
+  }
+
+  .mosaic-level-best-star {
+    background-position: 0 55%;
+    opacity: 0.85;
   }
 
   .mosaic-clear-flash {

@@ -1104,12 +1104,28 @@ export function BinaryMosaicGame() {
                         <span
                           className={
                             bestScore >= 90
-                              ? "mosaic-level-best mosaic-level-best--neon"
+                              ? "mosaic-level-best mosaic-level-best--high"
                               : "mosaic-level-best"
                           }
                           title="Best Score"
                         >
-                          B.S.{" "}
+                          <span
+                            className={
+                              bestScore >= 100
+                                ? "mosaic-level-best-star mosaic-level-best-star--perfect"
+                                : "mosaic-level-best-star"
+                            }
+                            style={
+                              bestScore >= 100
+                                ? undefined
+                                : {
+                                    animationDelay: `${((level.id * 37) % 100) / 10}s`,
+                                  }
+                            }
+                            aria-hidden="true"
+                          >
+                            {bestScore >= 100 ? "✶" : "★"}
+                          </span>{" "}
                           <span className="mosaic-level-best-num">
                             {bestScore}
                           </span>
