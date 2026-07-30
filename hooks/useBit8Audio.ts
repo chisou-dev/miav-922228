@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { isBgmSuppressed } from "@/features/audio/bgmControl";
 import { MiavSound } from "@/features/audio";
 
-/** Procedural BGM for a game screen; cleans up on unmount. */
+/** Procedural BGM for a game screen; cleans up on unmount / level change. */
 export function useBit8Audio(enabled = true, stage = 1) {
   const audioRef = useRef(MiavSound.getInstance());
 
@@ -14,21 +14,18 @@ export function useBit8Audio(enabled = true, stage = 1) {
       audio.stopBgm();
       return;
     }
+
     let cancelled = false;
-    void audio.unlock().then(() => {
+    void (async () => {
+      await audio.unlock();
       if (cancelled || isBgmSuppressed()) return;
-      void audio.startBgm(stage);
-    });
+      await audio.startBgm(stage);
+    })();
+
     return () => {
       cancelled = true;
       audio.stopBgm();
     };
-  }, [enabled, stage]);
-
-  useEffect(() => {
-    if (enabled && !isBgmSuppressed()) {
-      audioRef.current.setBgmStage(stage);
-    }
   }, [enabled, stage]);
 
   return audioRef.current;

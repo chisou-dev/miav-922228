@@ -176,7 +176,9 @@ function MosaicPlayfield({
     audio.setMuted(!next);
     if (next) {
       void audio.unlock().then(() => {
-        if (running && !clearing) void audio.startBgm(levelId);
+        if (running && !clearing && !isBgmSuppressed()) {
+          void audio.startBgm(levelId);
+        }
       });
       void audio.play("button");
     } else {
@@ -1035,22 +1037,31 @@ export function BinaryMosaicGame() {
     setProgress(loadProgress());
   }, []);
 
-  // ページが非表示になったら BGM を止め、戻ったら再開
+  // ページ非表示で BGM 停止。level 切替時に cleanup で止めない（速度残留・二重再生の原因）
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden) {
         audio.stopBgm();
-      } else if (soundOn && screen === "play" && !isBgmSuppressed()) {
+        return;
+      }
+      if (soundOn && screen === "play" && !isBgmSuppressed()) {
         void audio.startBgm(levelId);
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
-      // ゲーム画面を離れるときも必ず止める
-      audio.stopBgm();
     };
   }, [audio, soundOn, screen, levelId]);
+
+  useEffect(() => {
+    if (screen !== "play") {
+      audio.stopBgm();
+    }
+    return () => {
+      audio.stopBgm();
+    };
+  }, [audio, screen]);
 
   if (screen === "select") {
     return (
@@ -1085,8 +1096,7 @@ export function BinaryMosaicGame() {
                 >
                   <span>{level.title}</span>
                   <span className="mosaic-level-meta">
-                    {level.targetText} ·{" "}
-                    {extractPiecesFromLevel(level).pieces.length} pieces
+                    {level.targetText}
                     {cleared && bestScore != null && bestTime != null ? (
                       <>
                         {" "}
@@ -1097,8 +1107,16 @@ export function BinaryMosaicGame() {
                               ? "mosaic-level-best mosaic-level-best--neon"
                               : "mosaic-level-best"
                           }
+                          title="Best Score"
                         >
-                          Best Score {bestScore} · {formatTime(bestTime)}
+                          B.S.{" "}
+                          <span className="mosaic-level-best-num">
+                            {bestScore}
+                          </span>
+                          {" · "}
+                          <span className="mosaic-level-best-num">
+                            {formatTime(bestTime)}
+                          </span>
                         </span>
                       </>
                     ) : null}

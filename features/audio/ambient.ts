@@ -17,7 +17,6 @@ const BGM_NOISE_GAIN = SE_GAIN * 0.22;
 /**
  * Discrete tempo bands by level — always the same for a given range,
  * so returning from L20 to L1 restores the slow band (no leftover speed).
- * Caps stay comfortable (never frantic).
  *
  * 1–5 → 96 · 6–10 → 104 · 11–15 → 112 · 16–20 → 120
  */
@@ -64,8 +63,8 @@ export type GameLoopHandle = {
 };
 
 /**
- * Procedural loop BGM — melody fixed, BPM by level band (not linear per level).
- * Square + Triangle + occasional noise. No audio files.
+ * Procedural loop BGM — melody fixed, BPM by level band.
+ * start() is abort-safe: stop() during unlock will not revive timers.
  */
 export function createGameLoop(initialStage = 1): GameLoopHandle {
   let stage = Math.max(1, initialStage);
@@ -75,15 +74,15 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
   let bassTimer: number | null = null;
   let noiseTimer: number | null = null;
   let running = false;
+  let startEpoch = 0;
   let loopMuted = isSoundMuted();
 
   const bpm = () => bpmForLevel(stage);
-
   const eighthSec = () => 60 / bpm() / 2;
   const quarterSec = () => 60 / bpm();
 
   const tickMelody = () => {
-    if (loopMuted || isSoundMuted()) return;
+    if (!running || loopMuted || isSoundMuted()) return;
     const [note, dur] = MELODY[melodyIndex];
     scheduleTone({
       type: "square",
@@ -96,7 +95,7 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
   };
 
   const tickBass = () => {
-    if (loopMuted || isSoundMuted()) return;
+    if (!running || loopMuted || isSoundMuted()) return;
     const note = BASS[bassIndex];
     scheduleTone({
       type: "triangle",
@@ -109,7 +108,7 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
   };
 
   const tickNoise = () => {
-    if (loopMuted || isSoundMuted()) return;
+    if (!running || loopMuted || isSoundMuted()) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     scheduleNoiseBurst(ctx.currentTime, 0.025, BGM_NOISE_GAIN, 2000, "bgm");
@@ -133,22 +132,28 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
     tickBass();
     beatTimer = window.setInterval(tickMelody, eighthMs);
     bassTimer = window.setInterval(tickBass, quarterMs);
-    // Soft noise layer only in the fastest band (16+)
     if (stage >= 16) {
       noiseTimer = window.setInterval(tickNoise, quarterMs * 2);
     }
   };
 
-  return {
+  const handle: GameLoopHandle = {
     async start() {
-      await ensureAudioReady();
+      const epoch = ++startEpoch;
       running = true;
+      await ensureAudioReady();
+      // stop() or a newer start() ran while we awaited unlock
+      if (epoch !== startEpoch || !running || activeLoop !== handle) {
+        clearTimers();
+        return;
+      }
       melodyIndex = 0;
       bassIndex = 0;
       unmuteBgm();
       armTimers();
     },
     stop() {
+      startEpoch += 1;
       running = false;
       clearTimers();
     },
@@ -168,6 +173,8 @@ export function createGameLoop(initialStage = 1): GameLoopHandle {
       loopMuted = muted;
     },
   };
+
+  return handle;
 }
 
 let activeLoop: GameLoopHandle | null = null;
@@ -177,6 +184,7 @@ export function getActiveGameLoop() {
 }
 
 export function setActiveGameLoop(loop: GameLoopHandle | null) {
+  if (activeLoop === loop) return;
   activeLoop?.stop();
   activeLoop = loop;
 }

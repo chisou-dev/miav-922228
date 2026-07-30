@@ -111,6 +111,8 @@ export async function playSfx(id: SfxId) {
 /** Singleton facade — mute state + BGM lifecycle for game screens. */
 export class MiavSound {
   private static instance: MiavSound | null = null;
+  /** Invalidates in-flight startBgm() so old tempo never resumes. */
+  private bgmToken = 0;
 
   static getInstance() {
     if (!MiavSound.instance) MiavSound.instance = new MiavSound();
@@ -165,10 +167,23 @@ export class MiavSound {
   }
 
   async startBgm(stage = 1) {
+    const token = ++this.bgmToken;
     if (isSoundMuted() || isBgmSuppressed()) return;
+
+    // Hard reset so a previous band cannot keep ticking
+    stopActiveGameLoop();
+    if (token !== this.bgmToken) return;
+
     const loop = createGameLoop(stage);
     setActiveGameLoop(loop);
     await loop.start();
+
+    if (token !== this.bgmToken) {
+      loop.stop();
+      if (getActiveGameLoop() === loop) {
+        stopActiveGameLoop();
+      }
+    }
   }
 
   setBgmStage(stage: number) {
@@ -176,6 +191,7 @@ export class MiavSound {
   }
 
   stopBgm() {
+    this.bgmToken += 1;
     stopActiveGameLoop();
   }
 
