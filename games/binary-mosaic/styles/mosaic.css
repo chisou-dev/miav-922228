@@ -212,6 +212,31 @@
   color: var(--mosaic-muted);
 }
 
+.mosaic-hud-target {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--mosaic-ink);
+  animation: mosaic-target-glow 5s ease-in-out infinite;
+}
+
+@keyframes mosaic-target-glow {
+  0%,
+  86%,
+  100% {
+    color: var(--mosaic-ink);
+    text-shadow: none;
+    filter: brightness(1);
+  }
+  90%,
+  94% {
+    color: #1a4f8c;
+    text-shadow:
+      0 0 10px color-mix(in srgb, #58a7e6 80%, transparent),
+      0 0 22px color-mix(in srgb, #cfe6ff 70%, transparent);
+    filter: brightness(1.25);
+  }
+}
+
 .mosaic-btn {
   border: 1px solid var(--mosaic-ink);
   background: var(--mosaic-ink);
@@ -377,6 +402,32 @@
 }
 
 .mosaic-reject-marker.is-met {
+  z-index: 6;
+  background: color-mix(in srgb, #7ddea0 75%, #ffffff);
+  border-style: solid;
+  border-color: #1a6b3c;
+  color: #0d3d22;
+  animation: none;
+}
+
+.mosaic-hint-marker {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a4f8c;
+  background: color-mix(in srgb, #cfe6ff 72%, #ffffff);
+  border: 1px dashed #2e7bcb;
+  pointer-events: none;
+  animation: mosaic-reject-in 0.35s ease both;
+}
+
+.mosaic-hint-marker.is-met {
   z-index: 6;
   background: color-mix(in srgb, #7ddea0 75%, #ffffff);
   border-style: solid;

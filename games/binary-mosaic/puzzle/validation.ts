@@ -110,3 +110,34 @@ export function nextHintCellAnywhere(
   }
   return null;
 }
+
+/** All active solution cells in row-major order. */
+export function listSolutionCells(
+  level: LevelDef,
+): { row: number; col: number; bit: 0 | 1; pieceIndex: number }[] {
+  const cells: { row: number; col: number; bit: 0 | 1; pieceIndex: number }[] =
+    [];
+  for (let r = 0; r < level.rows; r += 1) {
+    for (let c = 0; c < level.cols; c += 1) {
+      const pieceIndex = level.solution[r][c];
+      if (pieceIndex < 0) continue;
+      cells.push({ row: r, col: c, bit: level.bits[r][c], pieceIndex });
+    }
+  }
+  return cells;
+}
+
+export const HINT_MAX_USES = 3;
+
+/** Cells revealed after N hint presses: 6 → 12 → all. */
+export function hintRevealCount(uses: number, totalCells: number): number {
+  if (uses <= 0 || totalCells <= 0) return 0;
+  if (uses === 1) return Math.min(6, totalCells);
+  if (uses === 2) return Math.min(12, totalCells);
+  return totalCells;
+}
+
+export function cellsForHintUses(level: LevelDef, uses: number) {
+  const all = listSolutionCells(level);
+  return all.slice(0, hintRevealCount(uses, all.length));
+}

@@ -141,7 +141,7 @@ export function ClearSequence({
             </div>
             <div>
               <dt>Hint</dt>
-              <dd>{result.hintUsed ? "ON" : "OFF"}</dd>
+              <dd>{result.hintUses > 0 ? `×${result.hintUses}` : "OFF"}</dd>
             </div>
             <div className="mosaic-result-score">
               <dt>Pattern Score</dt>

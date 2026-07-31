@@ -41,6 +41,11 @@ export type LevelDef = {
    */
   solution: number[][];
   hintAllowed: boolean;
+  /**
+   * Optional explicit piece indices that may rotate.
+   * If omitted, the engine picks up to the per-level rotatable count.
+   */
+  rotatablePieceIndices?: number[];
 };
 
 export type PieceRuntime = {
@@ -49,6 +54,8 @@ export type PieceRuntime = {
   baseShape: Shape;
   rotation: 0 | 1 | 2 | 3;
   placed: Cell | null;
+  /** When true, this piece may be rotated (per-level quota). */
+  canRotate?: boolean;
 };
 
 export type ClearPhase =
@@ -61,7 +68,8 @@ export type ClearPhase =
 export type PatternResult = {
   completionTimeSec: number;
   moves: number;
-  hintUsed: boolean;
+  /** How many times the Hint button was pressed (0–3). */
+  hintUses: number;
   patternScore: number;
   /** Decoded from the assembled board bits. */
   decodedText: string;

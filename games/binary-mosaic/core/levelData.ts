@@ -35,6 +35,8 @@ export type LevelData = {
    */
   solution: number[][];
   hintAllowed: boolean;
+  /** Optional explicit rotatable piece indices (else auto-picked by quota). */
+  rotatablePieceIndices?: number[];
 };
 
 /** Clear-condition slice (solver / scoring / Creator Mode). */

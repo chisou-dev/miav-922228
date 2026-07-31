@@ -11,7 +11,6 @@ import {
 } from "react";
 import { AudioManager } from "@/features/audio";
 import {
-  binaryMosaicConfig,
   getAllLevels,
   getLevel,
   getNextLevelId,
@@ -39,12 +38,16 @@ import { decodeBoardRows } from "@/games/binary-mosaic/puzzle/rowDecode";
 import {
   buildPatternResult,
   formatTime,
+  HINT_PENALTY_PER_USE,
 } from "@/games/binary-mosaic/puzzle/scoring";
 import {
   allPiecesPlaced,
   buildPieceExpectations,
+  cellsForHintUses,
   findWrongPlacedPieces,
+  HINT_MAX_USES,
   isPieceCorrectlyPlaced,
+  listSolutionCells,
   nextHintCellAnywhere,
   nextHintCellForPiece,
 } from "@/games/binary-mosaic/puzzle/validation";
@@ -66,6 +69,12 @@ import {
   applyTrayOrder,
   pickTrayPatternIndex,
 } from "@/games/binary-mosaic/puzzle/trayOrder";
+import {
+  initialRotationForRotatable,
+  pickRotatablePieceIndices,
+  rotatableCountForLevel,
+  rotationFeatureStartsAt,
+} from "@/games/binary-mosaic/puzzle/rotationPolicy";
 import { useBit8Audio } from "@/hooks/useBit8Audio";
 
 const ClearSequence = dynamic(
@@ -96,13 +105,26 @@ function createPieces(levelId: number): PieceRuntime[] {
   const level = getLevel(levelId);
   if (!level) return [];
   const { pieces } = extractPiecesFromLevel(level);
-  const runtime: PieceRuntime[] = pieces.map((piece) => ({
-    id: `p-${piece.pieceIndex}`,
-    pieceIndex: piece.pieceIndex,
-    baseShape: piece.baseShape,
-    rotation: 0 as const,
-    placed: null,
-  }));
+  const rotatableIds = new Set(
+    pickRotatablePieceIndices(
+      pieces,
+      rotatableCountForLevel(levelId),
+      level.rotatablePieceIndices,
+    ),
+  );
+  const runtime: PieceRuntime[] = pieces.map((piece) => {
+    const canRotate = rotatableIds.has(piece.pieceIndex);
+    return {
+      id: `p-${piece.pieceIndex}`,
+      pieceIndex: piece.pieceIndex,
+      baseShape: piece.baseShape,
+      rotation: canRotate
+        ? initialRotationForRotatable(piece.baseShape)
+        : (0 as const),
+      placed: null,
+      canRotate,
+    };
+  });
   return applyTrayOrder(runtime, levelId, pickTrayPatternIndex());
 }
 
@@ -130,7 +152,6 @@ function MosaicPlayfield({
     [level.solution],
   );
   const cellPx = useCellPx();
-  const rotationAllowed = level.id >= binaryMosaicConfig.rotateFromLevel;
   const boardRef = useRef<HTMLDivElement>(null);
   const dragLayerRef = useRef<HTMLDivElement>(null);
   const piecesRef = useRef<PieceRuntime[]>([]);
@@ -145,8 +166,7 @@ function MosaicPlayfield({
   const [pieces, setPieces] = useState<PieceRuntime[]>(() =>
     createPieces(levelId),
   );
-  const [hintOn, setHintOn] = useState(false);
-  const [hintUsed, setHintUsed] = useState(false);
+  const [hintUses, setHintUses] = useState(0);
   const [moves, setMoves] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(true);
@@ -216,8 +236,7 @@ function MosaicPlayfield({
   useEffect(() => {
     clearedRef.current = false;
     setPieces(createPieces(levelId));
-    setHintOn(false);
-    setHintUsed(false);
+    setHintUses(0);
     setMoves(0);
     setElapsed(0);
     setRunning(true);
@@ -268,7 +287,7 @@ function MosaicPlayfield({
     const completionResult = buildPatternResult({
       completionTimeSec,
       moves,
-      hintUsed,
+      hintUses,
       pieceCount: pieces.length,
       decodedText: decodedReady,
     });
@@ -280,7 +299,7 @@ function MosaicPlayfield({
     decodedReady,
     running,
     moves,
-    hintUsed,
+    hintUses,
     pieces.length,
     level.id,
     onLevelCleared,
@@ -361,9 +380,12 @@ function MosaicPlayfield({
 
   const rotatePiece = useCallback(
     (pieceId: string) => {
-      if (!rotationAllowed) return;
+      const target = piecesRef.current.find((p) => p.id === pieceId);
+      if (!target?.canRotate) return;
       let rotated = false;
       setPieces((prev) => {
+        const piece = prev.find((p) => p.id === pieceId);
+        if (!piece?.canRotate) return prev;
         const board = boardWithPieces(
           level.rows,
           level.cols,
@@ -380,7 +402,7 @@ function MosaicPlayfield({
         bumpMove();
       }
     },
-    [rotationAllowed, level, soundOn, audio],
+    [level, soundOn, audio],
   );
 
   const onPiecePointerDown = (
@@ -604,12 +626,14 @@ function MosaicPlayfield({
       }
 
       if (
-        rotationAllowed &&
         selectedId &&
         (event.key === "r" || event.key === "R")
       ) {
-        event.preventDefault();
-        rotatePiece(selectedId);
+        const selected = piecesRef.current.find((p) => p.id === selectedId);
+        if (selected?.canRotate) {
+          event.preventDefault();
+          rotatePiece(selectedId);
+        }
         return;
       }
 
@@ -667,7 +691,6 @@ function MosaicPlayfield({
     kbOrigin,
     trayPieceIds,
     pieces,
-    rotationAllowed,
     rotatePiece,
     placeAtOrigin,
     level.rows,
@@ -694,6 +717,24 @@ function MosaicPlayfield({
     }
     return covered;
   }, [pieces, expectations, dragPieceId]);
+
+  const hintCells = useMemo(
+    () => cellsForHintUses(level, hintUses),
+    [level, hintUses],
+  );
+
+  const solutionCellCount = useMemo(
+    () => listSolutionCells(level).length,
+    [level],
+  );
+
+  const rejectKeys = useMemo(
+    () => new Set(rejectMarkers.map((m) => `${m.row},${m.col}`)),
+    [rejectMarkers],
+  );
+
+  const hintUsesMaxed =
+    hintUses >= HINT_MAX_USES || hintCells.length >= solutionCellCount;
 
   const boardBits = useMemo(
     () => buildBoardGrid(level, pieces, { excludePieceId: dragPieceId }),
@@ -748,7 +789,7 @@ function MosaicPlayfield({
       <header className="mosaic-hud">
         <div className="mosaic-hud-item">
           <span className="mosaic-hud-label">Target</span>
-          <span>{level.targetText}</span>
+          <span className="mosaic-hud-target">{level.targetText}</span>
         </div>
         <div className="mosaic-hud-item">
           <span className="mosaic-hud-label">Time</span>
@@ -771,21 +812,20 @@ function MosaicPlayfield({
         {level.hintAllowed ? (
           <button
             type="button"
-            className={`mosaic-btn mosaic-btn--ghost ${hintOn ? "is-on" : ""}`}
+            className={`mosaic-btn mosaic-btn--ghost ${hintUses > 0 ? "is-on" : ""}`}
             onClick={() => {
+              if (hintUsesMaxed) return;
               void audio.playSe("button");
-              setHintOn((v) => {
-                const next = !v;
-                if (next) setHintUsed(true);
-                return next;
-              });
+              setHintUses((n) => Math.min(HINT_MAX_USES, n + 1));
             }}
-            disabled={clearing}
+            disabled={clearing || hintUsesMaxed}
+            title={`Reveal cells (−${HINT_PENALTY_PER_USE} pts each). 6 → 12 → all`}
           >
-            Hint
+            Hint{hintUses > 0 ? ` ${hintUses}/${HINT_MAX_USES}` : ""}
           </button>
         ) : null}
-        {rotationAllowed && selectedId ? (
+        {selectedId &&
+        pieces.some((p) => p.id === selectedId && p.canRotate) ? (
           <button
             type="button"
             className="mosaic-btn mosaic-btn--ghost"
@@ -867,6 +907,26 @@ function MosaicPlayfield({
             );
           })}
 
+          {hintCells.map((cell) => {
+            const key = `${cell.row},${cell.col}`;
+            if (rejectKeys.has(key)) return null;
+            const met = solvedCells.has(key);
+            return (
+              <span
+                key={`hint-${cell.row}-${cell.col}`}
+                className={`mosaic-hint-marker${met ? " is-met" : ""}`}
+                style={{
+                  left: cell.col * cellPx,
+                  top: cell.row * cellPx,
+                  width: cellPx,
+                  height: cellPx,
+                }}
+              >
+                {cell.bit}
+              </span>
+            );
+          })}
+
           {dropPreview ? (
             <div
               className={`mosaic-drop-preview${dropPreview.valid ? "" : " is-invalid"}`}
@@ -890,32 +950,6 @@ function MosaicPlayfield({
               }}
             />
           ) : null}
-
-          {hintOn &&
-            !dragPieceId &&
-            meta.pieces.map((def) => {
-              const runtime = pieces.find(
-                (p) => p.pieceIndex === def.pieceIndex,
-              );
-              if (runtime?.placed) return null;
-              return (
-                <div
-                  key={`hint-${def.pieceIndex}`}
-                  className="mosaic-hint"
-                  style={{
-                    left: def.target.col * cellPx,
-                    top: def.target.row * cellPx,
-                  }}
-                >
-                  <PieceView
-                    shape={def.baseShape}
-                    rotation={def.targetRotation}
-                    cellPx={cellPx}
-                    ghost
-                  />
-                </div>
-              );
-            })}
 
           {pieces.map((piece) => {
             if (!piece.placed || dragPieceId === piece.id) return null;
@@ -965,7 +999,7 @@ function MosaicPlayfield({
                       className={selectedId === piece.id ? "is-selected" : ""}
                       onPointerDown={(e) => onPiecePointerDown(e, piece)}
                     />
-                    {rotationAllowed ? (
+                    {piece.canRotate ? (
                       <button
                         type="button"
                         className="mosaic-rotate-mini"
@@ -1186,8 +1220,9 @@ export function BinaryMosaicGame() {
           })}
         </ul>
         <p className="mosaic-lead" style={{ marginTop: "2rem" }}>
-          Rotation unlocks from Level {binaryMosaicConfig.rotateFromLevel}.
-          Tab to select pieces · arrows to move · Enter to place · R to rotate.
+          Rotation from Level {rotationFeatureStartsAt()}: L20–21 one piece ·
+          L22–24 two · L25–28 three · L29–30 five. Tab to select · arrows to
+          move · Enter to place · R to rotate.
         </p>
       </div>
     );

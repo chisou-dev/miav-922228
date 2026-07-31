@@ -21,7 +21,10 @@ export const binaryMosaicConfig = {
   maxDesignedLevels: 30,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
-  /** Rotation unlocks from this level onward. */
+  /**
+   * Rotation quota starts at this level.
+   * Counts: L20–21 → 1 · L22–24 → 2 · L25–28 → 3 · L29–30 → 5
+   */
   rotateFromLevel: 20,
 } as const;
 

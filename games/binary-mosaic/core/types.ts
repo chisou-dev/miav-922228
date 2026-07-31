@@ -36,6 +36,8 @@ export type BoardPiece = {
   placed: Cell | null;
   /** Optional link to catalog shape for future tools. */
   catalogId?: PieceCatalogId;
+  /** Per-piece rotate permission (UI / session). */
+  canRotate?: boolean;
 };
 
 export type BoardCell = {
