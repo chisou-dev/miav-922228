@@ -157,6 +157,7 @@ export function hintRevealCount(
 /**
  * Grow the revealed hint list up to the quota for `uses`.
  * Skips cells that currently have a placed block (hints only on empty cells).
+ * From L20+: each new reveal is a random empty eligible cell (not row-major).
  */
 export function expandHintCells(
   level: LevelDef,
@@ -170,6 +171,26 @@ export function expandHintCells(
     previouslyRevealed.map((c) => [`${c.row},${c.col}`, c]),
   );
   const next = [...previouslyRevealed];
+  const need = target - next.length;
+  if (need <= 0) return next;
+
+  if (level.id >= HINT_ONE_PER_USE_FROM_LEVEL) {
+    const candidates: HintCell[] = [];
+    for (const cell of all) {
+      const key = `${cell.row},${cell.col}`;
+      if (byKey.has(key) || occupiedKeys.has(key)) continue;
+      candidates.push(cell);
+    }
+    for (let n = 0; n < need && candidates.length > 0; n += 1) {
+      const i = Math.floor(Math.random() * candidates.length);
+      const [picked] = candidates.splice(i, 1);
+      const key = `${picked.row},${picked.col}`;
+      next.push(picked);
+      byKey.set(key, picked);
+    }
+    return next;
+  }
+
   for (const cell of all) {
     if (next.length >= target) break;
     const key = `${cell.row},${cell.col}`;

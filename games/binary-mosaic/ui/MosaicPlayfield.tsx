@@ -75,7 +75,6 @@ import {
   initialRotationForRotatable,
   pickRotatablePieceIndices,
   rotatableCountForLevel,
-  rotationFeatureStartsAt,
 } from "@/games/binary-mosaic/puzzle/rotationPolicy";
 import { useBit8Audio } from "@/hooks/useBit8Audio";
 
@@ -1258,11 +1257,6 @@ export function BinaryMosaicGame() {
             );
           })}
         </ul>
-        <p className="mosaic-lead" style={{ marginTop: "2rem" }}>
-          Rotation from Level {rotationFeatureStartsAt()}: L20–21 one piece ·
-          L22–24 two · L25–28 three · L29–30 five. Tab to select · arrows to
-          move · Enter to place · R to rotate.
-        </p>
       </div>
     );
   }
