@@ -479,19 +479,19 @@
   font-family: ui-monospace, Consolas, monospace;
   font-size: 1rem;
   font-weight: 700;
-  color: #6b5a12;
-  background: color-mix(in srgb, #ffe9a8 82%, #ffffff);
-  border: 1px dashed #c4a035;
+  color: #101418;
+  background: transparent;
+  border: 1px dashed #101418;
   pointer-events: none;
   animation: mosaic-reject-in 0.35s ease both;
 }
 
 .mosaic-hint-marker.is-met {
   z-index: 6;
-  background: color-mix(in srgb, #e8f5c8 80%, #ffffff);
+  background: transparent;
   border-style: solid;
-  border-color: #8a9a3a;
-  color: #4a5a18;
+  border-color: #101418;
+  color: #101418;
   animation: none;
 }
 
