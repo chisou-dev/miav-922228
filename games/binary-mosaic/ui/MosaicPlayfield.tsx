@@ -957,6 +957,7 @@ function MosaicPlayfield({
               <div
                 key={piece.id}
                 className="mosaic-on-board"
+                data-tint={piece.pieceIndex % 6}
                 style={{
                   left: piece.placed.col * cellPx,
                   top: piece.placed.row * cellPx,

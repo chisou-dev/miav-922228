@@ -378,6 +378,64 @@
   z-index: 2;
 }
 
+/* Soft per-piece tints (sky / teal / slate) — placed blocks only. */
+.mosaic-on-board {
+  --piece-tint: #6aa0e8;
+}
+
+.mosaic-on-board[data-tint="1"] {
+  --piece-tint: #5aaf9a;
+}
+
+.mosaic-on-board[data-tint="2"] {
+  --piece-tint: #7a8eb8;
+}
+
+.mosaic-on-board[data-tint="3"] {
+  --piece-tint: #5b9ab8;
+}
+
+.mosaic-on-board[data-tint="4"] {
+  --piece-tint: #6b8aa0;
+}
+
+.mosaic-on-board[data-tint="5"] {
+  --piece-tint: #4f96c8;
+}
+
+/*
+ * Placed pieces must read against the pale board grid.
+ * Tray / drag ghost keep the default glass cells above.
+ */
+.mosaic-on-board .mosaic-cell {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 78%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--piece-tint) 22%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--piece-tint) 42%, #ffffff);
+}
+
+.mosaic-on-board .mosaic-cell--0 {
+  color: #2f3740;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #ffffff 82%, var(--piece-tint)) 0%,
+    color-mix(in srgb, #d2d8e0 72%, var(--piece-tint)) 48%,
+    color-mix(in srgb, #b0b8c4 58%, var(--piece-tint)) 100%
+  );
+  border-color: color-mix(in srgb, #6e7884 58%, var(--piece-tint));
+}
+
+.mosaic-on-board .mosaic-cell--1 {
+  color: #0a2a52;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #edf4ff 70%, var(--piece-tint)) 0%,
+    color-mix(in srgb, #a8c8f2 55%, var(--piece-tint)) 48%,
+    color-mix(in srgb, #6a9ad8 45%, var(--piece-tint)) 100%
+  );
+  border-color: color-mix(in srgb, #2e6bb0 50%, var(--piece-tint));
+}
+
 .mosaic-hint {
   z-index: 1;
   pointer-events: none;
@@ -547,6 +605,29 @@
     inset 0 1px 0 color-mix(in srgb, #ffffff 70%, transparent),
     inset 0 -1px 0 color-mix(in srgb, #4d7eb8 18%, transparent);
   backdrop-filter: blur(2px);
+}
+
+/* Bit 0 must stay visible — “00” pieces otherwise look like missing blocks. */
+.mosaic-cell--0 {
+  color: #3d4650;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #ffffff 72%, transparent) 0%,
+    color-mix(in srgb, #d5dbe3 50%, transparent) 48%,
+    color-mix(in srgb, #b7c0cc 28%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, #8a949f 55%, #ffffff);
+}
+
+.mosaic-cell--1 {
+  color: #0b2f5c;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #e8f2ff 70%, transparent) 0%,
+    color-mix(in srgb, #9ec5ff 42%, transparent) 48%,
+    color-mix(in srgb, #6aa0e8 26%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, #2e7bcb 45%, #ffffff);
 }
 
 .mosaic-piece.is-ghost .mosaic-cell {
