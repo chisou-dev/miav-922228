@@ -199,8 +199,22 @@ export function waitMs(ms: number) {
   });
 }
 
-/** Tear down shared audio (e.g. full app unload). */
+/** Tear down shared audio (timers already stopped by AudioManager). */
 export function disposeSoundEngine() {
+  if (masterGain) {
+    try {
+      masterGain.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+  }
+  if (bgmGain) {
+    try {
+      bgmGain.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+  }
   if (sharedContext) {
     void sharedContext.close();
   }

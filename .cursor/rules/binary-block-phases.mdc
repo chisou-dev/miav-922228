@@ -1,33 +1,25 @@
 ---
-description: Binary Block phase scope — currently Phase 2 local save
+description: Binary Block phase scope — Phase 1.1 core foundation
 globs:
   - games/binary-mosaic/**
   - docs/binary-block/**
   - features/audio/**
 ---
 
-# Binary Block — Phase 2
+# Binary Block — Phase 1.1
 
-Read `docs/binary-block/PHASES.md`. **Current phase: 2.**
+Read `docs/binary-block/PHASES.md`. **Current: Phase 1.1 (core foundation).**
 
-## Phase 2 scope
+## Scope
 
-Device-only progress via `localStorage` (`binary_block_progress`):
-
-- Cleared levels
-- Best Pattern Score per level
-- Best time per level
-
-Module: `games/binary-mosaic/progress/storage.ts`
+- `games/binary-mosaic/core/` — UI-free `board` · `rules` · `pieces` · `level` · `session`
+- `games/binary-mosaic/ui/` — React only (calls core for place/rotate)
+- Dependency: `board → rules → level/session → (future solver → analyzer → generator)`
 
 ## Forbidden
 
-Firebase · Google login · ranking UI · network / `fetch` · user IDs · World Memory · Luna images / spritesheet · Phase 3+ stubs
-
-## Do not change
-
-Phase 1 puzzle logic · clear FX · SE/BGM · core playfield UI (unless user requests)
+Firebase · Google login · ranking · network · Creator Mode · solver · generator · analyzer · Luna · new npm deps · rewriting AudioManager
 
 ## Capacity
 
-No Luna assets in the game bundle · no new npm dependencies · minimal save payload
+No unused stubs for solver/generator · keep puzzle adapters thin · do not reverse core dependency direction

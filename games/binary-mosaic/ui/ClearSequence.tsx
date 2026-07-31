@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  createDecoded,
-  createFirework,
-  createVictoryJingle,
-  stopActiveGameLoop,
-} from "@/features/audio";
+import { AudioManager } from "@/features/audio";
 import { textToBits } from "@/games/binary-mosaic/puzzle/binaryText";
 import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
 import { FireworksCanvas } from "@/games/binary-mosaic/ui/FireworksCanvas";
@@ -65,7 +60,8 @@ export function ClearSequence({
     let cancelled = false;
 
     const run = async () => {
-      stopActiveGameLoop();
+      const audio = AudioManager.getInstance();
+      // BGM already stopped via setGameState("clear"); SE only here
 
       for (const step of PHASES) {
         if (cancelled) return;
@@ -79,16 +75,16 @@ export function ClearSequence({
         if (step.phase === "reveal") {
           await Promise.all([
             waitMs(step.ms),
-            soundRef.current ? createDecoded() : Promise.resolve(),
+            soundRef.current ? audio.playSe("decoded") : Promise.resolve(),
           ]);
         } else if (step.phase === "fireworks") {
           await Promise.all([
             waitMs(step.ms),
-            soundRef.current ? createFirework() : Promise.resolve(),
+            soundRef.current ? audio.playSe("firework") : Promise.resolve(),
           ]);
         } else if (step.phase === "victory") {
           if (soundRef.current) {
-            await createVictoryJingle();
+            await audio.playSe("victory");
           } else {
             await waitMs(step.ms);
           }

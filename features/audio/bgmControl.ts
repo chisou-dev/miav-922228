@@ -1,12 +1,13 @@
 /**
- * BGM lifecycle flags — prevents BGM restarting during clear / result.
+ * @deprecated Prefer AudioManager.setSuppressed / isSuppressed.
+ * Kept as thin wrappers for existing call sites.
  */
-let bgmSuppressed = false;
+import { AudioManager } from "@/features/audio/AudioManager";
 
 export function suppressBgm(value: boolean) {
-  bgmSuppressed = value;
+  AudioManager.getInstance().setSuppressed(value);
 }
 
 export function isBgmSuppressed() {
-  return bgmSuppressed;
+  return AudioManager.getInstance().isSuppressed();
 }

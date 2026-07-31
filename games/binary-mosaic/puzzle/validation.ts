@@ -1,7 +1,8 @@
 import {
   absoluteCells,
   rotateShape,
-} from "@/games/binary-mosaic/puzzle/geometry";
+} from "@/games/binary-mosaic/core/board";
+import { allPiecesPlaced as coreAllPlaced } from "@/games/binary-mosaic/core/rules";
 import type { LevelDef, PieceRuntime } from "@/games/binary-mosaic/types";
 
 export type PieceExpectation = {
@@ -66,7 +67,7 @@ export function findWrongPlacedPieces(
 }
 
 export function allPiecesPlaced(pieces: PieceRuntime[]): boolean {
-  return pieces.length > 0 && pieces.every((p) => p.placed != null);
+  return coreAllPlaced(pieces);
 }
 
 /** Next unrevealed solution cell for a piece (row-major within the piece). */

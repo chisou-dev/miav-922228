@@ -129,3 +129,17 @@ export function isLevelCleared(
 ): boolean {
   return progress.clearedLevels.includes(levelId);
 }
+
+/** Highest level number the player may open (1 + max cleared). */
+export function highestUnlockedLevel(progress: BinaryBlockProgress): number {
+  if (progress.clearedLevels.length === 0) return 1;
+  return Math.max(...progress.clearedLevels) + 1;
+}
+
+/** Level 1 always open; clear N unlocks N+1. */
+export function isLevelUnlocked(
+  progress: BinaryBlockProgress,
+  levelId: number,
+): boolean {
+  return levelId <= highestUnlockedLevel(progress);
+}

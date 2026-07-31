@@ -1,0 +1,43 @@
+---
+description: Audio must go through AudioManager only — no direct AudioContext/timers
+globs:
+  - features/audio/**
+  - games/**/*
+  - hooks/useBit8Audio.ts
+  - engine/audio/**
+alwaysApply: false
+---
+
+# AudioManager (required)
+
+`AudioManager` is the **only** voice-control module.
+
+## Game / UI API
+
+- `playBgm(stage)` · `stopBgm()` · `playSe(id)` · `setGameState(state)` · `dispose()`
+- Do **not** use `AudioContext`, timers, or oscillators from game code
+- Prefer `setGameState("playing" | "clear" | "pause" | "menu")` over manual stop/start chains
+
+## BGM
+
+- Exactly **one** instance
+- State machine: `stopped → starting → playing → stopping → stopped`
+- `pendingStage` holds the **latest** request only (no FIFO) — rapid `playBgm(3/5/9)` ends on 9
+- Generation tokens cancel stale starts (no double play / leftover tempo)
+
+## Lifecycle
+
+- Call `dispose()` on screen unmount so timers, oscillators, gains, and AudioContext are released
+- Remount is safe — `unlock()` recreates the context
+
+AudioManagerは唯一の音声制御モジュールとし、ゲーム側はAudioContext・Timer・Oscillatorを直接操作しないでください。AudioManagerは状態機械として動作し、BGMは常に1インスタンスのみ管理します。また、dispose() を実装し、画面破棄時にすべての音声リソースを確実に解放してください。
+
+## Volume (future — do not implement in Binary Block Phase 1)
+
+When settings / mute polish / mobile / app builds need it, extend **AudioManager only**:
+
+- Separate `masterVolume` · `bgmVolume` · `seVolume`
+- Games never write GainNode values directly — change volume only via AudioManager API
+- Keep fixed defaults now; structure must allow a future settings screen without rewriting games
+
+Until that phase: **do not add volume APIs or settings UI.** Prefer core game-logic work instead.

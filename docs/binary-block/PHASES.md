@@ -6,14 +6,15 @@
 
 ---
 
-## Current phase: **2**
+## Current phase: **1.1** (core foundation)
 
 ```ts
-export const BINARY_BLOCK_PHASE = 2 as const;
+export const BINARY_BLOCK_PHASE = 1 as const; // Phase 1.1 — core board/rules
 ```
 
-Phase 1 checklist complete. Phase 2 adds **device-only** `localStorage` progress.
-Runtime Luna assets are removed until Phase 3 is explicitly re-enabled.
+Pure `core/` (`block` · `levelData` · `board` · `rules` · `pieces` · `level` · `session`) is separated from React `ui/`.
+Place/rotate go through `core/session`. Levels via `core/levelData` (JSON catalog). AudioManager frozen for Phase 1.1.
+Existing playable levels / FX remain; no Firebase · ranking · Creator Mode · solver.
 
 ---
 
@@ -89,7 +90,7 @@ Google login + Firebase.
 
 ## Levels
 
-Add via `games/binary-mosaic/levels/levels.json` only.
+Add via `games/binary-mosaic/levels/levels.json` only (loaded by `core/levelData.ts`).
 
 ---
 

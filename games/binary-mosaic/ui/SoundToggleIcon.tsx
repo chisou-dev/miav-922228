@@ -3,15 +3,16 @@
 type Props = {
   muted: boolean;
   className?: string;
+  size?: number;
 };
 
-export function SoundToggleIcon({ muted, className }: Props) {
+export function SoundToggleIcon({ muted, className, size = 20 }: Props) {
   return (
     <svg
       className={className}
       viewBox="0 0 24 24"
-      width={20}
-      height={20}
+      width={size}
+      height={size}
       aria-hidden="true"
       focusable="false"
     >

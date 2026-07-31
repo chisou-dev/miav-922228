@@ -9,14 +9,18 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { Bit8Audio } from "@/features/audio";
-import { suppressBgm, isBgmSuppressed } from "@/features/audio/bgmControl";
+import { AudioManager } from "@/features/audio";
 import {
   binaryMosaicConfig,
   getAllLevels,
   getLevel,
   getNextLevelId,
 } from "@/games/binary-mosaic/config";
+import {
+  boardWithPieces,
+  tryPlacePiece,
+  tryRotatePiece,
+} from "@/games/binary-mosaic/core";
 import { bitsToText } from "@/games/binary-mosaic/puzzle/binaryText";
 import {
   buildBoardGrid,
@@ -53,10 +57,15 @@ import { SoundToggleIcon } from "@/games/binary-mosaic/ui/SoundToggleIcon";
 import { useCellPx } from "@/games/binary-mosaic/ui/useCellPx";
 import {
   isLevelCleared,
+  isLevelUnlocked,
   loadProgress,
   recordLevelClear,
   type BinaryBlockProgress,
 } from "@/games/binary-mosaic/progress/storage";
+import {
+  applyTrayOrder,
+  pickTrayPatternIndex,
+} from "@/games/binary-mosaic/puzzle/trayOrder";
 import { useBit8Audio } from "@/hooks/useBit8Audio";
 
 const ClearSequence = dynamic(
@@ -87,13 +96,14 @@ function createPieces(levelId: number): PieceRuntime[] {
   const level = getLevel(levelId);
   if (!level) return [];
   const { pieces } = extractPiecesFromLevel(level);
-  return pieces.map((piece) => ({
+  const runtime: PieceRuntime[] = pieces.map((piece) => ({
     id: `p-${piece.pieceIndex}`,
     pieceIndex: piece.pieceIndex,
     baseShape: piece.baseShape,
     rotation: 0 as const,
     placed: null,
   }));
+  return applyTrayOrder(runtime, levelId, pickTrayPatternIndex());
 }
 
 function MosaicPlayfield({
@@ -154,7 +164,7 @@ function MosaicPlayfield({
     clientX: number;
     clientY: number;
   } | null>(null);
-  const audio = Bit8Audio.getInstance();
+  const audio = AudioManager.getInstance();
 
   useEffect(() => {
     audio.setMuted(!soundOn);
@@ -163,40 +173,40 @@ function MosaicPlayfield({
   useBit8Audio(running && !clearing && soundOn, levelId);
 
   useEffect(() => {
-    if (!clearing) return;
-    suppressBgm(true);
-    audio.stopBgm();
-    return () => {
-      suppressBgm(false);
-    };
-  }, [clearing, audio]);
+    if (clearing) {
+      audio.setGameState("clear", { stage: levelId });
+      return;
+    }
+    if (running && soundOn) {
+      audio.setGameState("playing", { stage: levelId });
+    }
+  }, [clearing, running, soundOn, levelId, audio]);
 
   const toggleSound = useCallback(() => {
     const next = !soundOn;
     audio.setMuted(!next);
     if (next) {
       void audio.unlock().then(() => {
-        if (running && !clearing && !isBgmSuppressed()) {
-          void audio.startBgm(levelId);
+        if (running && !clearing) {
+          audio.setGameState("playing", { stage: levelId });
         }
       });
-      void audio.play("button");
+      void audio.playSe("button");
     } else {
-      audio.stopBgm();
+      audio.setGameState("pause", { stage: levelId });
     }
     setSoundOn(next);
   }, [audio, running, clearing, soundOn, setSoundOn, levelId]);
 
   const handleClearDone = useCallback(() => {
-    void audio.play("button");
-    audio.stopBgm();
+    void audio.playSe("button");
     setClearing(false);
     onClearContinue(getNextLevelId(levelId));
   }, [audio, levelId, onClearContinue]);
 
   const handleBackToLevels = useCallback(() => {
-    void audio.play("button");
-    audio.stopBgm();
+    void audio.playSe("button");
+    audio.setGameState("menu");
     setClearing(false);
     onClearContinue(null);
   }, [audio, onClearContinue]);
@@ -325,21 +335,15 @@ function MosaicPlayfield({
   const placeAtOrigin = useCallback(
     (pieceId: string, origin: Cell) => {
       setPieces((prev) => {
-        const piece = prev.find((p) => p.id === pieceId);
-        if (!piece) return prev;
-        const shape = rotateShape(piece.baseShape, piece.rotation);
-        const ok = canPlaceOnBoard({
-          rows: level.rows,
-          cols: level.cols,
-          shape,
-          origin,
-          occupied: occupiedExcept(pieceId),
-          activeMask,
-        });
-        if (!ok) return prev;
-        const placed = prev.map((p) =>
-          p.id === pieceId ? { ...p, placed: origin } : p,
+        const board = boardWithPieces(
+          level.rows,
+          level.cols,
+          level.solution,
+          prev,
         );
+        const { board: nextBoard, ok } = tryPlacePiece(board, pieceId, origin);
+        if (!ok) return prev;
+        const placed = nextBoard.pieces as PieceRuntime[];
         const beforeIds = new Set(
           placed.filter((p) => p.placed).map((p) => p.id),
         );
@@ -347,43 +351,36 @@ function MosaicPlayfield({
         const rejected = next.some(
           (p) => beforeIds.has(p.id) && !p.placed,
         );
-        void audio.play(rejected ? "reject" : "snap");
+        void audio.playSe(rejected ? "reject" : "snap");
         bumpMove();
         return next;
       });
     },
-    [level, occupiedExcept, activeMask, afterPlacement, audio],
+    [level, afterPlacement, audio],
   );
 
   const rotatePiece = useCallback(
     (pieceId: string) => {
       if (!rotationAllowed) return;
       let rotated = false;
-      setPieces((prev) =>
-        prev.map((piece) => {
-          if (piece.id !== pieceId) return piece;
-          const nextRot = ((piece.rotation + 1) % 4) as 0 | 1 | 2 | 3;
-          rotated = true;
-          if (!piece.placed) return { ...piece, rotation: nextRot };
-          const shape = rotateShape(piece.baseShape, nextRot);
-          const ok = canPlaceOnBoard({
-            rows: level.rows,
-            cols: level.cols,
-            shape,
-            origin: piece.placed,
-            occupied: occupiedExcept(pieceId),
-            activeMask,
-          });
-          if (!ok) return { ...piece, rotation: nextRot, placed: null };
-          return { ...piece, rotation: nextRot };
-        }),
-      );
+      setPieces((prev) => {
+        const board = boardWithPieces(
+          level.rows,
+          level.cols,
+          level.solution,
+          prev,
+        );
+        const { board: nextBoard, ok } = tryRotatePiece(board, pieceId);
+        if (!ok) return prev;
+        rotated = true;
+        return nextBoard.pieces as PieceRuntime[];
+      });
       if (rotated) {
         if (soundOn) void audio.rotate();
         bumpMove();
       }
     },
-    [rotationAllowed, level, occupiedExcept, activeMask, soundOn, audio],
+    [rotationAllowed, level, soundOn, audio],
   );
 
   const onPiecePointerDown = (
@@ -776,7 +773,7 @@ function MosaicPlayfield({
             type="button"
             className={`mosaic-btn mosaic-btn--ghost ${hintOn ? "is-on" : ""}`}
             onClick={() => {
-              void audio.play("button");
+              void audio.playSe("button");
               setHintOn((v) => {
                 const next = !v;
                 if (next) setHintUsed(true);
@@ -793,7 +790,7 @@ function MosaicPlayfield({
             type="button"
             className="mosaic-btn mosaic-btn--ghost"
             onClick={() => {
-              void audio.play("button");
+              void audio.playSe("button");
               rotatePiece(selectedId);
             }}
             disabled={clearing}
@@ -1022,8 +1019,10 @@ export function BinaryMosaicGame() {
   const [levelId, setLevelId] = useState(levels[0]?.id ?? 1);
   const [screen, setScreen] = useState<"select" | "play">("select");
   const [soundOn, setSoundOn] = useState(false);
-  const [progress, setProgress] = useState<BinaryBlockProgress | null>(null);
-  const audio = Bit8Audio.getInstance();
+  const [progress, setProgress] = useState<BinaryBlockProgress>(() =>
+    loadProgress(),
+  );
+  const audio = AudioManager.getInstance();
 
   useEffect(() => {
     setProgress(loadProgress());
@@ -1033,19 +1032,34 @@ export function BinaryMosaicGame() {
     if (screen === "select") setProgress(loadProgress());
   }, [screen]);
 
+  useEffect(() => {
+    audio.setMuted(!soundOn);
+  }, [audio, soundOn]);
+
   const refreshProgress = useCallback(() => {
     setProgress(loadProgress());
   }, []);
 
-  // ページ非表示で BGM 停止。level 切替時に cleanup で止めない（速度残留・二重再生の原因）
+  const toggleSelectSound = useCallback(() => {
+    const next = !soundOn;
+    audio.setMuted(!next);
+    if (next) {
+      void audio.unlock().then(() => {
+        void audio.playSe("button");
+      });
+    }
+    setSoundOn(next);
+  }, [audio, soundOn]);
+
+  // Visibility / screen → GameAudioState (no manual BGM event chains)
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden) {
-        audio.stopBgm();
+        audio.setGameState("pause", { stage: levelId });
         return;
       }
-      if (soundOn && screen === "play" && !isBgmSuppressed()) {
-        void audio.startBgm(levelId);
+      if (soundOn && screen === "play") {
+        audio.setGameState("playing", { stage: levelId });
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
@@ -1055,31 +1069,52 @@ export function BinaryMosaicGame() {
   }, [audio, soundOn, screen, levelId]);
 
   useEffect(() => {
-    if (screen !== "play") {
-      audio.stopBgm();
+    if (screen === "select") {
+      audio.setGameState("menu");
     }
     return () => {
-      audio.stopBgm();
+      audio.setGameState("menu");
     };
   }, [audio, screen]);
+
+  useEffect(() => {
+    return () => {
+      audio.dispose();
+    };
+  }, [audio]);
 
   if (screen === "select") {
     return (
       <div className="mosaic-root">
-        <div className="mosaic-chrome">
-          <a href="/game" className="mosaic-chrome-link" onClick={() => audio.stopBgm()}>
+        <div className="mosaic-chrome mosaic-chrome--select">
+          <a href="/game" className="mosaic-chrome-link" onClick={() => audio.setGameState("menu")}>
             Game Library
           </a>
           <span className="mosaic-chrome-title">Binary Mosaic</span>
+          <button
+            type="button"
+            className={`mosaic-btn mosaic-btn--ghost mosaic-btn--icon mosaic-btn--icon-sm mosaic-chrome-sound ${soundOn ? "is-on" : ""}`}
+            onClick={toggleSelectSound}
+            aria-pressed={soundOn}
+            aria-label={soundOn ? "Sound on" : "Sound off"}
+            title={soundOn ? "Sound on" : "Sound off"}
+          >
+            <SoundToggleIcon
+              muted={!soundOn}
+              size={14}
+              className="mosaic-sound-icon"
+            />
+          </button>
         </div>
         <p className="mosaic-lead">
           Assemble glass binary fragments into a clean bit field. Each finished
-          board decodes to real ASCII text — not decoration.
+          board decodes to real ASCII text — not decoration. Clear a level to
+          unlock the next.
         </p>
         <ul className="mosaic-level-list">
           {levels.map((level) => {
-            const cleared =
-              progress != null && isLevelCleared(progress, level.id);
+            const unlocked = isLevelUnlocked(progress, level.id);
+            const cleared = isLevelCleared(progress, level.id);
             const key = String(level.id);
             const bestScore = progress?.bestScores[key];
             const bestTime = progress?.bestTimes[key];
@@ -1087,55 +1122,63 @@ export function BinaryMosaicGame() {
               <li key={level.id}>
                 <button
                   type="button"
-                  className={`mosaic-level-btn${cleared ? " is-cleared" : ""}`}
+                  className={`mosaic-level-btn${cleared ? " is-cleared" : ""}${unlocked ? "" : " is-locked"}`}
+                  disabled={!unlocked}
                   onClick={() => {
-                    void Bit8Audio.getInstance().play("button");
+                    if (!unlocked) return;
+                    void AudioManager.getInstance().playSe("button");
                     setLevelId(level.id);
                     setScreen("play");
                   }}
                 >
                   <span>{level.title}</span>
                   <span className="mosaic-level-meta">
-                    {level.targetText}
-                    {cleared && bestScore != null && bestTime != null ? (
+                    {unlocked ? (
                       <>
-                        {" "}
-                        ·{" "}
-                        <span
-                          className={
-                            bestScore >= 90
-                              ? "mosaic-level-best mosaic-level-best--high"
-                              : "mosaic-level-best"
-                          }
-                          title="Best Score"
-                        >
-                          <span
-                            className={
-                              bestScore >= 100
-                                ? "mosaic-level-best-star mosaic-level-best-star--perfect"
-                                : "mosaic-level-best-star"
-                            }
-                            style={
-                              bestScore >= 100
-                                ? undefined
-                                : {
-                                    animationDelay: `${((level.id * 37) % 100) / 10}s`,
-                                  }
-                            }
-                            aria-hidden="true"
-                          >
-                            {bestScore >= 100 ? "✶" : "★"}
-                          </span>{" "}
-                          <span className="mosaic-level-best-num">
-                            {bestScore}
-                          </span>
-                          {" · "}
-                          <span className="mosaic-level-best-num">
-                            {formatTime(bestTime)}
-                          </span>
-                        </span>
+                        {level.targetText}
+                        {cleared && bestScore != null && bestTime != null ? (
+                          <>
+                            {" "}
+                            ·{" "}
+                            <span
+                              className={
+                                bestScore >= 90
+                                  ? "mosaic-level-best mosaic-level-best--high"
+                                  : "mosaic-level-best"
+                              }
+                              title="Best Score"
+                            >
+                              <span
+                                className={
+                                  bestScore >= 100
+                                    ? "mosaic-level-best-star mosaic-level-best-star--perfect"
+                                    : "mosaic-level-best-star"
+                                }
+                                style={
+                                  bestScore >= 100
+                                    ? undefined
+                                    : {
+                                        animationDelay: `${((level.id * 37) % 100) / 10}s`,
+                                      }
+                                }
+                                aria-hidden="true"
+                              >
+                                {bestScore >= 100 ? "✶" : "★"}
+                              </span>{" "}
+                              <span className="mosaic-level-best-num">
+                                {bestScore}
+                              </span>
+                              {" · "}
+                              <span className="mosaic-level-best-num">
+                                {formatTime(bestTime)}
+                              </span>
+                            </span>
+                          </>
+                        ) : null}
                       </>
-                    ) : null}
+                    ) : (
+                      <span className="mosaic-level-lock">Locked</span>
+                    )}
                   </span>
                 </button>
               </li>
@@ -1153,7 +1196,7 @@ export function BinaryMosaicGame() {
   return (
     <div className="mosaic-root">
       <div className="mosaic-chrome">
-        <a href="/game" className="mosaic-chrome-link" onClick={() => audio.stopBgm()}>
+        <a href="/game" className="mosaic-chrome-link" onClick={() => audio.setGameState("menu")}>
           Game Library
         </a>
         <span className="mosaic-chrome-title">Binary Mosaic</span>

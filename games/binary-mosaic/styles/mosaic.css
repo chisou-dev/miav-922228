@@ -28,6 +28,24 @@
   border-bottom: 1px solid #dde1e6;
 }
 
+.mosaic-chrome--select {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.mosaic-chrome--select .mosaic-chrome-link {
+  justify-self: start;
+}
+
+.mosaic-chrome--select .mosaic-chrome-title {
+  justify-self: center;
+}
+
+.mosaic-chrome--select .mosaic-chrome-sound {
+  justify-self: end;
+}
+
 .mosaic-chrome-link {
   font-size: 0.68rem;
   letter-spacing: 0.14em;
@@ -226,6 +244,12 @@
   min-height: 2.25rem;
 }
 
+.mosaic-btn--icon-sm {
+  padding: 0.2rem 0.3rem;
+  min-width: 1.65rem;
+  min-height: 1.65rem;
+}
+
 .mosaic-sound-icon {
   display: block;
 }
@@ -233,6 +257,22 @@
 .mosaic-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+.mosaic-level-btn.is-locked {
+  opacity: 0.38;
+  cursor: not-allowed;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-level-btn.is-locked:hover {
+  color: var(--mosaic-muted);
+}
+
+.mosaic-level-lock {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--mosaic-muted);
 }
 
 .mosaic-stage {

@@ -1,0 +1,31 @@
+---
+description: Binary Block core separation — UI must not own game rules
+globs:
+  - games/binary-mosaic/**
+  - docs/binary-block/**
+---
+
+# Binary Block — core separation (Phase 1.1)
+
+## Layout
+
+- `core/` — UI-free: `block` · `levelData` · `board` · `rules` · `pieces` · `level` · `session`
+- `ui/` — React only (input → core → render)
+- `puzzle/` — thin adapters (binary text, scoring, legacy re-exports)
+- Level JSON lives in `levels/levels.json`; access via `core/levelData` (no per-level `if`)
+
+## Dependency direction (never reverse)
+
+```
+block / levelData / board → rules → level/session → (future) solver → analyzer → generator
+```
+
+Do **not** create empty `solver.ts` / `generator.ts` / `analyzer.ts` until that phase.
+
+## Rules
+
+- No React / DOM / Audio / localStorage / network inside `core/`
+- Place / rotate / board bootstrap go through `core/session` (`tryPlacePiece`, `tryRotatePiece`, `createSessionBoard`)
+- Do not delete or rewrite AudioManager work
+- Prefer minimal adapters over copying logic back into UI
+- Capacity first — no new npm deps, no unused stubs

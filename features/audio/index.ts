@@ -2,9 +2,8 @@
  * MIAV Games — shared procedural sound library.
  * Web Audio API only. No mp3 / wav / ogg.
  *
- * @example
- * import { createVictoryJingle, createBlockSnap } from "@/features/audio";
- * await createBlockSnap();
+ * Games: use AudioManager only (playBgm / stopBgm / playSe).
+ * Do not touch AudioContext or BGM timers from game code.
  */
 
 export {
@@ -19,7 +18,14 @@ export {
   unmuteBgm,
 } from "@/features/audio/soundEngine";
 
-export { isBgmSuppressed, suppressBgm } from "@/features/audio/bgmControl";
+export {
+  AudioManager,
+  Bit8Audio,
+  MiavSound,
+  type BgmState,
+  type GameAudioState,
+  type SeId,
+} from "@/features/audio/AudioManager";
 
 export { createButtonClick, createHover } from "@/features/audio/ui";
 
@@ -46,33 +52,13 @@ export {
   type GameLoopHandle,
 } from "@/features/audio/ambient";
 
-import {
-  createGameLoop,
-  getActiveGameLoop,
-  setActiveGameLoop,
-  stopActiveGameLoop,
-} from "@/features/audio/ambient";
-import { isBgmSuppressed } from "@/features/audio/bgmControl";
-import {
-  createBlockRotate,
-  createBlockSnap,
-  createFail,
-  createFirework,
-  createNewRecord,
-  createStageClear,
-} from "@/features/audio/game";
-import {
-  createButtonClick,
-} from "@/features/audio/ui";
-import {
-  disposeSoundEngine,
-  ensureAudioReady,
-  isSoundMuted,
-  setSoundMuted,
-} from "@/features/audio/soundEngine";
-import { createVictoryJingle } from "@/features/audio/victory";
+/** @deprecated Prefer AudioManager.setSuppressed */
+export { isBgmSuppressed, suppressBgm } from "@/features/audio/bgmControl";
 
-/** @deprecated Prefer named create* functions from `@/features/audio`. */
+import { AudioManager, type SeId } from "@/features/audio/AudioManager";
+import { isSoundMuted } from "@/features/audio/soundEngine";
+
+/** @deprecated Prefer SeId + AudioManager.playSe */
 export type SfxId =
   | "snap"
   | "complete"
@@ -81,131 +67,22 @@ export type SfxId =
   | "button"
   | "reject";
 
-/** @deprecated Prefer named create* functions. */
+/** @deprecated Prefer AudioManager.getInstance().playSe */
 export async function playSfx(id: SfxId) {
   if (isSoundMuted()) return;
-  switch (id) {
-    case "snap":
-      await createBlockSnap();
-      break;
-    case "reject":
-      await createFail();
-      break;
-    case "complete":
-      await createStageClear();
-      break;
-    case "level_up":
-      await createNewRecord();
-      break;
-    case "firework":
-      await createFirework();
-      break;
-    case "button":
-      await createButtonClick();
-      break;
-    default:
-      break;
-  }
+  const map: Record<SfxId, SeId> = {
+    snap: "snap",
+    complete: "complete",
+    level_up: "level_up",
+    firework: "firework",
+    button: "button",
+    reject: "reject",
+  };
+  await AudioManager.getInstance().playSe(map[id]);
 }
 
-/** Singleton facade — mute state + BGM lifecycle for game screens. */
-export class MiavSound {
-  private static instance: MiavSound | null = null;
-  /** Invalidates in-flight startBgm() so old tempo never resumes. */
-  private bgmToken = 0;
-
-  static getInstance() {
-    if (!MiavSound.instance) MiavSound.instance = new MiavSound();
-    return MiavSound.instance;
-  }
-
-  isMuted() {
-    return isSoundMuted();
-  }
-
-  setMuted(muted: boolean) {
-    setSoundMuted(muted);
-    getActiveGameLoop()?.setMuted(muted);
-  }
-
-  async unlock() {
-    await ensureAudioReady();
-  }
-
-  async button() {
-    await createButtonClick();
-  }
-
-  async snap() {
-    await createBlockSnap();
-  }
-
-  async rotate() {
-    await createBlockRotate();
-  }
-
-  async fail() {
-    await createFail();
-  }
-
-  async firework() {
-    await createFirework();
-  }
-
-  async victory() {
-    await createVictoryJingle();
-  }
-
-  /** @deprecated Use named create* functions or specific helpers. */
-  async play(id: SfxId) {
-    await playSfx(id);
-  }
-
-  /** @deprecated Use victory() or createVictoryJingle(). */
-  async playVictory() {
-    await this.victory();
-  }
-
-  async startBgm(stage = 1) {
-    const token = ++this.bgmToken;
-    if (isSoundMuted() || isBgmSuppressed()) return;
-
-    // Hard reset so a previous band cannot keep ticking
-    stopActiveGameLoop();
-    if (token !== this.bgmToken) return;
-
-    const loop = createGameLoop(stage);
-    setActiveGameLoop(loop);
-    await loop.start();
-
-    if (token !== this.bgmToken) {
-      loop.stop();
-      if (getActiveGameLoop() === loop) {
-        stopActiveGameLoop();
-      }
-    }
-  }
-
-  setBgmStage(stage: number) {
-    getActiveGameLoop()?.setStage(stage);
-  }
-
-  stopBgm() {
-    this.bgmToken += 1;
-    stopActiveGameLoop();
-  }
-
-  dispose() {
-    this.stopBgm();
-    disposeSoundEngine();
-  }
-}
-
-/** @deprecated Use MiavSound */
-export const Bit8Audio = MiavSound;
-
-/** @deprecated Use MiavSound */
-export const Audio = MiavSound;
+/** @deprecated Use AudioManager */
+export const Audio = AudioManager;
 
 /** @deprecated Use createGameLoop(). */
 export { createGameLoop as getProceduralBgm } from "@/features/audio/ambient";

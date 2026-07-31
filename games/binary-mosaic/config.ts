@@ -1,4 +1,9 @@
-import levelsJson from "@/games/binary-mosaic/levels/levels.json";
+import {
+  getAllLevelData,
+  getLevelData,
+  getNextLevelId as nextLevelIdFromData,
+  toLevelPackInput,
+} from "@/games/binary-mosaic/core/levelData";
 import {
   assertBitsMatchText,
 } from "@/games/binary-mosaic/puzzle/binaryText";
@@ -20,7 +25,8 @@ export const binaryMosaicConfig = {
   rotateFromLevel: 20,
 } as const;
 
-const levels = levelsJson as LevelDef[];
+/** Levels from `core/levelData` (backed by `levels/levels.json`). */
+const levels = getAllLevelData() as LevelDef[];
 
 for (const level of levels) {
   if (level.bits.length !== level.rows || level.solution.length !== level.rows) {
@@ -28,7 +34,7 @@ for (const level of levels) {
   }
   const mask = buildActiveMask(level.solution);
   assertBitsMatchText(level.bits, level.targetText, mask);
-  const { pieces } = extractPiecesFromLevel(level);
+  const { pieces } = extractPiecesFromLevel(toLevelPackInput(level));
   if (level.id <= 3) {
     const expectedCount = level.id + 2; // L1=3, L2=4, L3=5
     if (pieces.length !== expectedCount) {
@@ -41,7 +47,7 @@ for (const level of levels) {
 
 let prevPieceCount = 0;
 for (const level of [...levels].sort((a, b) => a.id - b.id)) {
-  const { pieces } = extractPiecesFromLevel(level);
+  const { pieces } = extractPiecesFromLevel(toLevelPackInput(level));
   if (pieces.length < prevPieceCount) {
     throw new Error(
       `Level ${level.id}: piece count ${pieces.length} < previous ${prevPieceCount}`,
@@ -69,12 +75,9 @@ export function getAllLevels(): LevelDef[] {
 }
 
 export function getLevel(id: number): LevelDef | undefined {
-  return levels.find((level) => level.id === id);
+  return getLevelData(id) as LevelDef | undefined;
 }
 
 export function getNextLevelId(currentId: number): number | null {
-  const sorted = [...levels].sort((a, b) => a.id - b.id);
-  const idx = sorted.findIndex((level) => level.id === currentId);
-  if (idx < 0 || idx >= sorted.length - 1) return null;
-  return sorted[idx + 1].id;
+  return nextLevelIdFromData(currentId);
 }
