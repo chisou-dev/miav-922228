@@ -129,15 +129,63 @@ export function listSolutionCells(
 
 export const HINT_MAX_USES = 3;
 
-/** Cells revealed after N hint presses: 6 → 12 → all. */
-export function hintRevealCount(uses: number, totalCells: number): number {
+/** From this level: 1 cell per Hint press (still max 3). Earlier: 6 → 12 → all. */
+export const HINT_ONE_PER_USE_FROM_LEVEL = 20;
+
+export type HintCell = {
+  row: number;
+  col: number;
+  bit: 0 | 1;
+  pieceIndex: number;
+};
+
+/** How many hint cells should be unlocked after `uses` presses. */
+export function hintRevealCount(
+  uses: number,
+  totalCells: number,
+  levelId: number,
+): number {
   if (uses <= 0 || totalCells <= 0) return 0;
+  if (levelId >= HINT_ONE_PER_USE_FROM_LEVEL) {
+    return Math.min(uses, HINT_MAX_USES, totalCells);
+  }
   if (uses === 1) return Math.min(6, totalCells);
   if (uses === 2) return Math.min(12, totalCells);
   return totalCells;
 }
 
-export function cellsForHintUses(level: LevelDef, uses: number) {
+/**
+ * Grow the revealed hint list up to the quota for `uses`.
+ * Skips cells that currently have a placed block (hints only on empty cells).
+ */
+export function expandHintCells(
+  level: LevelDef,
+  uses: number,
+  previouslyRevealed: readonly HintCell[],
+  occupiedKeys: ReadonlySet<string>,
+): HintCell[] {
   const all = listSolutionCells(level);
-  return all.slice(0, hintRevealCount(uses, all.length));
+  const target = hintRevealCount(uses, all.length, level.id);
+  const byKey = new Map<string, HintCell>(
+    previouslyRevealed.map((c) => [`${c.row},${c.col}`, c]),
+  );
+  const next = [...previouslyRevealed];
+  for (const cell of all) {
+    if (next.length >= target) break;
+    const key = `${cell.row},${cell.col}`;
+    if (byKey.has(key)) continue;
+    if (occupiedKeys.has(key)) continue;
+    next.push(cell);
+    byKey.set(key, cell);
+  }
+  return next;
+}
+
+/** @deprecated Prefer expandHintCells — kept for scripts / callers. */
+export function cellsForHintUses(
+  level: LevelDef,
+  uses: number,
+  occupiedKeys: ReadonlySet<string> = new Set(),
+): HintCell[] {
+  return expandHintCells(level, uses, [], occupiedKeys);
 }

@@ -12,6 +12,11 @@ function emptyProgress(): BinaryBlockProgress {
   return { clearedLevels: [], bestScores: {}, bestTimes: {} };
 }
 
+/** Empty defaults — safe for SSR / first paint (avoids hydration mismatch). */
+export function createEmptyProgress(): BinaryBlockProgress {
+  return emptyProgress();
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

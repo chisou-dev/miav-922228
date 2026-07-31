@@ -43,13 +43,14 @@ import {
 import {
   allPiecesPlaced,
   buildPieceExpectations,
-  cellsForHintUses,
+  expandHintCells,
   findWrongPlacedPieces,
   HINT_MAX_USES,
+  HINT_ONE_PER_USE_FROM_LEVEL,
   isPieceCorrectlyPlaced,
-  listSolutionCells,
   nextHintCellAnywhere,
   nextHintCellForPiece,
+  type HintCell,
 } from "@/games/binary-mosaic/puzzle/validation";
 import type {
   PatternResult,
@@ -59,6 +60,7 @@ import { PieceView } from "@/games/binary-mosaic/ui/PieceView";
 import { SoundToggleIcon } from "@/games/binary-mosaic/ui/SoundToggleIcon";
 import { useCellPx } from "@/games/binary-mosaic/ui/useCellPx";
 import {
+  createEmptyProgress,
   isLevelCleared,
   isLevelUnlocked,
   loadProgress,
@@ -167,6 +169,7 @@ function MosaicPlayfield({
     createPieces(levelId),
   );
   const [hintUses, setHintUses] = useState(0);
+  const [hintRevealed, setHintRevealed] = useState<HintCell[]>([]);
   const [moves, setMoves] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(true);
@@ -237,6 +240,7 @@ function MosaicPlayfield({
     clearedRef.current = false;
     setPieces(createPieces(levelId));
     setHintUses(0);
+    setHintRevealed([]);
     setMoves(0);
     setElapsed(0);
     setRunning(true);
@@ -718,14 +722,24 @@ function MosaicPlayfield({
     return covered;
   }, [pieces, expectations, dragPieceId]);
 
-  const hintCells = useMemo(
-    () => cellsForHintUses(level, hintUses),
-    [level, hintUses],
-  );
+  const occupiedKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const piece of pieces) {
+      if (!piece.placed || dragPieceId === piece.id) continue;
+      const shape = rotateShape(piece.baseShape, piece.rotation);
+      for (const cell of absoluteCells(shape, piece.placed)) {
+        set.add(`${cell.row},${cell.col}`);
+      }
+    }
+    return set;
+  }, [pieces, dragPieceId]);
 
-  const solutionCellCount = useMemo(
-    () => listSolutionCells(level).length,
-    [level],
+  const hintCells = useMemo(
+    () =>
+      hintRevealed.filter(
+        (cell) => !occupiedKeys.has(`${cell.row},${cell.col}`),
+      ),
+    [hintRevealed, occupiedKeys],
   );
 
   const rejectKeys = useMemo(
@@ -733,8 +747,21 @@ function MosaicPlayfield({
     [rejectMarkers],
   );
 
-  const hintUsesMaxed =
-    hintUses >= HINT_MAX_USES || hintCells.length >= solutionCellCount;
+  const hintUsesMaxed = useMemo(() => {
+    if (hintUses >= HINT_MAX_USES) return true;
+    const expanded = expandHintCells(
+      level,
+      hintUses + 1,
+      hintRevealed,
+      occupiedKeys,
+    );
+    return expanded.length <= hintRevealed.length;
+  }, [hintUses, level, hintRevealed, occupiedKeys]);
+
+  const hintTitle =
+    level.id >= HINT_ONE_PER_USE_FROM_LEVEL
+      ? `Reveal 1 empty cell (−${HINT_PENALTY_PER_USE} pts). Max ${HINT_MAX_USES}`
+      : `Reveal empty cells (−${HINT_PENALTY_PER_USE} pts each). 6 → 12 → all`;
 
   const boardBits = useMemo(
     () => buildBoardGrid(level, pieces, { excludePieceId: dragPieceId }),
@@ -816,10 +843,24 @@ function MosaicPlayfield({
             onClick={() => {
               if (hintUsesMaxed) return;
               void audio.playSe("button");
-              setHintUses((n) => Math.min(HINT_MAX_USES, n + 1));
+              const occupied = new Set<string>();
+              for (const piece of piecesRef.current) {
+                if (!piece.placed) continue;
+                const shape = rotateShape(piece.baseShape, piece.rotation);
+                for (const cell of absoluteCells(shape, piece.placed)) {
+                  occupied.add(`${cell.row},${cell.col}`);
+                }
+              }
+              setHintUses((n) => {
+                const next = Math.min(HINT_MAX_USES, n + 1);
+                setHintRevealed((prev) =>
+                  expandHintCells(level, next, prev, occupied),
+                );
+                return next;
+              });
             }}
             disabled={clearing || hintUsesMaxed}
-            title={`Reveal cells (−${HINT_PENALTY_PER_USE} pts each). 6 → 12 → all`}
+            title={hintTitle}
           >
             Hint{hintUses > 0 ? ` ${hintUses}/${HINT_MAX_USES}` : ""}
           </button>
@@ -910,11 +951,10 @@ function MosaicPlayfield({
           {hintCells.map((cell) => {
             const key = `${cell.row},${cell.col}`;
             if (rejectKeys.has(key)) return null;
-            const met = solvedCells.has(key);
             return (
               <span
                 key={`hint-${cell.row}-${cell.col}`}
-                className={`mosaic-hint-marker${met ? " is-met" : ""}`}
+                className="mosaic-hint-marker"
                 style={{
                   left: cell.col * cellPx,
                   top: cell.row * cellPx,
@@ -1054,9 +1094,7 @@ export function BinaryMosaicGame() {
   const [levelId, setLevelId] = useState(levels[0]?.id ?? 1);
   const [screen, setScreen] = useState<"select" | "play">("select");
   const [soundOn, setSoundOn] = useState(false);
-  const [progress, setProgress] = useState<BinaryBlockProgress>(() =>
-    loadProgress(),
-  );
+  const [progress, setProgress] = useState<BinaryBlockProgress>(createEmptyProgress);
   const audio = AudioManager.getInstance();
 
   useEffect(() => {
