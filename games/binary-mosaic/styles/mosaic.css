@@ -1168,10 +1168,30 @@
 
 @media (max-width: 640px) {
   .mosaic-creator-entry {
-    gap: 0.3rem 0.45rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    align-items: stretch;
   }
 
-  .mosaic-guide-trigger {
+  .mosaic-creator-entry-sep {
+    display: none;
+  }
+
+  .mosaic-creator-entry .mosaic-chrome-link,
+  .mosaic-creator-entry .mosaic-guide-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    text-align: center;
+    padding: 0.35rem 0.45rem;
+  }
+
+  .mosaic-creator-entry .mosaic-guide-trigger {
+    grid-column: 1 / -1;
+    width: 100%;
     font-size: 0.74rem;
   }
 
@@ -1799,6 +1819,10 @@ a.mosaic-developer-link:hover {
 
   .mosaic-challenge-tab {
     text-align: center;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .mosaic-user-level-row {

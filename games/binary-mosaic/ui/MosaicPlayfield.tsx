@@ -1588,7 +1588,7 @@ export function BinaryMosaicGame() {
             ·
           </span>
           <a href="/game/binary-mosaic/challenge" className="mosaic-chrome-link">
-            Challenge
+            Import
           </a>
           <span className="mosaic-creator-entry-sep" aria-hidden="true">
             ·
@@ -1603,10 +1603,10 @@ export function BinaryMosaicGame() {
             ·
           </span>
           <a
-            href="/game/binary-mosaic/challenge?tab=published"
+            href="/game/binary-mosaic/challenge?tab=featured"
             className="mosaic-chrome-link"
           >
-            Published
+            Featured
           </a>
           <span className="mosaic-creator-entry-sep" aria-hidden="true">
             ·

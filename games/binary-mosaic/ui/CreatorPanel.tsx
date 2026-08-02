@@ -284,7 +284,6 @@ export function CreatorPanel() {
   const [creatorName, setCreatorName] = useState("");
   const [publishTitle, setPublishTitle] = useState("");
   const [publishDescription, setPublishDescription] = useState("");
-  const [publishFlag, setPublishFlag] = useState(false);
   const [run, setRun] = useState<RunState>({ status: "idle" });
   const [saveBusy, setSaveBusy] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -292,7 +291,6 @@ export function CreatorPanel() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [editPublished, setEditPublished] = useState(false);
   const [editBusy, setEditBusy] = useState(false);
   const [editMessage, setEditMessage] = useState<string | null>(null);
   const [shareImportCode, setShareImportCode] = useState("");
@@ -425,7 +423,6 @@ export function CreatorPanel() {
           creatorName,
           title: publishTitle,
           description: publishDescription,
-          published: publishFlag,
         });
         if (!saved.ok) {
           setSaveMessage(saved.error);
@@ -494,7 +491,6 @@ export function CreatorPanel() {
     setEditId(record.userLevelId);
     setEditTitle(record.title);
     setEditDescription(record.description);
-    setEditPublished(record.published);
     setEditMessage(null);
   }
 
@@ -508,7 +504,6 @@ export function CreatorPanel() {
         const result = updateUserLevelPublishMeta(editId, {
           title: editTitle,
           description: editDescription,
-          published: editPublished,
         });
         if (!result.ok) {
           setEditMessage(result.error);
@@ -517,8 +512,7 @@ export function CreatorPanel() {
         }
         setEditTitle(result.record.title);
         setEditDescription(result.record.description);
-        setEditPublished(result.record.published);
-        setEditMessage("Publish info saved.");
+        setEditMessage("Saved.");
         refreshUserLevels();
         setEditBusy(false);
       } catch (err) {
@@ -677,15 +671,6 @@ export function CreatorPanel() {
             rows={2}
             autoComplete="off"
             placeholder="optional"
-            disabled={loading || saveBusy}
-          />
-        </label>
-        <label className="mosaic-creator-field mosaic-creator-field--primary mosaic-creator-field--check">
-          <span>Published</span>
-          <input
-            type="checkbox"
-            checked={publishFlag}
-            onChange={(e) => setPublishFlag(e.target.checked)}
             disabled={loading || saveBusy}
           />
         </label>
@@ -1090,8 +1075,6 @@ export function CreatorPanel() {
                     <span className="mosaic-creator-level-sub">
                       {text}
                       {" · "}
-                      {record.published ? "Published" : "Draft"}
-                      {" · "}
                       {formatCreatedAt(record.createdAt)}
                     </span>
                     <ShareCodeRow record={record} />
@@ -1122,24 +1105,13 @@ export function CreatorPanel() {
                             disabled={editBusy}
                           />
                         </label>
-                        <label className="mosaic-creator-field mosaic-creator-field--primary mosaic-creator-field--check">
-                          <span>Published</span>
-                          <input
-                            type="checkbox"
-                            checked={editPublished}
-                            onChange={(e) =>
-                              setEditPublished(e.target.checked)
-                            }
-                            disabled={editBusy}
-                          />
-                        </label>
                         <div className="mosaic-creator-actions">
                           <button
                             type="submit"
                             className="mosaic-btn"
                             disabled={editBusy}
                           >
-                            {editBusy ? "Saving…" : "Save publish info"}
+                            {editBusy ? "Saving…" : "Save"}
                           </button>
                           <button
                             type="button"
@@ -1156,7 +1128,7 @@ export function CreatorPanel() {
                         {editMessage ? (
                           <p
                             className={
-                              editMessage === "Publish info saved."
+                              editMessage === "Saved."
                                 ? "mosaic-creator-save-msg mosaic-creator-save-msg--ok"
                                 : "mosaic-creator-status mosaic-creator-status--fail"
                             }

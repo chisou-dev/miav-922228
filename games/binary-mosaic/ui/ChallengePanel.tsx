@@ -2,11 +2,10 @@
 
 /**
  * UserLevel Challenge Mode (Phase2-20) + Collection (Phase3-1)
- * + Featured Challenge (Phase3-2) + Published Collection.
+ * + Featured Challenge (Phase3-2).
  *
  * Share Code → importUserLevelFromShareCode (no re-eval) → metadata card → Play.
  * Collection → listUserLevels() → select → same card → Play (`?user=`).
- * Published → listPublishedUserLevels() → select → Showcase (`?user=`).
  * Featured → listFeaturedLevels() → select → same card → Play (`?user=`).
  * Does not call Generator / Solver / Evaluator / Pipeline.
  */
@@ -38,7 +37,6 @@ import {
   BINARY_BLOCK_USER_LEVELS_KEY,
   DEVELOPER_CREDIT,
   displayUserLevelTitle,
-  listPublishedUserLevels,
   listUserLevels,
   USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
@@ -47,7 +45,7 @@ import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
 import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
 import { ShareChallengeButton } from "@/games/binary-mosaic/ui/ShareChallengeButton";
 
-type ChallengeTab = "import" | "collection" | "published" | "featured";
+type ChallengeTab = "import" | "collection" | "featured";
 
 function playHref(userLevelId: string): string {
   return `/game/binary-mosaic?user=${encodeURIComponent(userLevelId)}`;
@@ -115,21 +113,11 @@ function readInitialTab(): ChallengeTab {
   try {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab === "collection") return "collection";
-    if (tab === "published") return "published";
     if (tab === "featured") return "featured";
   } catch {
     /* ignore */
   }
   return "import";
-}
-
-function formatPublishedAt(publishedAt: string | null): string {
-  if (!publishedAt) return "—";
-  try {
-    return new Date(publishedAt).toLocaleString();
-  } catch {
-    return publishedAt;
-  }
 }
 
 function ChallengeListItem({
@@ -189,52 +177,6 @@ function ChallengeListItem({
           DELETE
         </button>
       ) : null}
-    </li>
-  );
-}
-
-/** Published Collection row — opens Showcase on select (no detail card). */
-function PublishedListItem({ record }: { record: UserLevelRecord }) {
-  const feedback = getChallengeFeedback(record.userLevelId);
-  return (
-    <li>
-      <a
-        href={showcaseHref(record.userLevelId)}
-        className={`mosaic-challenge-list-btn${feedback?.clear ? " is-cleared" : ""}`}
-      >
-        <span className="mosaic-challenge-list-title">
-          {feedback?.clear ? (
-            <span className="mosaic-challenge-cleared-badge" aria-label="Cleared">
-              Cleared
-            </span>
-          ) : null}
-          {challengeTitle(record)}
-        </span>
-        <span className="mosaic-challenge-list-meta">
-          {record.creatorName}
-          {" · "}
-          {record.developerCredit || DEVELOPER_CREDIT}
-          {" · "}
-          {challengeTarget(record)}
-        </span>
-        <span className="mosaic-challenge-list-meta">
-          {record.evaluatorResult.difficulty}
-          {" · score "}
-          {record.evaluatorResult.score}
-          {" · pieces "}
-          {usedPieceCount(record.levelData)}
-          {" · rot "}
-          {rotationCount(record)}
-        </span>
-        <span className="mosaic-challenge-list-meta">
-          Published {formatPublishedAt(record.publishedAt)}
-        </span>
-        {feedback ? (
-          <span className="mosaic-challenge-list-meta mosaic-challenge-feedback">
-            {feedbackSummary(feedback)}
-          </span>
-        ) : null}
-      </a>
     </li>
   );
 }
@@ -385,7 +327,6 @@ export function ChallengePanel() {
   const [ok, setOk] = useState(false);
   const [imported, setImported] = useState<UserLevelRecord | null>(null);
   const [collection, setCollection] = useState<UserLevelRecord[]>([]);
-  const [published, setPublished] = useState<UserLevelRecord[]>([]);
   const [featuredLevels, setFeaturedLevels] = useState<UserLevelRecord[]>([]);
   const [featuredIds, setFeaturedIds] = useState<Set<string>>(() => new Set());
   const [selected, setSelected] = useState<UserLevelRecord | null>(null);
@@ -401,10 +342,6 @@ export function ChallengePanel() {
     setCollection(listUserLevels());
   }, []);
 
-  const refreshPublished = useCallback(() => {
-    setPublished(listPublishedUserLevels());
-  }, []);
-
   const refreshFeatured = useCallback(() => {
     setFeaturedLevels(listFeaturedLevels());
     setFeaturedIds(new Set(listFeatured().map((e) => e.userLevelId)));
@@ -412,9 +349,8 @@ export function ChallengePanel() {
 
   const refreshAllLists = useCallback(() => {
     refreshCollection();
-    refreshPublished();
     refreshFeatured();
-  }, [refreshCollection, refreshPublished, refreshFeatured]);
+  }, [refreshCollection, refreshFeatured]);
 
   useEffect(() => {
     setTab(readInitialTab());
@@ -466,19 +402,12 @@ export function ChallengePanel() {
       if (next === "collection") {
         refreshCollection();
       }
-      if (next === "published") {
-        refreshPublished();
-      }
       if (next === "featured") {
         refreshFeatured();
       }
       try {
         const url = new URL(window.location.href);
-        if (
-          next === "collection" ||
-          next === "published" ||
-          next === "featured"
-        ) {
+        if (next === "collection" || next === "featured") {
           url.searchParams.set("tab", next);
         } else {
           url.searchParams.delete("tab");
@@ -488,7 +417,7 @@ export function ChallengePanel() {
         /* ignore */
       }
     },
-    [refreshCollection, refreshPublished, refreshFeatured],
+    [refreshCollection, refreshFeatured],
   );
 
   const onImport = useCallback(
@@ -631,8 +560,8 @@ export function ChallengePanel() {
       </div>
 
       <p className="mosaic-lead">
-        Import a Share Code, browse Collection or Published, or open Featured
-        challenges. Play uses the saved UserLevel snapshot — no re-evaluation.
+        Import a Share Code, browse Collection, or open Featured challenges.
+        Play uses the saved UserLevel snapshot — no re-evaluation.
       </p>
 
       <div className="mosaic-challenge-tabs" role="tablist" aria-label="Challenge">
@@ -657,17 +586,6 @@ export function ChallengePanel() {
           onClick={() => selectTab("collection")}
         >
           Collection
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="challenge-tab-published"
-          aria-selected={tab === "published"}
-          aria-controls="challenge-panel-published"
-          className={`mosaic-challenge-tab${tab === "published" ? " is-active" : ""}`}
-          onClick={() => selectTab("published")}
-        >
-          Published
         </button>
         <button
           type="button"
@@ -759,34 +677,6 @@ export function ChallengePanel() {
               Import a Share Code to see the challenge card.
             </p>
           )}
-        </div>
-      ) : tab === "published" ? (
-        <div
-          id="challenge-panel-published"
-          role="tabpanel"
-          aria-labelledby="challenge-tab-published"
-        >
-          <section
-            className="mosaic-creator-panel mosaic-challenge-collection"
-            aria-label="Published Challenges"
-          >
-            <h2 className="mosaic-creator-h">Published Challenges</h2>
-            {published.length === 0 ? (
-              <p className="mosaic-creator-status">
-                No published challenges yet. Mark a UserLevel as Published in
-                Creator to list it here.
-              </p>
-            ) : (
-              <ul className="mosaic-challenge-list">
-                {published.map((record) => (
-                  <PublishedListItem
-                    key={record.userLevelId}
-                    record={record}
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
         </div>
       ) : tab === "featured" ? (
         selected ? (

@@ -6,7 +6,7 @@ import "@/games/binary-mosaic/styles/mosaic.css";
 export const metadata: Metadata = {
   title: "Binary Block Challenge | MIAV Games",
   description:
-    "Import a Share Code, browse Collection, Published, or Featured challenges — offline UserLevels, no re-eval.",
+    "Import a Share Code, browse Collection or Featured challenges — offline UserLevels, no re-eval.",
 };
 
 export default function BinaryMosaicChallengePage() {

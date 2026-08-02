@@ -267,15 +267,6 @@ export function ShowcasePanel() {
               </div>
             ) : null}
             <div>
-              <dt>Published</dt>
-              <dd>
-                {record.published ? "Yes" : "No"}
-                {record.publishedAt
-                  ? ` · ${new Date(record.publishedAt).toLocaleString()}`
-                  : null}
-              </dd>
-            </div>
-            <div>
               <dt>Target</dt>
               <dd>{challengeTarget(record)}</dd>
             </div>

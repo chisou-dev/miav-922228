@@ -14,23 +14,27 @@ const GUIDE_SECTIONS = [
   },
   {
     heading: "Creator",
-    body: "Enter a word to create a new Binary Block puzzle. Preview it, save it, play it, or copy its Share Code.",
+    body: "Enter a word to create a new Binary Block puzzle. Preview it, save it, play it, or share it.",
   },
   {
-    heading: "Challenge",
-    body: "Paste a Share Code received from someone else and play their puzzle.",
+    heading: "Share",
+    body: "Create a Challenge Link and send it to someone. They can open the link and play the puzzle directly. No account or server upload is required.",
+  },
+  {
+    heading: "Import",
+    body: "Paste a full Share Code you received to restore a challenge manually. Use Import when a Challenge Link is unavailable.",
   },
   {
     heading: "Collection",
-    body: "View the puzzles saved in this browser.",
+    body: "View the puzzles saved in this browser. You can play, share, export, or delete them.",
   },
   {
-    heading: "Published",
-    body: "View your locally saved puzzles marked as Published. Published puzzles are not uploaded to the internet.",
+    heading: "Featured",
+    body: "View challenges you have marked as Featured in this browser.",
   },
   {
     heading: "No account required",
-    body: "Your puzzles are stored only in this browser. Use a Share Code or Export to move them to another device.",
+    body: "Your puzzles are stored only in this browser. Challenge Links and Share Codes contain the puzzle data, so another person can open or import the challenge without an account.",
   },
 ] as const;
 
