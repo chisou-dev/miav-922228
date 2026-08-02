@@ -293,3 +293,52 @@ export function getChallengeFeedback(
 export function listChallengeFeedback(): ChallengeFeedbackRecord[] {
   return sortByPlayedAtAsc(loadChallengeFeedbackStore().results).reverse();
 }
+
+/**
+ * Remove feedback for one UserLevel id.
+ * Missing id is success (nothing to clear). Does not touch UserLevel / Featured.
+ */
+export function deleteChallengeFeedback(
+  userLevelId: string,
+):
+  | { ok: true }
+  | {
+      ok: false;
+      reason: "INVALID_ID" | "STORAGE_UNAVAILABLE" | "WRITE_FAILED" | "QUOTA";
+      error: string;
+    } {
+  if (!isUserLevelId(userLevelId)) {
+    return {
+      ok: false,
+      reason: "INVALID_ID",
+      error: "Invalid UserLevel id.",
+    };
+  }
+  if (!getKv()) {
+    return {
+      ok: false,
+      reason: "STORAGE_UNAVAILABLE",
+      error: "Storage unavailable. Changes could not be saved.",
+    };
+  }
+
+  const store = loadChallengeFeedbackStore();
+  const nextResults = store.results.filter(
+    (r) => r.userLevelId !== userLevelId,
+  );
+  if (nextResults.length === store.results.length) {
+    return { ok: true };
+  }
+  const written = writeStore({
+    schemaVersion: CHALLENGE_FEEDBACK_SCHEMA_VERSION,
+    results: nextResults,
+  });
+  if (!written.ok) {
+    return {
+      ok: false,
+      reason: written.reason === "QUOTA" ? "QUOTA" : "WRITE_FAILED",
+      error: "Storage is full. Delete an old level and try again.",
+    };
+  }
+  return { ok: true };
+}

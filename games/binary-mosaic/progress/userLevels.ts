@@ -215,6 +215,24 @@ export type CreateUserLevelResult =
         | "SAVE_FAILED";
       error: string;
     };
+
+export type DeleteUserLevelResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+/** Dispatched on `window` after UserLevel create / import / delete (same tab). */
+export const USER_LEVELS_CHANGED_EVENT =
+  "binary-block-user-levels-changed" as const;
+
+/** Notify listeners (My levels / Collection) to re-run `listUserLevels()`. */
+export function notifyUserLevelsChanged(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(new CustomEvent(USER_LEVELS_CHANGED_EVENT));
+  } catch {
+    /* ignore */
+  }
+}
 /**
  * Single-level export envelope.
  * Pretty-printed JSON; local-only (no network).
@@ -786,15 +804,45 @@ export function saveUserLevelDetailed(
   return writeStore(next);
 }
 
-/** Remove one user level. Returns true if it was present and write succeeded. */
-export function deleteUserLevel(userLevelId: string): boolean {
+/**
+ * Remove one user level record only (no Featured / feedback / share-index cleanup).
+ * Prefer `deleteUserLevelAndRelated` from the UI / progress orchestrator.
+ */
+export function deleteUserLevel(userLevelId: string): DeleteUserLevelResult {
+  if (!isUserLevelId(userLevelId)) {
+    return {
+      ok: false,
+      error: "Could not delete this challenge. Please try again.",
+    };
+  }
+  if (!getKv()) {
+    return {
+      ok: false,
+      error: STORAGE_UNAVAILABLE_MESSAGE,
+    };
+  }
   const store = loadUserLevels();
   const nextLevels = store.levels.filter((r) => r.userLevelId !== userLevelId);
-  if (nextLevels.length === store.levels.length) return false;
-  return writeStore({
+  if (nextLevels.length === store.levels.length) {
+    return {
+      ok: false,
+      error: "Could not delete this challenge. Please try again.",
+    };
+  }
+  const written = writeStore({
     schemaVersion: USER_LEVELS_SCHEMA_VERSION,
     levels: nextLevels,
-  }).ok;
+  });
+  if (!written.ok) {
+    return {
+      ok: false,
+      error:
+        written.reason === "QUOTA" || written.reason === "WRITE_FAILED"
+          ? "Could not delete this challenge. Please try again."
+          : STORAGE_UNAVAILABLE_MESSAGE,
+    };
+  }
+  return { ok: true };
 }
 
 /**
@@ -866,6 +914,7 @@ export function createUserLevel(
       error: storageWriteErrorMessage(saved.reason),
     };
   }
+  notifyUserLevelsChanged();
   return { ok: true, record };
 }
 
@@ -1182,6 +1231,9 @@ export function importUserLevelJson(json: string): ImportUserLevelResult {
       saved.push(record);
     }
 
+    if (saved.length > 0) {
+      notifyUserLevelsChanged();
+    }
     return { ok: true, records: saved, upserted, inserted };
   } catch {
     return {

@@ -29,18 +29,22 @@ import {
   getChallengeFeedback,
   type ChallengeFeedbackRecord,
 } from "@/games/binary-mosaic/progress/challengeFeedback";
+import { deleteUserLevelAndRelated } from "@/games/binary-mosaic/progress/deleteUserLevelAndRelated";
 import {
   importUserLevelFromShareCode,
   type ImportShareCodeResult,
 } from "@/games/binary-mosaic/progress/shareCode";
 import {
+  BINARY_BLOCK_USER_LEVELS_KEY,
   DEVELOPER_CREDIT,
   displayUserLevelTitle,
   listPublishedUserLevels,
   listUserLevels,
+  USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
 import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
+import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
 
 type ChallengeTab = "import" | "collection" | "published" | "featured";
 
@@ -130,13 +134,15 @@ function formatPublishedAt(publishedAt: string | null): string {
 function ChallengeListItem({
   record,
   onSelect,
+  onDelete,
 }: {
   record: UserLevelRecord;
   onSelect: () => void;
+  onDelete?: () => void;
 }) {
   const feedback = getChallengeFeedback(record.userLevelId);
   return (
-    <li>
+    <li className={onDelete ? "mosaic-challenge-list-row" : undefined}>
       <button
         type="button"
         className={`mosaic-challenge-list-btn${feedback?.clear ? " is-cleared" : ""}`}
@@ -172,6 +178,16 @@ function ChallengeListItem({
           </span>
         ) : null}
       </button>
+      {onDelete ? (
+        <button
+          type="button"
+          className="mosaic-btn mosaic-btn--danger mosaic-challenge-list-delete"
+          onClick={onDelete}
+          aria-label={`Delete ${challengeTitle(record)}`}
+        >
+          DELETE
+        </button>
+      ) : null}
     </li>
   );
 }
@@ -231,6 +247,7 @@ function ChallengeCard({
   featured,
   onToggleFeatured,
   featuredMessage,
+  onDelete,
 }: {
   record: UserLevelRecord;
   ariaLabel: string;
@@ -239,6 +256,7 @@ function ChallengeCard({
   featured: boolean;
   onToggleFeatured?: () => void;
   featuredMessage?: string | null;
+  onDelete?: () => void;
 }) {
   const feedback = getChallengeFeedback(record.userLevelId);
   return (
@@ -335,6 +353,15 @@ function ChallengeCard({
             {featured ? "Remove from Featured" : "Add to Featured"}
           </button>
         ) : null}
+        {onDelete ? (
+          <button
+            type="button"
+            className="mosaic-btn mosaic-btn--danger"
+            onClick={onDelete}
+          >
+            DELETE
+          </button>
+        ) : null}
       </div>
       {featuredMessage ? (
         <p
@@ -361,6 +388,13 @@ export function ChallengePanel() {
   const [featuredIds, setFeaturedIds] = useState<Set<string>>(() => new Set());
   const [selected, setSelected] = useState<UserLevelRecord | null>(null);
   const [featuredMessage, setFeaturedMessage] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
+
   const refreshCollection = useCallback(() => {
     setCollection(listUserLevels());
   }, []);
@@ -374,17 +408,59 @@ export function ChallengePanel() {
     setFeaturedIds(new Set(listFeatured().map((e) => e.userLevelId)));
   }, []);
 
-  useEffect(() => {
-    setTab(readInitialTab());
+  const refreshAllLists = useCallback(() => {
     refreshCollection();
     refreshPublished();
     refreshFeatured();
   }, [refreshCollection, refreshPublished, refreshFeatured]);
 
+  useEffect(() => {
+    setTab(readInitialTab());
+    refreshAllLists();
+  }, [refreshAllLists]);
+
+  useEffect(() => {
+    const refresh = () => {
+      refreshAllLists();
+      setImported((prev) => {
+        if (!prev) return prev;
+        return listUserLevels().find((r) => r.userLevelId === prev.userLevelId) ?? null;
+      });
+      setSelected((prev) => {
+        if (!prev) return prev;
+        return listUserLevels().find((r) => r.userLevelId === prev.userLevelId) ?? null;
+      });
+    };
+    const onVisibility = () => {
+      if (!document.hidden) refresh();
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) refresh();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === BINARY_BLOCK_USER_LEVELS_KEY || event.key === null) {
+        refresh();
+      }
+    };
+    window.addEventListener(USER_LEVELS_CHANGED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener(USER_LEVELS_CHANGED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refreshAllLists]);
+
   const selectTab = useCallback(
     (next: ChallengeTab) => {
       setTab(next);
       setSelected(null);
+      setDeleteMessage(null);
       if (next === "collection") {
         refreshCollection();
       }
@@ -436,14 +512,20 @@ export function ChallengePanel() {
           }
           setImported(result.record);
           setOk(true);
-          setMessage(
+          const lines = [
             result.upserted
               ? "Restored challenge (updated existing id)."
               : "Challenge imported.",
-          );
+            "The challenge was restored and is now available in My Levels.",
+          ];
+          if (result.upserted) {
+            lines.push(
+              "An existing challenge with the same ID was updated.",
+            );
+          }
+          setMessage(lines.join("\n"));
           setShareCode("");
-          refreshCollection();
-          refreshPublished();
+          refreshAllLists();
           setBusy(false);
         } catch (err) {
           setOk(false);
@@ -452,7 +534,7 @@ export function ChallengePanel() {
         }
       }, 0);
     },
-    [shareCode, refreshCollection, refreshPublished],
+    [shareCode, refreshAllLists],
   );
 
   const toggleFeatured = useCallback(
@@ -479,6 +561,50 @@ export function ChallengePanel() {
     },
     [refreshFeatured, tab],
   );
+
+  const requestDelete = useCallback((userLevelId: string) => {
+    setDeleteMessage(null);
+    setDeleteTargetId(userLevelId);
+  }, []);
+
+  const cancelDelete = useCallback(() => {
+    if (deleteBusy) return;
+    setDeleteTargetId(null);
+  }, [deleteBusy]);
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTargetId) return;
+    setDeleteBusy(true);
+    const id = deleteTargetId;
+    window.setTimeout(() => {
+      try {
+        const result = deleteUserLevelAndRelated(id);
+        if (!result.ok) {
+          setDeleteMessage({ ok: false, text: result.error });
+          setDeleteBusy(false);
+          setDeleteTargetId(null);
+          return;
+        }
+        setImported((prev) =>
+          prev?.userLevelId === id ? null : prev,
+        );
+        setSelected((prev) =>
+          prev?.userLevelId === id ? null : prev,
+        );
+        refreshAllLists();
+        setDeleteMessage({ ok: true, text: "Challenge deleted." });
+        setDeleteBusy(false);
+        setDeleteTargetId(null);
+      } catch {
+        setDeleteMessage({
+          ok: false,
+          text: "Could not delete this challenge. Please try again.",
+        });
+        setDeleteBusy(false);
+        setDeleteTargetId(null);
+      }
+    }, 0);
+  }, [deleteTargetId, refreshAllLists]);
 
   const importedFeatured = imported
     ? featuredIds.has(imported.userLevelId)
@@ -554,6 +680,19 @@ export function ChallengePanel() {
         </button>
       </div>
 
+      {deleteMessage ? (
+        <p
+          className={
+            deleteMessage.ok
+              ? "mosaic-creator-save-msg mosaic-creator-save-msg--ok mosaic-challenge-delete-msg"
+              : "mosaic-creator-status mosaic-creator-status--fail mosaic-challenge-delete-msg"
+          }
+          role="status"
+        >
+          {deleteMessage.text}
+        </p>
+      ) : null}
+
       {tab === "import" ? (
         <div
           id="challenge-panel-import"
@@ -572,10 +711,13 @@ export function ChallengePanel() {
                 onChange={(e) => setShareCode(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="MIAV-BB-XXXX-XXXX-…"
+                placeholder="Example: MIAV-BB-XXXX-XXXX-…"
                 disabled={busy}
                 autoFocus
               />
+              <span className="mosaic-creator-field-hint">
+                The text above is an example. Paste the full code you received.
+              </span>
             </label>
             <div className="mosaic-creator-actions">
               <button
@@ -594,6 +736,7 @@ export function ChallengePanel() {
                     : "mosaic-creator-status mosaic-creator-status--fail"
                 }
                 role="status"
+                style={{ whiteSpace: "pre-line" }}
               >
                 {message}
               </p>
@@ -607,6 +750,7 @@ export function ChallengePanel() {
               featured={importedFeatured}
               onToggleFeatured={() => toggleFeatured(imported)}
               featuredMessage={featuredMessage}
+              onDelete={() => requestDelete(imported.userLevelId)}
             />
           ) : (
             <p className="mosaic-creator-status">
@@ -657,6 +801,7 @@ export function ChallengePanel() {
               featured={selectedFeatured}
               onToggleFeatured={() => toggleFeatured(selected)}
               featuredMessage={featuredMessage}
+              onDelete={() => requestDelete(selected.userLevelId)}
             />
           </div>
         ) : (
@@ -682,6 +827,7 @@ export function ChallengePanel() {
                       key={record.userLevelId}
                       record={record}
                       onSelect={() => setSelected(record)}
+                      onDelete={() => requestDelete(record.userLevelId)}
                     />
                   ))}
                 </ul>
@@ -702,6 +848,7 @@ export function ChallengePanel() {
             featured={selectedFeatured}
             onToggleFeatured={() => toggleFeatured(selected)}
             featuredMessage={featuredMessage}
+            onDelete={() => requestDelete(selected.userLevelId)}
           />
         </div>
       ) : (
@@ -727,6 +874,7 @@ export function ChallengePanel() {
                     key={record.userLevelId}
                     record={record}
                     onSelect={() => setSelected(record)}
+                    onDelete={() => requestDelete(record.userLevelId)}
                   />
                 ))}
               </ul>
@@ -734,6 +882,13 @@ export function ChallengePanel() {
           </section>
         </div>
       )}
+
+      <DeleteUserLevelModal
+        open={deleteTargetId != null}
+        onCancel={cancelDelete}
+        onConfirm={confirmDelete}
+        busy={deleteBusy}
+      />
     </div>
   );
 }

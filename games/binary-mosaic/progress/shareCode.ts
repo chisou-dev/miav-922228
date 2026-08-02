@@ -361,6 +361,40 @@ function findAliasBodyForUserLevelId(
 }
 
 /**
+ * Drop local short-alias index entries that point at this userLevelId.
+ * Does not invalidate portable Share Codes already copied elsewhere.
+ * Best-effort; missing storage / no aliases → no-op success.
+ */
+export function removeLocalShareAliasesForUserLevel(
+  userLevelId: string,
+): boolean {
+  if (typeof userLevelId !== "string" || userLevelId.length === 0) {
+    return true;
+  }
+  const kv = getActiveUserLevelsKv();
+  if (!kv) return true;
+  const store = readShareIndex(kv);
+  let changed = false;
+  for (const [body, json] of Object.entries(store.aliases)) {
+    try {
+      const parsed: unknown = JSON.parse(json);
+      if (
+        isRecord(parsed) &&
+        isRecord(parsed.level) &&
+        parsed.level.userLevelId === userLevelId
+      ) {
+        delete store.aliases[body];
+        changed = true;
+      }
+    } catch {
+      /* skip corrupt entry */
+    }
+  }
+  if (!changed) return true;
+  return writeShareIndex(kv, store);
+}
+
+/**
  * Look up an existing local short alias for a user level (same browser only).
  * Returns grouped `MIAV-BB-XXXX-XXXX` or null.
  */

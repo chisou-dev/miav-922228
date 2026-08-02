@@ -168,7 +168,7 @@ function main(): void {
   });
   assert(blocked.ok === false && blocked.reason === "NOT_PASSED", "gate must block");
 
-  assert(deleteUserLevel(created.record.userLevelId) === true, "delete failed");
+  assert(deleteUserLevel(created.record.userLevelId).ok === true, "delete failed");
   assert(listUserLevels().length === 0, "store should be empty after delete");
   assert(getUserLevel(created.record.userLevelId) === undefined, "deleted id still present");
 

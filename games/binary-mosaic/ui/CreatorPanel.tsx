@@ -13,6 +13,7 @@ import {
   runPreviewCandidates,
   type PreviewCandidatesResult,
 } from "@/games/binary-mosaic/pipeline/previewCandidates";
+import { deleteUserLevelAndRelated } from "@/games/binary-mosaic/progress/deleteUserLevelAndRelated";
 import {
   generateUserLevelShareCodes,
   importUserLevelFromShareCode,
@@ -20,6 +21,7 @@ import {
   type ShareCodeBundle,
 } from "@/games/binary-mosaic/progress/shareCode";
 import {
+  BINARY_BLOCK_USER_LEVELS_KEY,
   CLIPBOARD_COPY_FAILED_MESSAGE,
   createUserLevel,
   DEFAULT_CREATOR_NAME,
@@ -30,8 +32,10 @@ import {
   listUserLevels,
   normalizeCreatorName,
   updateUserLevelPublishMeta,
+  USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
+import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
 
 type RunState =
   | { status: "idle" }
@@ -315,6 +319,12 @@ export function CreatorPanel() {
     null,
   );
   const [shareImportOk, setShareImportOk] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
 
   const refreshUserLevels = useCallback(() => {
     setUserLevels(listUserLevels());
@@ -322,6 +332,35 @@ export function CreatorPanel() {
 
   useEffect(() => {
     refreshUserLevels();
+  }, [refreshUserLevels]);
+
+  useEffect(() => {
+    const refresh = () => {
+      refreshUserLevels();
+    };
+    const onVisibility = () => {
+      if (!document.hidden) refresh();
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) refresh();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === BINARY_BLOCK_USER_LEVELS_KEY || event.key === null) {
+        refresh();
+      }
+    };
+    window.addEventListener(USER_LEVELS_CHANGED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener(USER_LEVELS_CHANGED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [refreshUserLevels]);
 
   function buildAdvancedIntent(): CreatorIntent {
@@ -449,11 +488,16 @@ export function CreatorPanel() {
           return;
         }
         setShareImportOk(true);
-        setShareImportMessage(
+        const lines = [
           result.upserted
-            ? `Restored (updated) · ${result.record.userLevelId}`
-            : `Imported · ${result.record.userLevelId}`,
-        );
+            ? "Restored challenge (updated existing id)."
+            : "Challenge imported.",
+          "The challenge was restored and is now available in My Levels.",
+        ];
+        if (result.upserted) {
+          lines.push("An existing challenge with the same ID was updated.");
+        }
+        setShareImportMessage(lines.join("\n"));
         setShareImportCode("");
         refreshUserLevels();
         setShareImportBusy(false);
@@ -498,6 +542,50 @@ export function CreatorPanel() {
       } catch (err) {
         setEditMessage(err instanceof Error ? err.message : String(err));
         setEditBusy(false);
+      }
+    }, 0);
+  }
+
+  function requestDeleteUserLevel(userLevelId: string) {
+    setDeleteMessage(null);
+    setDeleteTargetId(userLevelId);
+  }
+
+  function cancelDeleteUserLevel() {
+    if (deleteBusy) return;
+    setDeleteTargetId(null);
+  }
+
+  function confirmDeleteUserLevel() {
+    if (!deleteTargetId) return;
+    setDeleteBusy(true);
+    const id = deleteTargetId;
+    window.setTimeout(() => {
+      try {
+        const result = deleteUserLevelAndRelated(id);
+        if (!result.ok) {
+          setDeleteMessage({ ok: false, text: result.error });
+          setDeleteBusy(false);
+          setDeleteTargetId(null);
+          return;
+        }
+        if (editId === id) {
+          setEditId(null);
+        }
+        if (run.status === "saved" && run.savedUserLevelId === id) {
+          setRun({ status: "preview", result: run.result });
+        }
+        refreshUserLevels();
+        setDeleteMessage({ ok: true, text: "Challenge deleted." });
+        setDeleteBusy(false);
+        setDeleteTargetId(null);
+      } catch {
+        setDeleteMessage({
+          ok: false,
+          text: "Could not delete this challenge. Please try again.",
+        });
+        setDeleteBusy(false);
+        setDeleteTargetId(null);
       }
     }, 0);
   }
@@ -953,9 +1041,12 @@ export function CreatorPanel() {
               onChange={(e) => setShareImportCode(e.target.value)}
               autoComplete="off"
               spellCheck={false}
-              placeholder="MIAV-BB-XXXX-XXXX-…"
+              placeholder="Example: MIAV-BB-XXXX-XXXX-…"
               disabled={shareImportBusy || loading || saveBusy}
             />
+            <span className="mosaic-creator-field-hint">
+              Paste a Share Code copied from another Binary Block challenge.
+            </span>
           </label>
           <div className="mosaic-creator-actions">
             <button
@@ -974,11 +1065,25 @@ export function CreatorPanel() {
                   : "mosaic-creator-status mosaic-creator-status--fail"
               }
               role="status"
+              style={{ whiteSpace: "pre-line" }}
             >
               {shareImportMessage}
             </p>
           ) : null}
         </form>
+
+        {deleteMessage ? (
+          <p
+            className={
+              deleteMessage.ok
+                ? "mosaic-creator-save-msg mosaic-creator-save-msg--ok"
+                : "mosaic-creator-status mosaic-creator-status--fail"
+            }
+            role="status"
+          >
+            {deleteMessage.text}
+          </p>
+        ) : null}
 
         {userLevels.length === 0 ? (
           <p className="mosaic-creator-status">
@@ -1100,6 +1205,13 @@ export function CreatorPanel() {
                     >
                       Showcase
                     </a>
+                    <button
+                      type="button"
+                      className="mosaic-btn mosaic-btn--danger mosaic-creator-level-play"
+                      onClick={() => requestDeleteUserLevel(record.userLevelId)}
+                    >
+                      DELETE
+                    </button>
                   </div>
                 </li>
               );
@@ -1107,6 +1219,13 @@ export function CreatorPanel() {
           </ul>
         )}
       </section>
+
+      <DeleteUserLevelModal
+        open={deleteTargetId != null}
+        onCancel={cancelDeleteUserLevel}
+        onConfirm={confirmDeleteUserLevel}
+        busy={deleteBusy}
+      />
     </div>
   );
 }
