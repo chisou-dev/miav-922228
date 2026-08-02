@@ -78,6 +78,33 @@
   border-top: 1px solid #dde1e6;
 }
 
+.mosaic-level-section {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-level-section--user {
+  margin-top: 2.25rem;
+}
+
+.mosaic-user-levels-empty {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--mosaic-muted);
+  letter-spacing: 0.02em;
+}
+
+.mosaic-level-title-tag {
+  font-weight: 400;
+  font-size: 0.75em;
+  letter-spacing: 0.06em;
+  color: var(--mosaic-muted);
+}
+
 .mosaic-level-btn {
   display: flex;
   width: 100%;
@@ -884,4 +911,606 @@
   .mosaic-clear-flash {
     opacity: 0.2;
   }
+}
+
+/* Creator — Phase2-6 fields + Phase2-12 flow + Phase2-13 feedback */
+.mosaic-creator-entry {
+  margin: -0.75rem 0 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+}
+
+.mosaic-creator-entry-sep {
+  color: var(--mosaic-muted);
+  user-select: none;
+}
+
+.mosaic-creator-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dde1e6;
+}
+
+.mosaic-creator-form--primary {
+  grid-template-columns: 1fr;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0.75rem;
+}
+
+.mosaic-creator-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-creator-field--primary input[type="text"] {
+  font-size: 1.05rem;
+  min-height: 2.85rem;
+  letter-spacing: 0.04em;
+}
+
+.mosaic-creator-field input[type="text"],
+.mosaic-creator-field input[type="number"],
+.mosaic-creator-field textarea {
+  border: 1px solid var(--mosaic-line);
+  background: #fff;
+  color: var(--mosaic-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  padding: 0.45rem 0.55rem;
+  min-height: 2.5rem;
+}
+
+.mosaic-creator-field textarea {
+  resize: vertical;
+  min-height: 3.5rem;
+  letter-spacing: 0.02em;
+}
+
+.mosaic-creator-field--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.mosaic-creator-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.mosaic-creator-advanced {
+  margin: 0 0 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dde1e6;
+}
+
+.mosaic-creator-advanced > summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--mosaic-muted);
+  margin-bottom: 0.75rem;
+  list-style: none;
+}
+
+.mosaic-creator-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mosaic-creator-advanced[open] > summary {
+  color: var(--mosaic-ink);
+}
+
+.mosaic-creator-advanced .mosaic-creator-form {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.mosaic-creator-save-msg,
+.mosaic-creator-status {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-creator-save-msg--ok {
+  color: #2f6b45;
+  font-weight: 600;
+}
+
+.mosaic-creator-status--fail {
+  color: #8a3030;
+}
+
+.mosaic-creator-verdict {
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--mosaic-line);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.mosaic-creator-verdict--pass {
+  border-color: #2f6b45;
+  color: #2f6b45;
+  background: color-mix(in srgb, #2f6b45 8%, transparent);
+}
+
+.mosaic-creator-verdict--fail {
+  border-color: #8a3030;
+  color: #8a3030;
+  background: color-mix(in srgb, #8a3030 8%, transparent);
+}
+
+.mosaic-creator-panel {
+  margin: 0 0 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #dde1e6;
+}
+
+.mosaic-creator-h {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--mosaic-ink);
+}
+
+.mosaic-creator-h--sub {
+  margin-top: 0.85rem;
+}
+
+.mosaic-creator-feedback {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #dde1e6;
+}
+
+.mosaic-creator-dl--metrics {
+  margin-top: 0.35rem;
+}
+
+.mosaic-creator-reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.mosaic-creator-reasons > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+}
+
+.mosaic-creator-reason-code {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: #8a3030;
+  background: color-mix(in srgb, #8a3030 8%, transparent);
+  padding: 0.15rem 0.4rem;
+}
+
+.mosaic-creator-reason-label {
+  color: var(--mosaic-muted);
+}
+
+.mosaic-creator-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.55rem 1rem;
+  margin: 0;
+}
+
+.mosaic-creator-dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mosaic-creator-dl dt {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-creator-dl dd {
+  margin: 0;
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.mosaic-creator-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-creator-play-link {
+  margin: 1rem 0 0;
+}
+
+.mosaic-creator-bits-wrap {
+  margin-top: 1rem;
+}
+
+.mosaic-creator-bits {
+  display: grid;
+  gap: 2px;
+  width: min(100%, 16rem);
+  margin-top: 0.35rem;
+  padding: 0.35rem;
+  border: 1px solid var(--mosaic-line);
+  background: color-mix(in srgb, var(--mosaic-line) 35%, transparent);
+}
+
+.mosaic-creator-bit {
+  aspect-ratio: 1;
+  min-height: 0;
+  border-radius: 1px;
+}
+
+.mosaic-creator-bit--0 {
+  background: #e8ecf1;
+}
+
+.mosaic-creator-bit--1 {
+  background: var(--mosaic-ink);
+}
+
+.mosaic-creator-candidates-wrap {
+  margin-top: 1rem;
+}
+
+.mosaic-creator-candidates {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mosaic-creator-candidate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.65rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #dde1e6;
+  font-size: 0.8rem;
+}
+
+.mosaic-creator-candidate--selected {
+  border-color: var(--mosaic-ink);
+  background: color-mix(in srgb, var(--mosaic-ink) 4%, transparent);
+}
+
+.mosaic-creator-candidate-idx {
+  font-weight: 600;
+  color: var(--mosaic-ink);
+}
+
+.mosaic-creator-candidate-verdict {
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.mosaic-creator-candidate-verdict--pass {
+  color: #2f6b45;
+}
+
+.mosaic-creator-candidate-verdict--fail {
+  color: #8a3030;
+}
+
+.mosaic-creator-candidate-meta {
+  color: var(--mosaic-muted);
+  font-size: 0.75rem;
+}
+
+.mosaic-creator-level-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.mosaic-creator-level-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #dde1e6;
+}
+
+.mosaic-creator-level-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.mosaic-creator-level-title {
+  font-size: 0.9rem;
+  color: var(--mosaic-ink);
+  word-break: break-word;
+}
+
+.mosaic-creator-level-sub {
+  font-size: 0.72rem;
+  color: var(--mosaic-muted);
+  word-break: break-word;
+}
+
+.mosaic-creator-level-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  align-items: stretch;
+}
+
+.mosaic-creator-level-play {
+  flex-shrink: 0;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* UserLevel Showcase — reuses challenge card presentation */
+.mosaic-showcase .mosaic-challenge-card {
+  margin-top: 0.25rem;
+}
+
+/* Share Code (Phase2-18 / Phase2-19 grouped + local alias) */
+.mosaic-creator-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin-top: 0.35rem;
+  max-width: 100%;
+}
+
+.mosaic-creator-share-label {
+  font-size: 0.72rem;
+  color: var(--mosaic-muted);
+  flex-shrink: 0;
+}
+
+.mosaic-creator-share-label--alias {
+  margin-left: 0.15rem;
+}
+
+.mosaic-creator-share-code {
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--mosaic-ink);
+  word-break: break-all;
+  max-width: min(100%, 36rem);
+  flex: 1 1 8rem;
+  padding: 0.2rem 0;
+}
+
+.mosaic-creator-share-code--alias {
+  flex: 0 1 auto;
+  max-width: 12rem;
+  color: var(--mosaic-muted);
+}
+
+.mosaic-creator-share-copy {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.55rem;
+}
+
+.mosaic-creator-share-import {
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #dde1e6;
+}
+
+/* UserLevel play credits (Phase2-16) — not shown on public campaign */
+.mosaic-user-credits {
+  margin-top: 1.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--mosaic-line);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  letter-spacing: 0.04em;
+}
+
+.mosaic-user-credits-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.mosaic-user-credits-label {
+  font-size: 0.62rem;
+  color: var(--mosaic-muted);
+  text-transform: none;
+}
+
+.mosaic-user-credits-creator {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--mosaic-ink);
+}
+
+.mosaic-user-credits-developer {
+  font-size: 0.46rem;
+  font-weight: 400;
+  color: var(--mosaic-muted);
+  letter-spacing: 0.06em;
+}
+
+a.mosaic-user-credits-developer,
+a.mosaic-developer-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.mosaic-user-credits-developer:hover,
+a.mosaic-developer-link:hover {
+  text-decoration: underline;
+}
+
+.mosaic-showcase .mosaic-developer-link {
+  font-size: 0.7em;
+  color: var(--mosaic-muted);
+  letter-spacing: 0.04em;
+}
+
+.mosaic-user-credits-block--dev .mosaic-user-credits-label {
+  font-size: 0.5rem;
+}
+
+.mosaic-feedback-save-error {
+  margin: 0.65rem 0.85rem 0;
+}
+
+/* Challenge Mode (Phase2-20) + Collection (Phase3-1) + Featured (Phase3-2) — presentation only */
+.mosaic-challenge-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 1.15rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #dde1e6;
+}
+
+.mosaic-challenge-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--mosaic-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.mosaic-challenge-tab.is-active {
+  color: var(--mosaic-ink, #1a1f26);
+  border-color: #dde1e6;
+  background: #f4f6f8;
+}
+
+.mosaic-challenge-import {
+  margin-bottom: 1.25rem;
+}
+
+.mosaic-challenge-card {
+  margin-top: 0.25rem;
+}
+
+.mosaic-challenge-title {
+  margin-bottom: 0.85rem;
+}
+
+.mosaic-challenge-back {
+  margin-bottom: 0.75rem;
+}
+
+.mosaic-challenge-play {
+  margin-top: 1rem;
+}
+
+.mosaic-challenge-collection {
+  margin-top: 0.25rem;
+}
+
+.mosaic-challenge-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.mosaic-challenge-list-btn {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #dde1e6;
+  border-radius: 6px;
+  background: #fafbfc;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.mosaic-challenge-list-btn:hover {
+  border-color: #c5ccd4;
+  background: #f4f6f8;
+}
+
+.mosaic-challenge-list-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.mosaic-challenge-list-meta {
+  color: var(--mosaic-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.mosaic-challenge-list-btn.is-cleared {
+  border-color: #c5d0c8;
+  background: #f6faf7;
+}
+
+.mosaic-challenge-cleared-badge {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid #b7c9bb;
+  border-radius: 3px;
+  background: #e8f0ea;
+  color: var(--mosaic-ink, #1a1f26);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.mosaic-challenge-feedback {
+  color: var(--mosaic-ink, #1a1f26);
 }

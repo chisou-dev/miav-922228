@@ -9,7 +9,7 @@ globs:
 
 ## Layout
 
-- `core/` — UI-free: `block` · `levelData` · `board` · `rules` · `pieces` · `level` · `session`
+- `core/` — UI-free: `block` · `levelData` · `board` · `rules` · `pieces` · `level` · `session` · `solver` · `generator` · `evaluator` (`EvaluationProfile` switches pass/fail only)
 - `ui/` — React only (input → core → render)
 - `puzzle/` — thin adapters (binary text, scoring, legacy re-exports)
 - Level JSON lives in `levels/levels.json`; access via `core/levelData` (no per-level `if`)
@@ -17,10 +17,16 @@ globs:
 ## Dependency direction (never reverse)
 
 ```
-block / levelData / board → rules → level/session → (future) solver → analyzer → generator
+block / levelData / board → rules → level/session (play)
+                          ↘
+                           solver     ← sibling (↛ generator · evaluator)
+                          ↗
+              → generator  ← sibling (↛ solver · evaluator)
+              → evaluator  ← sibling (↛ generator; receives SolverResult only)
 ```
 
-Do **not** create empty `solver.ts` / `generator.ts` / `analyzer.ts` until that phase.
+Do **not** create empty `analyzer.ts` until that phase. Generator must not import Solver.
+Evaluator must not call Generator or `solveLevel`.
 
 ## Rules
 

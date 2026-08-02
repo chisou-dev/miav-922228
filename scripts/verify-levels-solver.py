@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """
-Verify Binary Block levels with structural checks + exact-cover solver.
+Verify Binary Block levels — thin wrapper around the TypeScript solver.
 
-Reports for each level:
-  - designed packing reconstructs target bits (clearable by construction)
-  - solver finds >=1 solution under game rotation rules
-  - solution uniqueness (count up to LIMIT)
-  - difficulty signals (pieces, rotate quota, board size, solver branching)
+Canonical verifier:
+  npm run verify:levels
+  npx tsx scripts/verify-levels-solver.mts
+
+Library: games/binary-mosaic/core/solver.ts
+
+This file keeps extract_pieces / solve_level helpers for legacy Python
+tooling (fix-unique, inspect-multi, phase1-2-audit). Prefer the TS
+solver for new work.
 """
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -183,6 +189,7 @@ class SolveResult:
 
 
 def solve_level(level: dict, pieces: list[Piece]) -> SolveResult:
+    """Legacy Python exact-cover (prefer core/solver.ts via npm run verify:levels)."""
     rows, cols = level["rows"], level["cols"]
     target = level["bits"]
     n = rows * cols
@@ -229,12 +236,6 @@ def solve_level(level: dict, pieces: list[Piece]) -> SolveResult:
     nodes = 0
     timed_out = False
     t0 = time.perf_counter()
-
-    def first_empty() -> int:
-        for i, v in enumerate(occ):
-            if v < 0:
-                return i
-        return -1
 
     def dfs(pi: int) -> None:
         nonlocal solutions, nodes, timed_out, found_designed
@@ -288,105 +289,19 @@ def difficulty_band(lid: int) -> str:
 
 
 def main() -> None:
-    levels = json.loads(LEVELS_PATH.read_text(encoding="utf-8"))
-    levels = sorted(levels, key=lambda x: x["id"])
-    assert len(levels) == 30, f"expected 30 levels, got {len(levels)}"
-
-    prev_pieces = 0
-    rows_out = []
-    fail = 0
-
+    """Delegate to the TypeScript verifier (core/solver.ts)."""
+    cmd = [
+        "npm",
+        "run",
+        "verify:levels",
+        "--prefix",
+        str(ROOT),
+    ]
     print(
-        f"{'Lv':>3} {'Word':12} {'Pc':>3} {'Rot':>3} {'Cells':>5} "
-        f"{'Design':>6} {'Sol>=':>5} {'Unique?':>8} {'Nodes':>8} {'ms':>7} Band"
+        "Delegating to TypeScript verifier (games/binary-mosaic/core/solver.ts)…",
+        file=sys.stderr,
     )
-
-    for level in levels:
-        lid = level["id"]
-        word = level["targetText"]
-        pieces = extract_pieces(level)
-        pc = len(pieces)
-        rot = sum(1 for p in pieces if p.can_rotate)
-        cells = level["rows"] * level["cols"]
-
-        # structural ASCII
-        flat = [level["bits"][r][c] for r in range(level["rows"]) for c in range(level["cols"])]
-        ascii_ok = flat == text_to_bits(word)
-
-        design_ok = designed_packing_ok(level, pieces)
-        mono_ok = pc >= prev_pieces
-
-        result = solve_level(level, pieces)
-
-        if result.solutions == 0 and not result.timed_out:
-            uniq = "NONE"
-            fail += 1
-        elif result.solutions == 1 and not result.timed_out:
-            uniq = "UNIQUE"
-        elif result.solutions >= SOLUTION_LIMIT:
-            uniq = f"MULTI>={SOLUTION_LIMIT}"
-        else:
-            uniq = f"MULTI={result.solutions}"
-
-        if result.timed_out:
-            uniq = uniq + "/TO"
-
-        ok = ascii_ok and design_ok and mono_ok and result.found_designed and (
-            result.solutions >= 1 or result.timed_out
-        )
-        if not ok:
-            fail += 1
-
-        print(
-            f"{lid:3d} {word:12} {pc:3d} {rot:3d} {cells:5d} "
-            f"{'OK' if design_ok else 'FAIL':>6} {result.solutions:5d} {uniq:>8} "
-            f"{result.nodes:8d} {result.ms:7.0f} {difficulty_band(lid)}"
-        )
-        rows_out.append(
-            {
-                "id": lid,
-                "word": word,
-                "pieces": pc,
-                "rotate": rot,
-                "cells": cells,
-                "designed_clearable": design_ok,
-                "ascii_ok": ascii_ok,
-                "monotonic_pieces": mono_ok,
-                "solver_solutions_capped": result.solutions,
-                "uniqueness": uniq,
-                "solver_nodes": result.nodes,
-                "timed_out": result.timed_out,
-                "found_designed": result.found_designed,
-            }
-        )
-        prev_pieces = pc
-
-    # Difficulty trend checks
-    pcs = [r["pieces"] for r in rows_out]
-    rots = [r["rotate"] for r in rows_out]
-    piece_mono = all(pcs[i] <= pcs[i + 1] for i in range(len(pcs) - 1))
-    rot_nondec_from_20 = all(
-        rots[i] <= rots[i + 1]
-        for i in range(19, len(rots) - 1)  # index 19 = L20
-    )
-
-    print()
-    print("=== Summary ===")
-    print(f"Levels: {len(rows_out)}")
-    print(f"All designed packings clearable: {all(r['designed_clearable'] for r in rows_out)}")
-    print(f"All ASCII bit match: {all(r['ascii_ok'] for r in rows_out)}")
-    print(f"Piece count monotonic: {piece_mono} ({pcs[0]}..{pcs[-1]})")
-    print(f"Rotate quota non-decreasing L20-30: {rot_nondec_from_20} ({rots[19:]})")
-    unique_n = sum(1 for r in rows_out if r["uniqueness"].startswith("UNIQUE"))
-    multi_n = sum(1 for r in rows_out if "MULTI" in r["uniqueness"])
-    none_n = sum(1 for r in rows_out if r["uniqueness"].startswith("NONE"))
-    to_n = sum(1 for r in rows_out if r["timed_out"])
-    print(f"Solver UNIQUE: {unique_n}  MULTI: {multi_n}  NONE: {none_n}  timed_out: {to_n}")
-    print(f"Failures flagged: {fail}")
-
-    out_path = ROOT / "scripts" / "level-verify-report.json"
-    out_path.write_text(json.dumps(rows_out, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {out_path}")
+    raise SystemExit(subprocess.call(cmd, cwd=str(ROOT)))
 
 
 if __name__ == "__main__":

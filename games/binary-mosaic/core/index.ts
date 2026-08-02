@@ -2,10 +2,15 @@
  * Binary Block core — UI-free game logic.
  *
  * Dependency direction (do not reverse):
- *   block / levelData / board → rules → level/session → (future) solver → analyzer → generator
+ *   block / levelData / board → rules → level / session (play)
+ *   level / rules / board / levelData → solver      (dev · Creator check)
+ *   level / rules / board / levelData → generator   (dev · Creator pack)
+ *   level / levelData + SolverResult → evaluator    (dev · quality gate)
  *
- * Reserved for later phases (do not add yet):
- *   solver.ts · generator.ts · analyzer.ts
+ * Generator · Solver · Evaluator are siblings — none imports another.
+ * Orchestrator (outside core) may call: generate → solveLevel → evaluateLevel.
+ *
+ * Reserved for later: analyzer.ts
  */
 export type {
   BoardCell,
@@ -94,3 +99,42 @@ export {
   type ActionResult,
   type LevelBoardInput,
 } from "@/games/binary-mosaic/core/session";
+
+export {
+  solveLevel,
+  type SolveLevelOptions,
+  type SolverResult,
+  type SolverStatus,
+} from "@/games/binary-mosaic/core/solver";
+
+export {
+  generateLevel,
+  generateLevelCandidates,
+  type CreatorIntent,
+  type GeneratorCandidate,
+  type GeneratorCandidateMetrics,
+  type GeneratorError,
+  type GeneratorErrorCode,
+  type GeneratorInput,
+  type GeneratorResult,
+} from "@/games/binary-mosaic/core/generator";
+
+export {
+  DEFAULT_EVALUATION_PROFILE,
+  DEFAULT_THRESHOLDS,
+  EvaluationProfile,
+  EvaluatorReasonCode,
+  PROFILE_THRESHOLD_OVERLAYS,
+  USER_LEVEL_MIN_SCORE,
+  distinctOrientationCount,
+  evaluateLevel,
+  isBarPiece,
+  isCampaignMultiOk,
+  isHardReasonForProfile,
+  isIBarPiece,
+  type EvaluateLevelOptions,
+  type EvaluatorDifficulty,
+  type EvaluatorMetrics,
+  type EvaluatorResult,
+  type EvaluatorThresholds,
+} from "@/games/binary-mosaic/core/evaluator";

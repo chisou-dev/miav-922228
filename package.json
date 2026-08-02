@@ -6,7 +6,9 @@
     "dev": "next dev --port 3001",
     "build": "next build --webpack",
     "start": "next start --port 3001",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:levels": "npx --yes tsx scripts/verify-levels-solver.mts",
+    "evaluate:levels": "npx --yes tsx scripts/evaluate-levels.mts"
   },
   "dependencies": {
     "next": "16.2.10",

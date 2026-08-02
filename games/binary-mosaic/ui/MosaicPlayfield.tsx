@@ -53,12 +53,14 @@ import {
   type HintCell,
 } from "@/games/binary-mosaic/puzzle/validation";
 import type {
+  LevelDef,
   PatternResult,
   PieceRuntime,
 } from "@/games/binary-mosaic/types";
 import { PieceView } from "@/games/binary-mosaic/ui/PieceView";
 import { SoundToggleIcon } from "@/games/binary-mosaic/ui/SoundToggleIcon";
 import { useCellPx } from "@/games/binary-mosaic/ui/useCellPx";
+import { saveChallengeFeedback } from "@/games/binary-mosaic/progress/challengeFeedback";
 import {
   createEmptyProgress,
   isLevelCleared,
@@ -67,6 +69,14 @@ import {
   recordLevelClear,
   type BinaryBlockProgress,
 } from "@/games/binary-mosaic/progress/storage";
+import {
+  getUserLevel,
+  listUserLevels,
+  DEFAULT_CREATOR_NAME,
+  DEVELOPER_CREDIT,
+  DEVELOPER_HOME_URL,
+  type UserLevelRecord,
+} from "@/games/binary-mosaic/progress/userLevels";
 import {
   applyTrayOrder,
   pickTrayPatternIndex,
@@ -77,6 +87,28 @@ import {
   rotatableCountForLevel,
 } from "@/games/binary-mosaic/puzzle/rotationPolicy";
 import { useBit8Audio } from "@/hooks/useBit8Audio";
+
+/** Campaign = public L1–30; user = saved UserLevel (separate storage). */
+type PlayMode = "campaign" | "user";
+
+type ActivePlay =
+  | { kind: "campaign"; levelId: number }
+  | { kind: "user"; userLevelId: string; level: LevelDef };
+
+/** Audio / tray seed — keep ≥1 so BGM stage hooks stay sane for draftId 0. */
+function audioStageForLevel(level: LevelDef): number {
+  return Math.max(1, level.id);
+}
+
+/**
+ * Rotate quota: campaign table, or honor LevelData.rotatablePieceIndices
+ * (UserLevels store explicit indices; draft ids are not in the L20–30 table).
+ */
+function rotateQuotaForPlay(level: LevelDef): number {
+  const table = rotatableCountForLevel(level.id);
+  const explicit = level.rotatablePieceIndices?.length ?? 0;
+  return Math.max(table, explicit);
+}
 
 const ClearSequence = dynamic(
   () =>
@@ -102,14 +134,13 @@ type DropPreview = {
 
 type Cell = { row: number; col: number };
 
-function createPieces(levelId: number): PieceRuntime[] {
-  const level = getLevel(levelId);
-  if (!level) return [];
+/** Build tray pieces from LevelData/LevelDef (campaign or user). */
+function createPieces(level: LevelDef): PieceRuntime[] {
   const { pieces } = extractPiecesFromLevel(level);
   const rotatableIds = new Set(
     pickRotatablePieceIndices(
       pieces,
-      rotatableCountForLevel(levelId),
+      rotateQuotaForPlay(level),
       level.rotatablePieceIndices,
     ),
   );
@@ -126,23 +157,29 @@ function createPieces(levelId: number): PieceRuntime[] {
       canRotate,
     };
   });
-  return applyTrayOrder(runtime, levelId, pickTrayPatternIndex());
+  return applyTrayOrder(runtime, level.id, pickTrayPatternIndex());
 }
 
 function MosaicPlayfield({
-  levelId,
+  level,
+  playMode,
+  userLevelId,
   onClearContinue,
   onLevelCleared,
   soundOn,
   setSoundOn,
 }: {
-  levelId: number;
+  /** LevelData from campaign catalog or UserLevel.levelData. */
+  level: LevelDef;
+  playMode: PlayMode;
+  /** Required when playMode === "user" — Challenge Feedback key. */
+  userLevelId?: string;
   onClearContinue: (nextLevelId: number | null) => void;
   onLevelCleared?: () => void;
   soundOn: boolean;
   setSoundOn: (next: boolean) => void;
 }) {
-  const level = getLevel(levelId)!;
+  const stageId = audioStageForLevel(level);
   const meta = useMemo(() => extractPiecesFromLevel(level), [level]);
   const expectations = useMemo(
     () => buildPieceExpectations(level),
@@ -165,7 +202,7 @@ function MosaicPlayfield({
   const previewKeyRef = useRef("");
 
   const [pieces, setPieces] = useState<PieceRuntime[]>(() =>
-    createPieces(levelId),
+    createPieces(level),
   );
   const [hintUses, setHintUses] = useState(0);
   const [hintRevealed, setHintRevealed] = useState<HintCell[]>([]);
@@ -175,6 +212,9 @@ function MosaicPlayfield({
   const [dragPieceId, setDragPieceId] = useState<string | null>(null);
   const [dropPreview, setDropPreview] = useState<DropPreview | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [feedbackSaveError, setFeedbackSaveError] = useState<string | null>(
+    null,
+  );
   const [result, setResult] = useState<PatternResult | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [kbOrigin, setKbOrigin] = useState<Cell | null>(null);
@@ -192,17 +232,17 @@ function MosaicPlayfield({
     audio.setMuted(!soundOn);
   }, [soundOn, audio]);
 
-  useBit8Audio(running && !clearing && soundOn, levelId);
+  useBit8Audio(running && !clearing && soundOn, stageId);
 
   useEffect(() => {
     if (clearing) {
-      audio.setGameState("clear", { stage: levelId });
+      audio.setGameState("clear", { stage: stageId });
       return;
     }
     if (running && soundOn) {
-      audio.setGameState("playing", { stage: levelId });
+      audio.setGameState("playing", { stage: stageId });
     }
-  }, [clearing, running, soundOn, levelId, audio]);
+  }, [clearing, running, soundOn, stageId, audio]);
 
   const toggleSound = useCallback(() => {
     const next = !soundOn;
@@ -210,21 +250,26 @@ function MosaicPlayfield({
     if (next) {
       void audio.unlock().then(() => {
         if (running && !clearing) {
-          audio.setGameState("playing", { stage: levelId });
+          audio.setGameState("playing", { stage: stageId });
         }
       });
       void audio.playSe("button");
     } else {
-      audio.setGameState("pause", { stage: levelId });
+      audio.setGameState("pause", { stage: stageId });
     }
     setSoundOn(next);
-  }, [audio, running, clearing, soundOn, setSoundOn, levelId]);
+  }, [audio, running, clearing, soundOn, setSoundOn, stageId]);
 
   const handleClearDone = useCallback(() => {
     void audio.playSe("button");
     setClearing(false);
-    onClearContinue(getNextLevelId(levelId));
-  }, [audio, levelId, onClearContinue]);
+    // User levels: no public next-level unlock — return to select (null).
+    if (playMode === "user") {
+      onClearContinue(null);
+      return;
+    }
+    onClearContinue(getNextLevelId(level.id));
+  }, [audio, playMode, level.id, onClearContinue]);
 
   const handleBackToLevels = useCallback(() => {
     void audio.playSe("button");
@@ -237,7 +282,7 @@ function MosaicPlayfield({
 
   useEffect(() => {
     clearedRef.current = false;
-    setPieces(createPieces(levelId));
+    setPieces(createPieces(level));
     setHintUses(0);
     setHintRevealed([]);
     setMoves(0);
@@ -247,12 +292,13 @@ function MosaicPlayfield({
     setDropPreview(null);
     setClearing(false);
     setResult(null);
+    setFeedbackSaveError(null);
     setSelectedId(null);
     setKbOrigin(null);
     setRejectMarkers([]);
     previewKeyRef.current = "";
     startRef.current = performance.now();
-  }, [levelId]);
+  }, [level]);
 
   useEffect(() => {
     if (!running) return;
@@ -294,8 +340,25 @@ function MosaicPlayfield({
       pieceCount: pieces.length,
       decodedText: decodedReady,
     });
-    recordLevelClear(level.id, completionResult);
-    onLevelCleared?.();
+    // Campaign only: write binary_block_progress.clearedLevels (numeric public ids).
+    // User levels: Challenge Feedback only — never push user ids into public progress.
+    if (playMode === "campaign") {
+      recordLevelClear(level.id, completionResult);
+      onLevelCleared?.();
+    } else if (playMode === "user" && userLevelId) {
+      const saved = saveChallengeFeedback({
+        userLevelId,
+        clear: true,
+        time: completionResult.completionTimeSec,
+        moves: completionResult.moves,
+        hintsUsed: completionResult.hintUses,
+      });
+      if (!saved.ok) {
+        setFeedbackSaveError(saved.error);
+      } else {
+        setFeedbackSaveError(null);
+      }
+    }
     setResult(completionResult);
     setClearing(true);
   }, [
@@ -305,6 +368,8 @@ function MosaicPlayfield({
     hintUses,
     pieces.length,
     level.id,
+    playMode,
+    userLevelId,
     onLevelCleared,
   ]);
 
@@ -1084,24 +1149,62 @@ function MosaicPlayfield({
         onDone={handleClearDone}
         onBackToLevels={handleBackToLevels}
       />
+      {feedbackSaveError ? (
+        <p
+          className="mosaic-creator-status mosaic-creator-status--fail mosaic-feedback-save-error"
+          role="status"
+        >
+          {feedbackSaveError}
+        </p>
+      ) : null}
     </div>
   );
 }
 
 export function BinaryMosaicGame() {
   const levels = getAllLevels();
-  const [levelId, setLevelId] = useState(levels[0]?.id ?? 1);
+  const [active, setActive] = useState<ActivePlay>({
+    kind: "campaign",
+    levelId: levels[0]?.id ?? 1,
+  });
   const [screen, setScreen] = useState<"select" | "play">("select");
   const [soundOn, setSoundOn] = useState(false);
   const [progress, setProgress] = useState<BinaryBlockProgress>(createEmptyProgress);
+  const [userLevels, setUserLevels] = useState<UserLevelRecord[]>([]);
   const audio = AudioManager.getInstance();
+
+  const playLevel: LevelDef | undefined =
+    active.kind === "campaign"
+      ? getLevel(active.levelId)
+      : active.level;
+  const playStage = playLevel ? audioStageForLevel(playLevel) : 1;
 
   useEffect(() => {
     setProgress(loadProgress());
+    setUserLevels(listUserLevels());
+
+    // Creator Play deep-link: /game/binary-mosaic?user=user:<uuid>
+    try {
+      const userId = new URLSearchParams(window.location.search).get("user");
+      if (!userId) return;
+      const record = getUserLevel(userId);
+      if (!record) return;
+      setActive({
+        kind: "user",
+        userLevelId: record.userLevelId,
+        level: record.levelData as LevelDef,
+      });
+      setScreen("play");
+    } catch {
+      /* ignore bad URL / storage */
+    }
   }, []);
 
   useEffect(() => {
-    if (screen === "select") setProgress(loadProgress());
+    if (screen === "select") {
+      setProgress(loadProgress());
+      setUserLevels(listUserLevels());
+    }
   }, [screen]);
 
   useEffect(() => {
@@ -1110,6 +1213,24 @@ export function BinaryMosaicGame() {
 
   const refreshProgress = useCallback(() => {
     setProgress(loadProgress());
+  }, []);
+
+  const startCampaign = useCallback((levelId: number) => {
+    void AudioManager.getInstance().playSe("button");
+    setActive({ kind: "campaign", levelId });
+    setScreen("play");
+  }, []);
+
+  const startUserLevel = useCallback((userLevelId: string) => {
+    const record = getUserLevel(userLevelId);
+    if (!record) return;
+    void AudioManager.getInstance().playSe("button");
+    setActive({
+      kind: "user",
+      userLevelId: record.userLevelId,
+      level: record.levelData as LevelDef,
+    });
+    setScreen("play");
   }, []);
 
   const toggleSelectSound = useCallback(() => {
@@ -1127,18 +1248,18 @@ export function BinaryMosaicGame() {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden) {
-        audio.setGameState("pause", { stage: levelId });
+        audio.setGameState("pause", { stage: playStage });
         return;
       }
       if (soundOn && screen === "play") {
-        audio.setGameState("playing", { stage: levelId });
+        audio.setGameState("playing", { stage: playStage });
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [audio, soundOn, screen, levelId]);
+  }, [audio, soundOn, screen, playStage]);
 
   useEffect(() => {
     if (screen === "select") {
@@ -1183,6 +1304,37 @@ export function BinaryMosaicGame() {
           board decodes to real ASCII text — not decoration. Clear a level to
           unlock the next.
         </p>
+        <p className="mosaic-creator-entry">
+          <a href="/game/binary-mosaic/creator" className="mosaic-chrome-link">
+            Creator
+          </a>
+          <span className="mosaic-creator-entry-sep" aria-hidden="true">
+            ·
+          </span>
+          <a href="/game/binary-mosaic/challenge" className="mosaic-chrome-link">
+            Challenge
+          </a>
+          <span className="mosaic-creator-entry-sep" aria-hidden="true">
+            ·
+          </span>
+          <a
+            href="/game/binary-mosaic/challenge?tab=collection"
+            className="mosaic-chrome-link"
+          >
+            Collection
+          </a>
+          <span className="mosaic-creator-entry-sep" aria-hidden="true">
+            ·
+          </span>
+          <a
+            href="/game/binary-mosaic/challenge?tab=published"
+            className="mosaic-chrome-link"
+          >
+            Published
+          </a>
+        </p>
+
+        <h3 className="mosaic-level-section">Campaign</h3>
         <ul className="mosaic-level-list">
           {levels.map((level) => {
             const unlocked = isLevelUnlocked(progress, level.id);
@@ -1198,9 +1350,7 @@ export function BinaryMosaicGame() {
                   disabled={!unlocked}
                   onClick={() => {
                     if (!unlocked) return;
-                    void AudioManager.getInstance().playSe("button");
-                    setLevelId(level.id);
-                    setScreen("play");
+                    startCampaign(level.id);
                   }}
                 >
                   <span>{level.title}</span>
@@ -1257,6 +1407,52 @@ export function BinaryMosaicGame() {
             );
           })}
         </ul>
+
+        <h3 className="mosaic-level-section mosaic-level-section--user">
+          My levels
+        </h3>
+        {userLevels.length === 0 ? (
+          <p className="mosaic-user-levels-empty">
+            No saved user levels yet. Create one in Creator.
+          </p>
+        ) : (
+          <ul className="mosaic-level-list">
+            {userLevels.map((record) => {
+              const ld = record.levelData;
+              return (
+                <li key={record.userLevelId}>
+                  <button
+                    type="button"
+                    className="mosaic-level-btn"
+                    onClick={() => startUserLevel(record.userLevelId)}
+                  >
+                    <span>{ld.title || "Untitled"}</span>
+                    <span className="mosaic-level-meta">
+                      {ld.targetText}
+                      {" · "}
+                      {ld.rows}×{ld.cols}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  if (!playLevel) {
+    return (
+      <div className="mosaic-root">
+        <p className="mosaic-lead">Level not found.</p>
+        <button
+          type="button"
+          className="mosaic-btn mosaic-btn--ghost"
+          onClick={() => setScreen("select")}
+        >
+          Levels
+        </button>
       </div>
     );
   }
@@ -1277,23 +1473,71 @@ export function BinaryMosaicGame() {
         >
           Levels
         </button>
-        <h2 className="mosaic-level-title">{getLevel(levelId)?.title}</h2>
+        <h2 className="mosaic-level-title">
+          {playLevel.title}
+          {active.kind === "user" ? (
+            <span className="mosaic-level-title-tag"> · My level</span>
+          ) : null}
+        </h2>
         <span className="mosaic-play-spacer" />
       </div>
       <MosaicPlayfield
-        key={levelId}
-        levelId={levelId}
+        key={
+          active.kind === "campaign"
+            ? `c-${active.levelId}`
+            : `u-${active.userLevelId}`
+        }
+        level={playLevel}
+        playMode={active.kind}
+        userLevelId={
+          active.kind === "user" ? active.userLevelId : undefined
+        }
         soundOn={soundOn}
         setSoundOn={setSoundOn}
-        onLevelCleared={refreshProgress}
+        onLevelCleared={
+          active.kind === "campaign" ? refreshProgress : undefined
+        }
         onClearContinue={(nextId) => {
+          if (active.kind === "user") {
+            setScreen("select");
+            return;
+          }
           if (nextId != null) {
-            setLevelId(nextId);
+            setActive({ kind: "campaign", levelId: nextId });
             return;
           }
           setScreen("select");
         }}
       />
+      {active.kind === "user" ? (
+        <UserLevelCreditsFooter userLevelId={active.userLevelId} />
+      ) : null}
     </div>
+  );
+}
+
+/** UserLevel-only credit strip — reads record by activeUserLevelId. */
+function UserLevelCreditsFooter({ userLevelId }: { userLevelId: string }) {
+  const record = getUserLevel(userLevelId);
+  const creatorName = record?.creatorName?.trim() || DEFAULT_CREATOR_NAME;
+  const developerCredit = record?.developerCredit || DEVELOPER_CREDIT;
+  return (
+    <footer className="mosaic-user-credits" aria-label="Level credits">
+      <div className="mosaic-user-credits-block">
+        <span className="mosaic-user-credits-label">Created by</span>
+        <span className="mosaic-user-credits-creator">{creatorName}</span>
+      </div>
+      <div className="mosaic-user-credits-block mosaic-user-credits-block--dev">
+        <span className="mosaic-user-credits-label">Developer</span>
+        <a
+          href={DEVELOPER_HOME_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mosaic-user-credits-developer mosaic-developer-link"
+        >
+          {developerCredit}
+        </a>
+      </div>
+    </footer>
   );
 }
