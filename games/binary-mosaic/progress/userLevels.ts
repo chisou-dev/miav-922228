@@ -97,12 +97,13 @@ export const SHARE_CODE_COPIED_MESSAGE = "Share Code copied.";
 export const CLIPBOARD_COPY_FAILED_MESSAGE =
   "Copy failed. Please select and copy the code manually.";
 
-/** User-facing Challenge Link clipboard success. */
-export const CHALLENGE_LINK_COPIED_MESSAGE = "Challenge Link copied.";
+/** User-facing Challenge Link clipboard success (SHARE fallback). */
+export const CHALLENGE_LINK_COPIED_MESSAGE =
+  "Link copied.\nPaste it into LINE, X, Reddit, or another app.";
 
-/** User-facing Challenge Link clipboard failure. */
+/** User-facing Challenge Link clipboard / share failure. */
 export const CHALLENGE_LINK_COPY_FAILED_MESSAGE =
-  "Copy failed. Please select and copy the link manually.";
+  "Sharing is not supported in this browser. Please select and copy the Challenge Link manually.";
 
 /** User-facing Challenge Link too long for a direct URL. */
 export const CHALLENGE_LINK_TOO_LARGE_MESSAGE =

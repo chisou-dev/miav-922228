@@ -1,15 +1,12 @@
 "use client";
 
 /**
- * Prominent Share / Copy Challenge Link button (Creator, My levels, Showcase, Challenge).
- * Mobile: navigator.share when available. PC / unsupported: copy to clipboard.
+ * Unified SHARE button (Creator, My levels, Showcase, Challenge).
+ * Label is always SHARE. navigator.share when available; else copy Challenge Link.
  */
 
-import { useEffect, useState } from "react";
-import {
-  canUseWebShare,
-  shareOrCopyChallengeLink,
-} from "@/games/binary-mosaic/progress/challengeLink";
+import { useState } from "react";
+import { shareOrCopyChallengeLink } from "@/games/binary-mosaic/progress/challengeLink";
 import {
   CHALLENGE_LINK_COPIED_MESSAGE,
   CHALLENGE_LINK_COPY_FAILED_MESSAGE,
@@ -23,14 +20,9 @@ export function ShareChallengeButton({
   record: UserLevelRecord;
   className?: string;
 }) {
-  const [webShare, setWebShare] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<"ok" | "fail" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setWebShare(canUseWebShare());
-  }, []);
 
   async function onShare() {
     if (busy) return;
@@ -48,7 +40,7 @@ export function ShareChallengeButton({
       window.setTimeout(() => {
         setStatus(null);
         setMessage(null);
-      }, 1600);
+      }, 2800);
       return;
     }
     setStatus("fail");
@@ -59,8 +51,6 @@ export function ShareChallengeButton({
     );
   }
 
-  const label = webShare ? "Share" : "Copy Challenge Link";
-
   return (
     <span className="mosaic-challenge-share-wrap">
       <button
@@ -69,7 +59,7 @@ export function ShareChallengeButton({
         onClick={() => void onShare()}
         disabled={busy}
       >
-        {busy ? "…" : label}
+        {busy ? "…" : "SHARE"}
       </button>
       {message ? (
         <p
@@ -79,6 +69,7 @@ export function ShareChallengeButton({
               : "mosaic-creator-status mosaic-creator-status--fail"
           }
           role="status"
+          style={{ whiteSpace: "pre-line" }}
         >
           {message}
         </p>
