@@ -59,8 +59,11 @@ import type {
 } from "@/games/binary-mosaic/types";
 import { PieceView } from "@/games/binary-mosaic/ui/PieceView";
 import { SoundToggleIcon } from "@/games/binary-mosaic/ui/SoundToggleIcon";
+import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
+import { UsageGuideModal } from "@/games/binary-mosaic/ui/UsageGuideModal";
 import { useCellPx } from "@/games/binary-mosaic/ui/useCellPx";
 import { saveChallengeFeedback } from "@/games/binary-mosaic/progress/challengeFeedback";
+import { deleteUserLevelAndRelated } from "@/games/binary-mosaic/progress/deleteUserLevelAndRelated";
 import {
   createEmptyProgress,
   isLevelCleared,
@@ -70,11 +73,13 @@ import {
   type BinaryBlockProgress,
 } from "@/games/binary-mosaic/progress/storage";
 import {
+  BINARY_BLOCK_USER_LEVELS_KEY,
   getUserLevel,
   listUserLevels,
   DEFAULT_CREATOR_NAME,
   DEVELOPER_CREDIT,
   DEVELOPER_HOME_URL,
+  USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
 import {
@@ -1169,9 +1174,17 @@ export function BinaryMosaicGame() {
   });
   const [screen, setScreen] = useState<"select" | "play">("select");
   const [soundOn, setSoundOn] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [progress, setProgress] = useState<BinaryBlockProgress>(createEmptyProgress);
   const [userLevels, setUserLevels] = useState<UserLevelRecord[]>([]);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [userLevelsMessage, setUserLevelsMessage] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
   const audio = AudioManager.getInstance();
+  const closeGuide = useCallback(() => setGuideOpen(false), []);
 
   const playLevel: LevelDef | undefined =
     active.kind === "campaign"
@@ -1179,9 +1192,13 @@ export function BinaryMosaicGame() {
       : active.level;
   const playStage = playLevel ? audioStageForLevel(playLevel) : 1;
 
+  const refreshUserLevels = useCallback(() => {
+    setUserLevels(listUserLevels());
+  }, []);
+
   useEffect(() => {
     setProgress(loadProgress());
-    setUserLevels(listUserLevels());
+    refreshUserLevels();
 
     // Creator Play deep-link: /game/binary-mosaic?user=user:<uuid>
     try {
@@ -1198,14 +1215,44 @@ export function BinaryMosaicGame() {
     } catch {
       /* ignore bad URL / storage */
     }
-  }, []);
+  }, [refreshUserLevels]);
 
   useEffect(() => {
     if (screen === "select") {
       setProgress(loadProgress());
-      setUserLevels(listUserLevels());
+      refreshUserLevels();
     }
-  }, [screen]);
+  }, [screen, refreshUserLevels]);
+
+  // Cross-page / same-tab refresh after Creator save / import / delete
+  useEffect(() => {
+    const refresh = () => {
+      refreshUserLevels();
+    };
+    const onVisibility = () => {
+      if (!document.hidden) refresh();
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) refresh();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === BINARY_BLOCK_USER_LEVELS_KEY || event.key === null) {
+        refresh();
+      }
+    };
+    window.addEventListener(USER_LEVELS_CHANGED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener(USER_LEVELS_CHANGED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refreshUserLevels]);
 
   useEffect(() => {
     audio.setMuted(!soundOn);
@@ -1214,6 +1261,51 @@ export function BinaryMosaicGame() {
   const refreshProgress = useCallback(() => {
     setProgress(loadProgress());
   }, []);
+
+  const requestDeleteUserLevel = useCallback((userLevelId: string) => {
+    setUserLevelsMessage(null);
+    setDeleteTargetId(userLevelId);
+  }, []);
+
+  const cancelDeleteUserLevel = useCallback(() => {
+    if (deleteBusy) return;
+    setDeleteTargetId(null);
+  }, [deleteBusy]);
+
+  const confirmDeleteUserLevel = useCallback(() => {
+    if (!deleteTargetId) return;
+    setDeleteBusy(true);
+    const id = deleteTargetId;
+    window.setTimeout(() => {
+      try {
+        const result = deleteUserLevelAndRelated(id);
+        if (!result.ok) {
+          setUserLevelsMessage({ ok: false, text: result.error });
+          setDeleteBusy(false);
+          setDeleteTargetId(null);
+          return;
+        }
+        if (active.kind === "user" && active.userLevelId === id) {
+          setScreen("select");
+          setActive({
+            kind: "campaign",
+            levelId: getAllLevels()[0]?.id ?? 1,
+          });
+        }
+        refreshUserLevels();
+        setUserLevelsMessage({ ok: true, text: "Challenge deleted." });
+        setDeleteBusy(false);
+        setDeleteTargetId(null);
+      } catch {
+        setUserLevelsMessage({
+          ok: false,
+          text: "Could not delete this challenge. Please try again.",
+        });
+        setDeleteBusy(false);
+        setDeleteTargetId(null);
+      }
+    }, 0);
+  }, [deleteTargetId, active, refreshUserLevels]);
 
   const startCampaign = useCallback((levelId: number) => {
     void AudioManager.getInstance().playSe("button");
@@ -1283,7 +1375,7 @@ export function BinaryMosaicGame() {
           <a href="/game" className="mosaic-chrome-link" onClick={() => audio.setGameState("menu")}>
             Game Library
           </a>
-          <span className="mosaic-chrome-title">Binary Mosaic</span>
+          <span className="mosaic-chrome-title">Binary Block</span>
           <button
             type="button"
             className={`mosaic-btn mosaic-btn--ghost mosaic-btn--icon mosaic-btn--icon-sm mosaic-chrome-sound ${soundOn ? "is-on" : ""}`}
@@ -1304,7 +1396,7 @@ export function BinaryMosaicGame() {
           board decodes to real ASCII text — not decoration. Clear a level to
           unlock the next.
         </p>
-        <p className="mosaic-creator-entry">
+        <nav className="mosaic-creator-entry" aria-label="Binary Block sections">
           <a href="/game/binary-mosaic/creator" className="mosaic-chrome-link">
             Creator
           </a>
@@ -1332,7 +1424,21 @@ export function BinaryMosaicGame() {
           >
             Published
           </a>
-        </p>
+          <span className="mosaic-creator-entry-sep" aria-hidden="true">
+            ·
+          </span>
+          <button
+            type="button"
+            className="mosaic-guide-trigger"
+            onClick={() => setGuideOpen(true)}
+            aria-label="How to use Binary Block"
+            aria-haspopup="dialog"
+            aria-expanded={guideOpen}
+          >
+            How to use
+          </button>
+        </nav>
+        <UsageGuideModal open={guideOpen} onClose={closeGuide} />
 
         <h3 className="mosaic-level-section">Campaign</h3>
         <ul className="mosaic-level-list">
@@ -1411,6 +1517,18 @@ export function BinaryMosaicGame() {
         <h3 className="mosaic-level-section mosaic-level-section--user">
           My levels
         </h3>
+        {userLevelsMessage ? (
+          <p
+            className={
+              userLevelsMessage.ok
+                ? "mosaic-user-levels-msg mosaic-user-levels-msg--ok"
+                : "mosaic-user-levels-msg mosaic-user-levels-msg--fail"
+            }
+            role="status"
+          >
+            {userLevelsMessage.text}
+          </p>
+        ) : null}
         {userLevels.length === 0 ? (
           <p className="mosaic-user-levels-empty">
             No saved user levels yet. Create one in Creator.
@@ -1420,7 +1538,7 @@ export function BinaryMosaicGame() {
             {userLevels.map((record) => {
               const ld = record.levelData;
               return (
-                <li key={record.userLevelId}>
+                <li key={record.userLevelId} className="mosaic-user-level-row">
                   <button
                     type="button"
                     className="mosaic-level-btn"
@@ -1433,11 +1551,28 @@ export function BinaryMosaicGame() {
                       {ld.rows}×{ld.cols}
                     </span>
                   </button>
+                  <button
+                    type="button"
+                    className="mosaic-btn mosaic-btn--danger mosaic-user-level-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestDeleteUserLevel(record.userLevelId);
+                    }}
+                    aria-label={`Delete ${ld.title || "Untitled"}`}
+                  >
+                    DELETE
+                  </button>
                 </li>
               );
             })}
           </ul>
         )}
+        <DeleteUserLevelModal
+          open={deleteTargetId != null}
+          onCancel={cancelDeleteUserLevel}
+          onConfirm={confirmDeleteUserLevel}
+          busy={deleteBusy}
+        />
       </div>
     );
   }
@@ -1463,7 +1598,7 @@ export function BinaryMosaicGame() {
         <a href="/game" className="mosaic-chrome-link" onClick={() => audio.setGameState("menu")}>
           Game Library
         </a>
-        <span className="mosaic-chrome-title">Binary Mosaic</span>
+        <span className="mosaic-chrome-title">Binary Block</span>
       </div>
       <div className="mosaic-play-top">
         <button

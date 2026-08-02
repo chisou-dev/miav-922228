@@ -4,7 +4,7 @@ import type { GameCatalogItem } from "@/types/game";
 export const GAME_LIBRARY: GameCatalogItem[] = [
   {
     slug: "binary-mosaic",
-    title: "Binary Mosaic",
+    title: "Binary Block",
     status: "available",
   },
   {

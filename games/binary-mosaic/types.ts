@@ -1,4 +1,4 @@
-/** Binary Mosaic — glass binary packing (no other games). */
+/** Binary Block — glass binary packing (no other games). */
 
 export type Cell = {
   row: number;

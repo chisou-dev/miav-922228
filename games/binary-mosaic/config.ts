@@ -15,7 +15,7 @@ import type { LevelDef } from "@/games/binary-mosaic/types";
 
 export const binaryMosaicConfig = {
   slug: "binary-mosaic",
-  title: "Binary Mosaic",
+  title: "Binary Block",
   /** Board cell size in px — keep compact so more pieces stay readable. */
   cellPx: 34,
   maxDesignedLevels: 30,

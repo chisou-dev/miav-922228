@@ -1,4 +1,4 @@
-/** ASCII ↔ bit-field helpers for Binary Mosaic. */
+/** ASCII ↔ bit-field helpers for Binary Block. */
 
 export function textToBits(text: string): (0 | 1)[] {
   const out: (0 | 1)[] = [];
