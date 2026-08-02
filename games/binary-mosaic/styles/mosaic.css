@@ -1547,7 +1547,7 @@
   margin-top: 0.25rem;
 }
 
-/* Share Code (Phase2-18 / Phase2-19 grouped + local alias) */
+/* Share Code (portable grouped only in UI) */
 .mosaic-creator-share {
   display: flex;
   flex-wrap: wrap;
@@ -1563,8 +1563,9 @@
   flex-shrink: 0;
 }
 
-.mosaic-creator-share-label--alias {
-  margin-left: 0.15rem;
+.mosaic-creator-share-hint {
+  flex: 1 1 100%;
+  margin: 0;
 }
 
 .mosaic-creator-share-code {
@@ -1575,12 +1576,6 @@
   max-width: min(100%, 36rem);
   flex: 1 1 8rem;
   padding: 0.2rem 0;
-}
-
-.mosaic-creator-share-code--alias {
-  flex: 0 1 auto;
-  max-width: 12rem;
-  color: var(--mosaic-muted);
 }
 
 .mosaic-creator-share-copy {

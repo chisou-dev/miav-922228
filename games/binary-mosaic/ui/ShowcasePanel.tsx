@@ -21,6 +21,7 @@ import {
   DEVELOPER_HOME_URL,
   displayUserLevelTitle,
   getUserLevel,
+  SHARE_CODE_COPIED_MESSAGE,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
 import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
@@ -116,13 +117,25 @@ function ShareCodeBlock({ record }: { record: UserLevelRecord }) {
       <code className="mosaic-creator-share-code" title={code}>
         {code}
       </code>
+      <span className="mosaic-creator-field-hint mosaic-creator-share-hint">
+        Copy this code and send it to someone. They can import it on another
+        device.
+      </span>
       <button
         type="button"
         className="mosaic-btn mosaic-btn--ghost mosaic-creator-share-copy"
         onClick={() => void onCopy()}
       >
-        {copied ? "Copied" : "Copy"}
+        Copy Share Code
       </button>
+      {copied ? (
+        <p
+          className="mosaic-creator-save-msg mosaic-creator-save-msg--ok"
+          role="status"
+        >
+          {SHARE_CODE_COPIED_MESSAGE}
+        </p>
+      ) : null}
       {copyError ? (
         <p
           className="mosaic-creator-status mosaic-creator-status--fail"

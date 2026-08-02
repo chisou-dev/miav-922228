@@ -10,7 +10,7 @@
  *   Grouped (Phase2-19): same payload, displayed as `MIAV-BB-XXXX-XXXX-…`
  *     (payload `-` escaped to `.` so group hyphens can be stripped safely)
  *
- * Same-browser short forms (not portable across devices/browsers):
+ * Same-browser short forms (legacy decode only — UI no longer creates these):
  *   Legacy fingerprint: `MIAV-BB-` + 6-char id fingerprint (listUserLevels lookup)
  *   Local alias (Phase2-19): `MIAV-BB-XXXX-XXXX` via `binary_block_share_index`
  *     (separate localStorage key — does not change UserLevel record schema)
@@ -524,14 +524,16 @@ export function encodeUserLevelShortShareCode(
 }
 
 /**
- * Generate portable (grouped + raw) and ensure a local short alias when possible.
+ * Generate portable (grouped + raw) Share Codes.
+ * Does not create new local short aliases (UI uses portable grouped only).
+ * `localAlias` is lookup-only for any pre-existing same-browser entry.
  */
 export function generateUserLevelShareCodes(
   recordOrId: UserLevelRecord | string,
 ): ShareCodeBundle {
   const portableRaw = encodeUserLevelShareCodeRaw(recordOrId);
   const portableGrouped = formatGroupedShareCode(portableRaw);
-  const localAlias = ensureLocalShareAlias(recordOrId);
+  const localAlias = getLocalShareAlias(recordOrId);
   return { portableGrouped, portableRaw, localAlias };
 }
 

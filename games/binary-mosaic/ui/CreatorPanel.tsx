@@ -15,10 +15,8 @@ import {
 } from "@/games/binary-mosaic/pipeline/previewCandidates";
 import { deleteUserLevelAndRelated } from "@/games/binary-mosaic/progress/deleteUserLevelAndRelated";
 import {
-  generateUserLevelShareCodes,
+  encodeUserLevelShareCode,
   importUserLevelFromShareCode,
-  regenerateLocalShareAlias,
-  type ShareCodeBundle,
 } from "@/games/binary-mosaic/progress/shareCode";
 import {
   BINARY_BLOCK_USER_LEVELS_KEY,
@@ -31,6 +29,7 @@ import {
   exportUserLevelJson,
   listUserLevels,
   normalizeCreatorName,
+  SHARE_CODE_COPIED_MESSAGE,
   updateUserLevelPublishMeta,
   USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
@@ -150,22 +149,18 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-function ShareCodeRow({
-  record,
-  label = "Share Code",
-}: {
-  record: UserLevelRecord;
-  label?: string;
-}) {
+function ShareCodeRow({ record }: { record: UserLevelRecord }) {
   const [copied, setCopied] = useState<"share" | "export" | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
-  const [bundle, setBundle] = useState<ShareCodeBundle>(() =>
-    generateUserLevelShareCodes(record),
-  );
+  const [code, setCode] = useState("");
 
   // Refresh when the saved record identity or publish payload changes.
   useEffect(() => {
-    setBundle(generateUserLevelShareCodes(record));
+    try {
+      setCode(encodeUserLevelShareCode(record));
+    } catch {
+      setCode("");
+    }
   }, [
     record.userLevelId,
     record.createdAt,
@@ -176,10 +171,8 @@ function ShareCodeRow({
     record.publishedAt,
   ]);
 
-  const code = bundle.portableGrouped;
-  const localAlias = bundle.localAlias;
-
   async function onCopyShare() {
+    if (!code) return;
     setCopyError(null);
     const ok = await copyText(code);
     if (!ok) {
@@ -203,24 +196,24 @@ function ShareCodeRow({
     window.setTimeout(() => setCopied(null), 1600);
   }
 
-  function onRegenerateAlias() {
-    const next = regenerateLocalShareAlias(record);
-    if (!next) return;
-    setBundle((prev) => ({ ...prev, localAlias: next }));
-  }
+  if (!code) return null;
 
   return (
     <div className="mosaic-creator-share">
-      <span className="mosaic-creator-share-label">{label}</span>
+      <span className="mosaic-creator-share-label">Share Code</span>
       <code className="mosaic-creator-share-code" title={code}>
         {code}
       </code>
+      <span className="mosaic-creator-field-hint mosaic-creator-share-hint">
+        Copy this code and send it to someone. They can import it on another
+        device.
+      </span>
       <button
         type="button"
         className="mosaic-btn mosaic-btn--ghost mosaic-creator-share-copy"
         onClick={() => void onCopyShare()}
       >
-        {copied === "share" ? "Copied" : "Copy"}
+        Copy Share Code
       </button>
       <button
         type="button"
@@ -229,25 +222,13 @@ function ShareCodeRow({
       >
         {copied === "export" ? "Exported" : "Copy Export"}
       </button>
-      {localAlias ? (
-        <>
-          <span className="mosaic-creator-share-label mosaic-creator-share-label--alias">
-            Local short
-          </span>
-          <code
-            className="mosaic-creator-share-code mosaic-creator-share-code--alias"
-            title="Same-browser only — not for SNS share"
-          >
-            {localAlias}
-          </code>
-          <button
-            type="button"
-            className="mosaic-btn mosaic-btn--ghost mosaic-creator-share-copy"
-            onClick={onRegenerateAlias}
-          >
-            Regenerate
-          </button>
-        </>
+      {copied === "share" ? (
+        <p
+          className="mosaic-creator-save-msg mosaic-creator-save-msg--ok"
+          role="status"
+        >
+          {SHARE_CODE_COPIED_MESSAGE}
+        </p>
       ) : null}
       {copyError ? (
         <p
@@ -1041,11 +1022,11 @@ export function CreatorPanel() {
               onChange={(e) => setShareImportCode(e.target.value)}
               autoComplete="off"
               spellCheck={false}
-              placeholder="Example: MIAV-BB-XXXX-XXXX-…"
+              placeholder="MIAV-BB-XXXX-XXXX-XXXX-..."
               disabled={shareImportBusy || loading || saveBusy}
             />
             <span className="mosaic-creator-field-hint">
-              Paste a Share Code copied from another Binary Block challenge.
+              Paste the full Share Code you received.
             </span>
           </label>
           <div className="mosaic-creator-actions">

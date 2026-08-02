@@ -704,19 +704,19 @@ export function ChallengePanel() {
             onSubmit={onImport}
           >
             <label className="mosaic-creator-field mosaic-creator-field--primary">
-              <span>Share Code</span>
+              <span>Import Share Code</span>
               <input
                 type="text"
                 value={shareCode}
                 onChange={(e) => setShareCode(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Example: MIAV-BB-XXXX-XXXX-…"
+                placeholder="MIAV-BB-XXXX-XXXX-XXXX-..."
                 disabled={busy}
                 autoFocus
               />
               <span className="mosaic-creator-field-hint">
-                The text above is an example. Paste the full code you received.
+                Paste the full Share Code you received.
               </span>
             </label>
             <div className="mosaic-creator-actions">

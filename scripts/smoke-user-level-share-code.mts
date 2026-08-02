@@ -206,7 +206,7 @@ function main(): void {
     "short code must not invent levels",
   );
 
-  // --- Local short alias (Phase2-19) MIAV-BB-XXXX-XXXX ---
+  // --- Local short alias decode (legacy; no UI generation) ---
   setUserLevelsStorage(createMemoryUserLevelsKv());
   assert(saveUserLevel(original), "re-save for alias");
   const bundle = generateUserLevelShareCodes(original);
@@ -214,20 +214,17 @@ function main(): void {
     bundle.portableGrouped === encodeUserLevelShareCode(original),
     "bundle grouped matches encode",
   );
-  assert(bundle.localAlias !== null, "local alias should be created");
+  // generate must not create new local aliases
+  assert(bundle.localAlias === null, "generate must not create local aliases");
+
+  const alias = ensureLocalShareAlias(original);
+  assert(alias !== null, "ensure can still create for legacy decode tests");
+  assert(alias!.startsWith(USER_LEVEL_SHARE_PREFIX), "alias prefix");
   assert(
-    bundle.localAlias!.startsWith(USER_LEVEL_SHARE_PREFIX),
-    "alias prefix",
+    /^MIAV-BB-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/i.test(alias!),
+    `alias format: ${alias}`,
   );
-  assert(
-    /^MIAV-BB-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/i.test(
-      bundle.localAlias!,
-    ),
-    `alias format: ${bundle.localAlias}`,
-  );
-  // Alias is same-browser: import restores via share index (even if we clear user levels
-  // the index still holds export JSON — but we keep user levels for upsert check)
-  const aliasImport = importUserLevelFromShareCode(bundle.localAlias!);
+  const aliasImport = importUserLevelFromShareCode(alias!);
   assert(aliasImport.ok, `alias import failed: ${JSON.stringify(aliasImport)}`);
   assert(
     aliasImport.record.userLevelId === original.userLevelId,
@@ -236,9 +233,9 @@ function main(): void {
 
   const alias2 = regenerateLocalShareAlias(original);
   assert(alias2 !== null, "regenerate alias");
-  assert(alias2 !== bundle.localAlias, "regenerate should change alias");
+  assert(alias2 !== alias, "regenerate should change alias");
   // Old alias gone
-  const oldGone = importUserLevelFromShareCode(bundle.localAlias!);
+  const oldGone = importUserLevelFromShareCode(alias!);
   assert(
     !oldGone.ok && oldGone.reason === "NOT_FOUND",
     "old alias must be removed after regenerate",
@@ -249,6 +246,13 @@ function main(): void {
   // ensure is idempotent when alias exists
   const ensured = ensureLocalShareAlias(original);
   assert(ensured === alias2, "ensure should reuse current alias");
+
+  // generate still lookup-only after an alias exists
+  const bundleAfter = generateUserLevelShareCodes(original);
+  assert(
+    bundleAfter.localAlias === alias2,
+    "generate may surface existing alias via lookup only",
+  );
 
   // Share index is a separate key (not user level schema)
   const kv = createMemoryUserLevelsKv();

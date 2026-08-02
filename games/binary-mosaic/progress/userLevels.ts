@@ -90,9 +90,12 @@ export const IMPORT_MAX_BOARD_COLS = 16;
 export const IMPORT_MAX_CELLS = 192;
 export const IMPORT_MAX_PIECE_COUNT = 32;
 
+/** User-facing clipboard success (portable Share Code). */
+export const SHARE_CODE_COPIED_MESSAGE = "Share Code copied.";
+
 /** User-facing clipboard failure (Share Code / Export copy). */
 export const CLIPBOARD_COPY_FAILED_MESSAGE =
-  "Copy failed. Please copy the code manually.";
+  "Copy failed. Please select and copy the code manually.";
 
 /** User-facing storage quota / write failure. */
 export const STORAGE_FULL_MESSAGE =
