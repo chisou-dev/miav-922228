@@ -545,6 +545,77 @@ export function validateShareCode(code: string): boolean {
   return normalizeShareCodeInput(code).ok;
 }
 
+export type DecodePortableShareCodeResult =
+  | { ok: true; json: string }
+  | {
+      ok: false;
+      reason:
+        | "INVALID_PREFIX"
+        | "INVALID_FORMAT"
+        | "DECODE_ERROR"
+        | "NOT_PORTABLE";
+      error: string;
+    };
+
+/**
+ * Decode a portable Share Code (raw or grouped) to export JSON text.
+ * Does not persist. Rejects same-browser short alias / fingerprint forms.
+ */
+export function decodePortableShareCodeToJson(
+  code: string,
+): DecodePortableShareCodeResult {
+  try {
+    const normalized = normalizeShareCodeInput(code);
+    if (!normalized.ok) {
+      if (normalized.reason === "INVALID_PREFIX") {
+        return {
+          ok: false,
+          reason: "INVALID_PREFIX",
+          error: "Share Code must start with MIAV-BB-.",
+        };
+      }
+      return {
+        ok: false,
+        reason: "INVALID_FORMAT",
+        error: "Share Code format looks invalid.",
+      };
+    }
+    const { body } = normalized;
+    if (isLocalAliasBody(body) || isShortFingerprintBody(body)) {
+      return {
+        ok: false,
+        reason: "NOT_PORTABLE",
+        error: "Share Code is not a portable Challenge Link payload.",
+      };
+    }
+    const payload = body.includes(".")
+      ? unescapeGroupedBase64Url(body)
+      : body;
+    if (!/^[A-Za-z0-9_-]+$/.test(payload)) {
+      return {
+        ok: false,
+        reason: "INVALID_FORMAT",
+        error: "Broken Share Code. Could not decode.",
+      };
+    }
+    const json = base64UrlToUtf8(payload);
+    if (json === null) {
+      return {
+        ok: false,
+        reason: "DECODE_ERROR",
+        error: "Broken Share Code. Could not decode.",
+      };
+    }
+    return { ok: true, json };
+  } catch {
+    return {
+      ok: false,
+      reason: "DECODE_ERROR",
+      error: "Broken Share Code. Could not decode.",
+    };
+  }
+}
+
 /**
  * Import / restore a UserLevel from a Share Code.
  *
@@ -627,25 +698,12 @@ export function importUserLevelFromShareCode(
       return { ok: true, record: found, upserted: false };
     }
 
-    // Portable: grouped (escaped) or legacy raw base64url
-    const payload = body.includes(".")
-      ? unescapeGroupedBase64Url(body)
-      : body;
-    if (!/^[A-Za-z0-9_-]+$/.test(payload)) {
-      return shareFail(
-        "INVALID_FORMAT",
-        "Broken Share Code. Could not decode.",
-      );
-    }
-    const json = base64UrlToUtf8(payload);
-    if (json === null) {
-      return shareFail(
-        "DECODE_ERROR",
-        "Broken Share Code. Could not decode.",
-      );
+    const decoded = decodePortableShareCodeToJson(code);
+    if (!decoded.ok) {
+      return shareFail(decoded.reason === "NOT_PORTABLE" ? "INVALID_FORMAT" : decoded.reason, decoded.error);
     }
 
-    const imported = importUserLevelJson(json);
+    const imported = importUserLevelJson(decoded.json);
     if (!imported.ok) {
       return shareFail(imported.reason, imported.error);
     }

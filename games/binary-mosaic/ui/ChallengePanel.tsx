@@ -45,6 +45,7 @@ import {
 } from "@/games/binary-mosaic/progress/userLevels";
 import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
 import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
+import { ShareChallengeButton } from "@/games/binary-mosaic/ui/ShareChallengeButton";
 
 type ChallengeTab = "import" | "collection" | "published" | "featured";
 
@@ -338,6 +339,7 @@ function ChallengeCard({
         <a href={playHref(record.userLevelId)} className="mosaic-btn">
           Play
         </a>
+        <ShareChallengeButton record={record} />
         <a
           href={showcaseHref(record.userLevelId)}
           className="mosaic-btn mosaic-btn--ghost"

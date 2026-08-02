@@ -25,6 +25,7 @@ import {
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
 import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
+import { ShareChallengeButton } from "@/games/binary-mosaic/ui/ShareChallengeButton";
 
 function playHref(userLevelId: string): string {
   return `/game/binary-mosaic?user=${encodeURIComponent(userLevelId)}`;
@@ -320,6 +321,7 @@ export function ShowcasePanel() {
             <a href={playHref(record.userLevelId)} className="mosaic-btn">
               Start Challenge
             </a>
+            <ShareChallengeButton record={record} />
             <a
               href="/game/binary-mosaic/challenge?tab=collection"
               className="mosaic-btn mosaic-btn--ghost"

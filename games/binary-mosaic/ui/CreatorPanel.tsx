@@ -35,6 +35,7 @@ import {
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
 import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
+import { ShareChallengeButton } from "@/games/binary-mosaic/ui/ShareChallengeButton";
 
 type RunState =
   | { status: "idle" }
@@ -997,10 +998,13 @@ export function CreatorPanel() {
                 Saved as UserLevel · {savedId}
               </p>
               {savedRecord ? <ShareCodeRow record={savedRecord} /> : null}
-              <p className="mosaic-creator-play-link">
+              <p className="mosaic-creator-play-link mosaic-creator-actions">
                 <a href={playHref(savedId)} className="mosaic-btn">
                   Play
                 </a>
+                {savedRecord ? (
+                  <ShareChallengeButton record={savedRecord} />
+                ) : null}
               </p>
             </>
           ) : null}
@@ -1180,6 +1184,10 @@ export function CreatorPanel() {
                     >
                       Play
                     </a>
+                    <ShareChallengeButton
+                      record={record}
+                      className="mosaic-btn mosaic-btn--ghost mosaic-creator-level-play"
+                    />
                     <a
                       href={showcaseHref(record.userLevelId)}
                       className="mosaic-btn mosaic-btn--ghost mosaic-creator-level-play"

@@ -97,6 +97,24 @@ export const SHARE_CODE_COPIED_MESSAGE = "Share Code copied.";
 export const CLIPBOARD_COPY_FAILED_MESSAGE =
   "Copy failed. Please select and copy the code manually.";
 
+/** User-facing Challenge Link clipboard success. */
+export const CHALLENGE_LINK_COPIED_MESSAGE = "Challenge Link copied.";
+
+/** User-facing Challenge Link clipboard failure. */
+export const CHALLENGE_LINK_COPY_FAILED_MESSAGE =
+  "Copy failed. Please select and copy the link manually.";
+
+/** User-facing Challenge Link too long for a direct URL. */
+export const CHALLENGE_LINK_TOO_LARGE_MESSAGE =
+  "This challenge is too large for a direct link. Use Copy Share Code instead.";
+
+/** User-facing invalid / unsupported Challenge Link. */
+export const CHALLENGE_LINK_INVALID_MESSAGE =
+  "This challenge link is invalid or unsupported.";
+
+/** User-facing success after saving a shared challenge locally. */
+export const SAVED_TO_MY_LEVELS_MESSAGE = "Saved to My Levels.";
+
 /** User-facing storage quota / write failure. */
 export const STORAGE_FULL_MESSAGE =
   "Storage is full. Delete an old level and try again.";
@@ -1068,20 +1086,30 @@ export function exportAllUserLevels(): string {
   return JSON.stringify(envelope, null, 2);
 }
 
-/**
- * Parse an export envelope into validated records (no persistence).
- * Accepts single (`level`) or multi (`levels`) envelopes.
- * Strengthened Import validation — never throws.
- */
-function parseExportPayload(
-  json: string,
-):
+export type ParseUserLevelJsonResult =
   | { ok: true; records: UserLevelRecord[] }
   | {
       ok: false;
       reason: "PARSE_ERROR" | "INVALID_SHAPE" | "UNSUPPORTED_SCHEMA";
       error: string;
-    } {
+    };
+
+/**
+ * Parse an export envelope into validated records (no persistence).
+ * Accepts single (`level`) or multi (`levels`) envelopes.
+ * Same validation as {@link importUserLevelJson} without writing storage.
+ * Strengthened Import validation — never throws.
+ */
+export function parseUserLevelJson(json: string): ParseUserLevelJsonResult {
+  return parseExportPayload(json);
+}
+
+/**
+ * Parse an export envelope into validated records (no persistence).
+ * Accepts single (`level`) or multi (`levels`) envelopes.
+ * Strengthened Import validation — never throws.
+ */
+function parseExportPayload(json: string): ParseUserLevelJsonResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(json);

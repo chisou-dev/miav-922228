@@ -1661,6 +1661,25 @@ a.mosaic-developer-link:hover {
   border-bottom: 1px solid #dde1e6;
 }
 
+.mosaic-challenge-share-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.mosaic-shared-challenge {
+  margin: 0 0 1.15rem;
+}
+
+.mosaic-shared-challenge-msg {
+  margin: 0 0 1rem;
+}
+
+.mosaic-user-level-share {
+  flex-shrink: 0;
+}
+
 .mosaic-challenge-tab {
   appearance: none;
   border: 1px solid transparent;
@@ -1772,6 +1791,16 @@ a.mosaic-developer-link:hover {
 }
 
 @media (max-width: 520px) {
+  .mosaic-challenge-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+  }
+
+  .mosaic-challenge-tab {
+    text-align: center;
+  }
+
   .mosaic-user-level-row {
     flex-wrap: wrap;
     padding-bottom: 0.35rem;
@@ -1781,6 +1810,7 @@ a.mosaic-developer-link:hover {
     flex: 1 1 100%;
   }
 
+  .mosaic-user-level-share,
   .mosaic-user-level-delete {
     width: 100%;
     margin: 0 0 0.45rem;

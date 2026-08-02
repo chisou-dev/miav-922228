@@ -19,6 +19,7 @@ import {
   boardWithPieces,
   tryPlacePiece,
   tryRotatePiece,
+  usedPieceCount,
 } from "@/games/binary-mosaic/core";
 import { bitsToText } from "@/games/binary-mosaic/puzzle/binaryText";
 import {
@@ -73,15 +74,26 @@ import {
   type BinaryBlockProgress,
 } from "@/games/binary-mosaic/progress/storage";
 import {
+  clearChallengeFragment,
+  decodeChallengeLinkPayload,
+  readChallengePayloadFromHash,
+} from "@/games/binary-mosaic/progress/challengeLink";
+import {
   BINARY_BLOCK_USER_LEVELS_KEY,
-  getUserLevel,
-  listUserLevels,
+  CHALLENGE_LINK_INVALID_MESSAGE,
   DEFAULT_CREATOR_NAME,
   DEVELOPER_CREDIT,
   DEVELOPER_HOME_URL,
+  displayUserLevelTitle,
+  exportUserLevelJson,
+  getUserLevel,
+  importUserLevelJson,
+  listUserLevels,
+  SAVED_TO_MY_LEVELS_MESSAGE,
   USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
+import { ShareChallengeButton } from "@/games/binary-mosaic/ui/ShareChallengeButton";
 import {
   applyTrayOrder,
   pickTrayPatternIndex,
@@ -1183,6 +1195,20 @@ export function BinaryMosaicGame() {
     ok: boolean;
     text: string;
   } | null>(null);
+  /** In-memory UserLevel from `#challenge=` (not auto-saved to My levels). */
+  const [sharedChallenge, setSharedChallenge] = useState<
+    | { status: "ok"; record: UserLevelRecord }
+    | { status: "invalid"; message: string }
+    | null
+  >(null);
+  const [sharedSaveMessage, setSharedSaveMessage] = useState<string | null>(
+    null,
+  );
+  const [sharedSaveOk, setSharedSaveOk] = useState(false);
+  const [sharedSaveBusy, setSharedSaveBusy] = useState(false);
+  /** Credits fallback when playing a shared challenge before Save to My Levels. */
+  const [ephemeralUserLevel, setEphemeralUserLevel] =
+    useState<UserLevelRecord | null>(null);
   const audio = AudioManager.getInstance();
   const closeGuide = useCallback(() => setGuideOpen(false), []);
 
@@ -1196,9 +1222,41 @@ export function BinaryMosaicGame() {
     setUserLevels(listUserLevels());
   }, []);
 
+  const loadSharedChallengeFromHash = useCallback(() => {
+    try {
+      const payload = readChallengePayloadFromHash(window.location.hash);
+      if (!payload) {
+        setSharedChallenge(null);
+        return false;
+      }
+      const decoded = decodeChallengeLinkPayload(payload);
+      if (!decoded.ok) {
+        setSharedChallenge({
+          status: "invalid",
+          message: CHALLENGE_LINK_INVALID_MESSAGE,
+        });
+        return true;
+      }
+      setSharedChallenge({ status: "ok", record: decoded.record });
+      setSharedSaveMessage(null);
+      return true;
+    } catch {
+      setSharedChallenge({
+        status: "invalid",
+        message: CHALLENGE_LINK_INVALID_MESSAGE,
+      });
+      return true;
+    }
+  }, []);
+
   useEffect(() => {
     setProgress(loadProgress());
     refreshUserLevels();
+
+    // Direct Challenge Link: /game/binary-mosaic#challenge={payload}
+    // Prefer fragment over ?user= so open-link never requires prior save.
+    const hasChallenge = loadSharedChallengeFromHash();
+    if (hasChallenge) return;
 
     // Creator Play deep-link: /game/binary-mosaic?user=user:<uuid>
     try {
@@ -1215,7 +1273,15 @@ export function BinaryMosaicGame() {
     } catch {
       /* ignore bad URL / storage */
     }
-  }, [refreshUserLevels]);
+  }, [refreshUserLevels, loadSharedChallengeFromHash]);
+
+  useEffect(() => {
+    const onHash = () => {
+      loadSharedChallengeFromHash();
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [loadSharedChallengeFromHash]);
 
   useEffect(() => {
     if (screen === "select") {
@@ -1309,6 +1375,9 @@ export function BinaryMosaicGame() {
 
   const startCampaign = useCallback((levelId: number) => {
     void AudioManager.getInstance().playSe("button");
+    clearChallengeFragment();
+    setSharedChallenge(null);
+    setEphemeralUserLevel(null);
     setActive({ kind: "campaign", levelId });
     setScreen("play");
   }, []);
@@ -1317,6 +1386,9 @@ export function BinaryMosaicGame() {
     const record = getUserLevel(userLevelId);
     if (!record) return;
     void AudioManager.getInstance().playSe("button");
+    clearChallengeFragment();
+    setSharedChallenge(null);
+    setEphemeralUserLevel(null);
     setActive({
       kind: "user",
       userLevelId: record.userLevelId,
@@ -1324,6 +1396,44 @@ export function BinaryMosaicGame() {
     });
     setScreen("play");
   }, []);
+
+  const startSharedChallenge = useCallback((record: UserLevelRecord) => {
+    void AudioManager.getInstance().playSe("button");
+    setEphemeralUserLevel(record);
+    setActive({
+      kind: "user",
+      userLevelId: record.userLevelId,
+      level: record.levelData as LevelDef,
+    });
+    setScreen("play");
+    // Keep `#challenge=` so refresh reopens the same challenge.
+  }, []);
+
+  const saveSharedToMyLevels = useCallback(() => {
+    if (!sharedChallenge || sharedChallenge.status !== "ok") return;
+    if (sharedSaveBusy) return;
+    setSharedSaveBusy(true);
+    setSharedSaveMessage(null);
+    try {
+      const imported = importUserLevelJson(
+        exportUserLevelJson(sharedChallenge.record),
+      );
+      if (!imported.ok) {
+        setSharedSaveOk(false);
+        setSharedSaveMessage(imported.error);
+        return;
+      }
+      setSharedSaveOk(true);
+      setSharedSaveMessage(SAVED_TO_MY_LEVELS_MESSAGE);
+      refreshUserLevels();
+    } finally {
+      setSharedSaveBusy(false);
+    }
+  }, [sharedChallenge, sharedSaveBusy, refreshUserLevels]);
+
+  const sharedAlreadySaved =
+    sharedChallenge?.status === "ok" &&
+    getUserLevel(sharedChallenge.record.userLevelId) != null;
 
   const toggleSelectSound = useCallback(() => {
     const next = !soundOn;
@@ -1396,6 +1506,80 @@ export function BinaryMosaicGame() {
           board decodes to real ASCII text — not decoration. Clear a level to
           unlock the next.
         </p>
+
+        {sharedChallenge?.status === "invalid" ? (
+          <p
+            className="mosaic-creator-status mosaic-creator-status--fail mosaic-shared-challenge-msg"
+            role="status"
+          >
+            {sharedChallenge.message}
+          </p>
+        ) : null}
+
+        {sharedChallenge?.status === "ok" ? (
+          <section
+            className="mosaic-creator-panel mosaic-challenge-card mosaic-shared-challenge"
+            aria-label="Shared Challenge"
+          >
+            <h2 className="mosaic-creator-h mosaic-challenge-title">
+              Shared Challenge
+            </h2>
+            <dl className="mosaic-creator-dl">
+              <div>
+                <dt>Title</dt>
+                <dd>{displayUserLevelTitle(sharedChallenge.record)}</dd>
+              </div>
+              <div>
+                <dt>Creator Name</dt>
+                <dd>{sharedChallenge.record.creatorName}</dd>
+              </div>
+              <div>
+                <dt>Difficulty</dt>
+                <dd>{sharedChallenge.record.evaluatorResult.difficulty}</dd>
+              </div>
+              <div>
+                <dt>Piece count</dt>
+                <dd>{usedPieceCount(sharedChallenge.record.levelData)}</dd>
+              </div>
+            </dl>
+            <div className="mosaic-creator-actions mosaic-challenge-play">
+              <button
+                type="button"
+                className="mosaic-btn"
+                onClick={() => startSharedChallenge(sharedChallenge.record)}
+              >
+                Play
+              </button>
+              <ShareChallengeButton
+                record={sharedChallenge.record}
+                className="mosaic-btn mosaic-btn--ghost"
+              />
+              {!sharedAlreadySaved ? (
+                <button
+                  type="button"
+                  className="mosaic-btn mosaic-btn--ghost"
+                  disabled={sharedSaveBusy}
+                  onClick={saveSharedToMyLevels}
+                >
+                  {sharedSaveBusy ? "Saving…" : "Save to My Levels"}
+                </button>
+              ) : null}
+            </div>
+            {sharedSaveMessage ? (
+              <p
+                className={
+                  sharedSaveOk
+                    ? "mosaic-creator-save-msg mosaic-creator-save-msg--ok"
+                    : "mosaic-creator-status mosaic-creator-status--fail"
+                }
+                role="status"
+              >
+                {sharedSaveMessage}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+
         <nav className="mosaic-creator-entry" aria-label="Binary Block sections">
           <a href="/game/binary-mosaic/creator" className="mosaic-chrome-link">
             Creator
@@ -1551,6 +1735,10 @@ export function BinaryMosaicGame() {
                       {ld.rows}×{ld.cols}
                     </span>
                   </button>
+                  <ShareChallengeButton
+                    record={record}
+                    className="mosaic-btn mosaic-btn--ghost mosaic-user-level-share"
+                  />
                   <button
                     type="button"
                     className="mosaic-btn mosaic-btn--danger mosaic-user-level-delete"
@@ -1645,15 +1833,28 @@ export function BinaryMosaicGame() {
         }}
       />
       {active.kind === "user" ? (
-        <UserLevelCreditsFooter userLevelId={active.userLevelId} />
+        <UserLevelCreditsFooter
+          userLevelId={active.userLevelId}
+          fallback={
+            ephemeralUserLevel?.userLevelId === active.userLevelId
+              ? ephemeralUserLevel
+              : null
+          }
+        />
       ) : null}
     </div>
   );
 }
 
 /** UserLevel-only credit strip — reads record by activeUserLevelId. */
-function UserLevelCreditsFooter({ userLevelId }: { userLevelId: string }) {
-  const record = getUserLevel(userLevelId);
+function UserLevelCreditsFooter({
+  userLevelId,
+  fallback = null,
+}: {
+  userLevelId: string;
+  fallback?: UserLevelRecord | null;
+}) {
+  const record = getUserLevel(userLevelId) ?? fallback;
   const creatorName = record?.creatorName?.trim() || DEFAULT_CREATOR_NAME;
   const developerCredit = record?.developerCredit || DEVELOPER_CREDIT;
   return (
