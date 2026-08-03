@@ -1611,7 +1611,13 @@ export function BinaryMosaicGame() {
           <span className="mosaic-creator-entry-sep" aria-hidden="true">
             ·
           </span>
-          <button
+                    <a href="/game/binary-mosaic/message" className="mosaic-chrome-link">
+            Binary Message
+          </a>
+          <span className="mosaic-creator-entry-sep" aria-hidden="true">
+            ·
+          </span>
+<button
             type="button"
             className="mosaic-guide-trigger"
             onClick={() => setGuideOpen(true)}

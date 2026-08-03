@@ -33,6 +33,10 @@ const GUIDE_SECTIONS = [
     body: "View challenges you have marked as Featured in this browser.",
   },
   {
+    heading: "Binary Message",
+    body: "Enter a short message of up to 30 characters. Convert it to binary, copy it, or share it with someone. You can also paste binary text to decode it.",
+  },
+  {
     heading: "No account required",
     body: "Your puzzles are stored only in this browser. Challenge Links and Share Codes contain the puzzle data, so another person can open or import the challenge without an account.",
   },
