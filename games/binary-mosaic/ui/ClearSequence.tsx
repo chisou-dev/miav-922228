@@ -2,8 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AudioManager } from "@/features/audio";
+import {
+  CHALLENGE_RESULT_COPIED_MESSAGE,
+  CHALLENGE_RESULT_SHARE_FAILED_MESSAGE,
+  shareOrCopyChallengeResult,
+} from "@/games/binary-mosaic/progress/challengeResultShare";
+import type { UserLevelRecord } from "@/games/binary-mosaic/progress/userLevels";
 import { textToBits } from "@/games/binary-mosaic/puzzle/binaryText";
-import { formatTime } from "@/games/binary-mosaic/puzzle/scoring";
+import {
+  formatPatternStars,
+  formatTime,
+  patternStarsFromScore,
+} from "@/games/binary-mosaic/puzzle/scoring";
 import { FireworksCanvas } from "@/games/binary-mosaic/ui/FireworksCanvas";
 import type { ClearPhase, PatternResult } from "@/games/binary-mosaic/types";
 
@@ -11,13 +21,21 @@ type Props = {
   active: boolean;
   onDone: () => void;
   onBackToLevels: () => void;
+  /** User Challenge: restart the same puzzle (reset score/time/rotations). */
+  onRetry?: () => void;
   /** When false, Victory Jingle is skipped (muted). */
   soundEnabled?: boolean;
   result: PatternResult | null;
+  /** Campaign keeps legacy panel; user shows Challenge Cleared. */
+  playMode?: "campaign" | "user";
+  /** Successful rotate actions this run (display only; not a separate score term). */
+  rotations?: number;
+  /** Needed to rebuild the original Challenge Link for SHARE RESULT. */
+  challengeRecord?: UserLevelRecord | null;
 };
 
 /**
- * Decoded + white flash → fireworks → Victory Jingle → Continue
+ * Decoded + white flash → fireworks → Victory Jingle → result panel
  * Clear SE plays sequentially (no overlap); BGM is stopped before SE start.
  */
 const PHASES: { phase: ClearPhase; ms: number }[] = [
@@ -39,10 +57,17 @@ export function ClearSequence({
   active,
   onDone,
   onBackToLevels,
+  onRetry,
   soundEnabled = false,
   result,
+  playMode = "campaign",
+  rotations = 0,
+  challengeRecord = null,
 }: Props) {
   const [phase, setPhase] = useState<ClearPhase>("idle");
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareStatus, setShareStatus] = useState<"ok" | "fail" | null>(null);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const word = result?.decodedText ?? "";
   const trueBits = useMemo(
     () => (word ? textToBits(word) : []),
@@ -54,6 +79,9 @@ export function ClearSequence({
   useEffect(() => {
     if (!active) {
       setPhase("idle");
+      setShareBusy(false);
+      setShareStatus(null);
+      setShareMessage(null);
       return;
     }
 
@@ -106,6 +134,34 @@ export function ClearSequence({
     phase === "victory" ||
     phase === "done";
 
+  const isChallenge = playMode === "user" && result != null;
+  const stars = result
+    ? formatPatternStars(patternStarsFromScore(result.patternScore))
+    : "";
+
+  async function onShareResult() {
+    if (!result || !challengeRecord || shareBusy) return;
+    setShareBusy(true);
+    setShareStatus(null);
+    setShareMessage(null);
+    const outcome = await shareOrCopyChallengeResult({
+      result,
+      rotations,
+      record: challengeRecord,
+    });
+    setShareBusy(false);
+    if (outcome.status === "aborted" || outcome.status === "shared") {
+      return;
+    }
+    if (outcome.status === "copied") {
+      setShareStatus("ok");
+      setShareMessage(CHALLENGE_RESULT_COPIED_MESSAGE);
+      return;
+    }
+    setShareStatus("fail");
+    setShareMessage(outcome.error || CHALLENGE_RESULT_SHARE_FAILED_MESSAGE);
+  }
+
   return (
     <div className={`mosaic-clear mosaic-clear--${phase}`} role="status">
       {phase === "reveal" ? (
@@ -124,7 +180,88 @@ export function ClearSequence({
         <div className="mosaic-hello mosaic-hello--decoded">{word}</div>
       ) : null}
 
-      {phase === "done" && result && (
+      {phase === "done" && result && isChallenge ? (
+        <div className="mosaic-result mosaic-result--challenge">
+          <h2 className="mosaic-result-challenge-title">Challenge Cleared</h2>
+          <dl className="mosaic-result-challenge-stats">
+            <div className="mosaic-result-challenge-hero">
+              <div>
+                <dt>Score</dt>
+                <dd className="mosaic-result-challenge-score">
+                  {result.patternScore}
+                </dd>
+              </div>
+              <div>
+                <dt>Stars</dt>
+                <dd className="mosaic-result-challenge-stars" aria-label={stars}>
+                  {stars}
+                </dd>
+              </div>
+            </div>
+            <div>
+              <dt>Clear Time</dt>
+              <dd>{formatTime(result.completionTimeSec)}</dd>
+            </div>
+            <div>
+              <dt>Rotations</dt>
+              <dd>{rotations}</dd>
+            </div>
+          </dl>
+          <div className="mosaic-result-actions mosaic-result-challenge-actions">
+            <button
+              type="button"
+              className="mosaic-btn"
+              onClick={() => void onShareResult()}
+              disabled={shareBusy || !challengeRecord}
+            >
+              {shareBusy ? "…" : "SHARE RESULT"}
+            </button>
+            <button
+              type="button"
+              className="mosaic-btn mosaic-btn--ghost"
+              onClick={() => {
+                void AudioManager.getInstance().playSe("button");
+                onRetry?.();
+              }}
+              disabled={!onRetry}
+            >
+              RETRY
+            </button>
+            <a
+              href="/game/binary-mosaic/creator"
+              className="mosaic-btn mosaic-btn--ghost mosaic-result-create-link"
+              onClick={() => AudioManager.getInstance().setGameState("menu")}
+            >
+              CREATE YOUR CHALLENGE
+            </a>
+            <p className="mosaic-result-create-hint">
+              Create a puzzle and send one back.
+            </p>
+            <button
+              type="button"
+              className="mosaic-btn--levels"
+              onClick={onBackToLevels}
+            >
+              Back to Levels
+            </button>
+          </div>
+          {shareMessage ? (
+            <p
+              className={
+                shareStatus === "ok"
+                  ? "mosaic-creator-save-msg mosaic-creator-save-msg--ok"
+                  : "mosaic-creator-status mosaic-creator-status--fail"
+              }
+              role="status"
+              style={{ whiteSpace: "pre-line" }}
+            >
+              {shareMessage}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {phase === "done" && result && !isChallenge ? (
         <div className="mosaic-result">
           <dl>
             <div>
@@ -161,7 +298,7 @@ export function ClearSequence({
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

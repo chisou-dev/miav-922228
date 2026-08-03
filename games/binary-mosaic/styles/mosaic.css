@@ -924,6 +924,117 @@
   border-color: #101418;
 }
 
+/* —— Challenge Cleared result (User Challenge only) —— */
+
+.mosaic-result--challenge {
+  min-width: min(20rem, 92vw);
+  max-width: min(24rem, 94vw);
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.mosaic-result-challenge-title {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #1a4f8c;
+}
+
+.mosaic-result-challenge-stats {
+  margin: 0 0 1.25rem;
+}
+
+.mosaic-result-challenge-stats > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.mosaic-result-challenge-hero {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  padding: 0.35rem 0 0.85rem !important;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid #dde1e6;
+}
+
+.mosaic-result-challenge-hero > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mosaic-result-challenge-hero dt {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: #5c6570;
+}
+
+.mosaic-result-challenge-score {
+  font-family: "Orbitron", ui-monospace, Consolas, monospace;
+  font-size: clamp(1.85rem, 8vw, 2.4rem);
+  font-weight: 600;
+  color: #2e7bcb;
+  line-height: 1.1;
+  word-break: break-word;
+}
+
+.mosaic-result-challenge-stars {
+  font-size: clamp(1.45rem, 6vw, 1.85rem);
+  letter-spacing: 0.08em;
+  color: #1a4f8c;
+  line-height: 1.2;
+}
+
+.mosaic-result-challenge-actions {
+  gap: 0.65rem;
+}
+
+.mosaic-result-challenge-actions .mosaic-btn,
+.mosaic-result-create-link {
+  width: 100%;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+}
+
+.mosaic-result-create-link {
+  border: 1px solid var(--mosaic-ink);
+  background: transparent;
+  color: var(--mosaic-ink);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mosaic-result-create-hint {
+  margin: -0.15rem 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  color: #5c6570;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.mosaic-result--challenge .mosaic-creator-save-msg,
+.mosaic-result--challenge .mosaic-creator-status {
+  margin: 0.75rem 0 0;
+  overflow-wrap: anywhere;
+}
+
 @keyframes mosaic-hello-in {
   from {
     opacity: 0;

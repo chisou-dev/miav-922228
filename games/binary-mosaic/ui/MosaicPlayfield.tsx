@@ -40,6 +40,8 @@ import {
   buildPatternResult,
   formatTime,
   HINT_PENALTY_PER_USE,
+  PATTERN_SCORE_HIGH,
+  PATTERN_SCORE_PERFECT,
 } from "@/games/binary-mosaic/puzzle/scoring";
 import {
   allPiecesPlaced,
@@ -181,6 +183,7 @@ function MosaicPlayfield({
   level,
   playMode,
   userLevelId,
+  challengeRecord = null,
   onClearContinue,
   onLevelCleared,
   soundOn,
@@ -191,6 +194,8 @@ function MosaicPlayfield({
   playMode: PlayMode;
   /** Required when playMode === "user" — Challenge Feedback key. */
   userLevelId?: string;
+  /** UserLevel used to rebuild Challenge Link on SHARE RESULT. */
+  challengeRecord?: UserLevelRecord | null;
   onClearContinue: (nextLevelId: number | null) => void;
   onLevelCleared?: () => void;
   soundOn: boolean;
@@ -224,6 +229,8 @@ function MosaicPlayfield({
   const [hintUses, setHintUses] = useState(0);
   const [hintRevealed, setHintRevealed] = useState<HintCell[]>([]);
   const [moves, setMoves] = useState(0);
+  /** Successful rotate actions this run (Challenge Result display). */
+  const [rotations, setRotations] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(true);
   const [dragPieceId, setDragPieceId] = useState<string | null>(null);
@@ -295,6 +302,29 @@ function MosaicPlayfield({
     onClearContinue(null);
   }, [audio, onClearContinue]);
 
+  /** Restart the same User Challenge — reset score/time/rotations; keep level data. */
+  const handleRetry = useCallback(() => {
+    void audio.playSe("button");
+    clearedRef.current = false;
+    setPieces(createPieces(level));
+    setHintUses(0);
+    setHintRevealed([]);
+    setMoves(0);
+    setRotations(0);
+    setElapsed(0);
+    setRunning(true);
+    setDragPieceId(null);
+    setDropPreview(null);
+    setClearing(false);
+    setResult(null);
+    setFeedbackSaveError(null);
+    setSelectedId(null);
+    setKbOrigin(null);
+    setRejectMarkers([]);
+    previewKeyRef.current = "";
+    startRef.current = performance.now();
+  }, [audio, level]);
+
   piecesRef.current = pieces;
 
   useEffect(() => {
@@ -303,6 +333,7 @@ function MosaicPlayfield({
     setHintUses(0);
     setHintRevealed([]);
     setMoves(0);
+    setRotations(0);
     setElapsed(0);
     setRunning(true);
     setDragPieceId(null);
@@ -485,6 +516,7 @@ function MosaicPlayfield({
       if (rotated) {
         if (soundOn) void audio.rotate();
         bumpMove();
+        setRotations((n) => n + 1);
       }
     },
     [level, soundOn, audio],
@@ -1162,8 +1194,12 @@ function MosaicPlayfield({
       <ClearSequence
         active={clearing}
         result={result}
+        playMode={playMode}
+        rotations={rotations}
+        challengeRecord={challengeRecord}
         soundEnabled={soundOn}
         onDone={handleClearDone}
+        onRetry={playMode === "user" ? handleRetry : undefined}
         onBackToLevels={handleBackToLevels}
       />
       {feedbackSaveError ? (
@@ -1660,7 +1696,7 @@ export function BinaryMosaicGame() {
                             ·{" "}
                             <span
                               className={
-                                bestScore >= 90
+                                bestScore >= PATTERN_SCORE_HIGH
                                   ? "mosaic-level-best mosaic-level-best--high"
                                   : "mosaic-level-best"
                               }
@@ -1668,12 +1704,12 @@ export function BinaryMosaicGame() {
                             >
                               <span
                                 className={
-                                  bestScore >= 100
+                                  bestScore >= PATTERN_SCORE_PERFECT
                                     ? "mosaic-level-best-star mosaic-level-best-star--perfect"
                                     : "mosaic-level-best-star"
                                 }
                                 style={
-                                  bestScore >= 100
+                                  bestScore >= PATTERN_SCORE_PERFECT
                                     ? undefined
                                     : {
                                         animationDelay: `${((level.id * 37) % 100) / 10}s`,
@@ -1681,7 +1717,7 @@ export function BinaryMosaicGame() {
                                 }
                                 aria-hidden="true"
                               >
-                                {bestScore >= 100 ? "✶" : "★"}
+                                {bestScore >= PATTERN_SCORE_PERFECT ? "✶" : "★"}
                               </span>{" "}
                               <span className="mosaic-level-best-num">
                                 {bestScore}
@@ -1820,6 +1856,14 @@ export function BinaryMosaicGame() {
         playMode={active.kind}
         userLevelId={
           active.kind === "user" ? active.userLevelId : undefined
+        }
+        challengeRecord={
+          active.kind === "user"
+            ? (getUserLevel(active.userLevelId) ??
+              (ephemeralUserLevel?.userLevelId === active.userLevelId
+                ? ephemeralUserLevel
+                : null))
+            : null
         }
         soundOn={soundOn}
         setSoundOn={setSoundOn}

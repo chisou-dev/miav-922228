@@ -21,6 +21,10 @@ const GUIDE_SECTIONS = [
     body: "Create a Challenge Link and send it to someone. They can open the link and play the puzzle directly. No account or server upload is required.",
   },
   {
+    heading: "Challenge Results",
+    body: "Clear a shared challenge to see your score, stars, time, and rotations. Share your result, retry the puzzle, or create a challenge to send back.",
+  },
+  {
     heading: "Import",
     body: "Paste a full Share Code you received to restore a challenge manually. Use Import when a Challenge Link is unavailable.",
   },

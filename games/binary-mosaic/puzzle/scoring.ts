@@ -3,6 +3,13 @@ import type { PatternResult } from "@/games/binary-mosaic/types";
 /** Penalty subtracted from Pattern Score per Hint button press. */
 export const HINT_PENALTY_PER_USE = 10;
 
+/**
+ * Campaign level-select thresholds (best Pattern Score).
+ * Reused for Challenge Result star display — do not invent a separate scale.
+ */
+export const PATTERN_SCORE_HIGH = 90;
+export const PATTERN_SCORE_PERFECT = 100;
+
 export function calcPatternScore(input: {
   completionTimeSec: number;
   moves: number;
@@ -20,6 +27,20 @@ export function calcPatternScore(input: {
     0,
     Math.min(100, 100 - timePenalty - movePenalty - hintPenalty),
   );
+}
+
+/**
+ * Map Pattern Score → 1–3 stars using campaign thresholds only.
+ * ≥100 → ★★★ · ≥90 → ★★☆ · cleared below 90 → ★☆☆
+ */
+export function patternStarsFromScore(score: number): 1 | 2 | 3 {
+  if (score >= PATTERN_SCORE_PERFECT) return 3;
+  if (score >= PATTERN_SCORE_HIGH) return 2;
+  return 1;
+}
+
+export function formatPatternStars(stars: 1 | 2 | 3): string {
+  return `${"★".repeat(stars)}${"☆".repeat(3 - stars)}`;
 }
 
 export function formatTime(totalSec: number): string {
