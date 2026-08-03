@@ -24,6 +24,7 @@ import {
 } from "@/games/binary-mosaic/progress/shareCode";
 import {
   createMemoryUserLevelsKv,
+  DEFAULT_HINT_LIMIT,
   DEVELOPER_CREDIT,
   exportUserLevelJson,
   getUserLevel,
@@ -99,6 +100,7 @@ function makeFixture(overrides?: Partial<UserLevelRecord>): UserLevelRecord {
     published: false,
     publishedAt: null,
     ...overrides,
+    hintLimit: overrides?.hintLimit ?? DEFAULT_HINT_LIMIT,
   };
 }
 

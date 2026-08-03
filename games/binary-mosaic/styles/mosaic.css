@@ -141,6 +141,57 @@
   color: var(--mosaic-muted);
 }
 
+.mosaic-hint-limit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.mosaic-hint-limit-btn {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--mosaic-line);
+  background: #fff;
+  color: var(--mosaic-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mosaic-hint-limit-btn.is-on {
+  border-color: var(--mosaic-ink);
+  background: var(--mosaic-ink);
+  color: #fff;
+}
+
+.mosaic-hint-limit-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mosaic-hud-hints {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  max-width: 100%;
+}
+
+.mosaic-hud-hints-remaining,
+.mosaic-hud-hints-none {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--mosaic-muted);
+  overflow-wrap: anywhere;
+}
+
+.mosaic-hud-hints-none {
+  color: #5c6570;
+}
+
 .mosaic-delete-dialog {
   max-height: none;
   width: min(22rem, 100%);

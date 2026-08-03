@@ -23,15 +23,19 @@ import {
   CLIPBOARD_COPY_FAILED_MESSAGE,
   createUserLevel,
   DEFAULT_CREATOR_NAME,
+  DEFAULT_HINT_LIMIT,
   DEFAULT_PUBLISH_TITLE,
   DEVELOPER_CREDIT,
   displayUserLevelTitle,
   exportUserLevelJson,
+  formatHintLimitCreatorLabel,
+  HINT_LIMIT_OPTIONS,
   listUserLevels,
   normalizeCreatorName,
   SHARE_CODE_COPIED_MESSAGE,
   updateUserLevelPublishMeta,
   USER_LEVELS_CHANGED_EVENT,
+  type HintLimit,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
 import { DeleteUserLevelModal } from "@/games/binary-mosaic/ui/DeleteUserLevelModal";
@@ -279,7 +283,7 @@ export function CreatorPanel() {
   const [rotateQuota, setRotateQuota] = useState(
     String(DEFAULT_ADVANCED.rotateQuota),
   );
-  const [hintAllowed, setHintAllowed] = useState(DEFAULT_ADVANCED.hintAllowed);
+  const [hintLimit, setHintLimit] = useState<HintLimit>(DEFAULT_HINT_LIMIT);
   const [seed, setSeed] = useState(String(DEFAULT_ADVANCED.seed));
   const [creatorName, setCreatorName] = useState("");
   const [publishTitle, setPublishTitle] = useState("");
@@ -353,7 +357,7 @@ export function CreatorPanel() {
       },
       pieceCount: parseIntField(pieceCount, DEFAULT_ADVANCED.pieceCount),
       rotateQuota: parseIntField(rotateQuota, DEFAULT_ADVANCED.rotateQuota),
-      hintAllowed,
+      hintAllowed: hintLimit > 0,
       seed: parseIntField(seed, DEFAULT_ADVANCED.seed),
       title: `Creator: ${text}`,
       draftId: 0,
@@ -388,7 +392,9 @@ export function CreatorPanel() {
       return;
     }
     try {
-      const intent = createAutoCreatorIntent(text);
+      const intent = createAutoCreatorIntent(text, {
+        hintAllowed: hintLimit > 0,
+      });
       executePreview(intent);
     } catch (err) {
       setRun({
@@ -423,6 +429,7 @@ export function CreatorPanel() {
           creatorName,
           title: publishTitle,
           description: publishDescription,
+          hintLimit,
         });
         if (!saved.ok) {
           setSaveMessage(saved.error);
@@ -674,6 +681,30 @@ export function CreatorPanel() {
             disabled={loading || saveBusy}
           />
         </label>
+        <label className="mosaic-creator-field mosaic-creator-field--primary">
+          <span>Hints</span>
+          <div
+            className="mosaic-hint-limit"
+            role="group"
+            aria-label="Hint uses allowed"
+          >
+            {HINT_LIMIT_OPTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`mosaic-hint-limit-btn${hintLimit === n ? " is-on" : ""}`}
+                aria-pressed={hintLimit === n}
+                disabled={loading || saveBusy}
+                onClick={() => setHintLimit(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <span className="mosaic-creator-field-hint">
+            Each hint reveals 3 random cells. Maximum: 15 revealed cells.
+          </span>
+        </label>
         <div className="mosaic-creator-actions">
           <button
             type="submit"
@@ -732,14 +763,29 @@ export function CreatorPanel() {
               disabled={loading || saveBusy}
             />
           </label>
-          <label className="mosaic-creator-field mosaic-creator-field--check">
-            <span>hintAllowed</span>
-            <input
-              type="checkbox"
-              checked={hintAllowed}
-              onChange={(e) => setHintAllowed(e.target.checked)}
-              disabled={loading || saveBusy}
-            />
+          <label className="mosaic-creator-field mosaic-creator-field--primary">
+            <span>Hints</span>
+            <div
+              className="mosaic-hint-limit"
+              role="group"
+              aria-label="Hint uses allowed"
+            >
+              {HINT_LIMIT_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={`mosaic-hint-limit-btn${hintLimit === n ? " is-on" : ""}`}
+                  aria-pressed={hintLimit === n}
+                  disabled={loading || saveBusy}
+                  onClick={() => setHintLimit(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <span className="mosaic-creator-field-hint">
+              Each hint reveals 3 random cells. Maximum: 15 revealed cells.
+            </span>
           </label>
           <label className="mosaic-creator-field">
             <span>seed</span>
@@ -813,6 +859,10 @@ export function CreatorPanel() {
                 {intent?.rotateQuota ?? "—"}
                 {levelData ? ` / rotatable ${rotatableLen}` : null}
               </dd>
+            </div>
+            <div>
+              <dt>Hints</dt>
+              <dd>{formatHintLimitCreatorLabel(hintLimit)}</dd>
             </div>
             <div>
               <dt>Creator Name</dt>

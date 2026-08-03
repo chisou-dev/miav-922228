@@ -20,7 +20,9 @@ import {
   DEVELOPER_CREDIT,
   DEVELOPER_HOME_URL,
   displayUserLevelTitle,
+  formatHintLimitChallengeLabel,
   getUserLevel,
+  resolveHintLimit,
   SHARE_CODE_COPIED_MESSAGE,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
@@ -165,7 +167,7 @@ function ClearedFeedback({ fb }: { fb: ChallengeFeedbackRecord }) {
         <dd>{fb.moves}</dd>
       </div>
       <div>
-        <dt>Hints</dt>
+        <dt>Hints used</dt>
         <dd>{fb.hintsUsed}</dd>
       </div>
     </>
@@ -302,6 +304,10 @@ export function ShowcasePanel() {
             <div>
               <dt>Rotation count</dt>
               <dd>{rotationCount(record)}</dd>
+            </div>
+            <div>
+              <dt>Hints</dt>
+              <dd>{formatHintLimitChallengeLabel(resolveHintLimit(record))}</dd>
             </div>
             {cleared ? <ClearedFeedback fb={cleared} /> : null}
           </dl>

@@ -17,6 +17,10 @@ const GUIDE_SECTIONS = [
     body: "Enter a word to create a new Binary Block puzzle. Preview it, save it, play it, or share it.",
   },
   {
+    heading: "Hints",
+    body: "Challenge creators can allow between 0 and 5 hints. Each hint reveals 3 random cells. A maximum of 15 cells can be revealed.",
+  },
+  {
     heading: "Share",
     body: "Create a Challenge Link and send it to someone. They can open the link and play the puzzle directly. No account or server upload is required.",
   },

@@ -17,6 +17,9 @@
  * UserLevelRecord only — never on LevelData / Core. Public campaign play
  * has no credit or publish UI.
  *
+ * Optional `hintLimit` (0–5) is also UserLevel-only. Missing → {@link DEFAULT_HINT_LIMIT} (3).
+ * User Challenge play uses random 3-cell reveals; Campaign L1–30 hint rules are unchanged.
+ *
  * `title` here is publish/showcase display title (not `levelData.title`).
  * Display preference: record.title → levelData.title → {@link DEFAULT_PUBLISH_TITLE}.
  *
@@ -132,6 +135,16 @@ export const STORAGE_UNAVAILABLE_MESSAGE =
 // Types
 // ---------------------------------------------------------------------------
 
+/** Allowed Hint press counts for User Challenges. */
+export type HintLimit = 0 | 1 | 2 | 3 | 4 | 5;
+
+/** Default when `hintLimit` is missing on older UserLevels. */
+export const DEFAULT_HINT_LIMIT: HintLimit = 3;
+
+export const HINT_LIMIT_OPTIONS: readonly HintLimit[] = [
+  0, 1, 2, 3, 4, 5,
+] as const;
+
 /**
  * One persisted user-created level that passed Generator → Solver → Evaluator.
  * `seed` lives here (and on CreatorIntent) — never inside LevelData.
@@ -170,6 +183,12 @@ export type UserLevelRecord = {
    * Kept on unpublish (last publishedAt preserved).
    */
   publishedAt: string | null;
+  /**
+   * Max Hint button presses for this User Challenge (0–5).
+   * Optional for backward compatibility — missing → {@link DEFAULT_HINT_LIMIT}.
+   * UserLevel-only; not LevelData / Core.
+   */
+  hintLimit: HintLimit;
 };
 
 export type UserLevelsStore = {
@@ -204,6 +223,11 @@ export type CreateUserLevelInput = {
   description?: string;
   /** Optional publish flag (default false). */
   published?: boolean;
+  /**
+   * Optional Hint press limit 0–5 (default {@link DEFAULT_HINT_LIMIT}).
+   * UserLevel-only; drives User Challenge hint UX.
+   */
+  hintLimit?: HintLimit | number;
   /** Optional fixed id (tests); otherwise `user:<uuid>`. */
   userLevelId?: string;
   /** Optional fixed timestamp (tests); otherwise `new Date().toISOString()`. */
@@ -613,6 +637,39 @@ export function displayUserLevelTitle(record: UserLevelRecord): string {
   return normalizePublishTitle(record.title, record.levelData.title);
 }
 
+/** Coerce unknown → HintLimit; invalid / missing → {@link DEFAULT_HINT_LIMIT}. */
+export function normalizeHintLimit(value: unknown): HintLimit {
+  if (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 5
+  ) {
+    return value as HintLimit;
+  }
+  return DEFAULT_HINT_LIMIT;
+}
+
+/** Resolve hintLimit from a record (default 3 when absent). */
+export function resolveHintLimit(
+  record: Pick<UserLevelRecord, "hintLimit"> | null | undefined,
+): HintLimit {
+  if (!record) return DEFAULT_HINT_LIMIT;
+  return normalizeHintLimit(record.hintLimit);
+}
+
+/** Creator preview label: "None" | "Up to N uses". */
+export function formatHintLimitCreatorLabel(limit: HintLimit): string {
+  if (limit === 0) return "None";
+  return `Up to ${limit} uses`;
+}
+
+/** Challenge receive label: "None" | "N uses available". */
+export function formatHintLimitChallengeLabel(limit: HintLimit): string {
+  if (limit === 0) return "None";
+  return `${limit} uses available`;
+}
+
 /**
  * Core shape check (pre–Phase2-16 records may omit credits / publish fields).
  * Credit + publish fields are filled by {@link coerceUserLevelRecord}.
@@ -655,6 +712,18 @@ function isValidUserLevelRecordShape(value: unknown): value is Record<string, un
   ) {
     return false;
   }
+  // Soft hintLimit: if present, must be integer 0–5.
+  if ("hintLimit" in value) {
+    const h = value.hintLimit;
+    if (
+      typeof h !== "number" ||
+      !Number.isInteger(h) ||
+      h < 0 ||
+      h > 5
+    ) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -668,7 +737,7 @@ function isValidUserLevelRecordShape(value: unknown): value is Record<string, un
  */
 export function coerceUserLevelRecord(value: unknown): UserLevelRecord | null {
   if (!isValidUserLevelRecordShape(value)) return null;
-  const raw = value as UserLevelRecord;
+  const raw = value as UserLevelRecord & { hintLimit?: unknown };
   const levelTitle =
     typeof raw.levelData?.title === "string" ? raw.levelData.title : "";
   return {
@@ -679,6 +748,9 @@ export function coerceUserLevelRecord(value: unknown): UserLevelRecord | null {
     description: normalizePublishDescription(raw.description),
     published: normalizePublished(raw.published),
     publishedAt: normalizePublishedAt(raw.publishedAt),
+    hintLimit: normalizeHintLimit(
+      "hintLimit" in raw ? raw.hintLimit : undefined,
+    ),
   };
 }
 
@@ -814,6 +886,7 @@ export function saveUserLevelDetailed(
     description: normalizePublishDescription(record.description),
     published: normalizePublished(record.published),
     publishedAt: normalizePublishedAt(record.publishedAt),
+    hintLimit: normalizeHintLimit(record.hintLimit),
   };
   const store = loadUserLevels();
   const without = store.levels.filter(
@@ -919,6 +992,7 @@ export function createUserLevel(
     description: normalizePublishDescription(input.description),
     published,
     publishedAt: published ? createdAt : null,
+    hintLimit: normalizeHintLimit(input.hintLimit),
   };
 
   const saved = saveUserLevelDetailed(record);

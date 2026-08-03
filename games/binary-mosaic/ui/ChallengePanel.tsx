@@ -37,7 +37,9 @@ import {
   BINARY_BLOCK_USER_LEVELS_KEY,
   DEVELOPER_CREDIT,
   displayUserLevelTitle,
+  formatHintLimitChallengeLabel,
   listUserLevels,
+  resolveHintLimit,
   USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
 } from "@/games/binary-mosaic/progress/userLevels";
@@ -255,6 +257,10 @@ function ChallengeCard({
           <dt>Rotation count</dt>
           <dd>{rotationCount(record)}</dd>
         </div>
+        <div>
+          <dt>Hints</dt>
+          <dd>{formatHintLimitChallengeLabel(resolveHintLimit(record))}</dd>
+        </div>
         {feedback ? (
           <>
             <div>
@@ -270,7 +276,7 @@ function ChallengeCard({
               <dd>{feedback.moves}</dd>
             </div>
             <div>
-              <dt>Hints</dt>
+              <dt>Hints used</dt>
               <dd>{feedback.hintsUsed}</dd>
             </div>
           </>

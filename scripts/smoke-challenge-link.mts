@@ -18,6 +18,7 @@ import {
 import { EvaluationProfile } from "@/games/binary-mosaic/core/evaluator";
 import {
   createMemoryUserLevelsKv,
+  DEFAULT_HINT_LIMIT,
   DEVELOPER_CREDIT,
   exportUserLevelJson,
   getUserLevel,
@@ -89,6 +90,7 @@ function makeFixture(overrides?: Partial<UserLevelRecord>): UserLevelRecord {
     published: false,
     publishedAt: null,
     ...overrides,
+    hintLimit: overrides?.hintLimit ?? DEFAULT_HINT_LIMIT,
   };
 }
 

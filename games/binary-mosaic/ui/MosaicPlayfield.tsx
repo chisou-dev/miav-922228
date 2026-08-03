@@ -44,6 +44,10 @@ import {
   PATTERN_SCORE_PERFECT,
 } from "@/games/binary-mosaic/puzzle/scoring";
 import {
+  revealRandomChallengeHintCells,
+  userChallengeHintExhausted,
+} from "@/games/binary-mosaic/puzzle/userChallengeHints";
+import {
   allPiecesPlaced,
   buildPieceExpectations,
   expandHintCells,
@@ -88,9 +92,11 @@ import {
   DEVELOPER_HOME_URL,
   displayUserLevelTitle,
   exportUserLevelJson,
+  formatHintLimitChallengeLabel,
   getUserLevel,
   importUserLevelJson,
   listUserLevels,
+  resolveHintLimit,
   SAVED_TO_MY_LEVELS_MESSAGE,
   USER_LEVELS_CHANGED_EVENT,
   type UserLevelRecord,
@@ -861,6 +867,11 @@ function MosaicPlayfield({
   );
 
   const hintUsesMaxed = useMemo(() => {
+    if (playMode === "user") {
+      const limit = resolveHintLimit(challengeRecord);
+      if (hintUses >= limit) return true;
+      return userChallengeHintExhausted(level, hintRevealed, occupiedKeys);
+    }
     if (hintUses >= HINT_MAX_USES) return true;
     const expanded = expandHintCells(
       level,
@@ -869,12 +880,28 @@ function MosaicPlayfield({
       occupiedKeys,
     );
     return expanded.length <= hintRevealed.length;
-  }, [hintUses, level, hintRevealed, occupiedKeys]);
+  }, [
+    playMode,
+    challengeRecord,
+    hintUses,
+    level,
+    hintRevealed,
+    occupiedKeys,
+  ]);
+
+  const userHintLimit =
+    playMode === "user" ? resolveHintLimit(challengeRecord) : null;
+  const userHintsRemaining =
+    userHintLimit != null ? Math.max(0, userHintLimit - hintUses) : 0;
 
   const hintTitle =
-    level.id >= HINT_ONE_PER_USE_FROM_LEVEL
-      ? `Reveal 1 empty cell (−${HINT_PENALTY_PER_USE} pts). Max ${HINT_MAX_USES}`
-      : `Reveal empty cells (−${HINT_PENALTY_PER_USE} pts each). 6 → 12 → all`;
+    playMode === "user"
+      ? userHintLimit === 0
+        ? "No hints available for this challenge."
+        : `Reveal 3 random cells (−${HINT_PENALTY_PER_USE} pts). Max ${userHintLimit}`
+      : level.id >= HINT_ONE_PER_USE_FROM_LEVEL
+        ? `Reveal 1 empty cell (−${HINT_PENALTY_PER_USE} pts). Max ${HINT_MAX_USES}`
+        : `Reveal empty cells (−${HINT_PENALTY_PER_USE} pts each). 6 → 12 → all`;
 
   const boardBits = useMemo(
     () => buildBoardGrid(level, pieces, { excludePieceId: dragPieceId }),
@@ -949,7 +976,56 @@ function MosaicPlayfield({
         >
           <SoundToggleIcon muted={!soundOn} className="mosaic-sound-icon" />
         </button>
-        {level.hintAllowed ? (
+        {playMode === "user" ? (
+          <div className="mosaic-hud-hints">
+            {userHintLimit === 0 ? (
+              <span className="mosaic-hud-hints-none" role="status">
+                No hints available for this challenge.
+              </span>
+            ) : (
+              <>
+                <span className="mosaic-hud-hints-remaining" aria-live="polite">
+                  Hints: {userHintsRemaining} remaining
+                </span>
+                <button
+                  type="button"
+                  className={`mosaic-btn mosaic-btn--ghost ${hintUses > 0 ? "is-on" : ""}`}
+                  onClick={() => {
+                    if (hintUsesMaxed || userHintLimit == null) return;
+                    const limit = userHintLimit;
+                    void audio.playSe("button");
+                    const occupied = new Set<string>();
+                    for (const piece of piecesRef.current) {
+                      if (!piece.placed) continue;
+                      const shape = rotateShape(
+                        piece.baseShape,
+                        piece.rotation,
+                      );
+                      for (const cell of absoluteCells(shape, piece.placed)) {
+                        occupied.add(`${cell.row},${cell.col}`);
+                      }
+                    }
+                    setHintUses((n) => {
+                      const next = Math.min(limit, n + 1);
+                      setHintRevealed((prev) =>
+                        revealRandomChallengeHintCells(
+                          level,
+                          prev,
+                          occupied,
+                        ),
+                      );
+                      return next;
+                    });
+                  }}
+                  disabled={clearing || hintUsesMaxed}
+                  title={hintTitle}
+                >
+                  HINT
+                </button>
+              </>
+            )}
+          </div>
+        ) : level.hintAllowed ? (
           <button
             type="button"
             className={`mosaic-btn mosaic-btn--ghost ${hintUses > 0 ? "is-on" : ""}`}
@@ -1577,6 +1653,14 @@ export function BinaryMosaicGame() {
                 <dt>Piece count</dt>
                 <dd>{usedPieceCount(sharedChallenge.record.levelData)}</dd>
               </div>
+              <div>
+                <dt>Hints</dt>
+                <dd>
+                  {formatHintLimitChallengeLabel(
+                    resolveHintLimit(sharedChallenge.record),
+                  )}
+                </dd>
+              </div>
             </dl>
             <div className="mosaic-creator-actions mosaic-challenge-play">
               <button
@@ -1647,13 +1731,13 @@ export function BinaryMosaicGame() {
           <span className="mosaic-creator-entry-sep" aria-hidden="true">
             ·
           </span>
-                    <a href="/game/binary-mosaic/message" className="mosaic-chrome-link">
+          <a href="/game/binary-mosaic/message" className="mosaic-chrome-link">
             Binary Message
           </a>
           <span className="mosaic-creator-entry-sep" aria-hidden="true">
             ·
           </span>
-<button
+          <button
             type="button"
             className="mosaic-guide-trigger"
             onClick={() => setGuideOpen(true)}

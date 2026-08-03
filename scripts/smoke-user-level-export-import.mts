@@ -11,6 +11,7 @@ import { EvaluationProfile } from "@/games/binary-mosaic/core/evaluator";
 import { getAllLevelData } from "@/games/binary-mosaic/core/levelData";
 import {
   createMemoryUserLevelsKv,
+  DEFAULT_HINT_LIMIT,
   createUserLevel,
   DEFAULT_CREATOR_NAME,
   DEFAULT_PUBLISH_TITLE,
@@ -99,6 +100,7 @@ function makeFixture(overrides?: Partial<UserLevelRecord>): UserLevelRecord {
     published: false,
     publishedAt: null,
     ...overrides,
+    hintLimit: overrides?.hintLimit ?? DEFAULT_HINT_LIMIT,
   };
 }
 
