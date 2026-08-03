@@ -4,7 +4,7 @@
  * Confirms:
  * - PASS path saves a UserLevel
  * - GENERATE_FAILED / EVAL_FAILED do not save
- * - public getAllLevelData() stays 30
+ * - public getAllLevelData() stays 31
  *
  * Usage: npx tsx scripts/smoke-pipeline.mts
  */
@@ -38,7 +38,7 @@ const BASE_INTENT: CreatorIntent = {
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 30, `expected 30 public levels, got ${publicBefore}`);
+  assert(publicBefore === 31, `expected 31 public levels, got ${publicBefore}`);
 
   setUserLevelsStorage(createMemoryUserLevelsKv());
   assert(listUserLevels().length === 0, "memory store should start empty");
@@ -106,7 +106,7 @@ function main(): void {
   );
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 30, `public levels mutated: ${publicAfter}`);
+  assert(publicAfter === 31, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
 
   setUserLevelsStorage(null);

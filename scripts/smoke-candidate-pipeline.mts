@@ -5,7 +5,7 @@
  * - Multiple candidates generated + evaluated
  * - Best selected among passed
  * - PASS path saves a UserLevel
- * - public getAllLevelData() stays 30
+ * - public getAllLevelData() stays 31
  *
  * Usage: npx tsx scripts/smoke-candidate-pipeline.mts
  */
@@ -43,7 +43,7 @@ const CANDIDATE_LIMIT = 4;
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 30, `expected 30 public levels, got ${publicBefore}`);
+  assert(publicBefore === 31, `expected 31 public levels, got ${publicBefore}`);
 
   setUserLevelsStorage(createMemoryUserLevelsKv());
   assert(listUserLevels().length === 0, "memory store should start empty");
@@ -143,7 +143,7 @@ function main(): void {
   );
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 30, `public levels mutated: ${publicAfter}`);
+  assert(publicAfter === 31, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
   assert(DEFAULT_CANDIDATE_LIMIT === 4, "default candidate limit sanity");
 

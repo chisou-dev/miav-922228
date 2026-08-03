@@ -79,8 +79,8 @@ function main(): void {
     readFileSync(LEVELS_PATH, "utf-8"),
   ) as LevelData[];
   const sorted = [...levels].sort((a, b) => a.id - b.id);
-  if (sorted.length !== 30) {
-    throw new Error(`expected 30 levels, got ${sorted.length}`);
+  if (sorted.length !== 31) {
+    throw new Error(`expected 31 levels, got ${sorted.length}`);
   }
 
   const rows: ReportRow[] = [];

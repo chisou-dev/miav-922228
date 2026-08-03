@@ -36,6 +36,7 @@ ROTATABLE_COUNT = {
     28: 3,
     29: 5,
     30: 5,
+    31: 4,
 }
 
 SOLUTION_LIMIT = 3  # stop after this many solutions

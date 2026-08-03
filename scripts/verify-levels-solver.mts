@@ -46,8 +46,8 @@ function main(): void {
     readFileSync(LEVELS_PATH, "utf-8"),
   ) as LevelData[];
   const sorted = [...levels].sort((a, b) => a.id - b.id);
-  if (sorted.length !== 30) {
-    throw new Error(`expected 30 levels, got ${sorted.length}`);
+  if (sorted.length !== 31) {
+    throw new Error(`expected 31 levels, got ${sorted.length}`);
   }
 
   const solutionLimit = 3;
@@ -58,7 +58,7 @@ function main(): void {
   let noneN = 0;
   let toN = 0;
   let solvableN = 0;
-  let unique21_30 = 0;
+  let unique21_31 = 0;
 
   console.log(
     `${"Lv".padStart(3)} ${"Word".padEnd(12)} ${"Pc".padStart(3)} ${"Sol".padStart(5)} ${"Unique?".padStart(10)} ${"Nodes".padStart(8)} ${"ms".padStart(7)} Band`,
@@ -84,8 +84,8 @@ function main(): void {
     if (result.status === "MULTI") multiN += 1;
     if (result.status === "NONE") noneN += 1;
     if (result.timedOut) toN += 1;
-    if (level.id >= 21 && level.id <= 30) {
-      if (result.unique) unique21_30 += 1;
+    if (level.id >= 21 && level.id <= 31) {
+      if (result.unique) unique21_31 += 1;
       else fail += 1;
     }
 
@@ -112,17 +112,17 @@ function main(): void {
   console.log();
   console.log("=== Summary ===");
   console.log(`Levels: ${rowsOut.length}`);
-  console.log(`Solvable (>=1): ${solvableN}/30`);
+  console.log(`Solvable (>=1): ${solvableN}/31`);
   console.log(
     `Solver UNIQUE: ${uniqueN}  MULTI: ${multiN}  NONE: ${noneN}  timed_out: ${toN}`,
   );
-  console.log(`L21–30 UNIQUE: ${unique21_30}/10`);
+  console.log(`L21–31 UNIQUE: ${unique21_31}/11`);
   console.log(`Failures flagged: ${fail}`);
 
   writeFileSync(REPORT_PATH, `${JSON.stringify(rowsOut, null, 2)}\n`, "utf-8");
   console.log(`Wrote ${REPORT_PATH}`);
 
-  if (solvableN !== 30 || unique21_30 !== 10 || fail > 0) {
+  if (solvableN !== 31 || unique21_31 !== 11 || fail > 0) {
     process.exitCode = 1;
   }
 }
