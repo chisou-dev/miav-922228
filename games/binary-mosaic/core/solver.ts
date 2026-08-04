@@ -16,7 +16,7 @@ import type { LevelData } from "@/games/binary-mosaic/core/levelData";
 import { buildActiveMask, canPlaceShape } from "@/games/binary-mosaic/core/rules";
 import type { Shape } from "@/games/binary-mosaic/core/types";
 
-/** Matches play rotate quotas (L1–19: 0 · L20–21: 1 · … · L29–30: 5 · L31: 4). */
+/** Matches play rotate quotas (L1–19: 0 · L20–21: 1 · … · L29–30: 5 · L31: 4 · L32: 3 · L33–34: 4 · L35: 4). */
 const ROTATABLE_COUNT_BY_LEVEL: Readonly<Record<number, number>> = {
   20: 1,
   21: 1,
@@ -30,6 +30,10 @@ const ROTATABLE_COUNT_BY_LEVEL: Readonly<Record<number, number>> = {
   29: 5,
   30: 5,
   31: 4,
+  32: 3,
+  33: 4,
+  34: 4,
+  35: 4,
 };
 
 const DEFAULT_SOLUTION_LIMIT = 3;

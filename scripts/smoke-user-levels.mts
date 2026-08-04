@@ -2,7 +2,7 @@
  * Smoke: UserLevel storage (Phase2-5).
  *
  * Pipeline: generate → solve → evaluate(USER_LEVEL) → createUserLevel → reload.
- * Confirms public getAllLevelData() stays 31 / unaffected.
+ * Confirms public getAllLevelData() stays 35 / unaffected.
  *
  * Usage: npx tsx scripts/smoke-user-levels.mts
  */
@@ -37,7 +37,7 @@ function assert(cond: unknown, msg: string): asserts cond {
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 31, `expected 31 public levels, got ${publicBefore}`);
+  assert(publicBefore === 35, `expected 35 public levels, got ${publicBefore}`);
 
   setUserLevelsStorage(createMemoryUserLevelsKv());
 
@@ -173,7 +173,7 @@ function main(): void {
   assert(getUserLevel(created.record.userLevelId) === undefined, "deleted id still present");
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 31, `public levels mutated: ${publicAfter}`);
+  assert(publicAfter === 35, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
 
   setUserLevelsStorage(null);

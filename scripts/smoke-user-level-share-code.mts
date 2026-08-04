@@ -106,7 +106,7 @@ function makeFixture(overrides?: Partial<UserLevelRecord>): UserLevelRecord {
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 31, `expected 31 public levels, got ${publicBefore}`);
+  assert(publicBefore === 35, `expected 35 public levels, got ${publicBefore}`);
 
   setUserLevelsStorage(createMemoryUserLevelsKv());
   const original = makeFixture();
@@ -358,7 +358,7 @@ function main(): void {
   );
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 31, `public levels mutated: ${publicAfter}`);
+  assert(publicAfter === 35, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
 
   setUserLevelsStorage(null);

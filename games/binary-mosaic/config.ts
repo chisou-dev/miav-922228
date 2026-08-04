@@ -18,12 +18,12 @@ export const binaryMosaicConfig = {
   title: "Binary Block",
   /** Board cell size in px — keep compact so more pieces stay readable. */
   cellPx: 34,
-  maxDesignedLevels: 31,
+  maxDesignedLevels: 35,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
   /**
    * Rotation quota starts at this level.
-   * Counts: L20–21 → 1 · L22–24 → 2 · L25–28 → 3 · L29–30 → 5 · L31 → 4
+   * Counts: L20–21 → 1 · L22–24 → 2 · L25–28 → 3 · L29–30 → 5 · L31 → 4 · L32 → 3 · L33–34 → 4 · L35 → 4
    */
   rotateFromLevel: 20,
 } as const;

@@ -5,7 +5,7 @@
  * - assessGenerationQuality is deterministic and scores differ across candidates
  * - Candidate ranking prefers higher generation-quality when other ties allow
  * - PASS path still saves a UserLevel
- * - public getAllLevelData() stays 31
+ * - public getAllLevelData() stays 35
  *
  * Usage: npx tsx scripts/smoke-generation-quality.mts
  */
@@ -46,7 +46,7 @@ const CANDIDATE_LIMIT = 4;
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 31, `expected 31 public levels, got ${publicBefore}`);
+  assert(publicBefore === 35, `expected 35 public levels, got ${publicBefore}`);
 
   setUserLevelsStorage(createMemoryUserLevelsKv());
   assert(listUserLevels().length === 0, "memory store should start empty");
@@ -152,7 +152,7 @@ function main(): void {
   );
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 31, `public levels mutated: ${publicAfter}`);
+  assert(publicAfter === 35, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
 
   // Sanity: reason enum is used somehow across candidates or is empty-ok

@@ -1,6 +1,6 @@
 /**
  * Per-level how many pieces may rotate (data table — not if(level===N) sprawl).
- * L1–19: none · L20–21: 1 · L22–24: 2 · L25–28: 3 · L29–30: 5 · L31: 4
+ * L1–19: none · L20–21: 1 · L22–24: 2 · L25–28: 3 · L29–30: 5 · L31: 4 · L32: 3 · L33–34: 4 · L35: 4
  */
 import {
   normalizeShape,
@@ -22,6 +22,10 @@ const ROTATABLE_COUNT_BY_LEVEL: Readonly<Record<number, number>> = {
   29: 5,
   30: 5,
   31: 4,
+  32: 3,
+  33: 4,
+  34: 4,
+  35: 4,
 };
 
 export function rotatableCountForLevel(levelId: number): number {

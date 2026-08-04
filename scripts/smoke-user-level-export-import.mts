@@ -2,7 +2,7 @@
  * Smoke: UserLevel Export / Import roundtrip (Phase2-7) + credits (Phase2-16).
  *
  * Does NOT call Generator / Solver / Evaluator.
- * Confirms public getAllLevelData() stays 31 / unaffected.
+ * Confirms public getAllLevelData() stays 35 / unaffected.
  * Credits: export/import preserves; missing fields get defaults.
  *
  * Usage: npx tsx scripts/smoke-user-level-export-import.mts
@@ -106,7 +106,7 @@ function makeFixture(overrides?: Partial<UserLevelRecord>): UserLevelRecord {
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 31, `expected 31 public levels, got ${publicBefore}`);
+  assert(publicBefore === 35, `expected 35 public levels, got ${publicBefore}`);
 
   setUserLevelsStorage(createMemoryUserLevelsKv());
 
@@ -492,7 +492,7 @@ function main(): void {
   assert(listUserLevels().length === 1, "legacy accept stored");
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 31, `public levels mutated: ${publicAfter}`);
+  assert(publicAfter === 35, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
 
   setUserLevelsStorage(null);
