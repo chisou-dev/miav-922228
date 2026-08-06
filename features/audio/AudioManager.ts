@@ -155,10 +155,12 @@ export class AudioManager {
   /**
    * Request BGM for `stage`. Rapid calls keep only the latest pendingStage.
    * Example: playBgm(3); playBgm(5); playBgm(9) → only 9 plays.
+   * Pass `{ restart: true }` to restart from the beginning even on the same stage.
    */
-  playBgm(stage = 1) {
+  playBgm(stage = 1, opts?: { restart?: boolean }) {
     const next = Math.max(1, Math.floor(stage));
     this.lastStage = next;
+    const forceRestart = opts?.restart === true;
 
     if (isSoundMuted() || this.suppressed || this.gameState !== "playing") {
       // Remember desire; do not start until Playing + unmuted
@@ -168,7 +170,7 @@ export class AudioManager {
 
     switch (this.bgmState) {
       case "playing":
-        if (this.currentStage === next) {
+        if (this.currentStage === next && !forceRestart) {
           this.pendingStage = null;
           return;
         }
@@ -191,6 +193,12 @@ export class AudioManager {
       default:
         return;
     }
+  }
+
+  /** Stop and start current stage BGM from the beginning (no double instance). */
+  restartBgm() {
+    if (this.gameState !== "playing") return;
+    this.playBgm(this.lastStage, { restart: true });
   }
 
   /** Alias for older call sites. */

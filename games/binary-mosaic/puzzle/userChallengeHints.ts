@@ -1,6 +1,6 @@
 /**
  * User Challenge hint reveal — random 3 cells per press.
- * Campaign L1–30 continues to use expandHintCells in validation.ts.
+ * Campaign L20+ uses expandHintCells (3 → 2 → 1); L1–19 keep 6 → 12 → all.
  */
 
 import { listSolutionCells, type HintCell } from "@/games/binary-mosaic/puzzle/validation";

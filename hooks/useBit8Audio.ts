@@ -5,7 +5,7 @@ import { AudioManager } from "@/features/audio";
 
 /**
  * Keep AudioManager game-state in sync with playfield lifecycle.
- * Games should not drive BGM timers — only setGameState / playBgm via manager.
+ * Starts BGM immediately on enable (from the beginning); never stacks loops.
  */
 export function useBit8Audio(enabled = true, stage = 1) {
   const audioRef = useRef(AudioManager.getInstance());
@@ -16,8 +16,14 @@ export function useBit8Audio(enabled = true, stage = 1) {
       audio.setGameState("pause", { stage });
       return;
     }
-    audio.setGameState("playing", { stage });
+    let cancelled = false;
+    void audio.unlock().then(() => {
+      if (cancelled) return;
+      audio.setGameState("playing", { stage });
+      audio.restartBgm();
+    });
     return () => {
+      cancelled = true;
       audio.setGameState("pause", { stage });
     };
   }, [enabled, stage]);

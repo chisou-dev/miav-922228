@@ -129,8 +129,14 @@ export function listSolutionCells(
 
 export const HINT_MAX_USES = 3;
 
-/** From this level: 1 cell per Hint press (still max 3). Earlier: 6 → 12 → all. */
+/**
+ * From this level: campaign hints reveal 3 → 2 → 1 cells per press (max 3).
+ * Earlier levels: 6 → 12 → all.
+ */
 export const HINT_ONE_PER_USE_FROM_LEVEL = 20;
+
+/** Cells added by the nth campaign hint press at L20+ (1-based index). */
+const HINT_CELLS_PER_USE_FROM_L20: readonly number[] = [0, 3, 2, 1];
 
 export type HintCell = {
   row: number;
@@ -147,7 +153,12 @@ export function hintRevealCount(
 ): number {
   if (uses <= 0 || totalCells <= 0) return 0;
   if (levelId >= HINT_ONE_PER_USE_FROM_LEVEL) {
-    return Math.min(uses, HINT_MAX_USES, totalCells);
+    const capped = Math.min(uses, HINT_MAX_USES);
+    let sum = 0;
+    for (let i = 1; i <= capped; i += 1) {
+      sum += HINT_CELLS_PER_USE_FROM_L20[i] ?? 0;
+    }
+    return Math.min(sum, totalCells);
   }
   if (uses === 1) return Math.min(6, totalCells);
   if (uses === 2) return Math.min(12, totalCells);
@@ -157,7 +168,7 @@ export function hintRevealCount(
 /**
  * Grow the revealed hint list up to the quota for `uses`.
  * Skips cells that currently have a placed block (hints only on empty cells).
- * From L20+: each new reveal is a random empty eligible cell (not row-major).
+ * From L20+: each new reveal picks random empty eligible cells (not row-major).
  */
 export function expandHintCells(
   level: LevelDef,

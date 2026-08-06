@@ -329,6 +329,11 @@ function MosaicPlayfield({
     setRejectMarkers([]);
     previewKeyRef.current = "";
     startRef.current = performance.now();
+    const stage = audioStageForLevel(level);
+    void audio.unlock().then(() => {
+      audio.setGameState("playing", { stage });
+      audio.restartBgm();
+    });
   }, [audio, level]);
 
   piecesRef.current = pieces;
@@ -900,7 +905,7 @@ function MosaicPlayfield({
         ? "No hints available for this challenge."
         : `Reveal 3 random cells (−${HINT_PENALTY_PER_USE} pts). Max ${userHintLimit}`
       : level.id >= HINT_ONE_PER_USE_FROM_LEVEL
-        ? `Reveal 1 empty cell (−${HINT_PENALTY_PER_USE} pts). Max ${HINT_MAX_USES}`
+        ? `Reveal 3 → 2 → 1 empty cells (−${HINT_PENALTY_PER_USE} pts). Max ${HINT_MAX_USES}`
         : `Reveal empty cells (−${HINT_PENALTY_PER_USE} pts each). 6 → 12 → all`;
 
   const boardBits = useMemo(
@@ -1486,7 +1491,9 @@ export function BinaryMosaicGame() {
   }, [deleteTargetId, active, refreshUserLevels]);
 
   const startCampaign = useCallback((levelId: number) => {
-    void AudioManager.getInstance().playSe("button");
+    const audio = AudioManager.getInstance();
+    void audio.playSe("button");
+    void audio.unlock();
     clearChallengeFragment();
     setSharedChallenge(null);
     setEphemeralUserLevel(null);
@@ -1497,7 +1504,9 @@ export function BinaryMosaicGame() {
   const startUserLevel = useCallback((userLevelId: string) => {
     const record = getUserLevel(userLevelId);
     if (!record) return;
-    void AudioManager.getInstance().playSe("button");
+    const audio = AudioManager.getInstance();
+    void audio.playSe("button");
+    void audio.unlock();
     clearChallengeFragment();
     setSharedChallenge(null);
     setEphemeralUserLevel(null);
@@ -1510,7 +1519,9 @@ export function BinaryMosaicGame() {
   }, []);
 
   const startSharedChallenge = useCallback((record: UserLevelRecord) => {
-    void AudioManager.getInstance().playSe("button");
+    const audio = AudioManager.getInstance();
+    void audio.playSe("button");
+    void audio.unlock();
     setEphemeralUserLevel(record);
     setActive({
       kind: "user",
