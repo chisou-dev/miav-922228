@@ -1,6 +1,11 @@
 import { SiteShell } from "@/features/shared/SiteShell";
-import { getAllChapters } from "@/features/stories/miav/chapters";
+import {
+  getAllChapters,
+  getMaxChapterNumber,
+} from "@/features/stories/miav/chapters";
 import { getContentLocale } from "@/features/shared/locale";
+import { MiavChapterArchiveList } from "@/features/stories/miav/MiavChapterList";
+import { readUnlockedThrough } from "@/features/stories/miav/chapterUnlockCookie";
 
 function formatArchiveDate(value: string | null): string {
   if (!value) return "Date unrecorded";
@@ -16,9 +21,10 @@ function formatArchiveDate(value: string | null): string {
   }).format(date);
 }
 
-export function ChaptersIndexPage() {
+export async function ChaptersIndexPage() {
   const locale = getContentLocale();
   const chapters = getAllChapters(locale);
+  const unlockedThrough = await readUnlockedThrough(getMaxChapterNumber(locale));
 
   return (
     <SiteShell>
@@ -38,48 +44,17 @@ export function ChaptersIndexPage() {
           </p>
         </section>
 
-        <ol className="list-none">
-          {chapters.map((chapter) => (
-            <li
-              key={chapter.slug}
-              className="border-t border-[var(--line)] py-24 sm:py-32"
-            >
-              <article>
-                <p className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
-                  Chapter {String(chapter.number).padStart(2, "0")}
-                </p>
-
-                <h2 className="mt-6 text-[1.45rem] font-medium tracking-[0.05em] text-[var(--foreground)] sm:mt-8 sm:text-[1.75rem] sm:tracking-[0.06em]">
-                  <a
-                    href={`/chapters/${chapter.slug}`}
-                    className="transition-opacity duration-300 hover:opacity-80"
-                  >
-                    {chapter.title}
-                  </a>
-                </h2>
-
-                <p className="mt-5 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] sm:mt-6">
-                  <time dateTime={chapter.published ?? undefined}>
-                    {formatArchiveDate(chapter.published)}
-                  </time>
-                </p>
-
-                <p className="mt-10 max-w-lg text-[0.95rem] leading-[2.05] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.15]">
-                  {chapter.summary}
-                </p>
-
-                <p className="mt-14 sm:mt-16">
-                  <a
-                    href={`/chapters/${chapter.slug}`}
-                    className="text-[0.78rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
-                  >
-                    Open record
-                  </a>
-                </p>
-              </article>
-            </li>
-          ))}
-        </ol>
+        <MiavChapterArchiveList
+          unlockedThrough={unlockedThrough}
+          chapters={chapters.map((chapter) => ({
+            number: chapter.number,
+            slug: chapter.slug,
+            title: chapter.title,
+            summary: chapter.summary,
+            publishedLabel: formatArchiveDate(chapter.published),
+            publishedDateTime: chapter.published ?? undefined,
+          }))}
+        />
 
         <p className="mt-8 border-t border-[var(--line)] pt-16 text-[0.72rem] leading-relaxed tracking-[0.12em] text-[var(--foreground-muted)] sm:pt-20">
           End of current archive — further chapters will be entered as they are

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import {
   SeriesChapterPage,
-  allChapterParams,
 } from "@/features/library/LibraryPages";
 import { chapterSeo, getSeriesChapter } from "@/features/library/catalog";
 
@@ -9,9 +8,8 @@ type Props = {
   params: Promise<{ series: string; chapter: string }>;
 };
 
-export function generateStaticParams() {
-  return allChapterParams();
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { series, chapter } = await params;

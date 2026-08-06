@@ -19,5 +19,17 @@ export const miavChapterSlugs = [
   "time",
   "photo-and-distortion",
   "family",
-  "continuum",
+  "virtual-world",
+  "shutdown",
+  "photograph",
 ] as const;
+
+/** Part II Kindle landing — set kindleUrl when the listing is ready. */
+export const miavPartTwo = {
+  eyebrow: "PART II",
+  title: "THE WAY HOME",
+  description: "The story continues on Kindle.",
+  linkLabel: "Read on Kindle ↗",
+  comingSoonLabel: "Coming soon",
+  kindleUrl: null as string | null,
+} as const;

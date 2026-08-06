@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getChapterBySlug } from "@/features/stories/miav/chapters";
+import {
+  getChapterBySlug,
+  getChapterMetaBySlug,
+  getMaxChapterNumber,
+} from "@/features/stories/miav/chapters";
 import { getContentLocale } from "@/features/shared/locale";
 import {
   chapterHref,
@@ -22,6 +26,14 @@ import {
   BreadcrumbJsonLd,
   CreativeWorkSeriesJsonLd,
 } from "@/features/library/jsonLd";
+import { MiavChapterReader } from "@/features/stories/miav/MiavChapterReader";
+import { MiavSeriesChapterList } from "@/features/stories/miav/MiavChapterList";
+import { miavWorkId } from "@/features/stories/miav/work";
+import {
+  isChapterUnlockedServer,
+  readUnlockedThrough,
+} from "@/features/stories/miav/chapterUnlockCookie";
+import { FREE_THROUGH_CHAPTER } from "@/features/stories/miav/chapterProgress";
 
 function Prose({ text }: { text: string }) {
   const blocks = text.split(/\n\n+/).filter(Boolean);
@@ -69,7 +81,7 @@ export function FlashFictionPage() {
   );
 }
 
-export function SeriesIndexPage({ seriesId }: { seriesId: string }) {
+export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
   const series = getSeries(seriesId);
   if (!series) notFound();
 
@@ -80,6 +92,11 @@ export function SeriesIndexPage({ seriesId }: { seriesId: string }) {
       : []),
     { label: series.title, href: seriesHref(series.id) },
   );
+
+  const unlockedThrough =
+    series.id === miavWorkId
+      ? await readUnlockedThrough(getMaxChapterNumber())
+      : FREE_THROUGH_CHAPTER;
 
   return (
     <>
@@ -111,6 +128,17 @@ export function SeriesIndexPage({ seriesId }: { seriesId: string }) {
             <p className="mt-10 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)]">
               Coming Soon.
             </p>
+          ) : series.id === miavWorkId ? (
+            <MiavSeriesChapterList
+              seriesId={series.id}
+              unlockedThrough={unlockedThrough}
+              chapters={series.chapters.map((chapter) => ({
+                number: chapter.number,
+                slug: chapter.contentSlug ?? chapter.pathSlug,
+                pathSlug: chapter.pathSlug,
+                title: chapter.title,
+              }))}
+            />
           ) : (
             <ul className="mt-6">
               {series.chapters.map((chapter) => {
@@ -161,12 +189,48 @@ export async function SeriesChapterPage({
   const { series, chapter } = found;
   const locale = getContentLocale();
   const category = getCategory(series.categoryId);
-
-  let bodyHtml: string | null = null;
-  let bodyText: string | null = chapter.body ?? null;
   const continueReading = chapter.continueReading;
+  const isMiavGate = series.id === miavWorkId && !continueReading;
 
-  if (!continueReading && chapter.contentSlug) {
+  const maxChapterNumber = series.chapters.reduce(
+    (max, item) => Math.max(max, item.number),
+    0,
+  );
+  const unlockedThrough = isMiavGate
+    ? await readUnlockedThrough(Math.max(maxChapterNumber, getMaxChapterNumber()))
+    : FREE_THROUGH_CHAPTER;
+  const unlocked = isMiavGate
+    ? isChapterUnlockedServer(chapter.number, unlockedThrough)
+    : true;
+
+  let bodyHtml: string | undefined;
+  let bodyText: string | null = !isMiavGate ? (chapter.body ?? null) : null;
+  let presentation: "reading" | "threshold" = "reading";
+
+  if (isMiavGate) {
+    const meta = chapter.contentSlug
+      ? getChapterMetaBySlug(chapter.contentSlug, locale)
+      : null;
+    presentation = meta?.presentation ?? "reading";
+
+    if (unlocked && chapter.contentSlug) {
+      const seriesDoc = await getSeriesStoryChapter(
+        series.id,
+        chapter.contentSlug,
+        locale,
+      );
+      if (seriesDoc) {
+        bodyHtml = seriesDoc.bodyHtml;
+      } else {
+        const doc = await getChapterBySlug(chapter.contentSlug, locale);
+        if (doc) {
+          presentation = doc.presentation;
+          // Threshold finals still use full prose; presentation controls Next / Part II.
+          bodyHtml = doc.bodyHtml;
+        }
+      }
+    }
+  } else if (!continueReading && chapter.contentSlug) {
     const seriesDoc = await getSeriesStoryChapter(
       series.id,
       chapter.contentSlug,
@@ -191,6 +255,13 @@ export async function SeriesChapterPage({
       ? series.chapters[index + 1]
       : null;
 
+  const toMiavNav = (item: (typeof series.chapters)[number]) => ({
+    number: item.number,
+    slug: item.contentSlug ?? item.pathSlug,
+    pathSlug: item.pathSlug,
+    title: item.title,
+  });
+
   const breadcrumbs = worksBreadcrumbs(
     ...(category
       ? [{ label: category.title, href: category.path }]
@@ -214,6 +285,26 @@ export async function SeriesChapterPage({
     ? (continueReading.title ?? series.title)
     : chapter.title;
 
+  const miavReaderBase = {
+    chapter: {
+      number: chapter.number,
+      slug: chapter.contentSlug ?? chapter.pathSlug,
+      pathSlug: chapter.pathSlug,
+      title: chapter.title,
+      presentation,
+    },
+    previous: previous ? toMiavNav(previous) : null,
+    next: next ? toMiavNav(next) : null,
+    allChapters: series.chapters.map(toMiavNav),
+    maxChapterNumber,
+    serverUnlockedThrough: unlockedThrough,
+    linkMode: "library" as const,
+    seriesId: series.id,
+    listHref: seriesHref(series.id),
+    listLabel: "All chapters",
+    hideNextOnThreshold: true as const,
+  };
+
   return (
     <>
       <BreadcrumbJsonLd items={breadcrumbs} />
@@ -236,6 +327,15 @@ export async function SeriesChapterPage({
               amazonUrl={continueReading.amazonUrl}
               buttonLabel={continueReading.buttonLabel}
             />
+          ) : isMiavGate ? (
+            unlocked ? (
+              <MiavChapterReader
+                {...miavReaderBase}
+                bodyHtml={bodyHtml ?? ""}
+              />
+            ) : (
+              <MiavChapterReader {...miavReaderBase} />
+            )
           ) : bodyHtml ? (
             <ReadingLayout label="Chapter text">
               <article
@@ -253,7 +353,7 @@ export async function SeriesChapterPage({
             </p>
           )}
 
-          {!continueReading ? (
+          {!continueReading && !isMiavGate ? (
             <nav
               aria-label="Chapter navigation"
               className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"
@@ -283,7 +383,7 @@ export async function SeriesChapterPage({
                 ) : null}
               </div>
             </nav>
-          ) : (
+          ) : continueReading ? (
             <nav
               aria-label="Chapter navigation"
               className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"
@@ -300,7 +400,7 @@ export async function SeriesChapterPage({
               </div>
               <div />
             </nav>
-          )}
+          ) : null}
         </div>
       </LibraryShell>
     </>

@@ -9,6 +9,9 @@ type Props = {
   params: Promise<{ series: string }>;
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export function generateStaticParams() {
   return allSeriesParams();
 }

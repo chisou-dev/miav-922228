@@ -10,6 +10,7 @@ import {
   isLocale,
   type Locale,
 } from "@/features/shared/locale";
+import { miavChapterSlugs } from "@/features/stories/miav/work";
 
 const contentRoot = path.join(process.cwd(), "content", "chapters");
 
@@ -108,17 +109,36 @@ export function getChapterSlugs(locale: Locale = defaultLocale): string[] {
 export function getAllChapters(
   locale: Locale = getContentLocale(),
 ): ChapterMeta[] {
-  return getChapterSlugs(locale)
-    .map((slug) => {
-      const parsed = parseChapterFile(
-        chapterFilePath(locale, slug),
-        locale,
-        slug,
-      );
-      const { bodyMarkdown: _body, ...meta } = parsed;
-      return meta;
-    })
-    .sort((a, b) => a.number - b.number);
+  // Public reading order follows miavChapterSlugs only (archived files under
+  // content/chapters/_archived are never scanned).
+  const chapters: ChapterMeta[] = [];
+  for (const slug of miavChapterSlugs) {
+    const meta = getChapterMetaBySlug(slug, locale);
+    if (meta) chapters.push(meta);
+  }
+  return chapters;
+}
+
+/** Frontmatter / listing metadata only — does not return or HTML-render body text. */
+export function getChapterMetaBySlug(
+  slug: string,
+  locale: Locale = getContentLocale(),
+): ChapterMeta | null {
+  const filePath = chapterFilePath(locale, slug);
+  if (!fs.existsSync(filePath)) return null;
+
+  const parsed = parseChapterFile(filePath, locale, slug);
+  const { bodyMarkdown: _body, ...meta } = parsed;
+  return meta;
+}
+
+export function getMaxChapterNumber(
+  locale: Locale = getContentLocale(),
+): number {
+  return getAllChapters(locale).reduce(
+    (max, chapter) => Math.max(max, chapter.number),
+    0,
+  );
 }
 
 export async function getChapterBySlug(
