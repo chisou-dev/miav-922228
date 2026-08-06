@@ -18,12 +18,12 @@ export const binaryMosaicConfig = {
   title: "Binary Block",
   /** Board cell size in px — keep compact so more pieces stay readable. */
   cellPx: 34,
-  maxDesignedLevels: 35,
+  maxDesignedLevels: 38,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
   /**
    * Rotation quota starts at this level.
-   * Counts: L20–21 → 1 · L22–24 → 2 · L25–28 → 3 · L29–30 → 5 · L31 → 4 · L32 → 3 · L33–34 → 4 · L35 → 4
+   * Counts: L20–21 → 1 · L22–24 → 2 · L25–28 → 3 · L29–30 → 5 · L31 → 4 · L32 → 3 · L33–34 → 4 · L35 → 4 · L36 → 4 · L37–38 → 3
    */
   rotateFromLevel: 20,
 } as const;
@@ -51,12 +51,15 @@ for (const level of levels) {
 let prevPieceCount = 0;
 for (const level of [...levels].sort((a, b) => a.id - b.id)) {
   const { pieces } = extractPiecesFromLevel(toLevelPackInput(level));
-  if (pieces.length < prevPieceCount) {
+  // L1–35 keep non-decreasing piece counts. L36+ may moderate density for clearability.
+  if (level.id <= 35 && pieces.length < prevPieceCount) {
     throw new Error(
       `Level ${level.id}: piece count ${pieces.length} < previous ${prevPieceCount}`,
     );
   }
-  prevPieceCount = pieces.length;
+  if (level.id <= 35) {
+    prevPieceCount = pieces.length;
+  }
 
   let filledRects = 0;
   for (const piece of pieces) {
