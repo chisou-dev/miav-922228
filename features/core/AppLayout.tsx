@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/features/core/AppSidebar";
+import { I18nProvider, useT } from "@/features/shared/i18n";
 
 export const SIDEBAR_COLLAPSED_KEY = "sidebarCollapsed";
 
@@ -66,6 +67,38 @@ export function AppLayout({ children }: Props) {
   }
 
   return (
+    <I18nProvider>
+      <AppLayoutChrome
+        collapsed={collapsed}
+        mobileOpen={mobileOpen}
+        ready={ready}
+        toggle={toggle}
+        onMobileClose={() => setMobileOpen(false)}
+      >
+        {children}
+      </AppLayoutChrome>
+    </I18nProvider>
+  );
+}
+
+function AppLayoutChrome({
+  children,
+  collapsed,
+  mobileOpen,
+  ready,
+  toggle,
+  onMobileClose,
+}: {
+  children: ReactNode;
+  collapsed: boolean;
+  mobileOpen: boolean;
+  ready: boolean;
+  toggle: () => void;
+  onMobileClose: () => void;
+}) {
+  const t = useT();
+
+  return (
     <div
       className="app-layout"
       data-collapsed={collapsed ? "true" : "false"}
@@ -76,7 +109,7 @@ export function AppLayout({ children }: Props) {
         type="button"
         className="app-sidebar-mobile-trigger"
         onClick={toggle}
-        aria-label="Open sidebar"
+        aria-label={t("shell.openSidebar")}
       >
         <span aria-hidden="true">☰</span>
       </button>
@@ -85,8 +118,8 @@ export function AppLayout({ children }: Props) {
         <button
           type="button"
           className="app-sidebar-backdrop"
-          aria-label="Close sidebar"
-          onClick={() => setMobileOpen(false)}
+          aria-label={t("shell.closeSidebar")}
+          onClick={onMobileClose}
         />
       ) : null}
 
@@ -94,7 +127,7 @@ export function AppLayout({ children }: Props) {
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onToggle={toggle}
-        onNavigate={() => setMobileOpen(false)}
+        onNavigate={onMobileClose}
       />
 
       <div className="app-main">{children}</div>

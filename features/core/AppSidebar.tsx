@@ -3,17 +3,18 @@
 import { usePathname } from "next/navigation";
 import { ReaderMemory } from "@/features/core/ReaderMemory";
 import { gamesLibraryUrl } from "@/features/core/gamesUrl";
+import { useT, type MessageKey } from "@/features/shared/i18n";
 
 const NAV = [
-  { href: "/", label: "Home", match: (path: string) => path === "/" },
+  { href: "/", labelKey: "nav.home", match: (path: string) => path === "/" },
   {
     href: "/world-map",
-    label: "World Memory",
+    labelKey: "nav.world",
     match: (path: string) => path === "/world-map" || path.startsWith("/world-map/"),
   },
   {
     href: "/works",
-    label: "Works",
+    labelKey: "nav.works",
     match: (path: string) =>
       path === "/works" ||
       path.startsWith("/literary-sf") ||
@@ -22,7 +23,14 @@ const NAV = [
       path.startsWith("/stories/") ||
       path.startsWith("/flash/"),
   },
-] as const;
+] as const satisfies readonly {
+  href: string;
+  labelKey: MessageKey;
+  match: (path: string) => boolean;
+}[];
+
+/** Homepage APPS block — same anchor as HomePage `#apps`. */
+const APPS_HREF = "/#apps";
 
 type Props = {
   collapsed: boolean;
@@ -32,8 +40,9 @@ type Props = {
 };
 
 /**
- * Site-wide navigation — Home / World Memory / Works / Game.
- * Game opens the external miav-games project. Reader Memory sits below the nav.
+ * Site-wide navigation — Home / World Memory / Works / Game / Apps.
+ * Game opens the external miav-games project. Apps scrolls to homepage APPS.
+ * Language switcher lives in SiteShell only (not duplicated here).
  */
 export function AppSidebar({
   collapsed,
@@ -43,13 +52,14 @@ export function AppSidebar({
 }: Props) {
   const pathname = usePathname() || "/";
   const gameHref = gamesLibraryUrl();
+  const t = useT();
 
   return (
     <aside
       className="app-sidebar"
       data-collapsed={collapsed ? "true" : "false"}
       data-mobile-open={mobileOpen ? "true" : "false"}
-      aria-label="Site"
+      aria-label={t("nav.siteAria")}
     >
       <div className="app-sidebar-inner">
         <div className="app-sidebar-brand">
@@ -59,7 +69,7 @@ export function AppSidebar({
             onClick={onToggle}
             aria-expanded={!collapsed}
             aria-controls="app-sidebar-nav"
-            aria-label={collapsed ? "Open sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("shell.openSidebar") : t("shell.collapseSidebar")}
           >
             <span aria-hidden="true">☰</span>
           </button>
@@ -72,7 +82,7 @@ export function AppSidebar({
           </a>
         </div>
 
-        <nav id="app-sidebar-nav" className="app-sidebar-nav" aria-label="Primary">
+        <nav id="app-sidebar-nav" className="app-sidebar-nav" aria-label={t("nav.primaryAria")}>
           <ul>
             {NAV.map((item) => {
               const active = item.match(pathname);
@@ -88,7 +98,7 @@ export function AppSidebar({
                     aria-current={active ? "page" : undefined}
                     onClick={onNavigate}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </a>
                 </li>
               );
@@ -99,7 +109,16 @@ export function AppSidebar({
                 className="app-sidebar-link"
                 onClick={onNavigate}
               >
-                Game
+                {t("nav.game")}
+              </a>
+            </li>
+            <li>
+              <a
+                href={APPS_HREF}
+                className="app-sidebar-link"
+                onClick={onNavigate}
+              >
+                {t("nav.apps")}
               </a>
             </li>
           </ul>

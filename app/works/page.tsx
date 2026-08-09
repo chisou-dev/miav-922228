@@ -8,6 +8,7 @@ import {
 } from "@/features/library/catalog";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { SfSection } from "@/features/shared/SfSection";
 
 export const metadata: Metadata = {
   title: worksLibrary.seo.title,
@@ -27,23 +28,27 @@ export default function WorksPage() {
         breadcrumbs={breadcrumbs}
         categoryNavHref="/works"
       >
-        <div>
-          {featured ? (
-            <div className="pt-2">
-              <p className="pt-8 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-                Featured
-              </p>
-              <LibraryListItem
-                href={seriesHref(featured.id)}
-                title={featured.title}
-                description={
-                  featured.worksFeaturedNote || featured.summary
-                }
-                actionLabel="Read →"
-              />
-            </div>
-          ) : null}
+        {featured ? (
+          <div className="pt-2">
+            <p className="pt-8 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+              Featured
+            </p>
+            <LibraryListItem
+              href={seriesHref(featured.id)}
+              title={featured.title}
+              description={
+                featured.worksFeaturedNote || featured.summary
+              }
+              actionLabel="Read →"
+            />
+          </div>
+        ) : null}
 
+        <SfSection
+          variant="split"
+          className={featured ? undefined : "pt-2"}
+          aria-label="Browse by Category"
+        >
           <p
             className={`text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase ${
               featured ? "pt-10" : "pt-8"
@@ -60,7 +65,7 @@ export default function WorksPage() {
               actionLabel="→"
             />
           ))}
-        </div>
+        </SfSection>
       </LibraryShell>
     </>
   );

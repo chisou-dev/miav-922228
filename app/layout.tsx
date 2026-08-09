@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
-const sidebarBootScript = `(function(){try{var v=localStorage.getItem("sidebarCollapsed");if(v==="true")document.documentElement.dataset.sidebarCollapsed="true";else document.documentElement.dataset.sidebarCollapsed="false";}catch(e){}})();`;
+const sidebarBootScript = `(function(){try{var v=localStorage.getItem("sidebarCollapsed");if(v==="true")document.documentElement.dataset.sidebarCollapsed="true";else document.documentElement.dataset.sidebarCollapsed="false";}catch(e){}try{var l=localStorage.getItem("miav_ui_locale");if(l==="en"||l==="fr"||l==="es")document.documentElement.lang=l;else document.documentElement.lang="en";}catch(e){}})();`;
 
 export default function RootLayout({
   children,

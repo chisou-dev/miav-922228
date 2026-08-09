@@ -16,7 +16,8 @@ import {
   signOutTrace,
   watchAuth,
 } from "@/features/world-memory/trace/auth";
-import { WELCOME_DIALOG, WELCOME_STORAGE_KEY } from "@/features/world-memory/trace/policyCopy";
+import { WELCOME_STORAGE_KEY, getWelcomeDialogBody } from "@/features/world-memory/trace/policyCopy";
+import { t as translate, useT } from "@/features/shared/i18n";
 
 const Map = dynamic(
   () => import("@/features/world-memory/map/Map").then((mod) => mod.Map),
@@ -24,7 +25,7 @@ const Map = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-[min(72vh,720px)] items-center justify-center border border-[var(--map-line)] bg-[#f7f9fb] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)]">
-        Unfolding the map…
+        {translate("world.loadingMap")}
       </div>
     ),
   },
@@ -39,6 +40,7 @@ type SelectedPlace = {
 };
 
 export function TraceMapApp() {
+  const t = useT();
   const [user, setUser] = useState<User | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [leavePanelOpen, setLeavePanelOpen] = useState(false);
@@ -118,6 +120,7 @@ export function TraceMapApp() {
   }
 
   const viewerOpen = Boolean(data.placeScope);
+  const welcomeBody = getWelcomeDialogBody(t);
 
   const leaveTraceFormProps = {
     user,
@@ -141,13 +144,9 @@ export function TraceMapApp() {
     <div className="trace-map-shell">
       <WelcomeDialog
         open={welcomeOpen}
-        title={WELCOME_DIALOG.title}
-        body={{
-          paragraphs: [...WELCOME_DIALOG.body.paragraphs],
-          bullets: [...WELCOME_DIALOG.body.bullets],
-          closing: [...WELCOME_DIALOG.body.closing],
-        }}
-        confirmLabel="I Understand"
+        title={t("world.welcomeTitle")}
+        body={welcomeBody}
+        confirmLabel={t("world.welcomeUnderstand")}
         onClose={dismissWelcome}
       />
 
@@ -156,17 +155,17 @@ export function TraceMapApp() {
           {/* Row 1: title + nav */}
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <h1 className="text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--map-ink)]">
-              World Memory
+              {t("world.title")}
             </h1>
             <nav
-              aria-label="World Memory links"
+              aria-label={t("world.navAria")}
               className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]"
             >
               <a href="/privacy" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
-                Privacy
+                {t("world.privacy")}
               </a>
               <a href="/site-policy" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
-                Site Policy
+                {t("world.sitePolicy")}
               </a>
               {user && getTraceAuthType(user) === "google" ? (
                 <>
@@ -177,7 +176,7 @@ export function TraceMapApp() {
                           <span aria-hidden="true" className="text-[#4a7c59]">
                             ✓
                           </span>
-                          Permanent Memory
+                          {t("world.permanentMemory")}
                         </span>
                         <span className="truncate font-mono text-[0.7rem] tracking-[0.04em] text-[var(--map-ink)]">
                           {data.mine.miavId}
@@ -185,9 +184,9 @@ export function TraceMapApp() {
                       </>
                     ) : (
                       <>
-                        <span>Permanent Memory</span>
+                        <span>{t("world.permanentMemory")}</span>
                         <span className="text-[0.7rem] tracking-[0.04em] text-[var(--map-muted)]">
-                          ✓ Verified with Google
+                          ✓ {t("world.verifiedGoogle")}
                         </span>
                       </>
                     )}
@@ -197,7 +196,7 @@ export function TraceMapApp() {
                     onClick={() => void signOutTrace()}
                     className="cursor-pointer underline decoration-[var(--map-line)] underline-offset-[0.4em]"
                   >
-                    Sign out
+                    {t("world.signOut")}
                   </button>
                 </>
               ) : null}
@@ -207,14 +206,14 @@ export function TraceMapApp() {
           {/* Row 2: subtitle + Leave a Memory */}
           <div className="mt-2 max-w-xl sm:mt-2.5">
             <p className="text-[0.95rem] leading-[1.65] tracking-[0.02em] text-[var(--map-muted)]">
-              Reader footprints left around the world — city by city.
+              {t("world.subtitle")}
             </p>
             <button
               type="button"
               onClick={() => setLeavePanelOpen(true)}
               className="mt-3 min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-6 text-[0.78rem] tracking-[0.16em] text-[var(--map-ink)]"
             >
-              Leave a Memory
+              {t("world.leaveMemory")}
             </button>
           </div>
         </div>
@@ -255,8 +254,7 @@ export function TraceMapApp() {
                 onOpenMemories={onOpenMemories}
               />
               <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                Stars mark places where readers left a Memory. Click a star to
-                read them — no GPS, no address.
+                {t("world.mapHelp")}
               </p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/features/contact/ContactForm";
+import { SfSection } from "@/features/shared/SfSection";
 
 export const metadata: Metadata = {
   title: "Contact | MIAV-922228",
@@ -34,9 +35,9 @@ export default function ContactPage() {
           </p>
         </header>
 
-        <section className="mt-8 border-t border-[var(--line)] pt-4 sm:mt-10">
+        <SfSection variant="terminal" className="mt-8 pt-4 sm:mt-10">
           <ContactForm />
-        </section>
+        </SfSection>
       </main>
     </div>
   );

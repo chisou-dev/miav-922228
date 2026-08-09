@@ -1,214 +1,235 @@
+"use client";
+
 import { SiteShell } from "@/features/shared/SiteShell";
+import { SfSection } from "@/features/shared/SfSection";
 import { ReaderMemory } from "@/features/core/ReaderMemory";
+import { AppListing } from "@/features/core/AppListing";
+import { MIAV_APPS } from "@/features/core/apps";
 import { getGamesBaseUrl, gamesLibraryUrl } from "@/features/core/gamesUrl";
 import { flashHref } from "@/features/library/catalog";
+import { useT } from "@/features/shared/i18n";
 
 const linkClassName =
   "text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]";
 
-const entryClassName =
-  "scroll-mt-24 border-t border-[var(--line)] py-24 sm:py-32";
+const sectionBase = "scroll-mt-28 py-24 sm:py-32";
 
 export function HomePage() {
+  const t = useT();
   const gameHref = gamesLibraryUrl();
   const binaryBlockHref = `${getGamesBaseUrl()}/game/binary-mosaic`;
   const afterTheRainHref = flashHref("after-the-rain");
-
   return (
     <SiteShell>
       <main>
         <section
-          aria-label="Introduction"
+          aria-label={t("home.introAria")}
           className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-24 sm:py-32"
         >
-          <h1 className="text-[clamp(2.4rem,7vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
-            MIAV
+          <h1 className="text-[clamp(1.75rem,6.2vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
+            {t("home.brand")}
           </h1>
           <p className="mt-10 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:text-lg sm:leading-8">
-            READ. PLAY. LEAVE A TRACE.
+            {t("home.tagline")}
           </p>
           <p className="mt-16 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-20 sm:text-base sm:leading-[2]">
-            Stories, browser games, and digital experiments exploring memory,
-            artificial intelligence, technology, loneliness, and human
-            existence.
+            {t("home.lead")}
           </p>
           <p className="mt-12 flex flex-wrap gap-x-8 gap-y-4 sm:mt-14">
             <a href="#start-here" className={linkClassName}>
-              START HERE
+              {t("home.ctaStart")}
             </a>
             <a href="/works" className={linkClassName}>
-              READ STORIES
+              {t("home.ctaStories")}
             </a>
             <a href={gameHref} className={linkClassName}>
-              PLAY GAMES
+              {t("home.ctaGames")}
             </a>
           </p>
         </section>
 
         <div className="pb-32 sm:pb-40">
-          <section id="start-here" className={entryClassName}>
+          <SfSection id="start-here" variant="central" className={sectionBase}>
             <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
-              START HERE
+              {t("home.startTitle")}
             </h2>
 
             <div className="mt-16 space-y-16 sm:mt-20 sm:space-y-20">
               <div>
                 <h3 className="text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
-                  READ
+                  {t("home.readTitle")}
                 </h3>
                 <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
-                  Short speculative fiction about memory, technology, and human
-                  existence.
+                  {t("home.readBody")}
                 </p>
                 <p className="mt-8 sm:mt-10">
                   <a href="/works" className={linkClassName}>
-                    Enter Works
+                    {t("home.readEnter")}
                   </a>
                 </p>
                 <p className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
                   <a href="/chapters" className={linkClassName}>
-                    Chapters
+                    {t("home.readChapters")}
                   </a>
                   <a href="/books" className={linkClassName}>
-                    Books
+                    {t("home.readBooks")}
                   </a>
                 </p>
               </div>
 
               <div>
                 <h3 className="text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
-                  PLAY
+                  {t("home.playTitle")}
                 </h3>
                 <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
-                  Browser games built around logic, discovery, and strange
-                  digital worlds.
+                  {t("home.playBody")}
                 </p>
                 <p className="mt-8 sm:mt-10">
                   <a href={gameHref} className={linkClassName}>
-                    Enter Games
+                    {t("home.playEnter")}
                   </a>
                 </p>
               </div>
 
               <div>
                 <h3 className="text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
-                  LEAVE A TRACE
+                  {t("home.appsTitle")}
                 </h3>
                 <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
-                  Add a small memory to World Memory and become part of its
-                  growing map.
+                  {t("home.appsBody")}
+                </p>
+                <p className="mt-8 sm:mt-10">
+                  <a href="#apps" className={linkClassName}>
+                    {t("home.appsView")}
+                  </a>
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
+                  {t("home.traceTitle")}
+                </h3>
+                <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
+                  {t("home.traceBody")}
                 </p>
                 <p className="mt-8 sm:mt-10">
                   <a href="/world-map" className={linkClassName}>
-                    Open World Memory
+                    {t("home.traceOpen")}
                   </a>
                 </p>
               </div>
             </div>
-          </section>
+          </SfSection>
 
-          <section id="featured-now" className={entryClassName}>
+          <SfSection id="featured-now" variant="split" className={sectionBase}>
             <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
-              FEATURED NOW
+              {t("home.featuredTitle")}
             </h2>
 
             <div className="mt-16 space-y-16 sm:mt-20 sm:space-y-20">
               <div>
                 <p className="text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] uppercase">
-                  READ
+                  {t("home.featured.readEyebrow")}
                 </p>
                 <h3 className="mt-4 text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
-                  After the Rain
+                  {t("home.featured.afterRainTitle")}
                 </h3>
                 <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
-                  A stranger beneath a bookshop awning remembers the hill
-                  differently.
+                  {t("home.featured.afterRainBody")}
                 </p>
                 <p className="mt-4 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
-                  About 2 minutes
+                  {t("home.featured.afterRainMeta")}
                 </p>
                 <p className="mt-8 sm:mt-10">
                   <a href={afterTheRainHref} className={linkClassName}>
-                    Read →
+                    {t("home.featured.readCta")}
                   </a>
                 </p>
               </div>
 
               <div>
                 <p className="text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] uppercase">
-                  PLAY
+                  {t("home.featured.playEyebrow")}
                 </p>
                 <h3 className="mt-4 text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
-                  Binary Block
+                  {t("home.featured.binaryTitle")}
                 </h3>
                 <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
-                  A logic puzzle about shape, rotation, and hidden structure.
+                  {t("home.featured.binaryBody")}
                 </p>
                 <p className="mt-4 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
-                  Play in your browser
+                  {t("home.featured.binaryMeta")}
                 </p>
                 <p className="mt-8 sm:mt-10">
                   <a href={binaryBlockHref} className={linkClassName}>
-                    Play →
+                    {t("home.featured.playCta")}
                   </a>
                 </p>
               </div>
 
+              <div id="apps" className="scroll-mt-28">
+                <p className="text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] uppercase">
+                  {t("home.featured.appsEyebrow")}
+                </p>
+                <div className="mt-10 space-y-16 sm:mt-12 sm:space-y-20">
+                  {MIAV_APPS.map((app) => (
+                    <AppListing key={app.id} app={app} showEyebrow={false} />
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <p className="text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] uppercase">
-                  LEAVE A TRACE
+                  {t("home.featured.traceEyebrow")}
                 </p>
                 <h3 className="mt-4 text-lg font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-xl">
-                  World Memory
+                  {t("home.featured.worldTitle")}
                 </h3>
                 <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.05]">
-                  Add one small memory to a growing map of human traces.
+                  {t("home.featured.worldBody")}
                 </p>
                 <p className="mt-4 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
-                  Join the map
+                  {t("home.featured.worldMeta")}
                 </p>
                 <p className="mt-8 sm:mt-10">
                   <a href="/world-map" className={linkClassName}>
-                    Enter →
+                    {t("home.featured.traceCta")}
                   </a>
                 </p>
               </div>
             </div>
-          </section>
+          </SfSection>
 
-          <section
+          <SfSection
             aria-label="Reader memory"
-            className="scroll-mt-24 border-t border-[var(--line)] py-24 sm:py-32"
+            variant="trace"
+            className={sectionBase}
           >
             <ReaderMemory workId="miav-922228" />
-          </section>
+          </SfSection>
 
-          <section id="about" className={entryClassName}>
+          <SfSection id="about" variant="central-offset" className={sectionBase}>
             <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
-              About MIAV
+              {t("home.aboutTitle")}
             </h2>
             <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
-              MIAV is an independent literary science fiction project bringing
-              together stories, browser games, and digital experiments. Across
-              fiction and interactive works, it explores memory, artificial
-              intelligence, loneliness, technology, and human existence.
+              {t("home.aboutBody")}
             </p>
-          </section>
+          </SfSection>
 
-          <section id="contact" className={entryClassName}>
+          <SfSection id="contact" variant="terminal" className={sectionBase}>
             <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
-              Contact
+              {t("home.contactTitle")}
             </h2>
             <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
-              For inquiries regarding the project, publications, or press,
-              please get in touch.
+              {t("home.contactBody")}
             </p>
             <p className="mt-12 sm:mt-14">
               <a href="/contact" className={linkClassName}>
-                Write a message
+                {t("home.contactCta")}
               </a>
             </p>
-          </section>
+          </SfSection>
         </div>
       </main>
     </SiteShell>

@@ -1,11 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { CONTACT_DISABLED_MESSAGE } from "@/features/dashboard/site-control/types";
+import { useT } from "@/features/shared/i18n";
 
 type SubmitState = "idle" | "sending" | "sent" | "error";
 
 export function ContactForm() {
+  const t = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -34,7 +35,7 @@ export function ContactForm() {
     event.preventDefault();
     if (!contactEnabled) {
       setState("error");
-      setError(CONTACT_DISABLED_MESSAGE);
+      setError(t("contact.disabled"));
       return;
     }
     setState("sending");
@@ -56,13 +57,13 @@ export function ContactForm() {
         setState("error");
         if (data?.code === "CONTACT_DISABLED") {
           setContactEnabled(false);
-          setError(CONTACT_DISABLED_MESSAGE);
+          setError(t("contact.disabled"));
           return;
         }
         setError(
           response.status === 429
-            ? "Too many messages were sent. Please wait a moment and try again."
-            : data?.error || "Unable to send the message.",
+            ? t("contact.errorRateLimit")
+            : data?.error || t("contact.errorGeneric"),
         );
         return;
       }
@@ -74,14 +75,14 @@ export function ContactForm() {
       setState("sent");
     } catch {
       setState("error");
-      setError("Unable to send the message.");
+      setError(t("contact.errorGeneric"));
     }
   }
 
   if (!contactEnabled) {
     return (
       <p className="mt-16 text-[0.95rem] leading-[2] text-[var(--foreground-muted)] sm:mt-20">
-        {CONTACT_DISABLED_MESSAGE}
+        {t("contact.disabled")}
       </p>
     );
   }
@@ -97,7 +98,7 @@ export function ContactForm() {
         aria-hidden="true"
         className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
       >
-        <label htmlFor="website">Website</label>
+        <label htmlFor="website">{t("contact.website")}</label>
         <input
           id="website"
           type="text"
@@ -111,7 +112,7 @@ export function ContactForm() {
 
       <label className="block">
         <span className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-          Name
+          {t("contact.name")}
         </span>
         <input
           type="text"
@@ -127,7 +128,7 @@ export function ContactForm() {
 
       <label className="block">
         <span className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-          Email
+          {t("contact.email")}
         </span>
         <input
           type="email"
@@ -143,7 +144,7 @@ export function ContactForm() {
 
       <label className="block">
         <span className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-          Message
+          {t("contact.message")}
         </span>
         <textarea
           name="message"
@@ -162,13 +163,13 @@ export function ContactForm() {
           disabled={state === "sending"}
           className="text-[0.85rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.55em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)] disabled:opacity-50"
         >
-          {state === "sending" ? "Sending…" : "Send message"}
+          {state === "sending" ? t("contact.sending") : t("contact.send")}
         </button>
       </div>
 
       {state === "sent" ? (
         <p className="text-[0.95rem] leading-[2] text-[var(--foreground-muted)]">
-          Your message has been received. Thank you for writing.
+          {t("contact.success")}
         </p>
       ) : null}
 

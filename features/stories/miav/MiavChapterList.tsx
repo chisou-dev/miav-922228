@@ -7,6 +7,7 @@ import {
   type ChapterProgressState,
 } from "@/features/stories/miav/chapterProgress";
 import type { MiavChapterNavItem } from "@/features/stories/miav/MiavChapterReader";
+import { sfSectionClass, sfSectionVariantAt } from "@/features/shared/SfSection";
 
 type ListStatus = "locked" | "available" | "read";
 
@@ -59,7 +60,7 @@ export function MiavChapterArchiveList({
 
   return (
     <ol className="list-none">
-      {chapters.map((chapter) => {
+      {chapters.map((chapter, index) => {
         const status = listStatus(chapter.number, unlockedThrough, progress);
         const locked = status === "locked";
         const href = `/chapters/${chapter.slug}`;
@@ -67,7 +68,10 @@ export function MiavChapterArchiveList({
         return (
           <li
             key={chapter.slug}
-            className="border-t border-[var(--line)] py-24 sm:py-32"
+            className={sfSectionClass(
+              sfSectionVariantAt(index),
+              "py-24 sm:py-32",
+            )}
           >
             <article>
               <p className="flex flex-wrap items-baseline gap-x-4 gap-y-2 text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">

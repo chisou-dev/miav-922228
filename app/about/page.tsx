@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { aboutPage, categories } from "@/features/library/catalog";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { t } from "@/features/shared/i18n";
 
 export const metadata: Metadata = {
   title: aboutPage.seo.title,
@@ -24,7 +25,7 @@ export default function AboutPage() {
       >
         <div>
           <p className="pt-8 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-            Works
+            {t("about.worksHeading")}
           </p>
           {categories.map((category) => (
             <LibraryListItem

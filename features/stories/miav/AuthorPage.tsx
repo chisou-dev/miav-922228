@@ -1,3 +1,5 @@
+import { SfSection, sfSectionClass } from "@/features/shared/SfSection";
+
 const themes = ["AI", "Memory", "Emotion", "Human Existence"] as const;
 
 export function AuthorPage() {
@@ -27,7 +29,10 @@ export function AuthorPage() {
           </p>
         </header>
 
-        <section className="mt-20 border-t border-[var(--line)] pt-16 sm:mt-28 sm:pt-20">
+        <SfSection
+          variant="central"
+          className="mt-20 pt-16 sm:mt-28 sm:pt-20"
+        >
           <h2 className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
             Profile
           </h2>
@@ -40,9 +45,12 @@ export function AuthorPage() {
               technology, and human existence through quiet speculative fiction.
             </p>
           </div>
-        </section>
+        </SfSection>
 
-        <section className="mt-20 border-t border-[var(--line)] pt-16 sm:mt-28 sm:pt-20">
+        <SfSection
+          variant="split"
+          className="mt-20 pt-16 sm:mt-28 sm:pt-20"
+        >
           <h2 className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
             Project
           </h2>
@@ -66,9 +74,12 @@ export function AuthorPage() {
               Chapter archive
             </a>
           </p>
-        </section>
+        </SfSection>
 
-        <section className="mt-20 border-t border-[var(--line)] pt-16 sm:mt-28 sm:pt-20">
+        <SfSection
+          variant="trace"
+          className="mt-20 pt-16 sm:mt-28 sm:pt-20"
+        >
           <h2 className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
             Themes
           </h2>
@@ -82,11 +93,14 @@ export function AuthorPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </SfSection>
 
         <nav
           aria-label="Related pages"
-          className="mt-24 border-t border-[var(--line)] pt-12 text-center sm:mt-32 sm:pt-16"
+          className={sfSectionClass(
+            "terminal",
+            "mt-24 pt-12 text-center sm:mt-32 sm:pt-16",
+          )}
         >
           <a
             href="/chapters"

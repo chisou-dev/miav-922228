@@ -5,6 +5,7 @@ import {
   TraceDialogFrame,
   TraceDialogPrimaryButton,
 } from "@/features/world-memory/trace/ui/TraceDialogFrame";
+import { useT } from "@/features/shared/i18n";
 
 export type WelcomeDialogBody = {
   paragraphs: string[];
@@ -28,9 +29,10 @@ export function WelcomeDialog({
   open,
   title,
   body,
-  confirmLabel = "I Understand",
+  confirmLabel,
   onClose,
 }: Props) {
+  const t = useT();
   const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function WelcomeDialog({
     <TraceDialogFrame
       open={open}
       title={title}
-      eyebrow="Entrance"
+      eyebrow={t("world.welcomeEyebrow")}
       onClose={onClose}
       closeOnEscape={false}
       closeOnOverlayClick={false}
@@ -61,7 +63,7 @@ export function WelcomeDialog({
               className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-[#5b7c99]"
             />
             <span>
-              I have read and understand the{" "}
+              {t("world.welcomeAgreePrefix")}{" "}
               <a
                 href="/privacy"
                 target="_blank"
@@ -69,9 +71,9 @@ export function WelcomeDialog({
                 className="text-[var(--map-accent,#5b7c99)] underline decoration-[var(--map-line,#d5dee7)] underline-offset-[0.35em]"
                 onClick={(event) => event.stopPropagation()}
               >
-                Privacy Policy
+                {t("world.privacyPolicyLabel")}
               </a>{" "}
-              and{" "}
+              {t("world.agreeAnd")}{" "}
               <a
                 href="/site-policy"
                 target="_blank"
@@ -79,14 +81,14 @@ export function WelcomeDialog({
                 className="text-[var(--map-accent,#5b7c99)] underline decoration-[var(--map-line,#d5dee7)] underline-offset-[0.35em]"
                 onClick={(event) => event.stopPropagation()}
               >
-                Site Policy
+                {t("world.sitePolicy")}
               </a>
               .
             </span>
           </label>
 
           <TraceDialogPrimaryButton disabled={!agreed} onClick={confirm}>
-            {confirmLabel}
+            {confirmLabel ?? t("world.welcomeUnderstand")}
           </TraceDialogPrimaryButton>
         </div>
       }

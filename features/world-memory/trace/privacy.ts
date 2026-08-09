@@ -3,8 +3,6 @@
  * Policy copy lives in policyCopy.ts.
  */
 
-export { TRACE_PRIVACY_BLURB } from "@/features/world-memory/trace/policyCopy";
-
 export const TRACE_STORED_FIELDS = [
   "uid",
   "miavId",

@@ -6,7 +6,7 @@ import {
   getChapterMetaBySlug,
   getMaxChapterNumber,
 } from "@/features/stories/miav/chapters";
-import { getContentLocale } from "@/features/shared/locale";
+import { getContentLocaleFromRequest } from "@/features/shared/locale";
 import { MiavChapterReader } from "@/features/stories/miav/MiavChapterReader";
 import {
   isChapterUnlockedServer,
@@ -51,7 +51,7 @@ function toNavItem(chapter: ChapterMeta) {
 
 export async function ChapterPage({ params }: Props) {
   const { slug } = await params;
-  const locale = getContentLocale();
+  const locale = await getContentLocaleFromRequest();
   const meta = getChapterMetaBySlug(slug, locale);
   if (!meta) notFound();
 

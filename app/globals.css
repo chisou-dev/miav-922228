@@ -22,6 +22,17 @@ body {
   font-family: var(--font-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
+/* Writer Memo — quiet deep-sea edge (not a card) */
+.app-listing--deep-sea {
+  border-left: 1px solid color-mix(in srgb, #69c7e8 42%, transparent);
+  padding-left: 1rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, #083b5c 22%, transparent) 0%,
+    transparent 52%
+  );
+}
+
 /* Soft blue field — quiet depth without flat fill */
 .site-canvas {
   min-height: 100%;
@@ -258,6 +269,87 @@ body {
   border-top: 1px solid var(--line);
 }
 
+.app-sidebar-lang {
+  margin-top: 0.25rem;
+}
+
+/* Compact language control — quiet, no new design system */
+.lang-switcher {
+  position: relative;
+}
+
+.lang-switcher__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.25rem 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--foreground-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.lang-switcher__btn:hover,
+.lang-switcher__btn:focus-visible {
+  color: var(--foreground);
+}
+
+.lang-switcher__code {
+  letter-spacing: 0.06em;
+}
+
+.lang-switcher__list {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.35rem);
+  z-index: 60;
+  min-width: 9rem;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--background-deep) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.lang-switcher__option {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--foreground-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.lang-switcher__option:hover,
+.lang-switcher__option:focus-visible {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.lang-switcher__option.is-active {
+  color: var(--foreground);
+}
+
+/* Header placement (SiteShell) sits inline with nav — dropdown opens downward */
+header .lang-switcher__list {
+  bottom: auto;
+  top: calc(100% + 0.35rem);
+}
+
 .app-main {
   min-width: 0;
   transition: padding-left 180ms ease;
@@ -296,6 +388,25 @@ body {
     pointer-events: none;
     width: 0;
     overflow: hidden;
+  }
+
+  /* Language switcher stays visible (icon-only) even when the rail collapses */
+  .app-layout[data-collapsed="true"] .app-sidebar-lang,
+  html[data-sidebar-collapsed="true"] .app-layout .app-sidebar-lang {
+    display: flex;
+    justify-content: center;
+  }
+
+  .app-layout[data-collapsed="true"] .lang-switcher__btn,
+  html[data-sidebar-collapsed="true"] .app-layout .lang-switcher__btn {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .app-layout[data-collapsed="true"] .lang-switcher__code,
+  html[data-sidebar-collapsed="true"] .app-layout .lang-switcher__code {
+    display: none;
   }
 
   .app-sidebar-mobile-trigger {
@@ -487,6 +598,292 @@ body {
   }
   83.33% {
     background-color: #1e1e1e;
+  }
+}
+
+/*
+ * MIAV section dividers — shared signal / trace language (home + sitewide).
+ * One line at each major section START only (next section's start closes the previous).
+ * Do not use for list-row borders, form fields, cards, breadcrumbs, or map chrome.
+ */
+.sf-section {
+  --sf-line: color-mix(in srgb, var(--foreground) 20%, transparent);
+  --sf-line-soft: color-mix(in srgb, #9eb6d4 28%, transparent);
+  --sf-line-lit: color-mix(in srgb, #d7e6f7 58%, transparent);
+  --sf-node: color-mix(in srgb, #e8f2fc 72%, transparent);
+  --sf-ring: color-mix(in srgb, #b8cfe8 35%, transparent);
+  position: relative;
+}
+
+/* Standalone mid-page divider (SfDivider) — line/node only, no layout height */
+.sf-divider {
+  height: 0;
+  margin: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sf-section::before,
+.sf-section::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  max-width: 100%;
+}
+
+.sf-section::before {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  opacity: 0.95;
+}
+
+.sf-section::after {
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sf-node);
+  opacity: 0.9;
+}
+
+/* A — Central Signal (primary entry) */
+.sf-section--central::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sf-line-soft) 2%,
+    var(--sf-line) 18%,
+    var(--sf-line) 26%,
+    transparent 26%,
+    transparent 29%,
+    var(--sf-line-lit) 29%,
+    var(--sf-line-lit) 41%,
+    var(--sf-line) 41%,
+    var(--sf-line) 58%,
+    transparent 58%,
+    transparent 61%,
+    var(--sf-line) 61%,
+    var(--sf-line-soft) 88%,
+    transparent 100%
+  );
+}
+
+.sf-section--central::after {
+  left: clamp(5rem, 46%, calc(100% - 5rem));
+  box-shadow:
+    0 0 0 1px var(--sf-ring),
+    -2.75rem 1.5px 0 -1.5px var(--sf-line-lit),
+    3.35rem 1.5px 0 -1.5px var(--sf-line-soft),
+    -0.1px 3px 0 -1.5px var(--sf-line-soft);
+}
+
+/* About — same central language, node nudged off-center */
+.sf-section--central-offset::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sf-line-soft) 3%,
+    var(--sf-line) 14%,
+    var(--sf-line) 22%,
+    transparent 22%,
+    transparent 25%,
+    var(--sf-line) 25%,
+    var(--sf-line) 48%,
+    var(--sf-line-lit) 48%,
+    var(--sf-line-lit) 56%,
+    var(--sf-line) 56%,
+    var(--sf-line) 78%,
+    transparent 78%,
+    transparent 81%,
+    var(--sf-line-soft) 81%,
+    transparent 100%
+  );
+}
+
+.sf-section--central-offset::after {
+  left: clamp(3.5rem, 31%, calc(100% - 6rem));
+  box-shadow:
+    0 0 0 1px var(--sf-ring),
+    2.9rem 1.5px 0 -1.5px var(--sf-line-lit),
+    -2.1rem 1.5px 0 -1.5px var(--sf-line-soft),
+    -0.1px 3px 0 -1.5px var(--sf-line-soft);
+}
+
+/* B — Split Signal (center open, nodes left + right) */
+.sf-section--split::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sf-line-soft) 4%,
+    var(--sf-line) 12%,
+    var(--sf-line) 28%,
+    var(--sf-line-lit) 28%,
+    var(--sf-line-lit) 34%,
+    transparent 34%,
+    transparent 66%,
+    var(--sf-line-lit) 66%,
+    var(--sf-line-lit) 72%,
+    var(--sf-line) 72%,
+    var(--sf-line) 88%,
+    var(--sf-line-soft) 96%,
+    transparent 100%
+  );
+}
+
+.sf-section--split::after {
+  left: clamp(2.25rem, 18%, 22%);
+  /* Second node mirrored toward the right via long box-shadow */
+  box-shadow:
+    0 0 0 1px var(--sf-ring),
+    clamp(11rem, 52%, 28rem) 0 0 0 var(--sf-node),
+    clamp(11rem, 52%, 28rem) 0 0 1px var(--sf-ring),
+    1.5rem 1.5px 0 -1.5px var(--sf-line-lit),
+    calc(clamp(11rem, 52%, 28rem) - 1.5rem) 1.5px 0 -1.5px var(--sf-line-soft);
+}
+
+/* C — Memory Trace (uneven micro-dots) */
+.sf-section--trace::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sf-line-soft) 6%,
+    var(--sf-line) 16%,
+    transparent 16%,
+    transparent 19%,
+    var(--sf-line) 19%,
+    var(--sf-line) 37%,
+    transparent 37%,
+    transparent 42%,
+    var(--sf-line-soft) 42%,
+    var(--sf-line) 63%,
+    transparent 63%,
+    transparent 71%,
+    var(--sf-line) 71%,
+    var(--sf-line-soft) 90%,
+    transparent 100%
+  );
+}
+
+.sf-section--trace::after {
+  left: clamp(3rem, 24%, calc(100% - 8rem));
+  width: 3px;
+  height: 3px;
+  top: -1px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #b8cfe8 28%, transparent),
+    3.4rem 0 0 0 color-mix(in srgb, var(--sf-node) 85%, transparent),
+    7.85rem 0.5px 0 -0.5px color-mix(in srgb, var(--sf-node) 70%, transparent),
+    1.15rem 1.5px 0 -1.5px var(--sf-line-soft);
+}
+
+/* D — Terminal (long line, lit segment + node near end) */
+.sf-section--terminal::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sf-line-soft) 1%,
+    var(--sf-line) 8%,
+    var(--sf-line) 68%,
+    var(--sf-line-lit) 68%,
+    var(--sf-line-lit) 79%,
+    var(--sf-line) 79%,
+    var(--sf-line) 92%,
+    transparent 92%,
+    transparent 95%,
+    var(--sf-line-soft) 95%,
+    transparent 100%
+  );
+}
+
+.sf-section--terminal::after {
+  left: auto;
+  right: clamp(2.5rem, 14%, 5.5rem);
+  box-shadow:
+    0 0 0 1px var(--sf-ring),
+    -2.2rem 1.5px 0 -1.5px var(--sf-line-lit),
+    1.85rem 1.5px 0 -1.5px var(--sf-line-soft),
+    -0.1px 3px 0 -1.5px var(--sf-line-soft);
+}
+
+/* Brief brighten only when arriving via hash */
+.sf-section:target::before,
+.sf-section:target::after {
+  animation: sf-section-arrive 1.15s ease-out;
+}
+
+@keyframes sf-section-arrive {
+  0% {
+    opacity: 1;
+    filter: brightness(1.55);
+  }
+  100% {
+    opacity: 0.95;
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-section:target::before,
+  .sf-section:target::after {
+    animation: none;
+    filter: brightness(1.2);
+  }
+}
+
+@media (max-width: 390px) {
+  .sf-section::after {
+    width: 4px;
+    height: 4px;
+  }
+
+  .sf-section--central::after {
+    left: clamp(3rem, 44%, calc(100% - 3.5rem));
+    box-shadow:
+      0 0 0 1px var(--sf-ring),
+      -1.85rem 1.5px 0 -1.5px var(--sf-line-lit),
+      2.25rem 1.5px 0 -1.5px var(--sf-line-soft),
+      -0.1px 2.5px 0 -1.5px var(--sf-line-soft);
+  }
+
+  .sf-section--central-offset::after {
+    left: clamp(2.25rem, 28%, calc(100% - 4rem));
+    box-shadow:
+      0 0 0 1px var(--sf-ring),
+      1.9rem 1.5px 0 -1.5px var(--sf-line-lit),
+      -1.5rem 1.5px 0 -1.5px var(--sf-line-soft),
+      -0.1px 2.5px 0 -1.5px var(--sf-line-soft);
+  }
+
+  .sf-section--split::after {
+    left: clamp(1.75rem, 16%, 20%);
+    box-shadow:
+      0 0 0 1px var(--sf-ring),
+      10.25rem 0 0 0 var(--sf-node),
+      10.25rem 0 0 1px var(--sf-ring),
+      1.1rem 1.5px 0 -1.5px var(--sf-line-lit),
+      9.15rem 1.5px 0 -1.5px var(--sf-line-soft);
+  }
+
+  .sf-section--trace::after {
+    width: 3px;
+    height: 3px;
+    left: clamp(2rem, 20%, calc(100% - 7rem));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #b8cfe8 28%, transparent),
+      2.6rem 0 0 0 color-mix(in srgb, var(--sf-node) 85%, transparent),
+      5.9rem 0.5px 0 -0.5px color-mix(in srgb, var(--sf-node) 70%, transparent),
+      0.85rem 1.5px 0 -1.5px var(--sf-line-soft);
+  }
+
+  .sf-section--terminal::after {
+    right: clamp(1.75rem, 12%, 3.25rem);
+    box-shadow:
+      0 0 0 1px var(--sf-ring),
+      -1.5rem 1.5px 0 -1.5px var(--sf-line-lit),
+      1.25rem 1.5px 0 -1.5px var(--sf-line-soft),
+      -0.1px 2.5px 0 -1.5px var(--sf-line-soft);
   }
 }
 

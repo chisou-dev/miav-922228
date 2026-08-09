@@ -3,7 +3,7 @@ import {
   getChapterMetaBySlug,
   getMaxChapterNumber,
 } from "@/features/stories/miav/chapters";
-import { getContentLocale } from "@/features/shared/locale";
+import { getContentLocaleFromRequest } from "@/features/shared/locale";
 import { ChapterPage } from "@/features/stories/miav/ChapterPage";
 import {
   isChapterUnlockedServer,
@@ -22,7 +22,7 @@ export const revalidate = 0;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const locale = getContentLocale();
+  const locale = await getContentLocaleFromRequest();
   const chapter = getChapterMetaBySlug(slug, locale);
   if (!chapter) return { title: "Chapter | MIAV-922228" };
 

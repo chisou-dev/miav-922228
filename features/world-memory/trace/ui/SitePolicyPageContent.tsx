@@ -1,28 +1,49 @@
-import { SITE_POLICY_PAGE } from "@/features/world-memory/trace/policyCopy";
+"use client";
+
+import { useT } from "@/features/shared/i18n";
+import { sfSectionClass } from "@/features/shared/SfSection";
 
 export function SitePolicyPageContent() {
+  const t = useT();
+  const paragraphs = [
+    t("world.sitePolicyTraceBelongsToOwner"),
+    t("world.sitePolicyProvidesPlace"),
+    t("world.responsibility"),
+  ];
+  const removeReasons = [
+    t("world.sitePolicyReasonLaw"),
+    t("world.sitePolicyReasonSpam"),
+    t("world.sitePolicyReasonPolicy"),
+  ];
+  const closing = [t("world.welcomeClosingNotSocial"), t("world.privacyQuietLiterarySpace")];
+
   return (
-    <article className="mx-auto mt-16 max-w-lg border-t border-[var(--line)] pt-14 sm:mt-20 sm:pt-16">
+    <article
+      className={sfSectionClass(
+        "central",
+        "mx-auto mt-16 max-w-lg pt-14 sm:mt-20 sm:pt-16",
+      )}
+    >
       <div className="space-y-8 text-[0.98rem] leading-[2.05] tracking-[0.01em] text-[var(--foreground-muted)] sm:text-[1.02rem] sm:leading-[2.15]">
-        <p>{SITE_POLICY_PAGE.intro}</p>
-        {SITE_POLICY_PAGE.paragraphs.map((paragraph) => (
+        <p>{t("world.sitePolicyIntro")}</p>
+        {paragraphs.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
 
         <div>
-          <p>{SITE_POLICY_PAGE.removeHeading}</p>
+          <p>{t("world.sitePolicyRemoveHeading")}</p>
           <ul className="mt-4 list-none space-y-2">
-            {SITE_POLICY_PAGE.removeReasons.map((reason) => (
+            {removeReasons.map((reason) => (
               <li key={reason}>• {reason}</li>
             ))}
           </ul>
         </div>
 
-        <p>{SITE_POLICY_PAGE.googleNote}</p>
-        <p>{SITE_POLICY_PAGE.noPii}</p>
-        <p>{SITE_POLICY_PAGE.noGoogleProfile}</p>
-        <p>{SITE_POLICY_PAGE.uidOnly}</p>
-        {SITE_POLICY_PAGE.closing.map((paragraph) => (
+        <p>{t("world.welcomeGoogleIdentify")}</p>
+        <p>{t("world.privacyBlurbNoInfo")}</p>
+        <p>{t("world.sitePolicyNoGoogleProfile")}</p>
+        <p>{t("world.privacyUidOnlyEdit")}</p>
+        {closing.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
       </div>
@@ -32,13 +53,13 @@ export function SitePolicyPageContent() {
           href="/privacy"
           className="text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em]"
         >
-          Privacy
+          {t("world.privacy")}
         </a>
         <a
           href="/world-map"
           className="text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em]"
         >
-          Return to World Memory
+          {t("world.returnToWorld")}
         </a>
       </p>
     </article>

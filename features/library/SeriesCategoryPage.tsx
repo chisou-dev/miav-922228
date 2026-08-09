@@ -9,6 +9,7 @@ import {
 } from "@/features/library/catalog";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { SfSection } from "@/features/shared/SfSection";
 
 type Props = {
   categoryId: Exclude<CategoryId, "flash-fiction">;
@@ -44,35 +45,39 @@ export function SeriesCategoryPage({
         categoryNavHref={category.path}
       >
         {showFeatured && featured ? (
-          <div className="pt-2">
-            <p className="pt-8 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-              Featured Series
-            </p>
-            <LibraryListItem
-              href={featured.comingSoon ? undefined : seriesHref(featured.id)}
-              title={featured.title}
-              description={featured.summary}
-              actionLabel={featured.comingSoon ? "Coming Soon." : "Read →"}
-            />
-            <p className="pt-10 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-              Other Series
-            </p>
-            {otherSeries.length === 0 ? (
-              <p className="py-10 text-[0.88rem] text-[var(--foreground-muted)]">
-                More series will be entered here.
+          <>
+            <div className="pt-2">
+              <p className="pt-8 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+                Featured Series
               </p>
-            ) : (
-              otherSeries.map((series) => (
-                <LibraryListItem
-                  key={series.id}
-                  href={series.comingSoon ? undefined : seriesHref(series.id)}
-                  title={series.title}
-                  description={series.summary}
-                  actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
-                />
-              ))
-            )}
-          </div>
+              <LibraryListItem
+                href={featured.comingSoon ? undefined : seriesHref(featured.id)}
+                title={featured.title}
+                description={featured.summary}
+                actionLabel={featured.comingSoon ? "Coming Soon." : "Read →"}
+              />
+            </div>
+            <SfSection variant="split" aria-label="Other Series">
+              <p className="pt-10 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+                Other Series
+              </p>
+              {otherSeries.length === 0 ? (
+                <p className="py-10 text-[0.88rem] text-[var(--foreground-muted)]">
+                  More series will be entered here.
+                </p>
+              ) : (
+                otherSeries.map((series) => (
+                  <LibraryListItem
+                    key={series.id}
+                    href={series.comingSoon ? undefined : seriesHref(series.id)}
+                    title={series.title}
+                    description={series.summary}
+                    actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
+                  />
+                ))
+              )}
+            </SfSection>
+          </>
         ) : (
           <div>
             {otherSeries.map((series) => (

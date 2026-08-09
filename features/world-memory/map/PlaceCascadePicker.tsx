@@ -13,6 +13,7 @@ import {
 } from "@/features/world-memory/location/locations/client";
 import { WORLD_PLACES } from "@/features/world-memory/location/places/places-data";
 import type { WorldPlace } from "@/features/world-memory/location/places/types";
+import { useT } from "@/features/shared/i18n";
 
 type Props = {
   value: WorldPlace | null;
@@ -105,6 +106,7 @@ function Row({
  * Loads index first; country JSON (regions + cities) only after country select.
  */
 export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
+  const t = useT();
   const [index, setIndex] = useState<LocationCountryIndexEntry[]>([]);
   const [continent, setContinent] = useState<ContinentName | null>(null);
   const [countryCode, setCountryCode] = useState<string | null>(null);
@@ -151,10 +153,10 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
   return (
     <div className="space-y-2">
       <p className="text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
-        Place
+        {t("world.place")}
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:flex-nowrap">
-        <Column label="Continent">
+        <Column label={t("world.placeContinent")}>
           {CONTINENTS.filter((c) => c.id !== "Antarctica").map((c) => (
             <Row
               key={c.id}
@@ -171,7 +173,7 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
           ))}
         </Column>
 
-        <Column label="Country">
+        <Column label={t("world.placeCountry")}>
           {continent ? (
             countries.map((entry) => (
               <Row
@@ -188,16 +190,16 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
             ))
           ) : (
             <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
-              Choose a continent
+              {t("world.chooseContinent")}
             </li>
           )}
         </Column>
 
-        <Column label="Region">
+        <Column label={t("world.placeRegion")}>
           {countryCode ? (
             loadingCountry ? (
               <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
-                Loading…
+                {t("world.loadingRegions")}
               </li>
             ) : regions.length > 0 ? (
               regions.map((region) => (
@@ -214,17 +216,17 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
               ))
             ) : (
               <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
-                No regions
+                {t("world.noRegions")}
               </li>
             )
           ) : (
             <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
-              {continent ? "Choose a country" : "—"}
+              {continent ? t("world.chooseCountry") : "—"}
             </li>
           )}
         </Column>
 
-        <Column label="City">
+        <Column label={t("world.placeCity")}>
           {regionName ? (
             cities.map((city) => {
               const place = placeFromCatalogCity(
@@ -247,7 +249,7 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
             })
           ) : (
             <li className="px-3 py-3 text-[0.78rem] text-[var(--map-muted)]">
-              {countryCode ? "Choose a region" : "—"}
+              {countryCode ? t("world.chooseRegion") : "—"}
             </li>
           )}
         </Column>
@@ -255,7 +257,7 @@ export function PlaceCascadePicker({ value, onChange, onFocusPlace }: Props) {
 
       {value ? (
         <p className="text-[0.8rem] tracking-[0.04em] text-[var(--map-muted)]">
-          Selected: {value.name}, {value.country}
+          {t("world.selectMemory", { city: value.name, country: value.country })}
           {regionName ? ` · ${regionName}` : ""}
         </p>
       ) : null}

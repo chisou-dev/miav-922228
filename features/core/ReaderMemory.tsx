@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { getLiteraryWork } from "@/features/novels/literaryWorks";
+import { useT, selectPluralKey, type MessageKey, type TVars } from "@/features/shared/i18n";
 
 const STORAGE_KEY = "reader_memory";
 const MS_DAY = 24 * 60 * 60 * 1000;
@@ -33,8 +34,13 @@ export type ReaderMemoryData = {
   works: Record<string, WorkMemory>;
 };
 
+type GreetingMessage = {
+  key: MessageKey;
+  vars?: TVars;
+};
+
 type DisplayState = {
-  greeting: string;
+  greeting: GreetingMessage;
   daysSinceFirst: number;
   chaptersRead: number;
   traceLeft: boolean;
@@ -138,22 +144,22 @@ function ensureWork(
 function greetingFromLastVisit(
   previousLastVisitMs: number | null,
   workTitle: string,
-): string {
+): GreetingMessage {
   if (previousLastVisitMs === null) {
-    return `Hello.\nWelcome to ${workTitle}.`;
+    return { key: "reader.greetingFirst", vars: { title: workTitle } };
   }
 
   const elapsed = Date.now() - previousLastVisitMs;
 
   if (elapsed < MS_DAY) {
-    return "Welcome back.";
+    return { key: "reader.greetingBack" };
   }
 
   if (elapsed <= MS_30_DAYS) {
-    return "It's good to see you again.";
+    return { key: "reader.greetingRecent" };
   }
 
-  return "It's been a while.\nWelcome back.";
+  return { key: "reader.greetingLongAgo" };
 }
 
 function loadAndTouch(workId: string): DisplayState | null {
@@ -217,6 +223,7 @@ type ReaderMemoryProps = {
 };
 
 export function ReaderMemory({ workId }: ReaderMemoryProps) {
+  const t = useT();
   const [state, setState] = useState<DisplayState | null>(null);
 
   useEffect(() => {
@@ -227,9 +234,9 @@ export function ReaderMemory({ workId }: ReaderMemoryProps) {
     return null;
   }
 
-  const traceMessage = state.traceLeft
-    ? "Your trace is still there."
-    : "One day,\nleave your trace on the map.";
+  const traceMessageKey: MessageKey = state.traceLeft
+    ? "reader.traceLeft"
+    : "reader.traceInvite";
 
   return (
     <div
@@ -237,19 +244,23 @@ export function ReaderMemory({ workId }: ReaderMemoryProps) {
       aria-live="polite"
     >
       <p className="whitespace-pre-line text-[0.8rem] leading-relaxed tracking-[0.08em] sm:text-[0.85rem]">
-        {state.greeting}
+        {t(state.greeting.key, state.greeting.vars)}
       </p>
 
       <p className="mt-3 whitespace-pre-line text-[0.68rem] leading-[1.65] tracking-[0.06em] sm:mt-3.5">
-        {`You first visited\n${state.daysSinceFirst} days ago.`}
+        {t(selectPluralKey("reader.firstVisit", state.daysSinceFirst), {
+          days: state.daysSinceFirst,
+        })}
       </p>
 
       <p className="mt-3 whitespace-pre-line text-[0.68rem] leading-[1.65] tracking-[0.06em] sm:mt-3.5">
-        {`You've read\n${state.chaptersRead} chapters.`}
+        {t(selectPluralKey("reader.chaptersRead", state.chaptersRead), {
+          count: state.chaptersRead,
+        })}
       </p>
 
       <p className="mt-3 whitespace-pre-line text-[0.68rem] leading-[1.65] tracking-[0.06em] sm:mt-3.5">
-        {traceMessage}
+        {t(traceMessageKey)}
       </p>
     </div>
   );

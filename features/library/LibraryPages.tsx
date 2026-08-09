@@ -4,7 +4,7 @@ import {
   getChapterMetaBySlug,
   getMaxChapterNumber,
 } from "@/features/stories/miav/chapters";
-import { getContentLocale } from "@/features/shared/locale";
+import { getContentLocaleFromRequest } from "@/features/shared/locale";
 import {
   chapterHref,
   flashHref,
@@ -187,7 +187,7 @@ export async function SeriesChapterPage({
   if (!found) notFound();
 
   const { series, chapter } = found;
-  const locale = getContentLocale();
+  const locale = await getContentLocaleFromRequest();
   const category = getCategory(series.categoryId);
   const continueReading = chapter.continueReading;
   const isMiavGate = series.id === miavWorkId && !continueReading;

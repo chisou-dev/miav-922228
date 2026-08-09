@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { BreadcrumbItem } from "@/features/library/catalog";
 import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
 import { WorksCategoryNav } from "@/features/library/WorksCategoryNav";
+import { SfSection } from "@/features/shared/SfSection";
 
 /** Quiet page shell for the works library — matches site typography, no new chrome. */
 export function LibraryShell({
@@ -55,10 +56,10 @@ export function LibraryShell({
             </div>
           ) : null}
         </header>
-        <section className="mt-16 border-t border-[var(--line)] sm:mt-20">
+        <SfSection variant="central" className="mt-16 sm:mt-20">
           {breadcrumbs ? <LibraryBreadcrumbs items={breadcrumbs} /> : null}
           {children}
-        </section>
+        </SfSection>
       </main>
     </div>
   );

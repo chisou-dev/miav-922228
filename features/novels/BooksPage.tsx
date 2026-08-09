@@ -1,4 +1,5 @@
 import { getAllBooks } from "@/features/novels/registry";
+import { SfSection, sfSectionVariantAt } from "@/features/shared/SfSection";
 
 export function BooksPage() {
   const archive = getAllBooks();
@@ -31,67 +32,74 @@ export function BooksPage() {
         </header>
 
         <ol className="mt-20 list-none sm:mt-28">
-          {archive.map((book) => (
-            <li
-              key={book.id}
-              className="border-t border-[var(--line)] py-20 sm:py-28"
-            >
-              <article>
-                <p className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
-                  Volume {String(book.volume).padStart(2, "0")}
-                </p>
-
-                <h2 className="mt-6 text-[1.45rem] font-medium tracking-[0.05em] text-[var(--foreground)] sm:mt-8 sm:text-[1.75rem] sm:tracking-[0.06em]">
-                  {book.title}
-                </h2>
-
-                <div className="mt-10 sm:mt-12">
-                  <h3 className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-                    Description
-                  </h3>
-                  <p className="mt-6 max-w-lg text-[1.02rem] leading-[2.3] tracking-[0.012em] text-[var(--foreground)] sm:text-[1.1rem] sm:leading-[2.45]">
-                    {book.description}
+          {archive.map((book, index) => (
+            <li key={book.id}>
+              <SfSection
+                variant={sfSectionVariantAt(index)}
+                className="py-20 sm:py-28"
+              >
+                <article>
+                  <p className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
+                    Volume {String(book.volume).padStart(2, "0")}
                   </p>
-                </div>
 
-                <div className="mt-16 space-y-14 sm:mt-20 sm:space-y-16">
-                  {book.editions.map((edition) => (
-                    <section key={edition.id}>
-                      <h3 className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
-                        {edition.label}
-                      </h3>
+                  <h2 className="mt-6 text-[1.45rem] font-medium tracking-[0.05em] text-[var(--foreground)] sm:mt-8 sm:text-[1.75rem] sm:tracking-[0.06em]">
+                    {book.title}
+                  </h2>
 
-                      {edition.status === "coming_soon" ? (
-                        <p className="mt-6 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)] sm:text-base">
-                          Coming soon
-                        </p>
-                      ) : edition.href ? (
-                        <p className="mt-8">
-                          <a
-                            href={edition.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
-                          >
-                            {edition.linkLabel ?? "Available on Amazon Kindle"}
-                          </a>
-                        </p>
-                      ) : (
-                        <p className="mt-6 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)] sm:text-base">
-                          Link forthcoming
-                        </p>
-                      )}
-                    </section>
-                  ))}
-                </div>
-              </article>
+                  <div className="mt-10 sm:mt-12">
+                    <h3 className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+                      Description
+                    </h3>
+                    <p className="mt-6 max-w-lg text-[1.02rem] leading-[2.3] tracking-[0.012em] text-[var(--foreground)] sm:text-[1.1rem] sm:leading-[2.45]">
+                      {book.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-16 space-y-14 sm:mt-20 sm:space-y-16">
+                    {book.editions.map((edition) => (
+                      <section key={edition.id}>
+                        <h3 className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+                          {edition.label}
+                        </h3>
+
+                        {edition.status === "coming_soon" ? (
+                          <p className="mt-6 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)] sm:text-base">
+                            Coming soon
+                          </p>
+                        ) : edition.href ? (
+                          <p className="mt-8">
+                            <a
+                              href={edition.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
+                            >
+                              {edition.linkLabel ?? "Available on Amazon Kindle"}
+                            </a>
+                          </p>
+                        ) : (
+                          <p className="mt-6 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)] sm:text-base">
+                            Link forthcoming
+                          </p>
+                        )}
+                      </section>
+                    ))}
+                  </div>
+                </article>
+              </SfSection>
             </li>
           ))}
         </ol>
 
-        <p className="border-t border-[var(--line)] pt-16 text-[0.72rem] leading-relaxed tracking-[0.12em] text-[var(--foreground-muted)] sm:pt-20">
-          Further volumes will be entered here as they are published.
-        </p>
+        <SfSection
+          variant="terminal"
+          className="pt-16 sm:pt-20"
+        >
+          <p className="text-[0.72rem] leading-relaxed tracking-[0.12em] text-[var(--foreground-muted)]">
+            Further volumes will be entered here as they are published.
+          </p>
+        </SfSection>
 
         <nav
           aria-label="Related pages"

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/features/shared/SiteShell";
 import { SitePolicyPageContent } from "@/features/world-memory/trace/ui/SitePolicyPageContent";
+import { t } from "@/features/shared/i18n";
 
 export const metadata: Metadata = {
   title: "Site Policy | MIAV-922228",
   description:
-    "Site policy for MIAV World Memory — Traces belong to their owners; the operator does not edit user content.",
+    "Site policy for MIAV World — Traces belong to their owners; the operator does not edit user content.",
 };
 
 export default function SitePolicyPage() {
@@ -17,7 +18,7 @@ export default function SitePolicyPage() {
             Policy
           </p>
           <h1 className="mt-5 text-[clamp(1.85rem,6vw,2.6rem)] font-medium leading-[1.3] tracking-[0.06em] text-[var(--foreground)] sm:mt-6">
-            Site Policy
+            {t("world.sitePolicy")}
           </h1>
         </header>
         <SitePolicyPageContent />
