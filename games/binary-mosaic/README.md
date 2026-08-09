@@ -9,7 +9,7 @@ Glass binary packing puzzle. Fragments of `0` / `1` assemble into an ASCII bit f
 | Level | Target |
 |------:|--------|
 | 1 | `HI` |
-| 2 | `HEL` |
+| 2 | `BIT` |
 | 3 | `HELLO` |
 | 4 | `ROBOT` |
 | 5 | `BINARY` |
