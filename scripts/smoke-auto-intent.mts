@@ -48,6 +48,16 @@ function main(): void {
   assert(intent.seed === 90210, "seed from options");
   assert(intent.title === "User: HI", "default title");
 
+  // Free Creator overrides: pieceCount + rotateQuota=1
+  const free = createAutoCreatorIntent("HELLO", {
+    seed: 77,
+    pieceCount: 5,
+    rotateQuota: 1,
+  });
+  assert(free.pieceCount === 5, "free pieceCount override");
+  assert(free.rotateQuota === 1, "free rotateQuota override");
+  assert(free.boardSize.rows * free.boardSize.cols === 40, "HELLO bits");
+
   // determinism with seed
   const again = createAutoCreatorIntent("HI", { seed: 90210 });
   assert(

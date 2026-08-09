@@ -10,6 +10,13 @@ import {
 } from "@/games/binary-mosaic/core";
 import { createAutoCreatorIntent } from "@/games/binary-mosaic/creator/autoIntent";
 import {
+  clampFreeCreatorPieceCount,
+  FREE_CREATOR_MAX_PIECES,
+  FREE_CREATOR_MIN_PIECES,
+  FREE_CREATOR_PIECE_OPTIONS,
+  FREE_CREATOR_ROTATABLE_COUNT,
+} from "@/games/binary-mosaic/creator/freeCreatorLimits";
+import {
   runPreviewCandidates,
   type PreviewCandidatesResult,
 } from "@/games/binary-mosaic/pipeline/previewCandidates";
@@ -55,13 +62,15 @@ type RunState =
 const DEFAULT_ADVANCED: CreatorIntent = {
   targetText: "HI",
   boardSize: { rows: 2, cols: 8 },
-  pieceCount: 3,
-  rotateQuota: 1,
+  pieceCount: FREE_CREATOR_MIN_PIECES,
+  rotateQuota: FREE_CREATOR_ROTATABLE_COUNT,
   hintAllowed: true,
   seed: 4242,
   title: "Creator draft",
   draftId: 0,
 };
+
+const DEFAULT_FREE_PIECE_COUNT = 5;
 
 /** UI-only short labels for EvaluatorReasonCode — display layer; not evaluator logic. */
 const REASON_LABELS: Record<EvaluatorReasonCode, string> = {
@@ -277,14 +286,9 @@ export function CreatorPanel() {
   const [targetText, setTargetText] = useState(DEFAULT_ADVANCED.targetText);
   const [rows, setRows] = useState(String(DEFAULT_ADVANCED.boardSize.rows));
   const [cols, setCols] = useState(String(DEFAULT_ADVANCED.boardSize.cols));
-  const [pieceCount, setPieceCount] = useState(
-    String(DEFAULT_ADVANCED.pieceCount),
-  );
-  const [rotateQuota, setRotateQuota] = useState(
-    String(DEFAULT_ADVANCED.rotateQuota),
-  );
-  const [hintLimit, setHintLimit] = useState<HintLimit>(DEFAULT_HINT_LIMIT);
+  const [freePieceCount, setFreePieceCount] = useState(DEFAULT_FREE_PIECE_COUNT);
   const [seed, setSeed] = useState(String(DEFAULT_ADVANCED.seed));
+  const [hintLimit, setHintLimit] = useState<HintLimit>(DEFAULT_HINT_LIMIT);
   const [creatorName, setCreatorName] = useState("");
   const [publishTitle, setPublishTitle] = useState("");
   const [publishDescription, setPublishDescription] = useState("");
@@ -355,12 +359,14 @@ export function CreatorPanel() {
         rows: parseIntField(rows, DEFAULT_ADVANCED.boardSize.rows),
         cols: parseIntField(cols, DEFAULT_ADVANCED.boardSize.cols),
       },
-      pieceCount: parseIntField(pieceCount, DEFAULT_ADVANCED.pieceCount),
-      rotateQuota: parseIntField(rotateQuota, DEFAULT_ADVANCED.rotateQuota),
+      // Free Creator: Advanced cannot exceed Free piece / rotation limits.
+      pieceCount: clampFreeCreatorPieceCount(freePieceCount),
+      rotateQuota: FREE_CREATOR_ROTATABLE_COUNT,
       hintAllowed: hintLimit > 0,
       seed: parseIntField(seed, DEFAULT_ADVANCED.seed),
       title: `Creator: ${text}`,
       draftId: 0,
+      candidateLimit: 12,
     };
   }
 
@@ -392,9 +398,14 @@ export function CreatorPanel() {
       return;
     }
     try {
+      const pieces = clampFreeCreatorPieceCount(freePieceCount);
       const intent = createAutoCreatorIntent(text, {
         hintAllowed: hintLimit > 0,
+        pieceCount: pieces,
+        rotateQuota: FREE_CREATOR_ROTATABLE_COUNT,
       });
+      // Free Creator: a few more candidates helps UNIQUE + meaningful rotation=1.
+      intent.candidateLimit = 12;
       executePreview(intent);
     } catch (err) {
       setRun({
@@ -415,6 +426,25 @@ export function CreatorPanel() {
     const levelData = result.selectedLevelData;
     const evaluatorResult = result.selectedEvaluatorResult;
     if (!levelData || !evaluatorResult || !evaluatorResult.passed) return;
+
+    // Free Creator generation gate: exactly one rotatable piece.
+    const rotCount = levelData.rotatablePieceIndices?.length ?? 0;
+    if (rotCount !== FREE_CREATOR_ROTATABLE_COUNT) {
+      setSaveMessage(
+        `Free Creator requires exactly ${FREE_CREATOR_ROTATABLE_COUNT} rotatable piece (got ${rotCount}).`,
+      );
+      return;
+    }
+    const pcs = usedPieceCount(levelData);
+    if (
+      pcs < FREE_CREATOR_MIN_PIECES ||
+      pcs > FREE_CREATOR_MAX_PIECES
+    ) {
+      setSaveMessage(
+        `Free Creator allows ${FREE_CREATOR_MIN_PIECES}–${FREE_CREATOR_MAX_PIECES} pieces (got ${pcs}).`,
+      );
+      return;
+    }
 
     setSaveBusy(true);
     setSaveMessage(null);
@@ -682,6 +712,40 @@ export function CreatorPanel() {
           />
         </label>
         <label className="mosaic-creator-field mosaic-creator-field--primary">
+          <span>Number of Pieces</span>
+          <div
+            className="mosaic-hint-limit"
+            role="group"
+            aria-label="Number of pieces"
+          >
+            {FREE_CREATOR_PIECE_OPTIONS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`mosaic-hint-limit-btn${freePieceCount === n ? " is-on" : ""}`}
+                aria-pressed={freePieceCount === n}
+                disabled={loading || saveBusy}
+                onClick={() => setFreePieceCount(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <span className="mosaic-creator-field-hint">
+            Free Creator: {FREE_CREATOR_MIN_PIECES}–{FREE_CREATOR_MAX_PIECES}{" "}
+            pieces.
+          </span>
+        </label>
+        <div className="mosaic-creator-field mosaic-creator-field--primary">
+          <span>Rotation</span>
+          <p className="mosaic-creator-rotation-fixed">
+            {FREE_CREATOR_ROTATABLE_COUNT} piece
+          </p>
+          <span className="mosaic-creator-field-hint">
+            Free Creator always uses exactly one rotatable piece.
+          </span>
+        </div>
+        <label className="mosaic-creator-field mosaic-creator-field--primary">
           <span>Hints</span>
           <div
             className="mosaic-hint-limit"
@@ -741,28 +805,25 @@ export function CreatorPanel() {
               disabled={loading || saveBusy}
             />
           </label>
-          <label className="mosaic-creator-field">
+          <div className="mosaic-creator-field">
             <span>pieceCount</span>
-            <input
-              type="number"
-              min={1}
-              max={24}
-              value={pieceCount}
-              onChange={(e) => setPieceCount(e.target.value)}
-              disabled={loading || saveBusy}
-            />
-          </label>
-          <label className="mosaic-creator-field">
+            <p className="mosaic-creator-rotation-fixed">
+              {freePieceCount}{" "}
+              <span className="mosaic-creator-field-hint">
+                (same as Number of Pieces above · Free {FREE_CREATOR_MIN_PIECES}
+                –{FREE_CREATOR_MAX_PIECES})
+              </span>
+            </p>
+          </div>
+          <div className="mosaic-creator-field">
             <span>rotateQuota</span>
-            <input
-              type="number"
-              min={0}
-              max={24}
-              value={rotateQuota}
-              onChange={(e) => setRotateQuota(e.target.value)}
-              disabled={loading || saveBusy}
-            />
-          </label>
+            <p className="mosaic-creator-rotation-fixed">
+              {FREE_CREATOR_ROTATABLE_COUNT}{" "}
+              <span className="mosaic-creator-field-hint">
+                (Free Creator fixed)
+              </span>
+            </p>
+          </div>
           <label className="mosaic-creator-field mosaic-creator-field--primary">
             <span>Hints</span>
             <div

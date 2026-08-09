@@ -25,6 +25,17 @@ export type AutoCreatorIntentOptions = {
   title?: string;
   /** Override hintAllowed (default true for user levels). */
   hintAllowed?: boolean;
+  /**
+   * When set, replaces auto pieceCount (still clamped to generator-feasible
+   * band 1…min(20, floor(cells/2)) via intent validation downstream).
+   * Free Creator passes 3–8 here; heuristics remain for other callers.
+   */
+  pieceCount?: number;
+  /**
+   * When set, replaces auto rotateQuota (clamped to [0, pieceCount]).
+   * Free Creator passes 1 here.
+   */
+  rotateQuota?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -68,8 +79,22 @@ export function createAutoCreatorIntent(
   const cells = boardSize.rows * boardSize.cols;
   const difficulty = options.difficulty ?? "medium";
 
-  const pieceCount = choosePieceCount(cells, difficulty);
-  const rotateQuota = chooseRotateQuota(text.length, pieceCount, difficulty);
+  const autoPieceCount = choosePieceCount(cells, difficulty);
+  const maxPieces = Math.min(20, Math.floor(cells / 2));
+  const pieceCount =
+    typeof options.pieceCount === "number" && Number.isFinite(options.pieceCount)
+      ? clampInt(Math.trunc(options.pieceCount), 1, Math.max(1, maxPieces))
+      : autoPieceCount;
+  const autoRotateQuota = chooseRotateQuota(
+    text.length,
+    pieceCount,
+    difficulty,
+  );
+  const rotateQuota =
+    typeof options.rotateQuota === "number" &&
+    Number.isFinite(options.rotateQuota)
+      ? clampInt(Math.trunc(options.rotateQuota), 0, pieceCount)
+      : autoRotateQuota;
   const seed =
     typeof options.seed === "number" && Number.isFinite(options.seed)
       ? options.seed

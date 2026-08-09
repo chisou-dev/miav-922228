@@ -172,6 +172,13 @@
   cursor: default;
 }
 
+.mosaic-creator-rotation-fixed {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--mosaic-ink);
+}
+
 .mosaic-hud-hints {
   display: flex;
   flex-wrap: wrap;
