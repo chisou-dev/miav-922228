@@ -94,22 +94,22 @@ export type FlashPiece = {
 export const worksLibrary = {
   title: "Works",
   summary:
-    "A collection of literary science fiction, speculative fiction, and short stories exploring memory, technology, and human existence.",
+    "Fiction and stories within MIAV-922228—literary science fiction, speculative fiction, and short works exploring memory, technology, and human existence.",
   seo: {
-    title: "Works | Takashi Yabe",
+    title: "Works | MIAV-922228",
     description:
-      "Literary science fiction, speculative fiction, and flash fiction by Takashi Yabe.",
+      "Literary science fiction, speculative fiction, and flash fiction from the MIAV-922228 project.",
   },
 } as const satisfies { title: string; summary: string; seo: PageSeo };
 
 export const aboutPage = {
-  title: AUTHOR_NAME,
+  title: "About MIAV",
   summary:
-    "A writer of literary science fiction.\n\nHis work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
+    "MIAV-922228 is an independent literary science fiction project of stories, browser games, and digital experiments.\n\nCreated by Takashi Yabe, it explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
   seo: {
-    title: "About | Takashi Yabe",
+    title: "About | MIAV-922228",
     description:
-      "Takashi Yabe is a writer of literary science fiction. His work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
+      "MIAV-922228 is an independent literary science fiction project by Takashi Yabe, bringing together stories, browser games, and digital experiments.",
   },
 } as const satisfies { title: string; summary: string; seo: PageSeo };
 
@@ -120,9 +120,9 @@ export const categories: readonly Category[] = [
     title: "Literary SF",
     summary: "Stories exploring memory, technology, and human existence.",
     seo: {
-      title: "Literary SF | Takashi Yabe",
+      title: "Literary SF | MIAV-922228",
       description:
-        "Literary science fiction series by Takashi Yabe exploring memory, technology, and human existence.",
+        "Literary science fiction series from MIAV-922228 exploring memory, technology, and human existence.",
     },
   },
   {
@@ -131,9 +131,9 @@ export const categories: readonly Category[] = [
     title: "Entertainment SF",
     summary: "Speculative fiction focused on story and adventure.",
     seo: {
-      title: "Entertainment SF | Takashi Yabe",
+      title: "Entertainment SF | MIAV-922228",
       description:
-        "Entertainment science fiction and speculative adventure stories by Takashi Yabe.",
+        "Entertainment science fiction and speculative adventure stories from MIAV-922228.",
     },
   },
   {
@@ -142,9 +142,9 @@ export const categories: readonly Category[] = [
     title: "Flash Fiction",
     summary: "Short stories that can be read in a few minutes.",
     seo: {
-      title: "Flash Fiction | Takashi Yabe",
+      title: "Flash Fiction | MIAV-922228",
       description:
-        "Short speculative fiction by Takashi Yabe — quiet stories readable in a few minutes.",
+        "Short speculative fiction from MIAV-922228 — quiet stories readable in a few minutes.",
     },
   },
 ] as const;

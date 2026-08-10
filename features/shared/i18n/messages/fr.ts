@@ -35,7 +35,7 @@ export const fr: MessageCatalog = {
   "home.brand": "MIAV-922228",
   "home.tagline": "LIRE. JOUER. LAISSER UNE TRACE.",
   "home.lead":
-    "Des histoires, des jeux dans le navigateur et des expériences numériques qui explorent la mémoire, l'intelligence artificielle, la technologie, la solitude et l'existence humaine.",
+    "Des histoires, des jeux dans le navigateur et des expériences numériques issus d'un même projet de science-fiction littéraire—explorant la mémoire, l'intelligence artificielle, la technologie, la solitude et l'existence humaine.",
   "home.ctaStart": "COMMENCER ICI",
   "home.ctaStories": "LIRE LES HISTOIRES",
   "home.ctaGames": "JOUER AUX JEUX",

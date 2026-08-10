@@ -35,7 +35,7 @@ export const es: MessageCatalog = {
   "home.brand": "MIAV-922228",
   "home.tagline": "LEER. JUGAR. DEJAR UN RASTRO.",
   "home.lead":
-    "Relatos, juegos de navegador y experimentos digitales que exploran la memoria, la inteligencia artificial, la tecnología, la soledad y la existencia humana.",
+    "Relatos, juegos de navegador y experimentos digitales de un mismo proyecto de ciencia ficción literaria—explorando la memoria, la inteligencia artificial, la tecnología, la soledad y la existencia humana.",
   "home.ctaStart": "EMPEZAR AQUÍ",
   "home.ctaStories": "LEER LOS RELATOS",
   "home.ctaGames": "JUGAR",

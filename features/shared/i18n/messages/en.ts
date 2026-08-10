@@ -34,7 +34,7 @@ export const en = {
   "home.brand": "MIAV-922228",
   "home.tagline": "READ. PLAY. LEAVE A TRACE.",
   "home.lead":
-    "Stories, browser games, and digital experiments exploring memory, artificial intelligence, technology, loneliness, and human existence.",
+    "Stories, browser games, and digital experiments from one literary science fiction project—exploring memory, artificial intelligence, technology, loneliness, and human existence.",
   "home.ctaStart": "START HERE",
   "home.ctaStories": "READ STORIES",
   "home.ctaGames": "PLAY GAMES",
