@@ -5,6 +5,15 @@ import {
 import { allPiecesPlaced as coreAllPlaced } from "@/games/binary-mosaic/core/rules";
 import type { LevelDef, PieceRuntime } from "@/games/binary-mosaic/types";
 
+export type HintCell = {
+  row: number;
+  col: number;
+  bit: 0 | 1;
+  pieceIndex: number;
+  /** Black Bit — do not show the digit in hint markers. */
+  hidden?: boolean;
+};
+
 export type PieceExpectation = {
   pieceIndex: number;
   cells: Set<string>;
@@ -75,19 +84,26 @@ export function nextHintCellForPiece(
   level: LevelDef,
   pieceIndex: number,
   revealedKeys: Set<string>,
-): { row: number; col: number; bit: 0 | 1; pieceIndex: number } | null {
-  const cells: { row: number; col: number; bit: 0 | 1 }[] = [];
+): HintCell | null {
+  const cells: HintCell[] = [];
   for (let r = 0; r < level.rows; r += 1) {
     for (let c = 0; c < level.cols; c += 1) {
       if (level.solution[r][c] !== pieceIndex) continue;
-      cells.push({ row: r, col: c, bit: level.bits[r][c] });
+      const hidden = Boolean(level.blackBits?.[r]?.[c]);
+      cells.push({
+        row: r,
+        col: c,
+        bit: level.bits[r][c],
+        pieceIndex,
+        ...(hidden ? { hidden: true as const } : {}),
+      });
     }
   }
   cells.sort((a, b) => a.row - b.row || a.col - b.col);
   for (const cell of cells) {
     const key = `${cell.row},${cell.col}`;
     if (!revealedKeys.has(key)) {
-      return { ...cell, pieceIndex };
+      return cell;
     }
   }
   return null;
@@ -97,14 +113,21 @@ export function nextHintCellForPiece(
 export function nextHintCellAnywhere(
   level: LevelDef,
   revealedKeys: Set<string>,
-): { row: number; col: number; bit: 0 | 1; pieceIndex: number } | null {
+): HintCell | null {
   for (let r = 0; r < level.rows; r += 1) {
     for (let c = 0; c < level.cols; c += 1) {
       const pieceIndex = level.solution[r][c];
       if (pieceIndex < 0) continue;
       const key = `${r},${c}`;
       if (!revealedKeys.has(key)) {
-        return { row: r, col: c, bit: level.bits[r][c], pieceIndex };
+        const hidden = Boolean(level.blackBits?.[r]?.[c]);
+        return {
+          row: r,
+          col: c,
+          bit: level.bits[r][c],
+          pieceIndex,
+          ...(hidden ? { hidden: true as const } : {}),
+        };
       }
     }
   }
@@ -112,16 +135,20 @@ export function nextHintCellAnywhere(
 }
 
 /** All active solution cells in row-major order. */
-export function listSolutionCells(
-  level: LevelDef,
-): { row: number; col: number; bit: 0 | 1; pieceIndex: number }[] {
-  const cells: { row: number; col: number; bit: 0 | 1; pieceIndex: number }[] =
-    [];
+export function listSolutionCells(level: LevelDef): HintCell[] {
+  const cells: HintCell[] = [];
   for (let r = 0; r < level.rows; r += 1) {
     for (let c = 0; c < level.cols; c += 1) {
       const pieceIndex = level.solution[r][c];
       if (pieceIndex < 0) continue;
-      cells.push({ row: r, col: c, bit: level.bits[r][c], pieceIndex });
+      const hidden = Boolean(level.blackBits?.[r]?.[c]);
+      cells.push({
+        row: r,
+        col: c,
+        bit: level.bits[r][c],
+        pieceIndex,
+        ...(hidden ? { hidden: true as const } : {}),
+      });
     }
   }
   return cells;
@@ -137,13 +164,6 @@ export const HINT_ONE_PER_USE_FROM_LEVEL = 20;
 
 /** Cells added by the nth campaign hint press at L20+ (1-based index). */
 const HINT_CELLS_PER_USE_FROM_L20: readonly number[] = [0, 3, 2, 1];
-
-export type HintCell = {
-  row: number;
-  col: number;
-  bit: 0 | 1;
-  pieceIndex: number;
-};
 
 /** How many hint cells should be unlocked after `uses` presses. */
 export function hintRevealCount(

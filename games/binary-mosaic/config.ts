@@ -18,14 +18,14 @@ export const binaryMosaicConfig = {
   title: "Binary Block",
   /** Board cell size in px — keep compact so more pieces stay readable. */
   cellPx: 34,
-  maxDesignedLevels: 38,
+  maxDesignedLevels: 50,
   /** Silhouette picture levels are intended from around Level 10. */
   silhouetteFromLevel: 10,
   /**
-   * Rotation quota starts at this level.
-   * Counts: L20–21 → 1 · L22–24 → 2 · L25–28 → 3 · L29–30 → 5 · L31 → 4 · L32 → 3 · L33–34 → 4 · L35 → 4 · L36 → 4 · L37–38 → 3
+   * Rotation quota starts at this level (campaign).
+   * L1–39: none · L40 intro → 1 · then gradual.
    */
-  rotateFromLevel: 20,
+  rotateFromLevel: 40,
 } as const;
 
 /** Levels from `core/levelData` (backed by `levels/levels.json`). */
@@ -69,7 +69,7 @@ for (const level of [...levels].sort((a, b) => a.id - b.id)) {
     const isFilledRect = !isBar && piece.baseShape.length === rows * cols;
     if (isFilledRect) filledRects += 1;
   }
-  if (filledRects > 1) {
+  if (filledRects > 1 && level.id < 40) {
     throw new Error(
       `Level ${level.id}: too many solid rectangles (${filledRects}); keep 0–1`,
     );

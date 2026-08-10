@@ -23,13 +23,15 @@ export type LevelPackInput = {
   cols: number;
   bits: (0 | 1)[][];
   solution: number[][];
+  /** Optional Black Bit mask; true hides that cell’s digit on the piece. */
+  blackBits?: boolean[][];
 };
 
 /** Extract connected pieces from a packed solution map. */
 export function extractPiecesFromLevel(
   options: LevelPackInput,
 ): { pieces: PackedPiece[] } {
-  const { rows, cols, bits, solution } = options;
+  const { rows, cols, bits, solution, blackBits } = options;
   if (bits.length !== rows || solution.length !== rows) {
     throw new Error("Binary Block: row count mismatch");
   }
@@ -38,6 +40,11 @@ export function extractPiecesFromLevel(
     solution.some((r) => r.length !== cols)
   ) {
     throw new Error("Binary Block: col count mismatch");
+  }
+  if (blackBits) {
+    if (blackBits.length !== rows || blackBits.some((r) => r.length !== cols)) {
+      throw new Error("Binary Block: blackBits size mismatch");
+    }
   }
 
   const indices = new Set<number>();
@@ -55,7 +62,13 @@ export function extractPiecesFromLevel(
       for (let row = 0; row < rows; row += 1) {
         for (let col = 0; col < cols; col += 1) {
           if (solution[row][col] === pieceIndex) {
-            cells.push({ row, col, bit: bits[row][col] });
+            const hidden = Boolean(blackBits?.[row]?.[col]);
+            cells.push({
+              row,
+              col,
+              bit: bits[row][col],
+              ...(hidden ? { hidden: true as const } : {}),
+            });
           }
         }
       }

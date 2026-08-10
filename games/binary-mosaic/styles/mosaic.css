@@ -519,6 +519,18 @@
   flex-shrink: 0;
 }
 
+/* Touch drag: reduce scroll fighting while a piece is grabbed. */
+.mosaic-play.is-dragging {
+  touch-action: none;
+}
+
+@media (max-width: 640px) {
+  .mosaic-tray-slot,
+  .mosaic-on-board {
+    touch-action: manipulation;
+  }
+}
+
 .mosaic-board-cluster {
   display: flex;
   align-items: stretch;
@@ -665,6 +677,18 @@
   border-color: #1a6b3c;
   color: #0d3d22;
   animation: none;
+}
+
+.mosaic-reject-marker.is-black-bit {
+  color: transparent;
+  background: #121417;
+  border: 2px dashed #3a4048;
+}
+
+.mosaic-reject-marker.is-black-bit.is-met {
+  background: #1a1f24;
+  border-style: solid;
+  border-color: #4a5560;
 }
 
 .mosaic-hint-marker {
@@ -828,6 +852,26 @@
     color-mix(in srgb, #6aa0e8 26%, transparent) 100%
   );
   border-color: color-mix(in srgb, #2e7bcb 45%, #ffffff);
+}
+
+/* Black Bit — digit hidden; cell reads as solid black (L40+). */
+.mosaic-cell--black {
+  color: transparent;
+  background: linear-gradient(160deg, #1a1d22 0%, #0c0e12 55%, #050607 100%);
+  border-color: #2a2e35;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.mosaic-piece.is-ghost .mosaic-cell--black {
+  background: color-mix(in srgb, #1a1d22 55%, transparent);
+  border-style: dashed;
+  color: transparent;
+}
+
+.mosaic-hint-marker.is-black-bit {
+  color: transparent;
+  background: #121417;
+  border: 2px solid #3a4048;
 }
 
 .mosaic-piece.is-ghost .mosaic-cell {

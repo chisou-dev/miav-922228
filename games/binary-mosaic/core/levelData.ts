@@ -37,6 +37,12 @@ export type LevelData = {
   hintAllowed: boolean;
   /** Optional explicit rotatable piece indices (else auto-picked by quota). */
   rotatablePieceIndices?: number[];
+  /**
+   * Optional Black Bit mask (same size as bits/solution).
+   * true = hide that piece cell’s digit from the player (L40+).
+   * Solver still uses `bits`. Omit on L1–39.
+   */
+  blackBits?: boolean[][];
 };
 
 /** Clear-condition slice (solver / scoring / Creator Mode). */
@@ -79,6 +85,7 @@ export function toLevelPackInput(level: LevelData): LevelPackInput {
     cols: level.cols,
     bits: level.bits,
     solution: level.solution,
+    blackBits: level.blackBits,
   };
 }
 

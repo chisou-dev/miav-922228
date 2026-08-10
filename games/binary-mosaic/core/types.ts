@@ -11,6 +11,11 @@ export type Cell = {
 /** One cell of a piece; bit stays glued through rotation. */
 export type ShapeCell = Cell & {
   bit: 0 | 1;
+  /**
+   * Player-facing Black Bit: true bit exists for the solver, but the digit
+   * is hidden on the piece UI (L40+). Absent/false = normal visible digit.
+   */
+  hidden?: boolean;
 };
 
 export type Shape = ShapeCell[];

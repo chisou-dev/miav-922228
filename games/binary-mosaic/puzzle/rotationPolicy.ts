@@ -1,6 +1,7 @@
 /**
  * Per-level how many pieces may rotate (data table — not if(level===N) sprawl).
- * L1–19: none · L20–21: 1 · L22–24: 2 · L25–28: 3 · L29–30: 5 · L31: 4 · L32: 3 · L33–34: 4 · L35–36: 4 · L37–38: 3
+ * L1–39: none · L40: Rotation intro (1) · L41+: gradual increase.
+ * Prefer level.rotatablePieceIndices when set (L40+ / UserLevels).
  */
 import {
   normalizeShape,
@@ -9,34 +10,29 @@ import {
 } from "@/games/binary-mosaic/core/board";
 import type { Shape } from "@/games/binary-mosaic/types";
 
+/** Campaign rotation quotas. Ids below {@link rotationFeatureStartsAt} are 0. */
 const ROTATABLE_COUNT_BY_LEVEL: Readonly<Record<number, number>> = {
-  20: 1,
-  21: 1,
-  22: 2,
-  23: 2,
-  24: 2,
-  25: 3,
-  26: 3,
-  27: 3,
-  28: 3,
-  29: 5,
-  30: 5,
-  31: 4,
-  32: 3,
-  33: 4,
-  34: 4,
-  35: 4,
-  36: 4,
-  37: 3,
-  38: 3,
+  40: 1,
+  41: 2,
+  42: 2,
+  43: 2,
+  44: 3,
+  45: 3,
+  46: 2,
+  47: 2,
+  48: 3,
+  49: 4,
+  50: 7,
 };
 
 export function rotatableCountForLevel(levelId: number): number {
+  if (levelId < rotationFeatureStartsAt()) return 0;
   return ROTATABLE_COUNT_BY_LEVEL[levelId] ?? 0;
 }
 
+/** First campaign level that may require / offer piece rotation. */
 export function rotationFeatureStartsAt(): number {
-  return 20;
+  return 40;
 }
 
 /** True if 90° CW changes the occupied footprint (worth rotating). */

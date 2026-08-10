@@ -215,6 +215,10 @@ export function isHardReasonForProfile(
       if (reason === EvaluatorReasonCode.SCORE_TOO_LOW) {
         return false;
       }
+      // L40+ small-pack: TOO_EASY must hard-fail (softEasyMaxNodes overlay).
+      if (reason === EvaluatorReasonCode.TOO_EASY && levelId >= 40) {
+        return true;
+      }
       return STRICT_HARD_REASONS.has(reason);
     default: {
       const _exhaustive: never = profile;
@@ -352,9 +356,17 @@ export function evaluateLevel(
   options: EvaluateLevelOptions = {},
 ): EvaluatorResult {
   const profile = options.profile ?? DEFAULT_EVALUATION_PROFILE;
+  const smallPack = level.id >= 40;
   const thresholds: EvaluatorThresholds = {
     ...DEFAULT_THRESHOLDS,
     ...PROFILE_THRESHOLD_OVERLAYS[profile],
+    ...(smallPack
+      ? {
+          maxPieceSize: 20,
+          softEasyMaxNodes: 8,
+          softHardMinNodes: 80_000,
+        }
+      : {}),
     ...options.thresholds,
   };
 
@@ -363,6 +375,7 @@ export function evaluateLevel(
     cols: level.cols,
     bits: level.bits,
     solution: level.solution,
+    blackBits: level.blackBits,
   });
 
   const pieceCount = pieces.length;

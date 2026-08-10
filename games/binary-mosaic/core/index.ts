@@ -102,6 +102,7 @@ export {
 
 export {
   solveLevel,
+  solveLevelVisible,
   type SolveLevelOptions,
   type SolverResult,
   type SolverStatus,

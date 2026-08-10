@@ -35,16 +35,22 @@ export function PieceView({
       style={{ width: cols * cellPx, height: rows * cellPx, ...style }}
       onPointerDown={onPointerDown}
     >
-      {cells.map((cell) => (
-        <span
-          key={`${cell.row}-${cell.col}`}
-          className={`mosaic-cell mosaic-cell--${cell.bit}`}
-          style={cellStyle(cell, cellPx)}
-          aria-hidden="true"
-        >
-          {cell.bit}
-        </span>
-      ))}
+      {cells.map((cell) => {
+        const isBlack = Boolean(cell.hidden);
+        return (
+          <span
+            key={`${cell.row}-${cell.col}`}
+            className={`mosaic-cell ${
+              isBlack ? "mosaic-cell--black" : `mosaic-cell--${cell.bit}`
+            }`}
+            style={cellStyle(cell, cellPx)}
+            aria-hidden="true"
+            title={isBlack ? "Black Bit" : undefined}
+          >
+            {isBlack ? "" : cell.bit}
+          </span>
+        );
+      })}
     </div>
   );
 }

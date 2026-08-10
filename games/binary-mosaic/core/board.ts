@@ -23,17 +23,23 @@ export function normalizeShape(cells: Shape): Shape {
       row: c.row - minRow,
       col: c.col - minCol,
       bit: c.bit,
+      ...(c.hidden ? { hidden: true as const } : {}),
     }))
     .sort((a, b) => a.row - b.row || a.col - b.col);
 }
 
-/** Rotate 90° clockwise; bits stay glued to their cells. */
+/** Rotate 90° clockwise; bits (and Black Bit flags) stay glued to their cells. */
 export function rotateShape(shape: Shape, times = 1): Shape {
   let next = shape;
   const n = ((times % 4) + 4) % 4;
   for (let i = 0; i < n; i += 1) {
     next = normalizeShape(
-      next.map((c) => ({ row: c.col, col: -c.row, bit: c.bit })),
+      next.map((c) => ({
+        row: c.col,
+        col: -c.row,
+        bit: c.bit,
+        ...(c.hidden ? { hidden: true as const } : {}),
+      })),
     );
   }
   return next;
@@ -51,6 +57,7 @@ export function absoluteCells(shape: Shape, origin: Cell): ShapeCell[] {
     row: origin.row + c.row,
     col: origin.col + c.col,
     bit: c.bit,
+    ...(c.hidden ? { hidden: true as const } : {}),
   }));
 }
 

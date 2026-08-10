@@ -110,6 +110,7 @@ import {
   initialRotationForRotatable,
   pickRotatablePieceIndices,
   rotatableCountForLevel,
+  rotationFeatureStartsAt,
 } from "@/games/binary-mosaic/puzzle/rotationPolicy";
 import { useBit8Audio } from "@/hooks/useBit8Audio";
 
@@ -126,14 +127,25 @@ function audioStageForLevel(level: LevelDef): number {
 }
 
 /**
- * Rotate quota: campaign table, or honor LevelData.rotatablePieceIndices
- * (UserLevels store explicit indices; draft ids are not in the L20–30 table).
+ * Rotate quota: campaign table from L40; L1–39 campaign never rotates.
+ * UserLevels still honor explicit rotatablePieceIndices.
  */
-function rotateQuotaForPlay(level: LevelDef): number {
+function rotateQuotaForPlay(level: LevelDef, playMode: PlayMode): number {
+  if (playMode === "campaign") {
+    if (level.id < rotationFeatureStartsAt()) return 0;
+    return rotatableCountForLevel(level.id);
+  }
   const table = rotatableCountForLevel(level.id);
   const explicit = level.rotatablePieceIndices?.length ?? 0;
   return Math.max(table, explicit);
 }
+
+/** Touch long-press → grab (ms). Mouse keeps immediate drag. */
+const TOUCH_LONG_PRESS_MS = 420;
+/** Finger movement allowed while waiting for long-press. */
+const TOUCH_PRESS_SLOP_PX = 14;
+/** Lift dragged piece above the finger on touch. */
+const TOUCH_DRAG_LIFT_PX = 56;
 
 const ClearSequence = dynamic(
   () =>
@@ -148,6 +160,7 @@ type RejectMarker = {
   col: number;
   bit: 0 | 1;
   pieceIndex: number;
+  hidden?: boolean;
 };
 
 type DropPreview = {
@@ -160,14 +173,15 @@ type DropPreview = {
 type Cell = { row: number; col: number };
 
 /** Build tray pieces from LevelData/LevelDef (campaign or user). */
-function createPieces(level: LevelDef): PieceRuntime[] {
+function createPieces(level: LevelDef, playMode: PlayMode): PieceRuntime[] {
   const { pieces } = extractPiecesFromLevel(level);
+  const quota = rotateQuotaForPlay(level, playMode);
+  const explicit =
+    playMode === "campaign" && level.id < rotationFeatureStartsAt()
+      ? undefined
+      : level.rotatablePieceIndices;
   const rotatableIds = new Set(
-    pickRotatablePieceIndices(
-      pieces,
-      rotateQuotaForPlay(level),
-      level.rotatablePieceIndices,
-    ),
+    pickRotatablePieceIndices(pieces, quota, explicit),
   );
   const runtime: PieceRuntime[] = pieces.map((piece) => {
     const canRotate = rotatableIds.has(piece.pieceIndex);
@@ -230,7 +244,7 @@ function MosaicPlayfield({
   const previewKeyRef = useRef("");
 
   const [pieces, setPieces] = useState<PieceRuntime[]>(() =>
-    createPieces(level),
+    createPieces(level, playMode),
   );
   const [hintUses, setHintUses] = useState(0);
   const [hintRevealed, setHintRevealed] = useState<HintCell[]>([]);
@@ -312,7 +326,7 @@ function MosaicPlayfield({
   const handleRetry = useCallback(() => {
     void audio.playSe("button");
     clearedRef.current = false;
-    setPieces(createPieces(level));
+    setPieces(createPieces(level, playMode));
     setHintUses(0);
     setHintRevealed([]);
     setMoves(0);
@@ -334,13 +348,13 @@ function MosaicPlayfield({
       audio.setGameState("playing", { stage });
       audio.restartBgm();
     });
-  }, [audio, level]);
+  }, [audio, level, playMode]);
 
   piecesRef.current = pieces;
 
   useEffect(() => {
     clearedRef.current = false;
-    setPieces(createPieces(level));
+    setPieces(createPieces(level, playMode));
     setHintUses(0);
     setHintRevealed([]);
     setMoves(0);
@@ -357,7 +371,7 @@ function MosaicPlayfield({
     setRejectMarkers([]);
     previewKeyRef.current = "";
     startRef.current = performance.now();
-  }, [level]);
+  }, [level, playMode]);
 
   useEffect(() => {
     if (!running) return;
@@ -455,6 +469,7 @@ function MosaicPlayfield({
             col: hint.col,
             bit: hint.bit,
             pieceIndex: hint.pieceIndex,
+            ...(hint.hidden ? { hidden: true as const } : {}),
           });
         }
         return next;
@@ -533,35 +548,176 @@ function MosaicPlayfield({
     [level, soundOn, audio],
   );
 
+  const longPressTimerRef = useRef<number | null>(null);
+  const touchPressRef = useRef<{
+    pointerId: number;
+    pieceId: string;
+    startX: number;
+    startY: number;
+    lastX: number;
+    lastY: number;
+    target: HTMLElement;
+  } | null>(null);
+
+  const clearTouchPress = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    touchPressRef.current = null;
+  }, []);
+
+  const scrollBoardIntoViewIfNeeded = useCallback(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const rect = board.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const visibleTop = Math.max(rect.top, 0);
+    const visibleBottom = Math.min(rect.bottom, vh);
+    const visibleH = Math.max(0, visibleBottom - visibleTop);
+    const ratio = visibleH / Math.max(rect.height, 1);
+    // Already mostly on-screen — skip abrupt scroll.
+    if (ratio >= 0.72 && rect.top >= -8 && rect.top < vh * 0.45) return;
+    board.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, []);
+
+  const beginPieceDrag = useCallback(
+    (
+      piece: PieceRuntime,
+      clientX: number,
+      clientY: number,
+      target: HTMLElement,
+      options?: { touchLift?: boolean },
+    ) => {
+      const rect = target.getBoundingClientRect();
+      const lift = options?.touchLift ? TOUCH_DRAG_LIFT_PX : 0;
+      const x = rect.left;
+      const y = rect.top - lift;
+      dragMetaRef.current = {
+        grabOffsetX: clientX - x,
+        grabOffsetY: clientY - y,
+        x,
+        y,
+      };
+      setDragPieceId(piece.id);
+      requestAnimationFrame(() => {
+        if (dragLayerRef.current) {
+          dragLayerRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        }
+      });
+      if (piece.placed) {
+        setPieces((prev) =>
+          prev.map((p) => (p.id === piece.id ? { ...p, placed: null } : p)),
+        );
+      }
+      if (options?.touchLift) {
+        scrollBoardIntoViewIfNeeded();
+      }
+    },
+    [scrollBoardIntoViewIfNeeded],
+  );
+
   const onPiecePointerDown = (
     event: ReactPointerEvent,
     piece: PieceRuntime,
   ) => {
     if (clearing) return;
     void audio.unlock();
-    event.preventDefault();
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     setSelectedId(piece.id);
     setKbOrigin(null);
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    dragMetaRef.current = {
-      grabOffsetX: event.clientX - rect.left,
-      grabOffsetY: event.clientY - rect.top,
-      x: rect.left,
-      y: rect.top,
-    };
-    setDragPieceId(piece.id);
-    requestAnimationFrame(() => {
-      if (dragLayerRef.current) {
-        dragLayerRef.current.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
-      }
-    });
-    if (piece.placed) {
-      setPieces((prev) =>
-        prev.map((p) => (p.id === piece.id ? { ...p, placed: null } : p)),
+
+    const isTouch = event.pointerType === "touch";
+
+    // PC / pen: keep immediate drag (unchanged).
+    if (!isTouch) {
+      event.preventDefault();
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+      beginPieceDrag(
+        piece,
+        event.clientX,
+        event.clientY,
+        event.currentTarget as HTMLElement,
       );
+      return;
     }
+
+    // Touch: long-press to grab — do not place on press; keep drag until release.
+    clearTouchPress();
+    const target = event.currentTarget as HTMLElement;
+    touchPressRef.current = {
+      pointerId: event.pointerId,
+      pieceId: piece.id,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      target,
+    };
+
+    longPressTimerRef.current = window.setTimeout(() => {
+      const press = touchPressRef.current;
+      if (!press || press.pieceId !== piece.id) return;
+      longPressTimerRef.current = null;
+      try {
+        press.target.setPointerCapture(press.pointerId);
+      } catch {
+        /* capture may fail if pointer already up */
+      }
+      beginPieceDrag(piece, press.lastX, press.lastY, press.target, {
+        touchLift: true,
+      });
+      touchPressRef.current = null;
+    }, TOUCH_LONG_PRESS_MS);
   };
+
+  // Touch press: cancel long-press on big move; track last point for grab.
+  useEffect(() => {
+    const onMove = (event: PointerEvent) => {
+      const press = touchPressRef.current;
+      if (!press || event.pointerId !== press.pointerId) return;
+      press.lastX = event.clientX;
+      press.lastY = event.clientY;
+      const dx = event.clientX - press.startX;
+      const dy = event.clientY - press.startY;
+      if (dx * dx + dy * dy > TOUCH_PRESS_SLOP_PX * TOUCH_PRESS_SLOP_PX) {
+        clearTouchPress();
+      }
+    };
+    const onUp = (event: PointerEvent) => {
+      const press = touchPressRef.current;
+      if (!press || event.pointerId !== press.pointerId) return;
+      // Short tap: selection only (no drag started).
+      clearTouchPress();
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      clearTouchPress();
+    };
+  }, [clearTouchPress]);
+
+  // While dragging on touch, block page scroll competing with the piece.
+  useEffect(() => {
+    if (!dragPieceId) return;
+    const prev = document.body.style.touchAction;
+    document.body.style.touchAction = "none";
+    const blockScroll = (e: TouchEvent) => {
+      if (e.cancelable) e.preventDefault();
+    };
+    document.addEventListener("touchmove", blockScroll, { passive: false });
+    return () => {
+      document.body.style.touchAction = prev;
+      document.removeEventListener("touchmove", blockScroll);
+    };
+  }, [dragPieceId]);
 
   useEffect(() => {
     if (!dragPieceId) {
@@ -957,7 +1113,7 @@ function MosaicPlayfield({
   const showRowLetters = level.cols === 8;
 
   return (
-    <div className="mosaic-play">
+    <div className={`mosaic-play${dragPieceId ? " is-dragging" : ""}`}>
       <header className="mosaic-hud">
         <div className="mosaic-hud-item">
           <span className="mosaic-hud-label">Target</span>
@@ -1126,10 +1282,11 @@ function MosaicPlayfield({
           {rejectMarkers.map((marker) => {
             const key = `${marker.row},${marker.col}`;
             const met = solvedCells.has(key);
+            const isBlack = Boolean(marker.hidden);
             return (
               <span
                 key={`reject-${marker.pieceIndex}-${marker.row}-${marker.col}`}
-                className={`mosaic-reject-marker${met ? " is-met" : ""}`}
+                className={`mosaic-reject-marker${met ? " is-met" : ""}${isBlack ? " is-black-bit" : ""}`}
                 style={{
                   left: marker.col * cellPx,
                   top: marker.row * cellPx,
@@ -1137,7 +1294,7 @@ function MosaicPlayfield({
                   height: cellPx,
                 }}
               >
-                {marker.bit}
+                {isBlack ? "" : marker.bit}
               </span>
             );
           })}
@@ -1145,10 +1302,11 @@ function MosaicPlayfield({
           {hintCells.map((cell) => {
             const key = `${cell.row},${cell.col}`;
             if (rejectKeys.has(key)) return null;
+            const isBlack = Boolean(cell.hidden);
             return (
               <span
                 key={`hint-${cell.row}-${cell.col}`}
-                className="mosaic-hint-marker"
+                className={`mosaic-hint-marker${isBlack ? " is-black-bit" : ""}`}
                 style={{
                   left: cell.col * cellPx,
                   top: cell.row * cellPx,
@@ -1156,7 +1314,7 @@ function MosaicPlayfield({
                   height: cellPx,
                 }}
               >
-                {cell.bit}
+                {isBlack ? "" : cell.bit}
               </span>
             );
           })}
@@ -1490,47 +1648,63 @@ export function BinaryMosaicGame() {
     }, 0);
   }, [deleteTargetId, active, refreshUserLevels]);
 
-  const startCampaign = useCallback((levelId: number) => {
+  /** Level click = user gesture: unmute, unlock, start BGM from the beginning. */
+  const armPlayAudio = useCallback((stage: number) => {
     const audio = AudioManager.getInstance();
+    const stageId = Math.max(1, Math.floor(stage));
+    setSoundOn(true);
+    audio.setMuted(false);
+    void audio.unlock().then(() => {
+      audio.setGameState("playing", { stage: stageId });
+      audio.playBgm(stageId, { restart: true });
+    });
     void audio.playSe("button");
-    void audio.unlock();
-    clearChallengeFragment();
-    setSharedChallenge(null);
-    setEphemeralUserLevel(null);
-    setActive({ kind: "campaign", levelId });
-    setScreen("play");
   }, []);
 
-  const startUserLevel = useCallback((userLevelId: string) => {
-    const record = getUserLevel(userLevelId);
-    if (!record) return;
-    const audio = AudioManager.getInstance();
-    void audio.playSe("button");
-    void audio.unlock();
-    clearChallengeFragment();
-    setSharedChallenge(null);
-    setEphemeralUserLevel(null);
-    setActive({
-      kind: "user",
-      userLevelId: record.userLevelId,
-      level: record.levelData as LevelDef,
-    });
-    setScreen("play");
-  }, []);
+  const startCampaign = useCallback(
+    (levelId: number) => {
+      armPlayAudio(levelId);
+      clearChallengeFragment();
+      setSharedChallenge(null);
+      setEphemeralUserLevel(null);
+      setActive({ kind: "campaign", levelId });
+      setScreen("play");
+    },
+    [armPlayAudio],
+  );
 
-  const startSharedChallenge = useCallback((record: UserLevelRecord) => {
-    const audio = AudioManager.getInstance();
-    void audio.playSe("button");
-    void audio.unlock();
-    setEphemeralUserLevel(record);
-    setActive({
-      kind: "user",
-      userLevelId: record.userLevelId,
-      level: record.levelData as LevelDef,
-    });
-    setScreen("play");
-    // Keep `#challenge=` so refresh reopens the same challenge.
-  }, []);
+  const startUserLevel = useCallback(
+    (userLevelId: string) => {
+      const record = getUserLevel(userLevelId);
+      if (!record) return;
+      armPlayAudio(Math.max(1, record.levelData.id));
+      clearChallengeFragment();
+      setSharedChallenge(null);
+      setEphemeralUserLevel(null);
+      setActive({
+        kind: "user",
+        userLevelId: record.userLevelId,
+        level: record.levelData as LevelDef,
+      });
+      setScreen("play");
+    },
+    [armPlayAudio],
+  );
+
+  const startSharedChallenge = useCallback(
+    (record: UserLevelRecord) => {
+      armPlayAudio(Math.max(1, record.levelData.id));
+      setEphemeralUserLevel(record);
+      setActive({
+        kind: "user",
+        userLevelId: record.userLevelId,
+        level: record.levelData as LevelDef,
+      });
+      setScreen("play");
+      // Keep `#challenge=` so refresh reopens the same challenge.
+    },
+    [armPlayAudio],
+  );
 
   const saveSharedToMyLevels = useCallback(() => {
     if (!sharedChallenge || sharedChallenge.status !== "ok") return;
@@ -1590,9 +1764,6 @@ export function BinaryMosaicGame() {
     if (screen === "select") {
       audio.setGameState("menu");
     }
-    return () => {
-      audio.setGameState("menu");
-    };
   }, [audio, screen]);
 
   useEffect(() => {

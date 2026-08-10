@@ -16,28 +16,22 @@ import type { LevelData } from "@/games/binary-mosaic/core/levelData";
 import { buildActiveMask, canPlaceShape } from "@/games/binary-mosaic/core/rules";
 import type { Shape } from "@/games/binary-mosaic/core/types";
 
-/** Matches play rotate quotas (L1–19: 0 · L20–21: 1 · … · L29–30: 5 · L31: 4 · L32: 3 · L33–34: 4 · L35–36: 4 · L37–38: 3). */
+/** Matches play rotate quotas. Campaign rotation starts at L40. */
 const ROTATABLE_COUNT_BY_LEVEL: Readonly<Record<number, number>> = {
-  20: 1,
-  21: 1,
-  22: 2,
-  23: 2,
-  24: 2,
-  25: 3,
-  26: 3,
-  27: 3,
-  28: 3,
-  29: 5,
-  30: 5,
-  31: 4,
-  32: 3,
-  33: 4,
-  34: 4,
-  35: 4,
-  36: 4,
-  37: 3,
-  38: 3,
+  40: 1,
+  41: 2,
+  42: 2,
+  43: 2,
+  44: 3,
+  45: 3,
+  46: 2,
+  47: 2,
+  48: 3,
+  49: 4,
+  50: 7,
 };
+
+const ROTATION_FEATURE_STARTS_AT = 40;
 
 const DEFAULT_SOLUTION_LIMIT = 3;
 const DEFAULT_NODE_LIMIT = 2_000_000;
@@ -64,6 +58,11 @@ export type SolveLevelOptions = {
   rotatablePieceIndices?: readonly number[];
   /** Quota when auto-picking rotatable pieces (default: per-level table). */
   rotateQuota?: number;
+  /**
+   * When true, Black Bit cells do not constrain bit matching
+   * (player-visible uniqueness). Default false = full internal bits.
+   */
+  visibleOnly?: boolean;
 };
 
 type SolverPiece = {
@@ -110,13 +109,19 @@ function pickRotatableIndices(
   );
 }
 
-function orientations(base: Shape, canRotate: boolean): Shape[] {
+function orientations(
+  base: Shape,
+  canRotate: boolean,
+  visibleOnly = false,
+): Shape[] {
   if (!canRotate) return [base];
   const seen = new Set<string>();
   const out: Shape[] = [];
   for (let t = 0; t < 4; t += 1) {
     const sh = rotateShape(base, t);
-    const key = sh.map((c) => `${c.row},${c.col},${c.bit}`).join("|");
+    const key = visibleOnly
+      ? orientationKeyVisible(sh)
+      : sh.map((c) => `${c.row},${c.col},${c.bit}`).join("|");
     if (!seen.has(key)) {
       seen.add(key);
       out.push(sh);
@@ -130,13 +135,26 @@ function shapeMatchesBits(
   originRow: number,
   originCol: number,
   bits: (0 | 1)[][],
+  visibleOnly: boolean,
 ): boolean {
   for (const cell of shape) {
+    if (visibleOnly && cell.hidden) continue;
     const r = originRow + cell.row;
     const c = originCol + cell.col;
     if (bits[r][c] !== cell.bit) return false;
   }
   return true;
+}
+
+/** Orientation key under player-visible info (hidden bits ignored). */
+function orientationKeyVisible(shape: Shape): string {
+  return shape
+    .map((c) =>
+      c.hidden
+        ? `${c.row},${c.col},?`
+        : `${c.row},${c.col},${c.bit}`,
+    )
+    .join("|");
 }
 
 /**
@@ -154,21 +172,26 @@ export function solveLevel(
       ? performance.now()
       : Date.now();
 
-  const { rows, cols, bits, solution } = level;
+  const { rows, cols, bits, solution, blackBits } = level;
   const activeMask = buildActiveMask(solution);
+  const visibleOnly = Boolean(options.visibleOnly);
   const { pieces: packed } = extractPiecesFromLevel({
     rows,
     cols,
     bits,
     solution,
+    blackBits,
   });
 
   const quota =
     options.rotateQuota ??
-    ROTATABLE_COUNT_BY_LEVEL[level.id] ??
-    0;
+    (level.id > 0 && level.id < ROTATION_FEATURE_STARTS_AT
+      ? 0
+      : (ROTATABLE_COUNT_BY_LEVEL[level.id] ?? 0));
   const explicit =
-    options.rotatablePieceIndices ?? level.rotatablePieceIndices;
+    level.id > 0 && level.id < ROTATION_FEATURE_STARTS_AT
+      ? undefined
+      : (options.rotatablePieceIndices ?? level.rotatablePieceIndices);
   const rotatable = pickRotatableIndices(packed, quota, explicit);
 
   const pieces: SolverPiece[] = packed.map((p) => ({
@@ -182,12 +205,12 @@ export function solveLevel(
 
   for (const p of pieces) {
     const places: number[][] = [];
-    for (const shape of orientations(p.baseShape, p.canRotate)) {
+    for (const shape of orientations(p.baseShape, p.canRotate, visibleOnly)) {
       const bounds = shapeBounds(shape);
       for (let orr = 0; orr <= rows - bounds.rows; orr += 1) {
         for (let orc = 0; orc <= cols - bounds.cols; orc += 1) {
           const origin = { row: orr, col: orc };
-          if (!shapeMatchesBits(shape, orr, orc, bits)) continue;
+          if (!shapeMatchesBits(shape, orr, orc, bits, visibleOnly)) continue;
           if (
             !canPlaceShape({
               rows,
@@ -279,4 +302,15 @@ export function solveLevel(
     status,
     timedOut,
   };
+}
+
+/**
+ * Player-visible uniqueness: Black Bit cells are wildcards for bit matching.
+ * Must be UNIQUE for L40+ campaign levels (in addition to internal UNIQUE).
+ */
+export function solveLevelVisible(
+  level: LevelData,
+  options: Omit<SolveLevelOptions, "visibleOnly"> = {},
+): SolverResult {
+  return solveLevel(level, { ...options, visibleOnly: true });
 }

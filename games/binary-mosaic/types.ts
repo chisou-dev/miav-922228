@@ -8,6 +8,8 @@ export type Cell = {
 /** One cell of a piece, carrying a fixed bit through rotation. */
 export type ShapeCell = Cell & {
   bit: 0 | 1;
+  /** Black Bit — digit hidden on the piece (L40+). */
+  hidden?: boolean;
 };
 
 export type Shape = ShapeCell[];
@@ -46,6 +48,13 @@ export type LevelDef = {
    * If omitted, the engine picks up to the per-level rotatable count.
    */
   rotatablePieceIndices?: number[];
+  /**
+   * Optional Black Bit mask (same size as bits/solution).
+   * true = that packed cell’s digit is hidden on the piece UI.
+   * Board target bits remain visible; solver still uses true bits.
+   * Omit on L1–39.
+   */
+  blackBits?: boolean[][];
 };
 
 export type PieceRuntime = {

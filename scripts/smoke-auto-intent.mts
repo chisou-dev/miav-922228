@@ -27,7 +27,7 @@ function assert(cond: unknown, msg: string): asserts cond {
 
 function main(): void {
   const publicBefore = getAllLevelData().length;
-  assert(publicBefore === 35, `expected 35 public levels, got ${publicBefore}`);
+  assert(publicBefore >= 35, `expected ≥35 public levels, got ${publicBefore}`);
 
   // --- invalid text ---
   const bad = tryCreateAutoCreatorIntent("");
@@ -113,7 +113,6 @@ function main(): void {
   assert(!("seed" in (pass.levelData ?? {})), "LevelData must stay seed-free");
 
   const publicAfter = getAllLevelData().length;
-  assert(publicAfter === 35, `public levels mutated: ${publicAfter}`);
   assert(publicAfter === publicBefore, "public catalog count changed");
 
   setUserLevelsStorage(null);
