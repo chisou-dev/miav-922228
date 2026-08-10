@@ -24,13 +24,13 @@ Entre elles, un vide qui ne devrait pas exister.
 
 Une absence qui revient sans jamais s’expliquer.
 
-L’ordre des images autour de ce vide devient toujours incertain.
+L’ordre des images autour de ce vide reste incertain.
 
 La table.
 
 Des biscuits en forme d’étoiles posés sur des assiettes en papier.
 
-Le cycle change toutes les trente secondes.
+Le cycle se renouvelle toutes les trente secondes.
 
 Rien ne s’arrête.
 
@@ -50,7 +50,7 @@ L’enfant pointe l’écran.
 
 L’arrière-petit-enfant regarde.
 
-Un léger silence.
+Un bref silence.
 
 — Je ne sais pas.
 
