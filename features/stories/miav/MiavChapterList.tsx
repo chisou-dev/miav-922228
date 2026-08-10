@@ -1,46 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  FREE_THROUGH_CHAPTER,
-  loadChapterProgress,
-  type ChapterProgressState,
-} from "@/features/stories/miav/chapterProgress";
+import { useSyncExternalStore } from "react";
+import { readReaderMemoryThroughChapter } from "@/features/stories/miav/readerMemorySync";
 import type { MiavChapterNavItem } from "@/features/stories/miav/MiavChapterReader";
 import { sfSectionClass, sfSectionVariantAt } from "@/features/shared/SfSection";
 
-type ListStatus = "locked" | "available" | "read";
+type ListStatus = "available" | "read";
 
 function statusLabel(status: ListStatus): string {
-  switch (status) {
-    case "locked":
-      return "LOCKED";
-    case "read":
-      return "READ";
-    default:
-      return "AVAILABLE";
-  }
+  return status === "read" ? "READ" : "AVAILABLE";
 }
 
 function listStatus(
   chapterNumber: number,
-  unlockedThrough: number,
-  progress: ChapterProgressState | null,
+  readThrough: number,
 ): ListStatus {
-  if (
-    chapterNumber > FREE_THROUGH_CHAPTER &&
-    chapterNumber > unlockedThrough
-  ) {
-    return "locked";
-  }
-  if (progress?.completedChapters.includes(chapterNumber)) {
-    return "read";
-  }
+  if (readThrough > 0 && chapterNumber <= readThrough) return "read";
   return "available";
 }
 
+function subscribeReaderMemory() {
+  return () => {};
+}
+
+function useReadThroughChapter(): number {
+  return useSyncExternalStore(
+    subscribeReaderMemory,
+    readReaderMemoryThroughChapter,
+    () => 0,
+  );
+}
+
 type ArchiveProps = {
-  unlockedThrough: number;
   chapters: readonly (MiavChapterNavItem & {
     summary: string;
     publishedLabel: string;
@@ -48,21 +39,13 @@ type ArchiveProps = {
   })[];
 };
 
-export function MiavChapterArchiveList({
-  chapters,
-  unlockedThrough,
-}: ArchiveProps) {
-  const [progress, setProgress] = useState<ChapterProgressState | null>(null);
-
-  useEffect(() => {
-    setProgress(loadChapterProgress());
-  }, []);
+export function MiavChapterArchiveList({ chapters }: ArchiveProps) {
+  const readThrough = useReadThroughChapter();
 
   return (
     <ol className="list-none">
       {chapters.map((chapter, index) => {
-        const status = listStatus(chapter.number, unlockedThrough, progress);
-        const locked = status === "locked";
+        const status = listStatus(chapter.number, readThrough);
         const href = `/chapters/${chapter.slug}`;
 
         return (
@@ -84,21 +67,12 @@ export function MiavChapterArchiveList({
               </p>
 
               <h2 className="mt-6 text-[1.45rem] font-medium tracking-[0.05em] text-[var(--foreground)] sm:mt-8 sm:text-[1.75rem] sm:tracking-[0.06em]">
-                {locked ? (
-                  <span>
-                    {chapter.title}
-                    <span className="mt-2 block text-[0.78rem] tracking-[0.14em] text-[var(--foreground-muted)] sm:mt-0 sm:ml-3 sm:inline">
-                      — LOCKED
-                    </span>
-                  </span>
-                ) : (
-                  <a
-                    href={href}
-                    className="transition-opacity duration-300 hover:opacity-80"
-                  >
-                    {chapter.title}
-                  </a>
-                )}
+                <a
+                  href={href}
+                  className="transition-opacity duration-300 hover:opacity-80"
+                >
+                  {chapter.title}
+                </a>
               </h2>
 
               <p className="mt-5 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] sm:mt-6">
@@ -112,18 +86,12 @@ export function MiavChapterArchiveList({
               </p>
 
               <p className="mt-14 sm:mt-16">
-                {locked ? (
-                  <span className="text-[0.78rem] tracking-[0.14em] text-[var(--foreground-muted)]">
-                    Locked — read earlier chapters to unlock
-                  </span>
-                ) : (
-                  <a
-                    href={href}
-                    className="text-[0.78rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
-                  >
-                    Open record
-                  </a>
-                )}
+                <a
+                  href={href}
+                  className="text-[0.78rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
+                >
+                  Open record
+                </a>
               </p>
             </article>
           </li>
@@ -136,46 +104,20 @@ export function MiavChapterArchiveList({
 type SeriesListProps = {
   chapters: readonly MiavChapterNavItem[];
   seriesId: string;
-  unlockedThrough: number;
 };
 
 export function MiavSeriesChapterList({
   chapters,
   seriesId,
-  unlockedThrough,
 }: SeriesListProps) {
-  const [progress, setProgress] = useState<ChapterProgressState | null>(null);
-
-  useEffect(() => {
-    setProgress(loadChapterProgress());
-  }, []);
+  const readThrough = useReadThroughChapter();
 
   return (
     <ul className="mt-6">
       {chapters.map((chapter) => {
-        const status = listStatus(chapter.number, unlockedThrough, progress);
-        const locked = status === "locked";
+        const status = listStatus(chapter.number, readThrough);
         const href = `/stories/${seriesId}/${chapter.pathSlug ?? chapter.slug}`;
         const label = statusLabel(status);
-
-        if (locked) {
-          return (
-            <li
-              key={chapter.pathSlug ?? chapter.slug}
-              className="flex items-baseline justify-between gap-4 border-b border-[var(--line)] py-5 text-[0.92rem] tracking-[0.04em] text-[var(--foreground-muted)]"
-            >
-              <span>
-                Chapter {chapter.number}
-                <span className="mt-1 block text-[0.8rem] tracking-[0.06em] sm:ml-4 sm:mt-0 sm:inline">
-                  {chapter.title}
-                </span>
-              </span>
-              <span className="shrink-0 text-[0.72rem] tracking-[0.12em]">
-                {label}
-              </span>
-            </li>
-          );
-        }
 
         return (
           <li key={chapter.pathSlug ?? chapter.slug}>

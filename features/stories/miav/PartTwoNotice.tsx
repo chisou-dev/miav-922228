@@ -1,7 +1,7 @@
 import { miavPartTwo } from "@/features/stories/miav/work";
 
 /**
- * Compact Part II notice for the unlocked final chapter only.
+ * Compact Part II notice for the final chapter only.
  * Kindle URL is managed solely via miavPartTwo.kindleUrl.
  */
 export function PartTwoNotice() {

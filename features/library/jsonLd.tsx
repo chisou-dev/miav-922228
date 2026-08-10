@@ -78,6 +78,50 @@ export function CreativeWorkSeriesJsonLd({
   );
 }
 
+type ChapterFields = {
+  name: string;
+  description: string;
+  position: number;
+  url: string;
+  workName: string;
+  workUrl: string;
+  inLanguage?: string;
+};
+
+/** Schema.org Chapter belonging to MIAV-922228 (or another Book work). */
+export function ChapterJsonLd({
+  name,
+  description,
+  position,
+  url,
+  workName,
+  workUrl,
+  inLanguage = "en",
+}: ChapterFields) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "Chapter",
+        name,
+        description,
+        position,
+        inLanguage,
+        url: absoluteUrl(url),
+        author: {
+          "@type": "Person",
+          name: AUTHOR_NAME,
+        },
+        isPartOf: {
+          "@type": "Book",
+          name: workName,
+          url: absoluteUrl(workUrl),
+        },
+      }}
+    />
+  );
+}
+
 export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
   const withHref = items.filter((item) => item.href);
   if (withHref.length === 0) return null;

@@ -5,6 +5,10 @@
 
 import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
 import { fourthPeriodKindle } from "@/features/stories/fourth-period/store";
+import {
+  chapterDocumentTitle,
+  chapterMetaDescription,
+} from "@/features/stories/miav/chapterSeo";
 
 export type CategoryId = "literary-sf" | "entertainment-sf" | "flash-fiction";
 
@@ -789,6 +793,18 @@ export function chapterSeo(
         series.seo.description,
     };
   }
+
+  // MIAV archive SEO is authoritative; library twin routes reuse the same titles.
+  if (series.id === "miav-922228") {
+    return {
+      title: chapterDocumentTitle(chapter.number, chapter.title),
+      description: chapterMetaDescription(
+        chapter.number,
+        series.seo.description,
+      ),
+    };
+  }
+
   return {
     title: `Chapter ${chapter.number}｜${chapter.title} | ${series.title}`,
     description: series.seo.description,

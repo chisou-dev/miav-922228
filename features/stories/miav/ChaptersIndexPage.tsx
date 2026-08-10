@@ -1,12 +1,10 @@
+import Image from "next/image";
 import { SiteShell } from "@/features/shared/SiteShell";
 import { SfSection } from "@/features/shared/SfSection";
-import {
-  getAllChapters,
-  getMaxChapterNumber,
-} from "@/features/stories/miav/chapters";
+import { getAllChapters } from "@/features/stories/miav/chapters";
 import { getContentLocaleFromRequest } from "@/features/shared/locale";
 import { MiavChapterArchiveList } from "@/features/stories/miav/MiavChapterList";
-import { readUnlockedThrough } from "@/features/stories/miav/chapterUnlockCookie";
+import { MIAV_OG_IMAGE } from "@/features/stories/miav/miavVisual";
 
 function formatArchiveDate(value: string | null): string {
   if (!value) return "Date unrecorded";
@@ -25,7 +23,6 @@ function formatArchiveDate(value: string | null): string {
 export async function ChaptersIndexPage() {
   const locale = await getContentLocaleFromRequest();
   const chapters = getAllChapters(locale);
-  const unlockedThrough = await readUnlockedThrough(getMaxChapterNumber(locale));
 
   return (
     <SiteShell>
@@ -43,10 +40,27 @@ export async function ChaptersIndexPage() {
             Each entry is a record in the work—held apart, readable in its own
             hour.
           </p>
+
+          <figure className="mt-16 sm:mt-20">
+            <div className="overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--background)]">
+              <Image
+                src={MIAV_OG_IMAGE.path}
+                alt={MIAV_OG_IMAGE.alt}
+                width={MIAV_OG_IMAGE.width}
+                height={MIAV_OG_IMAGE.height}
+                className="h-auto w-full"
+                sizes="(max-width: 768px) 100vw, 760px"
+                priority
+              />
+            </div>
+            <figcaption className="sr-only">
+              Representative visual for the literary science fiction work
+              MIAV-922228.
+            </figcaption>
+          </figure>
         </section>
 
         <MiavChapterArchiveList
-          unlockedThrough={unlockedThrough}
           chapters={chapters.map((chapter) => ({
             number: chapter.number,
             slug: chapter.slug,
