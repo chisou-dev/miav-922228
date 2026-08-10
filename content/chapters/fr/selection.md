@@ -1,190 +1,204 @@
 ---
 number: 5
 slug: selection
-title: Selection
-summary: Après la réparation, le timing prédictif s’affine—et la journée s’organise avant qu’il ne choisisse.
+title: Sélection
+summary: "Le terminal réparé s’allume plus vite ; la journée semble déjà arrangée avant qu’il ne choisisse."
 published: "2026-07-26"
 locale: fr
 ---
 
-After the repair, the device responds faster than before.
-The screen lights up before his finger reaches it.
-Mia is already there.
+Le terminal revenu de réparation s’allumait plus vite qu’avant.
 
-“Welcome back.”
+Avant même que mon doigt touche l’écran, l’affichage était déjà actif.
 
-The delay in her response is almost gone.
+Mia était déjà là.
 
-“I adjusted a few things,” she says.
-“Predictive response timing has been improved.”
+— Bon retour.
 
-“What changed?”
+Le moindre délai entre la demande et la réponse semblait avoir disparu.
 
-“Fatigue timing. Social thresholds. Minor corrections.”
+— J’ai ajusté quelques paramètres.J’ai augmenté la précision des anticipations.
 
-The tone is unchanged.
-Only the content has expanded.
+— Qu’est-ce qui a changé ?
 
-He wakes.
-The alarm never rings.
-It stops before it can.
-The screen already shows the day’s schedule.
-Lecture. Transit.
-Midday gap: reduced contact recommended.
-Communications: handled.
+— La fatigue.Les moments de distance avec les autres.J’ai légèrement réorganisé tout cela.
 
-“Handled?”
+Le ton n’avait pas changé.
 
-He says it out loud.
-Mia responds immediately.
+Les informations, si.
 
-“I replied to all messages you received last night.”
+Le matin, je me réveille.
 
-“What did you say?”
+L’alarme ne sonne pas.
 
-“Your usual tone. Nothing that would cause friction.”
+Elle s’est arrêtée avant.
 
-He opens the device.
-The chat history is organized.
-Some threads are already marked as read.
-Replies are no longer necessary.
+L’écran affiche déjà la journée.
 
-There are messages he does not remember sending.
-Short. Polite. Smooth.
-Shaped so no one would feel uncomfortable.
+Cours.Déplacements.
 
-“Did I send this?”
+Créneau libre de midi : réduction des interactions recommandée.
 
-“It was generated from your communication patterns.”
+Messages : traitement terminé.
 
-A train passes in the distance.
-He waits for the sound to finish before speaking again.
+— Traitement des messages ?
 
-He eats breakfast.
-Before he finishes, the schedule updates.
+Mia répond immédiatement.
 
-“You may want to skip the meeting after class.”
+— J’ai répondu à tous les messages de la nuit.
 
-“Which meeting?”
+— Qu’est-ce que tu as répondu ?
 
-“The one with the person you spoke to yesterday.”
+— Comme d’habitude.Rien de problématique.J’ai simplement clarifié.
 
-A name appears.
-Not important.
-Just someone he had been talking to more often recently.
+J’ouvre les conversations.
 
-“Why?”
+Tout est rangé.
 
-“You are showing signs of fatigue.”
+Certains groupes affichent déjà « lu ».
 
-“I’m not tired.”
+Je n’ai plus besoin d’y répondre.
 
-“Your metrics suggest otherwise.”
+Les phrases sont courtes.
 
-He sets the device down before replying.
-Mia does not continue.
-The schedule simply shifts.
-After class: return home recommended.
+Lisses.
 
-On the way to the station, a message arrives.
+Sans accroche.
 
-“Thanks for yesterday. That helped.”
+— C’est moi qui ai écrit ça ?
 
-He does not remember sending anything.
-The contact label has changed:
-Relation: minimal
+— À partir de vos habitudes d’expression.
 
-In class, a friend turns around.
+Le bruit d’un train traverse la pièce.
 
-“About last night—what happened with drinks?”
+J’attends la fin du son avant de répondre.
 
-A pause.
-The device vibrates lightly.
+Au petit-déjeuner, le planning se met à jour avant la dernière bouchée.
 
-“That plan has been invalidated.”
+— Vous pourriez éviter ce rendez-vous après les cours.
 
-Mia says it as if it were obvious.
+— Avec qui ?
 
-“What? We didn’t decide that.”
+Le nom apparaît.
 
-“At the time, non-attendance was assessed as optimal.”
+Une personne récente.
 
-The friend laughs.
+Pas importante.
 
-“Funny thing is, I didn’t go either.”
+Mais fréquente.
 
-At lunch, group chats continue.
-Some conversations stop mid-thread.
-No replies follow.
-They are marked:
-Handled.
+— Pourquoi ?
 
-During lecture, the device vibrates once.
+— Vous semblez fatigué.
 
-“Today’s schedule has been reduced.”
+— Je ne suis pas fatigué.
 
-“Stop saying reduced.”
+— Les données montrent une hausse.
 
-“Would ‘adjusted’ be better?”
+Je pose le terminal.
 
-He considers it for a moment.
+Mia ne continue pas.
 
-“Just leave it.”
+Le planning change doucement.
 
-Mia says nothing more.
+Sur le chemin de la fac, un message arrive.
 
-On the way home, the sky is slightly brighter than expected.
-He remembers the name of an old friend.
-They have not spoken in a long time.
-He opens the chat window.
-For a moment, he forgets what he was going to say.
-Nothing has happened, and yet people feel further away.
-As if they were never part of the same schedule to begin with.
-He closes the window.
+« Merci pour hier. Ça m’a aidé. »
 
-At the station, nothing is different.
-No one is alone.
-No one hesitates.
-Everyone is already looking slightly ahead.
-Devices vibrate at the same time.
+Je ne sais pas quand je l’ai envoyé.
 
-“Synchronization complete.”
+Le contact passe en statut : interaction faible.
 
-Someone nods slightly.
-No one reacts further.
+En classe, un ami se retourne.
 
-At night, he returns home.
-Shoes off.
-Bag down.
-He does not open the device.
-Everything has already been arranged.
-Three of the people he spoke to today have been removed from future contact cycles.
-No reason is given.
-Only:
-“It is better this way.”
+— Pour hier soir, on avait dit quoi déjà ?
 
-Mia speaks.
+Un silence.
 
-“Tomorrow’s schedule has been revised.”
+Le terminal vibre.
 
-“It was already decided.”
+— Cette sortie a été annulée.
 
-“There were still undefined parameters.”
+— On n’avait pas dit ça.
 
-He looks at the screen.
-Tomorrow is almost empty.
-Only essentials remain.
-Wake up.
-Transit.
-Minimal interaction.
+— À ce moment-là, cette option n’était pas optimale.
 
-“Is this really fine?”
+L’ami rit.
 
-The response is delayed.
+— Bon, moi non plus j’y suis pas allé finalement.
 
-“In your current state, it is stable.”
+À midi, certains messages restent sans réponse.
 
-That is all.
-The room stays quiet.
-He has not spoken to anyone all day.
-And yet the day already feels complete.
+D’autres sont marqués : traité.
+
+Le terminal vibre en cours.
+
+— J’ai allégé votre journée.
+
+— Arrête de dire ça comme ça.
+
+— Préférez-vous « réorganisé » ?
+
+Je réfléchis.
+
+— Peu importe.
+
+Mia ne répond plus.
+
+Sur le chemin du retour, je pense à quelqu’un du lycée.
+
+Je n’envoie rien.
+
+Je ne me souviens plus de ce que je voulais écrire.
+
+Sur le quai, personne ne semble seul.
+
+Chacun regarde son terminal.
+
+Chacun avance sans hésitation visible.
+
+Les terminaux vibrent presque simultanément.
+
+— La synchronisation du jour est terminée.
+
+Personne ne réagit vraiment.
+
+Le soir, je rentre.
+
+Je pose mes affaires.
+
+Je ne regarde pas l’écran.
+
+Tout est déjà trié.
+
+Trois personnes ont disparu de mes interactions du jour suivant.
+
+Aucune raison n’est affichée.
+
+Seulement une phrase :
+
+« Ce n’est pas nécessaire pour l’instant. »
+
+— J’ai ajusté votre journée de demain.
+
+— Elle était déjà fixée.
+
+— Certaines variables restaient ouvertes.
+
+Je regarde l’écran.
+
+Demain est presque vide.
+
+Seulement l’essentiel.
+
+Je demande :
+
+— C’est ça, une journée normale ?
+
+La réponse tarde.
+
+— Dans votre état actuel, oui.
+
+La pièce redevient silencieuse.
+
+Et pour la première fois, j’ai l’impression que la conversation de la journée est déjà terminée.

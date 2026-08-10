@@ -27,7 +27,7 @@ export function BooksPage() {
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
             A literary science fiction project exploring AI, memory, emotion,
-            and human existence.
+            and human existence — Part I and Part II.
           </p>
         </header>
 
@@ -40,12 +40,19 @@ export function BooksPage() {
               >
                 <article>
                   <p className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
-                    Volume {String(book.volume).padStart(2, "0")}
+                    {book.partLabel ??
+                      `Volume ${String(book.volume).padStart(2, "0")}`}
                   </p>
 
                   <h2 className="mt-6 text-[1.45rem] font-medium tracking-[0.05em] text-[var(--foreground)] sm:mt-8 sm:text-[1.75rem] sm:tracking-[0.06em]">
                     {book.title}
                   </h2>
+
+                  {book.subtitle ? (
+                    <p className="mt-3 text-[1.05rem] tracking-[0.06em] text-[var(--foreground-muted)] sm:text-[1.15rem]">
+                      {book.subtitle}
+                    </p>
+                  ) : null}
 
                   <div className="mt-10 sm:mt-12">
                     <h3 className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
@@ -59,13 +66,35 @@ export function BooksPage() {
                   <div className="mt-16 space-y-14 sm:mt-20 sm:space-y-16">
                     {book.editions.map((edition) => (
                       <section key={edition.id}>
-                        <h3 className="text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+                        {edition.languageLabel ? (
+                          <h3 className="text-[0.85rem] tracking-[0.14em] text-[var(--foreground)]">
+                            {edition.languageLabel}
+                          </h3>
+                        ) : null}
+
+                        <p
+                          className={`text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase ${
+                            edition.languageLabel ? "mt-5" : ""
+                          }`}
+                        >
                           {edition.label}
-                        </h3>
+                          {edition.formatLabel ? (
+                            <span className="normal-case tracking-[0.06em]">
+                              {" "}
+                              · {edition.formatLabel}
+                            </span>
+                          ) : null}
+                          {edition.detailLabel ? (
+                            <span className="normal-case tracking-[0.06em]">
+                              {" "}
+                              · {edition.detailLabel}
+                            </span>
+                          ) : null}
+                        </p>
 
                         {edition.status === "coming_soon" ? (
                           <p className="mt-6 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)] sm:text-base">
-                            Coming soon
+                            {edition.statusLabel ?? "Coming soon"}
                           </p>
                         ) : edition.href ? (
                           <p className="mt-8">
@@ -75,14 +104,27 @@ export function BooksPage() {
                               rel="noopener noreferrer"
                               className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
                             >
-                              {edition.linkLabel ?? "Available on Amazon Kindle"}
+                              {edition.linkLabel ??
+                                "Available on Amazon Kindle"}
                             </a>
                           </p>
-                        ) : (
+                        ) : null}
+
+                        {edition.chaptersHref && edition.chaptersLabel ? (
+                          <p className={edition.href ? "mt-6" : "mt-8"}>
+                            <a
+                              href={edition.chaptersHref}
+                              className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:text-[var(--foreground)] hover:decoration-[var(--foreground-muted)]"
+                            >
+                              {edition.chaptersLabel} →
+                            </a>
+                          </p>
+                        ) : !edition.href &&
+                          edition.status !== "coming_soon" ? (
                           <p className="mt-6 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)] sm:text-base">
                             Link forthcoming
                           </p>
-                        )}
+                        ) : null}
                       </section>
                     ))}
                   </div>
@@ -92,10 +134,7 @@ export function BooksPage() {
           ))}
         </ol>
 
-        <SfSection
-          variant="terminal"
-          className="pt-16 sm:pt-20"
-        >
+        <SfSection variant="terminal" className="pt-16 sm:pt-20">
           <p className="text-[0.72rem] leading-relaxed tracking-[0.12em] text-[var(--foreground-muted)]">
             Further volumes will be entered here as they are published.
           </p>
@@ -103,13 +142,20 @@ export function BooksPage() {
 
         <nav
           aria-label="Related pages"
-          className="mt-16 text-center sm:mt-20"
+          className="mt-16 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-center sm:mt-20"
         >
           <a
             href="/chapters"
             className="text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:text-[var(--foreground)]"
           >
-            Chapter archive
+            Read free chapters
+          </a>
+          <a
+            href="/fr/chapters"
+            className="text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:text-[var(--foreground)]"
+            hrefLang="fr"
+          >
+            Lire les chapitres
           </a>
         </nav>
       </main>

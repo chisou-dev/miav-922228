@@ -3,11 +3,19 @@
 import { useSyncExternalStore } from "react";
 import { readReaderMemoryThroughChapter } from "@/features/stories/miav/readerMemorySync";
 import type { MiavChapterNavItem } from "@/features/stories/miav/MiavChapterReader";
+import {
+  type ChapterEdition,
+  chapterNumberLabel,
+  chapterPath,
+} from "@/features/stories/miav/edition";
 import { sfSectionClass, sfSectionVariantAt } from "@/features/shared/SfSection";
 
 type ListStatus = "available" | "read";
 
-function statusLabel(status: ListStatus): string {
+function statusLabel(status: ListStatus, edition: ChapterEdition): string {
+  if (edition === "fr") {
+    return status === "read" ? "LU" : "DISPONIBLE";
+  }
   return status === "read" ? "READ" : "AVAILABLE";
 }
 
@@ -37,16 +45,23 @@ type ArchiveProps = {
     publishedLabel: string;
     publishedDateTime: string | undefined;
   })[];
+  edition?: ChapterEdition;
+  openRecordLabel?: string;
 };
 
-export function MiavChapterArchiveList({ chapters }: ArchiveProps) {
+export function MiavChapterArchiveList({
+  chapters,
+  edition = "en",
+  openRecordLabel = "Open record",
+}: ArchiveProps) {
   const readThrough = useReadThroughChapter();
 
   return (
     <ol className="list-none">
       {chapters.map((chapter, index) => {
         const status = listStatus(chapter.number, readThrough);
-        const href = `/chapters/${chapter.slug}`;
+        const href = chapterPath(chapter.slug, edition);
+        const label = statusLabel(status, edition);
 
         return (
           <li
@@ -58,12 +73,8 @@ export function MiavChapterArchiveList({ chapters }: ArchiveProps) {
           >
             <article>
               <p className="flex flex-wrap items-baseline gap-x-4 gap-y-2 text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
-                <span>
-                  Chapter {String(chapter.number).padStart(2, "0")}
-                </span>
-                <span aria-label={`Status: ${statusLabel(status)}`}>
-                  {statusLabel(status)}
-                </span>
+                <span>{chapterNumberLabel(chapter.number, edition)}</span>
+                <span aria-label={`Status: ${label}`}>{label}</span>
               </p>
 
               <h2 className="mt-6 text-[1.45rem] font-medium tracking-[0.05em] text-[var(--foreground)] sm:mt-8 sm:text-[1.75rem] sm:tracking-[0.06em]">
@@ -90,7 +101,7 @@ export function MiavChapterArchiveList({ chapters }: ArchiveProps) {
                   href={href}
                   className="text-[0.78rem] tracking-[0.14em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
                 >
-                  Open record
+                  {openRecordLabel}
                 </a>
               </p>
             </article>
@@ -117,7 +128,7 @@ export function MiavSeriesChapterList({
       {chapters.map((chapter) => {
         const status = listStatus(chapter.number, readThrough);
         const href = `/stories/${seriesId}/${chapter.pathSlug ?? chapter.slug}`;
-        const label = statusLabel(status);
+        const label = statusLabel(status, "en");
 
         return (
           <li key={chapter.pathSlug ?? chapter.slug}>

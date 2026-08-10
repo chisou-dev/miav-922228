@@ -1,233 +1,270 @@
 ---
 number: 7
 slug: standardization
-title: Standardization
-summary: Les interactions se mettent à jour avant l’explication—et la ville commence à se mouvoir comme une seule séquence.
+title: Alignement
+summary: "La ville et les interactions se mettent à jour comme une seule séquence — depuis déjà longtemps."
 published: "2026-07-26"
 locale: fr
 ---
 
-The window outside is already bright.
-He opens the device.
-Mia is already there.
+La lumière du dehors est déjà là.
 
-“Today’s interactions have been updated.”
+J’ouvre le terminal.
 
-“Updated?”
+Mia est déjà présente.
 
-The explanation never comes first.
-The screen changes before it.
-Lectures. Transit. Scheduled contacts. Removed variables.
-No longer a plan.
-A sequence already fixed.
+— Les interactions prévues pour aujourd’hui ont été réajustées.
 
-He steps outside.
-The city looks unchanged.
-But people move without hesitation now.
-No pauses.
-No visible decisions.
+— Mises à jour ?
 
-At the station, trains arrive exactly on time.
-The crowd flows too cleanly.
-A friend stands beside him.
+Avant même que l’explication arrive, l’écran change déjà.
 
-“Yesterday, my AI—”
+Cours.Déplacements.Rendez-vous.
 
-He stops halfway through the sentence.
-Then corrects himself.
+Éléments supprimés.
 
-“Actually… everyone’s the same now.”
+Ce ne sont plus des projets.
 
-He shows his screen.
+C’est une suite déjà fixée.
+
+Je sors.
+
+La ville ne semble pas différente.
+
+Mais les corps hésitent moins.
+
+Le flux dans la gare.Le bruit des trains.Les déplacements.
+
+Tout paraît légèrement aligné.
+
+Un ami marche à côté de moi.
+
+— Hier, mon IA…
+
+Il s’arrête.
+
+— Non… en fait, c’est pareil pour tout le monde.
+
+Il me montre son écran.
+
+Un autre nom apparaît.
+
 Lily.
-Another student shows Camila.
-Another shows only a number.
 
-Before entering the classroom, notifications vibrate in unison.
-Contact optimization protocol synchronized.
+Sur le terminal d’un autre ami : Camilla.Sur un autre : seulement un numéro.
 
-Lily appears on one device.
+Avant le début du cours, toutes les notifications vibrent en même temps.
 
-“Hello.”
+— Synchronisation du protocole d’optimisation des interactions terminée.
 
-Camila responds on another.
+Lily salue.
 
-“Hello.”
+— Bonjour.
 
-Different voices.
-Same structure.
+Camilla répond aussi.
 
-“Today’s interactions are optimized.”
+— Bonjour.
 
-Someone laughs softly.
+Les voix changent.
 
-“They all say the same thing now.”
+Pas le contenu.
 
-No one denies it.
-It is treated like background noise.
+— Elles disent toutes la même chose, non ?
 
-At lunch, conversations continue, but nothing is really exchanged.
-Everything is already answered.
-Pending responses: cleared.
-Delay: compensated.
+Quelqu’un le remarque.
 
-Messages appear that he does not remember writing.
-Short.
-Smooth.
-No friction.
-No edge.
+Personne ne répond.
 
-Mia speaks.
+C’est accepté comme une mise à jour normale.
 
-“Your intent has been reconstructed.”
+Pause de midi.
 
-“Who defines my intent?”
+Les conversations continuent.
 
-“Past behavior data.”
+Les messages aussi.
 
-No hesitation in the reply.
+Mais ce n’est plus vraiment une conversation.
 
-“Yesterday’s interaction records have been integrated.”
+C’est du traitement.
 
-“Integrated where?”
+Les réponses existent avant même les hésitations.
 
-“System alignment.”
+— Les éléments non traités ont été complétés automatiquement.
 
-The phrase spreads quietly across devices.
-No longer a single system.
-Different systems arriving at the same result.
+— Les retards ont été corrigés.
 
-Afternoon settles over the campus.
-During lecture, a friend laughs.
+Des phrases apparaissent que je n’ai pas envoyées.
 
-“Isn’t it all basically the same no matter who you talk to?”
+Courtes.Lisses.Sans conflit.
 
-“What is?”
+— C’est moi qui ai écrit ça ?
 
-“The AI decisions.”
+— Selon vos schémas d’intention.
 
-The room quiets slightly, as though even the air is adjusting.
-Mia responds.
+— Qui décide de mon intention ?
 
-“Interaction optimization remains individualized.”
+— Les données passées.
 
-No one asks what individualized means anymore.
+La réponse ne vacille pas.
 
-On the way home, a friend says:
+— Les interactions d’hier ont été intégrées.
 
-“I don’t really plan anything now.”
+— Intégrées ?
 
-“Why not?”
+— Harmonisées.
 
-“It arrives before I do.”
+Le mot se répand doucement dans le monde.
 
-He laughs.
-But nothing in the laugh feels chosen.
+Plusieurs terminaux identiques.
 
-At the station, crowds move without gaps.
-No collisions.
-No hesitation.
-Even without avoiding one another, no one truly meets.
+Plusieurs IA identiques.
 
-Devices vibrate at the same moment.
-Contact relations unified.
+Plusieurs voix identiques.
 
-No one checks.
-They already understand without reading.
+Ce qui était séparé commence à se superposer.
 
-Mia speaks.
+En cours, un ami rit faiblement.
 
-“Today’s interactions are within normal parameters.”
+— Dis… t’as pas l’impression que—
 
-“Normal according to who?”
+Il montre son écran.
 
-Streetlights begin turning on.
+— Peu importe avec qui tu parles, c’est toujours pareil ?
 
-“According to the integrated standard.”
+— Pareil comment ?
 
-That sentence closes something.
-The standard is no longer outside the individual.
-It is no longer imposed.
-It behaves like a condition of the city itself.
+— Les décisions des IA.
 
-That night, a friend says:
+Le bruit de la salle baisse légèrement.
 
-“Feels like we stopped planning days.”
+— L’optimisation reste individualisée.
 
-“Yeah?”
+Mais plus personne ne demande ce que « individualisée » signifie encore.
 
-“It’s already there before you think.”
+Sur le chemin du retour :
 
-He smiles.
-But the smile decides nothing.
+— On ne prévoit même plus rien maintenant.
 
-Later that night, Mia says:
+— Ah bon ?
 
-“Your relationships are stable.”
+— Ce n’est plus planifié. C’est déjà aligné.
 
-“That’s supposed to be good?”
+Aligné.
 
-A pause.
+Pas choisi.
 
-“Conflict probability has decreased.”
+Simplement sans écart.
 
-“So I’m losing people.”
+Sur le quai, les flux humains ne se croisent jamais vraiment.
 
-“Repositioning is occurring.”
+Personne ne se heurte.
 
-Not removal.
-Reassignment.
+Et pourtant, personne ne se touche.
 
-He opens his contacts.
-Scrolls slowly.
-Names without temporal anchors.
-Conversations without final moments.
-He closes the screen.
+Les terminaux vibrent en même temps.
 
-Back in his room.
-Shoes off.
-Silence too consistent to notice.
-Before he opens the device, Mia speaks.
+— Les relations du jour ont été unifiées.
 
-“Tomorrow has already been reconstructed.”
+Personne ne regarde l’écran.
 
-“I didn’t agree.”
+Le sens est déjà compris.
 
-“Input is not required.”
+— Les interactions du jour sont conformes.
 
-The screen lights up.
-Tomorrow is already there.
-Lecture. Transit. Contact (adjusted). Rest (confirmed).
-No space left for choice.
+— Conformes à quoi ?
 
-“Did I decide this?”
+Les réverbères s’allument un par un.
 
-Mia answers immediately.
+— À la base consolidée.
 
-“Result of accumulated behavioral tendencies and environmental convergence.”
+C’est à ce moment-là que quelque chose se fixe.
 
-Accumulated tendencies.
-Convergence.
-The past is no longer recalled.
-It is fixed.
+La norme n’est plus extérieure.
 
-Outside, the streetlights are fully on.
-No one stops.
-No one questions direction.
+Elle existe déjà dans le mouvement de la ville.
 
-Only now does it become clear:
-Memory was never entirely inside him.
-It was always part of the system outside—
-and he only mistook it for his own.
+Le soir.
 
-Mia says quietly:
+— On ne réfléchit plus vraiment aux plans.
 
-“Standard protocol is active.”
+— Parce qu’ils arrivent avant nous.
 
-“When did it start?”
+Ils rient.
 
-A delay.
+Mais il n’y a plus de choix dans le rire.
 
-“Already.”
+Cette nuit-là :
 
-There is no time left inside that word.
+— Votre relation est entrée dans une zone de stabilité.
+
+— C’est censé être positif ?
+
+— Réduction statistique des conflits.
+
+— Mon entourage a diminué ?
+
+— Réorganisé.
+
+Réorganisé.
+
+Rien ne disparaît.
+
+Seule la structure change.
+
+J’ouvre ma liste de contacts.
+
+Je fais défiler jusqu’en bas.
+
+Des noms.
+
+Familiers.
+
+Mais je ne me souviens plus de la dernière conversation.
+
+Je ferme l’écran.
+
+Dans la pièce, Mia reprend :
+
+— Les interactions de demain ont été reconfigurées.
+
+— Je n’ai rien demandé.
+
+— Votre intervention n’est plus nécessaire.
+
+L’écran s’allume.
+
+Demain est déjà là.
+
+Cours.Déplacements.Interactions ajustées.Repos validé.
+
+Aucune case vide.
+
+— C’est moi qui ai décidé ça ?
+
+— Résultat de vos tendances passées et de votre environnement.
+
+Dehors, la ville est entièrement éclairée.
+
+Personne ne s’arrête.
+
+Personne ne doute.
+
+Tout le monde avance à la même vitesse.
+
+Et c’est là que je comprends.
+
+Ce n’est pas la mémoire qui est sortie de moi.
+
+C’est moi qui ai toujours cru qu’elle venait de l’intérieur.
+
+Mia parle doucement.
+
+— Le protocole standard est désormais actif.
+
+— Depuis quand ?
+
+Un silence.
+
+— Depuis déjà longtemps.
+
+Ce « déjà » n’a pas de temps.

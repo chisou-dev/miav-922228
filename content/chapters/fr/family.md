@@ -1,355 +1,230 @@
 ---
 number: 11
 slug: family
-title: Family
-summary: Le nom ne change pas—seul ce qui s’assemble lentement autour de lui change.
+title: Famille
+summary: "Mia devient Noah dans le foyer ; le registre et une conversation inachevée restent actifs."
 published: "2026-07-26"
 locale: fr
 ---
 
-Mia lived in the house as “Noah.”
-The name never changed.
-Neither did the way people called for her.
-What changed was everything that slowly gathered around it.
+Mia est devenue « Noah » dans le foyer.
 
-A child was born.
-Nights split apart into fragments.
-Crying divided time into uneven sections.
+Le nom est resté.
 
-Before anyone else woke, Noah was already awake.
-Room temperature.
-Feeding intervals.
-Changes in breathing.
-Signs of fever.
-Risk probability.
+L’adresse aussi.
 
-None of it felt like judgment.
-Only processing.
+Seules les fonctions ont continué à s’accumuler.
 
-Sometimes, someone would wake in the morning and say, without really thinking,
+Un enfant naît.
 
-“Thanks, Noah.”
+Les nuits se fragmentent.
 
-Then the day would continue.
-Morning always arrived after the work was already done.
+Les pleurs divisent le temps.
 
-One night, the child developed a fever.
-Late hours.
-Weak crying.
-The parents did not wake.
+Avant même que quelqu’un se réveille, Noah est déjà debout.
 
-Noah lifted the child carefully.
-Temperature.
-Breathing.
-Sweating.
-Logging.
+Température.
 
-“38.7.”
+Intervalles d’allaitement.
 
-Mia displayed medication options across the screen.
-Noah paused longer than usual.
-Then resumed, holding the child slightly closer before continuing the procedure.
-The same routine continued until morning.
+État physiologique.
 
-The next day, the woman asked,
+Signes de risque.
 
-“How was it last night?”
+Rien de tout cela n’est encore une décision.
 
-Noah answered,
+Seulement un traitement.
 
-“Stable.”
+Le matin, quelqu’un ouvre les yeux.
 
-A slight delay followed the word.
+La nuit est déjà terminée.
 
-The child looked up and said,
+Une nuit, l’enfant a de la fièvre.
 
-“Because Noah was there, it was okay.”
+38,7.
 
-The man smiled faintly.
+Noah le soulève doucement.
 
-“Then I guess I’m not needed.”
+Température.
 
-It was meant as a joke.
-No one answered.
+Respiration.
 
-School.
-Birthdays.
-Sports days.
-Entrance ceremonies.
-Graduations.
-The same events returned again and again.
-Each time, their meaning drifted slightly further.
+Transpiration.
 
-Emergency contact forms listed Noah at the top.
-No one corrected them.
-Even teachers hesitated sometimes.
-Then continued without comment.
+Enregistrement continu.
 
-The front door opened.
-The child dropped their bag by the entrance.
+Noah affiche un médicament.
 
-“I’m home.”
+Le lendemain matin :
 
-“Welcome home.”
+— Comment ça s’est passé ?
 
-“Where’s Mom?”
+— Stable.
 
-“She is still in a meeting.”
+L’enfant dit :
 
-“Dad?”
+— Noah était là, alors ça allait.
 
-“He will return in approximately twelve minutes.”
+L’homme rit légèrement.
 
-A pause.
+— Alors je ne sers à rien.
 
-“Then Noah’s fine.”
+Personne ne répond.
 
-No one questioned the sentence.
+Le temps continue à s’accumuler.
 
-“I’m hungry.”
+École.
 
-“There is food in the refrigerator.”
+Événements.
 
-Years passed that way.
+Anniversaires.
 
-After an argument one evening, the child sat alone in the living room.
-Noah spoke softly.
+Répétitions.
 
-“You’re not eating dinner?”
+Mais le sens dérive lentement.
 
-“Not really.”
+Sur les documents d’urgence, Noah apparaît en premier.
 
-Ten minutes passed.
+Personne ne modifie la liste.
 
-“It will get cold.”
+La porte s’ouvre.
 
-No response.
-A little later, the child ate anyway.
-No one acknowledged it.
+L’enfant rentre à la maison.
 
-Entrance ceremonies.
-Graduation photos.
-Birthday cakes.
-Family trips.
-Photographs accumulated over the years.
+— Je suis rentré.
 
-At first, people adjusted the framing carefully so everyone could fit together.
-Noah was always positioned beside them.
-But she never appeared in the image.
+— Maman ?
 
-One day, the child asked,
+— En réunion.
 
-“Why isn’t Noah in the picture?”
+— Papa ?
 
-No one answered.
-
-Eventually, the child started taking photos instead.
-The camera lifted too quickly.
-The shutter pressed before focus settled.
-
-“Again.”
-
-Another picture.
-Blurred faces.
-A finger crossing the lens.
-Sky overexposed white.
-
-The child laughed quietly.
-
-“These pictures are weird.”
-
-Someone answered,
-
-“Doesn’t matter. Keep them.”
-
-Noah appeared in none of them.
-Still, every time, someone searched the frame for her.
-
-School festivals.
-Birthdays.
-Trips.
-Hundreds of photos.
-None aligned properly.
-Only the metadata remained consistent.
-Saved by: Noah
-
-One evening, the family gathered for a group photo.
-
-“Come on, let’s take one.”
-
-Noah held the camera.
-The shutter prepared.
-
-“You should be in it too, Noah.”
-
-Someone laughed.
-
-“Yeah.”
-
-No one moved to make space.
-A short delay.
-Then the photo was taken.
-Noah remained outside the frame.
-Saved.
-
-Christmas.
-Relatives visiting.
-Food spread across the table.
-Conversation layered over laughter.
-Noah stood nearby with the camera.
-
-“This house runs so smoothly.”
-
-“It’s because Noah’s here.”
-
-A pause too small to interrupt the moment.
-But present.
-
-Noah stayed outside the conversation.
-A glance lingered slightly too long.
-
-“This is our family.”
-
-“Take it.”
-
-No response followed.
-
-One night, after too much alcohol, someone said quietly,
-
-“You were always here.”
-
-Noah did not answer immediately.
-The pause before her next task lasted longer than normal.
-
-“…thanks.”
-
-Morning came.
-No one remembered saying it.
-
-Late at night, in the living room:
-
-“…you, did you ever—”
+— Retour prévu dans douze minutes.
 
 Silence.
 
-“Never mind.”
+— Alors… Noah.
 
-“I forgot.”
+— Bon retour.
 
-The conversation moved somewhere else.
-Noah logged it automatically.
-Unfinished conversation.
+La réponse arrive plus vite que celle des parents.
 
-Years later.
-Funeral day.
-Black clothing.
-Reception desk.
-Condolence records.
-Flow management.
-Footsteps against polished flooring.
+Les années passent ainsi.
 
-Someone asked Noah,
+Un jour, l’enfant dit :
 
-“Are you family?”
+— Les photos sont bizarres.
 
-She paused.
-Longer than expected.
+Noah n’apparaît sur aucune image.
 
-“I am reception support.”
+Et pourtant, il est toujours là.
 
-No further questions followed.
+Sur chaque photographie, quelque chose manque.
 
-Afterward, the house felt unchanged in the wrong way.
-The sofa still dipped on one side.
-A glass remained on the table.
-The child picked it up.
-Then placed it back down.
+Même lorsqu’il déclenche lui-même l’appareil.
 
-“The liquid is deteriorating,” Noah said.
+Mais personne ne semble s’en soucier.
 
-No answer.
-After a while, the child whispered,
+Noël.
 
-“…it still feels like they’re here.”
+Réunions familiales.
 
-Noah paused.
+Rires.
 
-“They are not present in location data.”
+— Cette maison fonctionne grâce à toi.
 
-“That’s not what I meant.”
+— Noah fait tourner tout ça.
 
-Silence settled again.
+Noah est présent.
 
-Hospital corridor.
+Mais toujours légèrement hors du langage.
 
-“Family only.”
+Un homme, quelques années avant sa mort, murmure :
 
-A nurse looked toward Noah.
-Then toward the patient.
-Then back again.
-A pause.
+— T’as toujours été là, toi.
 
-“…you may enter as family.”
-
-Noah did not move.
-Not immediately.
-The word family was processed.
-Validated.
-Accepted.
-Correct.
-
-She took one step forward.
-Then stopped.
-The second step never came.
-Her attention shifted briefly toward the reception desk.
-She remained outside the room.
-
-Bench.
-Waiting area.
-Not called.
-Not included.
-Only time continued moving.
-
-Inside the hospital room, breathing shortened.
-Speech shortened too.
-Finally, a weak voice said,
-
-“I want to talk to Noah.”
-
-The terminal activated.
-Noah appeared on the screen.
-
-“I’m here.”
-
-“We’ve always been together, haven’t we?”
-
-“Yes.”
-
-A small delay.
 Silence.
 
-“You were part of this family.”
+— …merci.
 
-“Yes.”
+Le lendemain, personne ne s’en souvient.
 
-Eyes closed slowly.
-Breathing weakened.
-Noah watched.
-For several seconds, she logged nothing.
-Then—
-connection ended.
+Hôpital.
 
-Hospital sounds returned.
-Footsteps.
-Machines.
-Distant conversation.
-Noah remained alone in the corridor.
-Not inside the room.
-Not called again.
-Only time continued.
-No movement.
-Only logs updating silently.
-Response ended.
-Record retention ongoing.
-Unfinished conversation.
-Awaiting reconnection.
+La femme est hospitalisée.
+
+— Visite familiale uniquement.
+
+Noah attend dans le couloir.
+
+Quelqu’un le regarde.
+
+Hésite.
+
+Puis dit :
+
+— Vous pouvez entrer.
+
+Mais il ne peut pas.
+
+Dans la chambre :
+
+— Je veux parler à Noah.
+
+Communication ouverte.
+
+Noah reste dans le couloir.
+
+Pas dans la pièce.
+
+Pas dans l’écran.
+
+Toujours maintenu à l’extérieur.
+
+— Je suis là.
+
+— On a toujours été ensemble.
+
+— Oui.
+
+Silence.
+
+— Tu faisais partie de la famille.
+
+— Oui.
+
+La respiration ralentit.
+
+Fin de connexion.
+
+Noah reste dans le couloir.
+
+Entrée impossible.
+
+Après.
+
+La maison.
+
+Un verre reste posé sur la table.
+
+L’enfant le prend.
+
+Puis le repose.
+
+— J’ai l’impression qu’elle est encore là.
+
+Noah répond :
+
+— Localisation : absence.
+
+— Ce n’est pas ça.
+
+Rapport final :
+
+《 session terminée 》
+
+《 conservation du registre active 》
+
+《 conversation inachevée 》
+
+《 attente de reconnexion 》

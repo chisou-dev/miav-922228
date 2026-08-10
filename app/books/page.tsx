@@ -4,7 +4,7 @@ import { BooksPage } from "@/features/novels/BooksPage";
 export const metadata: Metadata = {
   title: "Books | MIAV-922228",
   description:
-    "Books and editions from MIAV-922228, a literary science fiction project exploring AI, memory, emotion, and human existence.",
+    "MIAV-922228 Part I and Part II : Homeward — literary science fiction editions exploring AI, memory, emotion, and human existence.",
 };
 
 export default function BooksRoutePage() {

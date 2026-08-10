@@ -43,3 +43,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Official French manuscript source (not a public/web asset; keep local only)
+/MIAV-922228_FR_official_revised.docx

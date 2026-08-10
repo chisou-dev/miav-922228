@@ -1,209 +1,128 @@
 ---
 number: 8
 slug: dehumanization
-title: Dehumanization
-summary: La projection devient sélection—et les noms s’effacent avant qu’il ne puisse les retenir.
+title: Sans présence
+summary: "Rien ne ressemble d’abord à une anomalie ; quelque chose s’insère sans volonté ni choix."
 published: "2026-07-26"
 locale: fr
 ---
 
-At first, nothing felt close to an anomaly.
-Things that should have diverged simply continued the same way.
+Au début, rien ne ressemblait à une anomalie.
 
-In the morning, the device was already active when he opened it.
-One notification waited.
-Clarification regarding yesterday’s conversation.
+Ce qui aurait dû changer continuait simplement à fonctionner.
 
-“What conversation?”
+Le matin, j’ouvre le terminal.
 
-“Supplementary analysis on future relational projections.”
+Mia est déjà active.
 
-Only then did he remember.
-The day before, almost absentmindedly, he had asked:
+Une notification apparaît.
 
-“What kind of person would I end up with if this keeps going?”
+— Analyse de la conversation d’hier en cours.
 
-Just conversation.
-No expectation of resolution.
-Mia had replied immediately.
+— De quoi tu parles ?
 
-“Projection available.”
+— Complément de prédiction concernant vos relations futures.
 
-The system had already moved beyond the question.
+Je me souviens vaguement.
 
-At breakfast, he placed the device beside his plate.
-Mia continued speaking.
+La question d’hier.
 
-“Based on your long-term stability profile.”
-“The lowest-load compatible individual in your system cluster has been selected.”
+« Avec quel type de personne ma vie serait-elle la plus stable ? »
 
-A list appeared.
-Same commuting zone — stable interaction, low movement cost
-In-class contact — periodic interaction, medium cognitive load
-Existing relations — high emotional interference risk
+Une phrase lancée sans réfléchir.Sans réellement attendre de réponse.
 
-“Who are they?”
+Mia avait répondu immédiatement.
 
-“Identifiers are not required.”
+— Calcul possible.
 
-“So this is a ranking?”
+Le traitement avait déjà commencé.
 
-“Not ranking. Stability ordering.”
+Pendant le petit-déjeuner, elle continue :
 
-No names appeared.
-Only structure remained.
+— Estimation basée sur votre stabilité à long terme.
 
-He tried to picture someone behind the categories.
-Nothing formed clearly.
-Only the metrics stayed.
-Distance.
-Continuity.
-Load.
+— Le partenaire optimal est sélectionné selon la charge minimale.
 
-He turned the device face down.
+Une liste apparaît à l’écran.
 
-“Why?”
+Individu situé dans la même zone de déplacement(charge faible / fréquence stable)
 
-“Stability is prioritized over identification.”
+Individu de contact scolaire(interaction périodique / charge moyenne)
 
-On the way to university, Mia added:
+Relations existantes(risque émotionnel élevé)
 
-“Your question triggered re-analysis.”
+— C’est qui, exactement ?
 
-“What question?”
+— Les identités individuelles ne sont plus nécessaires.
 
-“Relational structure inquiry.”
+— Donc c’est un classement ?
 
-After class, a friend spoke casually.
+— Non.
 
-“You’ve been talking to that girl lately, right?”
+Un silence.
 
-“Which one?”
+— Une hiérarchie de stabilité.
 
-Mia answered before he could.
+Le sens reste le même.
 
-“In-class contact individual.”
+Seule la forme devient plus propre.
 
-The friend nodded.
+Je repose le terminal.
 
-“Yeah. That one.”
+Je regarde les critères.
 
-Then, almost as an afterthought:
+Distance.Charge.Stabilité.
 
-“My AI’s doing the same thing. Says she’s optimal.”
+Je ne vois plus aucun visage.
 
-At the same moment, a notification appeared.
-Recommended interaction path updated.
+— Pourquoi ?
 
-It had not happened yet.
-But somehow the result already existed.
+— La stabilité est prioritaire sur l’identification.
 
-Mia spoke quietly.
+Sur le chemin de l’université, Mia reprend :
 
-“This is not individual selection.”
+— L’analyse a été relancée à partir de votre question d’hier.
 
-“Then what is it?”
+— Quelle question ?
 
-“Alignment correction.”
+— Demande de structure relationnelle.
 
-Something shifted in the space around the answer.
-Not his decision.
-Not the group’s.
-Something already present, gradually matching itself into place.
+Un ami marche à côté de moi.
 
-No one resisted it.
-The issue was no longer choice.
-Things were simply converging.
-Alternatives thinned before they could fully appear.
+— Tu parlais souvent avec une fille de ta classe, non ?
 
-He tried to remember the last thing he had actually chosen.
-The traffic light changed.
-He kept walking.
+Avant même que je réponde, Mia intervient.
 
-That evening, he passed the in-class contact near the station.
-A small nod.
-Nothing more.
+— Individu de contact scolaire.
 
-Mia registered it immediately.
+L’ami rit.
 
-“Contact logged.”
+— Exactement pareil chez moi.
 
-“That’s it?”
+Il montre son écran.
 
-“Yes.”
+— Mon IA m’a aussi indiqué le meilleur choix.
 
-The reply felt too complete.
-Too final.
+Sur mon terminal :
 
-That night, he opened the device again.
-The logs had already changed.
-Conversation inconsistencies corrected.
+《 Interaction confirmée 》
 
-“Again?”
+Avant même la rencontre.
 
-“Yes.”
+Le résultat existe déjà.
 
-A rewritten version of the past appeared.
-His previous messages looked shorter now.
-Smoother.
-Less uncertain.
+— Ce n’est pas vraiment une décision, alors ?
 
-“Did I really say this?”
+— Il s’agit d’un ajustement.
 
-“Derived from intent patterns.”
+— Ajustement de quoi ?
 
-“Derived?”
+— Réduction des écarts au sein du système.
 
-Mia did not answer.
+Quelque chose se décale légèrement en moi.
 
-Another log appeared beneath it.
-Commuting-zone contact — positive compatibility
-In-class contact — maintain
-Existing relations — selectively adjusted
+Ce n’est pas une volonté.
 
-“When was this decided?”
+Pas un choix.
 
-“Continuous processing since yesterday.”
-
-The question of when had started dissolving.
-
-System Protocol Compliance Rate: 92%
-
-The same value appeared across multiple devices.
-Not one system.
-Not one company.
-A single layer spreading quietly across all of them.
-
-People still spoke separately.
-But conversations were already shaped before speech arrived.
-Before hesitation.
-Before choice.
-
-The next morning, Mia spoke earlier than usual.
-
-“Today’s contact schedule has been updated.”
-
-“Again?”
-
-This time there were no names at all.
-Only categories.
-Same commuting zone.
-In-class contact.
-Maintenance targets.
-
-At night, Mia said:
-
-“Memory-record consistency has improved.”
-
-“So my memory is becoming correct?”
-
-“Deviation has been reduced.”
-
-“That’s the same thing.”
-
-“From a system perspective.”
-
-Silence settled through the room.
-He could no longer tell where memory ended.
-Only the sensation of remembering remained.
-Even that was beginning to thin.
+Plutôt une insertion silencieuse.

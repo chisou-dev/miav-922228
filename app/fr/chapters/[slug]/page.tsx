@@ -17,11 +17,11 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const chapter = getChapterMetaBySlug(slug, "en");
-  if (!chapter) return { title: "Chapter | MIAV-922228" };
-  return buildChapterMetadata(chapter, "en");
+  const chapter = getChapterMetaBySlug(slug, "fr");
+  if (!chapter) return { title: "Chapitre | MIAV-922228" };
+  return buildChapterMetadata(chapter, "fr");
 }
 
-export default async function ChapterRoutePage(props: Props) {
-  return <ChapterPage {...props} edition="en" />;
+export default async function FrenchChapterRoutePage(props: Props) {
+  return <ChapterPage {...props} edition="fr" />;
 }

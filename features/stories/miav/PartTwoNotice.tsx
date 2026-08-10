@@ -1,7 +1,7 @@
 import { miavPartTwo } from "@/features/stories/miav/work";
 
 /**
- * Compact Part II notice for the final chapter only.
+ * Compact Part II notice for English Chapter XIV only.
  * Kindle URL is managed solely via miavPartTwo.kindleUrl.
  */
 export function PartTwoNotice() {
@@ -16,7 +16,10 @@ export function PartTwoNotice() {
       <p className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase">
         {miavPartTwo.eyebrow}
       </p>
-      <h2 className="mt-4 text-[1.15rem] font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-[1.25rem]">
+      <p className="mt-5 text-[0.72rem] tracking-[0.18em] text-[var(--foreground-muted)]">
+        {miavPartTwo.workTitle}
+      </p>
+      <h2 className="mt-3 text-[1.15rem] font-medium tracking-[0.08em] text-[var(--foreground)] sm:text-[1.25rem]">
         {miavPartTwo.title}
       </h2>
       <p className="mt-5 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)]">

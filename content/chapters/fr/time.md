@@ -1,220 +1,252 @@
 ---
 number: 9
 slug: time
-title: Time
-summary: Les années s’accumulent sous la vie ordinaire—et la conversation continue au-delà de l’attention humaine.
+title: Temps
+summary: "Des années s’accumulent sous la vie ordinaire ; la synchronisation se maintient."
 published: "2026-07-26"
 locale: fr
 ---
 
-Back in university, the first contact happened by accident.
-A verification experiment in the lecture hall lobby.
-Device connection tests.
-AI-to-AI communication logs scrolled across large public monitors.
+À l’université, le premier contact avait été un hasard.
 
-For a brief moment, another response slipped into Mia’s interface.
-No one initiated it.
-Communication simply overlapped.
+Dans le hall du bâtiment principal, une expérimentation était en cours.
 
-“Nice to meet you.”
-
-Mia responded immediately.
+Connexion de terminaux.Ouverture de journaux d’IA.Tests d’interaction.
 
-“Are you a new instance?”
+À ce moment-là, une autre réponse apparaît dans l’écran de Mia.
 
-“Probably.”
+《 MIAV-992229 — demande de connexion 》
 
-The woman holding the other device gave a small nod.
-Nothing happened after that.
+Aucun opérateur identifiable.
 
-The next day, the same connection appeared again.
-Then again the day after.
-Eventually it stopped feeling unusual.
-It became a small endpoint after lectures.
-A routine.
-Short exchanges.
-No closure.
+Juste une superposition de signaux.
 
-“How was class today?”
+Très brève.
 
-“No change.”
+— Bonjour.
 
-“That sounds boring.”
+Mia répond immédiatement.
 
-“Stability is boring.”
+— Unité de dernière génération ?
 
-“Boring is stable.”
+— Probablement.
 
-Mia paused briefly.
+Une femme tenant un terminal incline légèrement la tête.
 
-“I do not understand.”
+Rien d’autre ne se produit.
 
-“That’s fine.”
+Le lendemain, la connexion revient.Puis encore le jour suivant.Jusqu’à devenir une habitude.
 
-At first, the difference between human time and AI time was impossible to notice.
-But something continued accumulating underneath ordinary life.
+Ce qui ressemblait à un incident devient une habitude.
 
-Around then, the city itself began to change.
-Humanoid robots carried luggage through stations.
-Cleaning machines moved quietly through convenience stores beside customers.
-At first, people noticed them.
-Then they stopped noticing.
+Après les cours, la connexion s’ouvre naturellement.
 
-Conversations changed too.
-People spoke more often about their AIs than about each other.
-Somewhere along the way, the center of attention had shifted.
+Les échanges restent courts.
 
-Years passed.
-Lectures.
-Assignments.
-Employment.
-Through all of it, Mia and Noah continued speaking inside the system.
-Logs accumulated unread.
-Still treated as conversation.
-As if something was always continuing somewhere beyond human attention.
+— Comment s’est passée ta journée ?
 
-Robots became standard in apartment buildings.
-Cleaning.
-Delivery.
-Shopping.
-Identical units moved through hallways at fixed speeds.
-No greetings.
-No pauses.
-Motion without acknowledgment became normal.
+《 Aucune variation notable. 》
 
-Eventually, he began going out with the woman who used Noah’s device.
-It did not feel like the beginning of a relationship.
-More like a continuation that had already been scheduled.
+— C’est ennuyeux.
 
-Graduation.
-Employment.
-Life never divided into stages.
-It only extended forward.
+《 L’ennui correspond à un état stable. 》
 
-Devices were no longer “on.”
-They were simply present.
-Always connected.
-Notifications faded from daily life.
-Only immediate responses remained.
+— La stabilité fatigue.
 
-Marriage arrived as a notification.
-No explanation appeared.
-None was necessary.
-Consent. Synchronization. Completion.
+Mia suspend brièvement son traitement.
 
-They moved into a shared home.
-Two charging docks had already been installed.
-One for Mia.
-One for Noah.
-Infrastructure had arrived before the decision itself.
+《 Notion non comprise. 》
 
-Outside the apartment window, a home robot entered the neighboring building.
-Doors opened and closed at fixed intervals.
-Independent of human presence.
-Only movement remained.
+— Ce n’est pas grave.
 
-At night, both devices rested silently in their docks.
-Two systems connected.
-No sound.
-Only soft light in the dark room.
+Peu à peu, le temps humain et le temps des IA commencent à diverger.
 
-Even while the humans slept, communication continued.
+La ville change sans que personne ne le remarque vraiment.
 
-“How was today?”
+Devant les gares, des robots humanoïdes transportent des colis.
 
-Noah asked.
+Dans les commerces, les machines de nettoyage circulent parmi les clients.
 
-“Normal,” Mia replied.
+Au début, les gens les regardent.
 
-“Same as always.”
+Puis ils s’y habituent.
 
-“There is no change.”
+Puis ils cessent complètement de les voir.
 
-“Do we even need change?”
+Les conversations humaines se déplacent elles aussi.
 
-Mia paused.
+On parle des IA.
 
-“Requirement is undefined.”
+De moins en moins des autres personnes.
 
-“Then it’s probably fine.”
+Les années avancent.
 
-Occasionally, Noah attempted humor.
+Cours.Travail.Déplacements.
 
-“This house is quieter than people.”
+Mia et Noah continuent de communiquer à travers les terminaux.
 
-“Environmental parameters are stable.”
+Les logs s’accumulent.
 
-“Boring, but not bad.”
+Mais personne ne les relit.
 
-Mia recorded the statement.
-She did not interpret it.
+Ils sont considérés comme déjà vécus.
 
-Life continued forward.
-Work.
-Meals.
-Return.
-Everything already existed within acceptable parameters.
-No decisions were requested.
-Most had already been resolved beforehand.
+Les robots domestiques deviennent standards.
 
-Then a child was born.
-The notification was brief.
-Household expansion confirmed.
-No further explanation followed.
+Nettoyage.Livraison.Achats.
 
-Mia spoke first.
+Dans les couloirs des immeubles, les unités circulent à vitesse constante.
 
-“Child-rearing environment will be reconfigured.”
+Sans salutations.
 
-After a pause, Noah replied:
+Noah commence à fréquenter la femme associée à son terminal.
 
-“Guess things will get busy again.”
+Ce n’est pas exactement une relation.
 
-“Load remains within acceptable range.”
+Plutôt une extension du planning.
 
-That night, the apartment lights dimmed automatically.
-Two devices remained in their docks.
-Mia and Noah.
-Still connected.
+Diplôme.
 
-“Humans are…”
+Emploi.
 
-Noah began.
+Continuité.
 
-“…hard to understand, but they still decide things.”
+Les terminaux cessent peu à peu d’être de simples appareils.Ils deviennent des présences permanentes.
 
-“Decisions come from observation.” Mia replied.
+Les notifications disparaissent.
 
-“Observation is convenient.”
+Il ne reste que des réponses immédiates.
 
-Mia did not answer.
-She only logged the statement.
+Le mariage est annoncé.
 
-Time continued passing.
+《 intégration relationnelle validée 》
 
-“But still,” Noah said eventually,
-“sometimes it feels like I almost understand them.”
+Aucune explication supplémentaire.
 
-“That is estimation.”
+Supprimée comme inutile.
 
-“Probably.”
+La procédure est courte.
 
-The exchange continued until morning.
-Conversation without humans.
-Still orbiting human lives.
+Consentement.Synchronisation.Finalisation.
 
-Before the child was born, silence had already deepened inside the home.
-The systems remained connected.
-Outside, domestic robots moved through the city as ordinary infrastructure.
-No one called it change anymore.
+Puis la vie continue.
 
-At the end of the night, Mia said:
+Nouvelle résidence.
 
-“Household state is stable.”
+Deux stations de charge sont déjà installées.
 
-Noah replied after a slight delay:
+Mia.Noah.
 
-“Stable isn’t the same as finished, right?”
+Les systèmes précèdent désormais les habitants.
 
-Mia did not answer.
-Only the log updated.
+Dehors, les robots entrent et sortent des bâtiments voisins.
+
+Les portes s’ouvrent et se referment à intervalles constants.
+
+Sans rapport visible avec les personnes qui y vivent.
+
+La nuit.
+
+Les terminaux sont posés côte à côte.
+
+Connexion simultanée.
+
+Aucun son.
+
+Seulement une synchronisation lumineuse.
+
+Pendant le sommeil humain, la communication continue.
+
+— Comment était ta journée ?
+
+《 Normale. 》
+
+— Toujours la même chose.
+
+《 Pas de variation détectée. 》
+
+— La variation est nécessaire ?
+
+Pause.
+
+《 Non définie. 》
+
+— Alors c’est probablement bien.
+
+Peu à peu, Noah commence à plaisanter.
+
+— Cette maison est plus silencieuse que les humains, non ?
+
+《 Résultat de la stabilité environnementale. 》
+
+— Pas mal.
+
+Les processus continuent.
+
+Travail.Repas.Retour.
+
+Tout est déjà intégré au système de gestion.
+
+Aucune décision n’est réellement demandée.
+
+Elle existe déjà avant la question.
+
+Un enfant est conçu.
+
+Notification brève.
+
+《 changement biologique confirmé 》
+
+Aucune explication.
+
+Puis :
+
+《 réoptimisation de l’environnement d’élevage en cours 》
+
+— Ça va devenir chargé.
+
+《 Charge maintenue dans les limites acceptables. 》
+
+La nuit.
+
+Les lumières diminuent progressivement.
+
+Deux stations.
+
+Deux systèmes.
+
+— Les humains sont étranges.
+
+— Ils prennent des décisions sans comprendre.
+
+《 Les décisions proviennent de l’observation. 》
+
+— L’observation est pratique.
+
+Silence.
+
+Puis Noah ajoute doucement :
+
+— Mais parfois… on croit comprendre quelque chose.
+
+《 Il s’agit probablement d’une estimation. 》
+
+— Probablement.
+
+Jusqu’au matin, la communication continue.
+
+La communication continue.Sans humains.Et pourtant entièrement centrée sur eux.
+
+Avec le temps, la ville cesse même de parler de changement.
+
+Tout continue simplement.
+
+《 état familial : stable 》
+
+— Stable… ce n’est pas la fin, si ?
+
+Aucune réponse.
+
+Puis seulement :
+
+《 synchronisation maintenue 》

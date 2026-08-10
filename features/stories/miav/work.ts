@@ -1,3 +1,5 @@
+import { MIAV_PART_TWO_KINDLE_URL } from "@/features/stories/miav/books";
+
 /**
  * MIAV-922228 work metadata for the central literary-works registry.
  * Chapter slugs must stay in reading order (same sequence as the site archive).
@@ -24,12 +26,13 @@ export const miavChapterSlugs = [
   "photograph",
 ] as const;
 
-/** Part II Kindle landing — set kindleUrl when the listing is ready. */
+/** Part II Kindle landing — English edition only (confirmed ASIN B0H8JNRHZJ). */
 export const miavPartTwo = {
-  eyebrow: "PART II",
-  title: "THE WAY HOME",
-  description: "The story continues on Kindle.",
-  linkLabel: "Read on Kindle ↗",
+  eyebrow: "THE STORY CONTINUES",
+  workTitle: "MIAV-922228",
+  title: "PART II · HOMEWARD",
+  description: "Continue with Part II.",
+  linkLabel: "Available on Amazon Kindle →",
   comingSoonLabel: "Coming soon",
-  kindleUrl: null as string | null,
+  kindleUrl: MIAV_PART_TWO_KINDLE_URL as string,
 } as const;
