@@ -1,10 +1,22 @@
 import type { Metadata } from "next";
+import type { BreadcrumbItem } from "@/features/library/catalog";
 import type { ChapterMeta } from "@/features/stories/miav/chapters";
 import { getSiteUrl } from "@/features/shared/site";
 import { miavOgMetadataImages } from "@/features/stories/miav/miavVisual";
 
 const WORK_TITLE = "MIAV-922228";
 const DEFAULT_SUFFIX = "Literary Science Fiction";
+
+/** Visible + JSON-LD trail: MIAV-922228 → Chapters → (optional chapter). */
+export function miavChapterBreadcrumbs(
+  ...trail: BreadcrumbItem[]
+): BreadcrumbItem[] {
+  return [
+    { label: WORK_TITLE, href: "/" },
+    { label: "Chapters", href: "/chapters" },
+    ...trail,
+  ];
+}
 
 type ChapterSeoOverride = {
   titleSuffix?: string;

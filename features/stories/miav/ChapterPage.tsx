@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getAdjacentChapters,
@@ -8,8 +7,12 @@ import {
 } from "@/features/stories/miav/chapters";
 import { getContentLocaleFromRequest } from "@/features/shared/locale";
 import { MiavChapterReader } from "@/features/stories/miav/MiavChapterReader";
-import { ChapterJsonLd } from "@/features/library/jsonLd";
-import { chapterCanonicalPath } from "@/features/stories/miav/chapterSeo";
+import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
+import { BreadcrumbJsonLd, ChapterJsonLd } from "@/features/library/jsonLd";
+import {
+  chapterCanonicalPath,
+  miavChapterBreadcrumbs,
+} from "@/features/stories/miav/chapterSeo";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,17 +20,8 @@ type Props = {
 
 function ChapterHeader({ chapter }: { chapter: ChapterMeta }) {
   return (
-    <header className="pt-14 text-center sm:pt-20">
-      <p>
-        <Link
-          href="/"
-          className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
-        >
-          MIAV-922228
-        </Link>
-      </p>
-
-      <p className="mt-14 text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase sm:mt-16">
+    <header className="pt-10 text-center sm:pt-14">
+      <p className="text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase">
         Chapter {chapter.number}
       </p>
 
@@ -54,6 +48,11 @@ export async function ChapterPage({ params }: Props) {
 
   const { previous, next } = getAdjacentChapters(slug, locale);
   const meta = getChapterMetaBySlug(slug, locale) ?? chapter;
+  const canonicalPath = chapterCanonicalPath(meta.slug);
+  const breadcrumbs = miavChapterBreadcrumbs({
+    label: meta.title,
+    href: canonicalPath,
+  });
 
   return (
     <div className="relative z-10 mx-auto w-full max-w-[760px] px-5 sm:px-8">
@@ -61,11 +60,13 @@ export async function ChapterPage({ params }: Props) {
         name={meta.title}
         description={meta.summary}
         position={meta.number}
-        url={chapterCanonicalPath(meta.slug)}
+        url={canonicalPath}
         workName="MIAV-922228"
         workUrl="/chapters"
       />
+      <BreadcrumbJsonLd items={breadcrumbs} />
       <main className="pb-24 sm:pb-32">
+        <LibraryBreadcrumbs items={breadcrumbs} />
         <ChapterHeader chapter={meta} />
 
         <MiavChapterReader

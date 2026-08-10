@@ -5,6 +5,9 @@ import { getAllChapters } from "@/features/stories/miav/chapters";
 import { getContentLocaleFromRequest } from "@/features/shared/locale";
 import { MiavChapterArchiveList } from "@/features/stories/miav/MiavChapterList";
 import { MIAV_OG_IMAGE } from "@/features/stories/miav/miavVisual";
+import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
+import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { miavChapterBreadcrumbs } from "@/features/stories/miav/chapterSeo";
 
 function formatArchiveDate(value: string | null): string {
   if (!value) return "Date unrecorded";
@@ -23,10 +26,13 @@ function formatArchiveDate(value: string | null): string {
 export async function ChaptersIndexPage() {
   const locale = await getContentLocaleFromRequest();
   const chapters = getAllChapters(locale);
+  const breadcrumbs = miavChapterBreadcrumbs();
 
   return (
     <SiteShell>
+      <BreadcrumbJsonLd items={breadcrumbs} />
       <main className="pb-36 sm:pb-48">
+        <LibraryBreadcrumbs items={breadcrumbs} />
         <section className="py-28 sm:py-36">
           <p className="text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase">
             Record
