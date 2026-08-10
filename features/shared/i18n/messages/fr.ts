@@ -84,6 +84,10 @@ export const fr: MessageCatalog = {
   "home.featured.worldMeta": "Rejoindre la carte",
   "home.featured.traceCta": "Entrer →",
 
+  "home.cosmic.writerMemo": "WRITER MEMO",
+  "home.cosmic.handy": "UTILE",
+  "home.cosmic.miavWorld": "MIAV WORLD",
+
   // apps
   "apps.openApp": "Ouvrir l'application",
   "apps.comingSoon": "Bientôt disponible",

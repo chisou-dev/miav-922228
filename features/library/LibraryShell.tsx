@@ -71,12 +71,15 @@ export function LibraryListItem({
   meta,
   description,
   actionLabel = "Read →",
+  /** Row separator under the item. Use false when an SfDivider follows instead. */
+  showBorder = true,
 }: {
   href?: string;
   title: string;
   meta?: string;
   description?: string;
   actionLabel?: string;
+  showBorder?: boolean;
 }) {
   const body = (
     <>
@@ -101,16 +104,18 @@ export function LibraryListItem({
     </>
   );
 
+  const borderClass = showBorder ? "border-b border-[var(--line)]" : "";
+
   if (!href) {
     return (
-      <div className="block border-b border-[var(--line)] py-8 sm:py-10">{body}</div>
+      <div className={`block py-8 sm:py-10 ${borderClass}`.trim()}>{body}</div>
     );
   }
 
   return (
     <a
       href={href}
-      className="block border-b border-[var(--line)] py-8 transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)] sm:py-10"
+      className={`block py-8 transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--foreground)_2%,transparent)] sm:py-10 ${borderClass}`.trim()}
     >
       {body}
     </a>

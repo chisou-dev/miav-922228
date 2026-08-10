@@ -2,6 +2,7 @@
 
 import { SiteShell } from "@/features/shared/SiteShell";
 import { SfSection } from "@/features/shared/SfSection";
+import { CosmicMorseDivider } from "@/features/shared/cosmic-morse";
 import { ReaderMemory } from "@/features/core/ReaderMemory";
 import { AppListing } from "@/features/core/AppListing";
 import { MIAV_APPS } from "@/features/core/apps";
@@ -167,6 +168,11 @@ export function HomePage() {
                 </p>
               </div>
 
+              <CosmicMorseDivider
+                message={t("home.cosmic.writerMemo")}
+                secondaryMessage={t("home.cosmic.handy")}
+              />
+
               <div id="apps" className="scroll-mt-28">
                 <p className="text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] uppercase">
                   {t("home.featured.appsEyebrow")}
@@ -177,6 +183,11 @@ export function HomePage() {
                   ))}
                 </div>
               </div>
+
+              <CosmicMorseDivider
+                message={t("home.cosmic.miavWorld")}
+                secondaryMessage={t("home.featured.traceEyebrow")}
+              />
 
               <div>
                 <p className="text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] uppercase">

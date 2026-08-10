@@ -8,13 +8,20 @@ import {
 } from "@/features/library/catalog";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
-import { SfSection } from "@/features/shared/SfSection";
+import {
+  SfDivider,
+  SfSection,
+  type SfSectionVariant,
+} from "@/features/shared/SfSection";
 import { chapterArchivePath } from "@/features/stories/miav/edition";
 
 export const metadata: Metadata = {
   title: worksLibrary.seo.title,
   description: worksLibrary.seo.description,
 };
+
+/** Category-to-category separators on /works (not the section start line). */
+const CATEGORY_DIVIDERS: readonly SfSectionVariant[] = ["split", "trace"];
 
 export default function WorksPage() {
   const featured = getWorksFeatured();
@@ -100,14 +107,19 @@ export default function WorksPage() {
           >
             Browse by Category
           </p>
-          {categories.map((category) => (
-            <LibraryListItem
-              key={category.id}
-              href={category.path}
-              title={category.title}
-              description={category.summary}
-              actionLabel="→"
-            />
+          {categories.map((category, index) => (
+            <div key={category.id}>
+              {index > 0 ? (
+                <SfDivider variant={CATEGORY_DIVIDERS[index - 1] ?? "trace"} />
+              ) : null}
+              <LibraryListItem
+                href={category.path}
+                title={category.title}
+                description={category.summary}
+                actionLabel="→"
+                showBorder={false}
+              />
+            </div>
           ))}
         </SfSection>
       </LibraryShell>

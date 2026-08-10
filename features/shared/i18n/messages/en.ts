@@ -82,6 +82,11 @@ export const en = {
   "home.featured.worldMeta": "Join the map",
   "home.featured.traceCta": "Enter →",
 
+  // Cosmic Morse dividers (home featured only — Morse-normalized uppercase phrases)
+  "home.cosmic.writerMemo": "WRITER MEMO",
+  "home.cosmic.handy": "HANDY",
+  "home.cosmic.miavWorld": "MIAV WORLD",
+
   // apps
   "apps.openApp": "Open App",
   "apps.comingSoon": "Coming Soon",

@@ -84,6 +84,10 @@ export const es: MessageCatalog = {
   "home.featured.worldMeta": "Únete al mapa",
   "home.featured.traceCta": "Entrar →",
 
+  "home.cosmic.writerMemo": "WRITER MEMO",
+  "home.cosmic.handy": "ÚTIL",
+  "home.cosmic.miavWorld": "MIAV WORLD",
+
   // apps
   "apps.openApp": "Abrir la app",
   "apps.comingSoon": "Próximamente",
