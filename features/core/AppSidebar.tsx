@@ -124,7 +124,7 @@ export function AppSidebar({
           </ul>
         </nav>
 
-        {pathname === "/" ? null : (
+        {pathname === "/" || pathname === "/chapters" ? null : (
           <div className="app-sidebar-memory">
             <ReaderMemory workId="miav-922228" />
           </div>
