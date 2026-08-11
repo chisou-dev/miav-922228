@@ -28,7 +28,8 @@ export type SignalDefinition = {
   rewardTargets: SignalRewardTarget[];
   version: number;
   /**
-   * When true, `/api/signals/issue` may mint a code for this id.
+   * When true, discovery/claim may acquire this signal.
+   * Codes are minted only after claim (GET /api/signals/mine).
    * Hidden teasers stay false until their source app ships.
    */
   acquirable?: boolean;

@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getSignalDefinition,
-  isAcquirableSignal,
-} from "@/features/signals/definitions";
-import { issueSignalCode, verifySignalCode } from "@/features/signals/codeServer";
+import { verifySignalCode } from "@/features/signals/codeServer";
 import {
   getRewardForSignal,
   isSignalAvailableForTarget,
@@ -19,65 +15,6 @@ function readJsonObject(
 ): Record<string, unknown> | null {
   if (!body || typeof body !== "object") return null;
   return body as Record<string, unknown>;
-}
-
-export async function POST_issue(request: Request) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { ok: false, reason: "INVALID_FORMAT", error: "Invalid request body." },
-      { status: 400 },
-    );
-  }
-
-  const record = readJsonObject(body);
-  const signalId =
-    typeof record?.signalId === "string" ? record.signalId.trim() : "";
-
-  if (!signalId) {
-    return NextResponse.json(
-      { ok: false, reason: "UNKNOWN_SIGNAL", error: "signalId is required." },
-      { status: 400 },
-    );
-  }
-
-  const definition = getSignalDefinition(signalId);
-  if (!definition) {
-    return NextResponse.json(
-      { ok: false, reason: "UNKNOWN_SIGNAL", error: "Unknown signal." },
-      { status: 404 },
-    );
-  }
-
-  if (!isAcquirableSignal(signalId)) {
-    return NextResponse.json(
-      {
-        ok: false,
-        reason: "NOT_ACQUIRABLE",
-        error: "This signal cannot be issued.",
-      },
-      { status: 403 },
-    );
-  }
-
-  try {
-    const code = issueSignalCode(signalId);
-    return NextResponse.json({
-      ok: true,
-      signalId,
-      code,
-      codePrefix: definition.codePrefix,
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to issue signal code.";
-    return NextResponse.json(
-      { ok: false, reason: "ISSUE_FAILED", error: message },
-      { status: 503 },
-    );
-  }
 }
 
 export async function POST_validate(request: Request) {
