@@ -10,10 +10,9 @@ import {
   type TracePin,
   type TraceStats,
 } from "@/features/world-memory/trace/types";
-import {
-  getOrCreateVisitorId,
-  readVisitorId,
-} from "@/features/world-memory/trace/visitorId";
+import type { GeographyAggregate } from "@/features/world-memory/trace/aggregate";
+import type { TraceCategory } from "@/features/world-memory/trace/works";
+import { TRACE_CATEGORIES } from "@/features/world-memory/trace/works";
 
 function emptyStats(): TraceStats {
   return {
@@ -25,17 +24,39 @@ function emptyStats(): TraceStats {
   };
 }
 
+export type GeoScope =
+  | { level: "world" }
+  | { level: "country"; countryCode: string; countryLabel: string };
+
+export type MemoryQueryScope =
+  | PlaceScope
+  | {
+      countryCode: string;
+      country: string;
+      region?: string | null;
+      name: string;
+      locationId?: undefined;
+    };
+
 export function useMapDataLoader() {
   const [stars, setStars] = useState<MemoryStar[]>([]);
   const [stats, setStats] = useState<TraceStats | null>(null);
   const [recent, setRecent] = useState<TracePin[]>([]);
   const [mapLoading, setMapLoading] = useState(true);
 
-  const [posted, setPosted] = useState(false);
-  const [guestPosted, setGuestPosted] = useState(false);
-  const [mine, setMine] = useState<TracePin | null>(null);
+  const [geographies, setGeographies] = useState<GeographyAggregate[]>([]);
+  const [geoTotals, setGeoTotals] = useState({
+    peopleCount: 0,
+    activityCount: 0,
+  });
+  const [geoLoading, setGeoLoading] = useState(false);
 
-  const [placeScope, setPlaceScope] = useState<PlaceScope | null>(null);
+  const [posted, setPosted] = useState(false);
+  const [mine, setMine] = useState<TracePin | null>(null);
+  const [miavId, setMiavId] = useState<string | null>(null);
+  const [postedWorkIds, setPostedWorkIds] = useState<string[]>([]);
+
+  const [placeScope, setPlaceScope] = useState<MemoryQueryScope | null>(null);
   const [traces, setTraces] = useState<TracePin[]>([]);
   const [tracesLoading, setTracesLoading] = useState(false);
   const [tracesLoadingMore, setTracesLoadingMore] = useState(false);
@@ -65,56 +86,118 @@ export function useMapDataLoader() {
     }
   }, []);
 
+  const loadGeo = useCallback(
+    async (
+      scope: GeoScope,
+      categories: TraceCategory[] = [...TRACE_CATEGORIES],
+    ) => {
+      setGeoLoading(true);
+      try {
+        const params = new URLSearchParams({
+          view: "geo",
+          scope: scope.level,
+          categories: categories.join(","),
+        });
+        if (scope.level === "country") {
+          params.set("country", scope.countryCode);
+        }
+        const response = await fetch(`/api/trace?${params.toString()}`);
+        const data = (await response.json().catch(() => null)) as {
+          geographies?: GeographyAggregate[];
+          totals?: { peopleCount: number; activityCount: number };
+        } | null;
+        if (!response.ok) {
+          setGeographies([]);
+          setGeoTotals({ peopleCount: 0, activityCount: 0 });
+          return;
+        }
+        setGeographies(Array.isArray(data?.geographies) ? data.geographies : []);
+        setGeoTotals(
+          data?.totals || { peopleCount: 0, activityCount: 0 },
+        );
+      } finally {
+        setGeoLoading(false);
+      }
+    },
+    [],
+  );
+
   const loadStatus = useCallback(async (user: User | null) => {
-    const visitorId = readVisitorId() || getOrCreateVisitorId();
     const token = await getIdTokenOrNull(user);
-    const params = new URLSearchParams({ view: "status", visitorId });
+    const params = new URLSearchParams({ view: "status" });
     const response = await fetch(`/api/trace?${params.toString()}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     const data = (await response.json().catch(() => null)) as {
       posted?: boolean;
-      guestPosted?: boolean;
       mine?: TracePin | null;
+      miavId?: string | null;
+      postedWorkIds?: string[];
     } | null;
-    if (!response.ok) return;
+    if (!response.ok) {
+      if (!token) {
+        setPosted(false);
+        setMine(null);
+        setMiavId(null);
+        setPostedWorkIds([]);
+      }
+      return;
+    }
     setPosted(Boolean(data?.posted));
-    setGuestPosted(Boolean(data?.guestPosted));
     setMine(data?.mine || null);
+    setMiavId(data?.miavId || null);
+    setPostedWorkIds(
+      Array.isArray(data?.postedWorkIds) ? data.postedWorkIds : [],
+    );
   }, []);
 
-  const loadMemories = useCallback(async (scope: PlaceScope) => {
-    setPlaceScope(scope);
-    setTracesLoading(true);
-    setTraces([]);
-    setNextCursor(null);
-    setHasMore(false);
-    try {
-      const params = new URLSearchParams({
-        view: "memories",
-        locationId: scope.locationId,
-        limit: String(TRACE_PAGE_SIZE),
-      });
-      const response = await fetch(`/api/trace?${params.toString()}`);
-      const data = (await response.json().catch(() => null)) as {
-        traces?: TracePin[];
-        nextCursor?: string | null;
-        hasMore?: boolean;
-      } | null;
-      if (!response.ok) {
-        setTraces([]);
-        return;
+  const loadMemories = useCallback(
+    async (
+      scope: MemoryQueryScope,
+      categories?: TraceCategory[],
+    ) => {
+      setPlaceScope(scope);
+      setTracesLoading(true);
+      setTraces([]);
+      setNextCursor(null);
+      setHasMore(false);
+      try {
+        const params = new URLSearchParams({
+          view: "memories",
+          limit: String(TRACE_PAGE_SIZE),
+        });
+        if ("locationId" in scope && scope.locationId) {
+          params.set("locationId", scope.locationId);
+        } else if ("countryCode" in scope && scope.countryCode) {
+          params.set("country", scope.countryCode);
+          if (scope.region) params.set("region", scope.region);
+        }
+        if (categories && categories.length > 0) {
+          params.set("categories", categories.join(","));
+        }
+        const response = await fetch(`/api/trace?${params.toString()}`);
+        const data = (await response.json().catch(() => null)) as {
+          traces?: TracePin[];
+          nextCursor?: string | null;
+          hasMore?: boolean;
+        } | null;
+        if (!response.ok) {
+          setTraces([]);
+          return;
+        }
+        setTraces(data?.traces || []);
+        setNextCursor(data?.nextCursor || null);
+        setHasMore(Boolean(data?.hasMore));
+      } finally {
+        setTracesLoading(false);
       }
-      setTraces(data?.traces || []);
-      setNextCursor(data?.nextCursor || null);
-      setHasMore(Boolean(data?.hasMore));
-    } finally {
-      setTracesLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const loadMoreMemories = useCallback(async () => {
     if (!placeScope || !hasMore || !nextCursor || tracesLoadingMore) return;
+    if (!("locationId" in placeScope) || !placeScope.locationId) return;
     setTracesLoadingMore(true);
     try {
       const params = new URLSearchParams({
@@ -151,11 +234,18 @@ export function useMapDataLoader() {
     recent,
     mapLoading,
     loadMap,
+    geographies,
+    geoTotals,
+    geoLoading,
+    loadGeo,
     posted,
-    guestPosted,
     mine,
+    miavId,
+    postedWorkIds,
     setMine,
     setPosted,
+    setMiavId,
+    setPostedWorkIds,
     loadStatus,
     placeScope,
     traces,

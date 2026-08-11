@@ -11,6 +11,7 @@ import {
   chapterPath,
 } from "@/features/stories/miav/edition";
 import { syncReaderMemoryOnChapterView } from "@/features/stories/miav/readerMemorySync";
+import { ReceiveChapter14Signal } from "@/features/signals/ReceiveChapter14Signal";
 
 export type MiavChapterNavItem = {
   number: number;
@@ -149,6 +150,8 @@ export function MiavChapterReader({
           />
         </ReadingLayout>
       </div>
+
+      {chapter.slug === "photograph" ? <ReceiveChapter14Signal /> : null}
 
       {showPartTwo ? <PartTwoNotice /> : null}
       {showFrenchPartTwo ? <FrenchPartTwoNotice /> : null}

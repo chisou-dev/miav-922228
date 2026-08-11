@@ -7,6 +7,8 @@ export const TRACE_STORED_FIELDS = [
   "uid",
   "miavId",
   "authType",
+  "category",
+  "workId",
   "locationId",
   "country",
   "region",
@@ -19,6 +21,30 @@ export const TRACE_STORED_FIELDS = [
   "createdAt",
   "updatedAt",
   "expiresAt",
+] as const;
+
+/** Identity docs — never exposed via public TracePin. */
+export const MIAV_IDENTITY_STORED_FIELDS = [
+  "miavId",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+/** Activity docs — uid is internal only. */
+export const TRACE_ACTIVITY_STORED_FIELDS = [
+  "uid",
+  "miavId",
+  "category",
+  "workId",
+  "locationId",
+  "country",
+  "region",
+  "city",
+  "lat",
+  "lng",
+  "message",
+  "createdAt",
+  "updatedAt",
 ] as const;
 
 /** Fields that must never be accepted or written for traces. */

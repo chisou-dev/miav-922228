@@ -8,11 +8,15 @@ import {
   type TraceStats,
 } from "@/features/world-memory/trace/types";
 import { useT } from "@/features/shared/i18n";
+import { TraceOriginLabel } from "@/features/world-memory/viewer/TraceOriginLabel";
+import type { GeoScope } from "@/features/world-memory/map/MapDataLoader";
 
 type Props = {
   stats: TraceStats | null;
   loading?: boolean;
   recent: TracePin[];
+  geoScope: GeoScope;
+  geoTotals: { peopleCount: number; activityCount: number };
   onFocusMemory: (memory: {
     locationId: string | null;
     lat: number | null;
@@ -20,7 +24,14 @@ type Props = {
   }) => void;
 };
 
-export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
+export function Sidebar({
+  stats,
+  loading,
+  recent,
+  geoScope,
+  geoTotals,
+  onFocusMemory,
+}: Props) {
   const t = useT();
   const memories = useMemo(() => recent.slice(0, 20), [recent]);
   const memoryKey = useMemo(
@@ -61,11 +72,32 @@ export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
     focusAt(nextIndex);
   }
 
+  const scopeLabel =
+    geoScope.level === "world" ? t("world.scopeWorld") : geoScope.countryLabel;
+
   return (
-    <aside className="flex h-full min-h-[min(72vh,720px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6">
+    <aside className="flex h-full min-h-[min(62vh,640px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:min-h-[min(72vh,720px)]">
       <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)]">
         {t("world.archive")}
       </p>
+
+      <div className="mt-4 border-b border-[var(--map-line)] pb-4">
+        <p className="text-[0.65rem] tracking-[0.14em] text-[var(--map-muted)] uppercase">
+          {t("world.mapScope")}
+        </p>
+        <p className="mt-1 text-[1.05rem] font-medium tracking-[0.08em] text-[var(--map-ink)]">
+          {scopeLabel}
+        </p>
+        <p className="mt-1 text-[0.78rem] leading-[1.6] text-[var(--map-muted)]">
+          {geoTotals.peopleCount === 1
+            ? t("world.personCount", { count: geoTotals.peopleCount })
+            : t("world.peopleCount", { count: geoTotals.peopleCount })}
+          {" · "}
+          {geoTotals.activityCount === 1
+            ? t("world.activityCountOne", { count: geoTotals.activityCount })
+            : t("world.activityCountMany", { count: geoTotals.activityCount })}
+        </p>
+      </div>
 
       <div className="mt-5 border-b border-[var(--map-line)] pb-5">
         <div className="flex items-center justify-between gap-2">
@@ -111,6 +143,16 @@ export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
                 {current.miavId}
               </dd>
             </div>
+            {current.category && current.workId ? (
+              <div>
+                <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                  {t("world.origin")}
+                </dt>
+                <dd className="mt-1">
+                  <TraceOriginLabel trace={current} className="" />
+                </dd>
+              </div>
+            ) : null}
             <div>
               <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
                 {t("world.place")}
@@ -182,7 +224,7 @@ export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
           </div>
           <div>
             <dt className="tracking-[0.14em] text-[var(--map-muted)]">
-              {t("world.guestMemories")}
+              {t("world.earlierMemories")}
             </dt>
             <dd className="mt-1 text-[1.2rem] tracking-[0.06em] text-[var(--map-ink)]">
               {stats?.guestCount ?? 0}

@@ -13,6 +13,12 @@ const NAV = [
     match: (path: string) => path === "/world-map" || path.startsWith("/world-map/"),
   },
   {
+    href: "/my-miav",
+    labelKey: "nav.myMiav",
+    match: (path: string) =>
+      path === "/my-miav" || path.startsWith("/my-miav/"),
+  },
+  {
     href: "/works",
     labelKey: "nav.works",
     match: (path: string) =>
@@ -40,7 +46,7 @@ type Props = {
 };
 
 /**
- * Site-wide navigation — Home / World Memory / Works / Game / Apps.
+ * Site-wide navigation — Home / MIAV World / My MIAV / Works / Game / Apps.
  * Game opens the external miav-games project. Apps scrolls to homepage APPS.
  * Language switcher lives in SiteShell only (not duplicated here).
  */

@@ -3,6 +3,7 @@
 import { useRef, type TouchEvent } from "react";
 import { formatJoinedDate, type TracePin } from "@/features/world-memory/trace/types";
 import { formatMessageFull } from "@/features/world-memory/trace/messagePolicy";
+import { TraceOriginLabel } from "@/features/world-memory/viewer/TraceOriginLabel";
 
 type Props = {
   trace: TracePin;
@@ -76,6 +77,7 @@ export function SelectedTrace({
           <p className="font-mono text-[0.92rem] tracking-[0.06em] text-[var(--map-accent)]">
             {trace.miavId}
           </p>
+          <TraceOriginLabel trace={trace} className="mt-2" />
           <p className="mt-1.5 text-[0.8rem] tracking-[0.04em] text-[var(--map-muted)]">
             {formatJoinedDate(trace.createdAt)}
           </p>

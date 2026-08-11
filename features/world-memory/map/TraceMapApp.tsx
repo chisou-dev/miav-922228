@@ -5,11 +5,24 @@ import { useEffect, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 import "leaflet/dist/leaflet.css";
 import { Sidebar } from "@/features/world-memory/map/Sidebar";
+import { CategoryFilter } from "@/features/world-memory/map/CategoryFilter";
 import { LeaveTraceForm } from "@/features/world-memory/trace/ui/LeaveTraceForm";
 import { TraceViewer } from "@/features/world-memory/viewer/TraceViewer";
-import { useMapDataLoader } from "@/features/world-memory/map/MapDataLoader";
+import {
+  useMapDataLoader,
+  type GeoScope,
+} from "@/features/world-memory/map/MapDataLoader";
 import { WelcomeDialog } from "@/features/world-memory/trace/ui/WelcomeDialog";
+import type { GeographyAggregate } from "@/features/world-memory/trace/aggregate";
 import type { TracePin } from "@/features/world-memory/trace/types";
+import {
+  TRACE_CATEGORIES,
+  type TraceCategory,
+} from "@/features/world-memory/trace/works";
+import {
+  CATEGORY_MAP_COLORS,
+  CATEGORY_ORDER,
+} from "@/features/world-memory/map/categoryColors";
 import {
   completeTraceRedirectSignIn,
   getTraceAuthType,
@@ -24,7 +37,7 @@ const Map = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[min(72vh,720px)] items-center justify-center border border-[var(--map-line)] bg-[#f7f9fb] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)]">
+      <div className="flex h-[min(62vh,640px)] items-center justify-center border border-[var(--map-line)] bg-[#f7f9fb] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)] sm:h-[min(72vh,720px)]">
         {translate("world.loadingMap")}
       </div>
     ),
@@ -53,9 +66,17 @@ export function TraceMapApp() {
   const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(
     null,
   );
-  const [highlightLocationId, setHighlightLocationId] = useState<string | null>(
+
+  /** Map filter — independent from Leave a Memory form category. */
+  const [mapCategories, setMapCategories] = useState<TraceCategory[]>([
+    ...TRACE_CATEGORIES,
+  ]);
+  const [geoScope, setGeoScope] = useState<GeoScope>({ level: "world" });
+  const [selectedGeographyId, setSelectedGeographyId] = useState<string | null>(
     null,
   );
+  const [emphasizeCategory, setEmphasizeCategory] =
+    useState<TraceCategory | null>(null);
 
   const data = useMapDataLoader();
 
@@ -72,6 +93,11 @@ export function TraceMapApp() {
     void data.loadMap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    void data.loadGeo(geoScope, mapCategories);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoScope, mapCategories]);
 
   useEffect(() => {
     void completeTraceRedirectSignIn();
@@ -107,25 +133,85 @@ export function TraceMapApp() {
     setWelcomeOpen(false);
   }
 
-  function onOpenMemories(scope: {
-    locationId: string;
-    country: string;
-    name: string;
-  }) {
-    const star = data.stars.find((s) => s.locationId === scope.locationId);
-    if (star) {
-      setFocus({ lat: star.lat, lng: star.lng, zoom: 5 });
+  function backToWorld() {
+    setGeoScope({ level: "world" });
+    setSelectedGeographyId(null);
+    setEmphasizeCategory(null);
+    setFocus({ lat: 20, lng: 0, zoom: 2 });
+    data.closeViewer();
+  }
+
+  function onSelectGeography(
+    geo: GeographyAggregate,
+    category?: TraceCategory,
+  ) {
+    setSelectedGeographyId(geo.geographyId);
+    setEmphasizeCategory(category || null);
+
+    if (geoScope.level === "world") {
+      setGeoScope({
+        level: "country",
+        countryCode: geo.geographyId,
+        countryLabel: geo.label,
+      });
+      setFocus({
+        lat: geo.lat,
+        lng: geo.lng,
+        zoom: 5,
+      });
+      data.closeViewer();
+      return;
     }
-    void data.loadMemories(scope);
+
+    setFocus({ lat: geo.lat, lng: geo.lng, zoom: 6 });
+  }
+
+  function onViewMemories(geo: GeographyAggregate) {
+    setSelectedGeographyId(geo.geographyId);
+    setFocus({
+      lat: geo.lat,
+      lng: geo.lng,
+      zoom: geoScope.level === "world" ? 5 : 6,
+    });
+
+    if (geoScope.level === "world") {
+      void data.loadMemories(
+        {
+          countryCode: geo.geographyId,
+          country: geo.label,
+          name: geo.label,
+          region: null,
+        },
+        mapCategories,
+      );
+      return;
+    }
+
+    const countryCode =
+      geo.countryCode ||
+      (geoScope.level === "country" ? geoScope.countryCode : "");
+    const countryLabel =
+      geo.countryLabel ||
+      (geoScope.level === "country" ? geoScope.countryLabel : "");
+    void data.loadMemories(
+      {
+        countryCode,
+        country: countryLabel,
+        region: geo.label,
+        name: geo.label,
+      },
+      mapCategories,
+    );
   }
 
   const viewerOpen = Boolean(data.placeScope);
   const welcomeBody = getWelcomeDialogBody(t);
+  const filterEmpty = mapCategories.length === 0;
 
   const leaveTraceFormProps = {
     user,
-    posted: data.posted,
-    guestPosted: data.guestPosted,
+    miavId: data.miavId,
+    postedWorkIds: data.postedWorkIds,
     mine: data.mine,
     selectedPlace,
     onSelectPlace: setSelectedPlace,
@@ -133,12 +219,22 @@ export function TraceMapApp() {
     onSaved: (trace: TracePin) => {
       data.setMine(trace);
       data.setPosted(true);
+      if (trace.miavId) data.setMiavId(trace.miavId);
+      if (trace.workId) {
+        data.setPostedWorkIds(
+          Array.from(new Set([...data.postedWorkIds, trace.workId])),
+        );
+      }
       void data.loadStatus(user);
       void data.loadMap();
-      if (data.placeScope) void data.loadMemories(data.placeScope);
+      void data.loadGeo(geoScope, mapCategories);
+      if (data.placeScope) void data.loadMemories(data.placeScope, mapCategories);
     },
     onClose: () => setLeavePanelOpen(false),
   };
+
+  const viewerTitle = data.placeScope?.name ?? "";
+  const viewerCountry = data.placeScope?.country ?? "";
 
   return (
     <div className="trace-map-shell">
@@ -152,7 +248,6 @@ export function TraceMapApp() {
 
       <header className="border-b border-[var(--map-line)] px-5 py-5 pl-14 sm:px-8 sm:py-6 lg:pl-8">
         <div className="mx-auto w-full max-w-6xl">
-          {/* Row 1: title + nav */}
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <h1 className="text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--map-ink)]">
               {t("world.title")}
@@ -170,21 +265,27 @@ export function TraceMapApp() {
               {user && getTraceAuthType(user) === "google" ? (
                 <>
                   <span className="inline-flex max-w-[14rem] flex-col items-end gap-0.5 text-right text-[var(--map-ink)] sm:max-w-[18rem]">
-                    {data.mine?.authType === "google" && data.mine.miavId ? (
+                    {data.miavId ? (
                       <>
                         <span className="inline-flex items-center gap-1.5">
                           <span aria-hidden="true" className="text-[#4a7c59]">
                             ✓
                           </span>
-                          {t("world.permanentMemory")}
+                          {t("world.yourMemory")}
                         </span>
                         <span className="truncate font-mono text-[0.7rem] tracking-[0.04em] text-[var(--map-ink)]">
-                          {data.mine.miavId}
+                          {data.miavId}
                         </span>
+                        <a
+                          href="/my-miav"
+                          className="text-[0.7rem] tracking-[0.08em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.35em]"
+                        >
+                          {t("nav.myMiav")}
+                        </a>
                       </>
                     ) : (
                       <>
-                        <span>{t("world.permanentMemory")}</span>
+                        <span>{t("world.readyToLeave")}</span>
                         <span className="text-[0.7rem] tracking-[0.04em] text-[var(--map-muted)]">
                           ✓ {t("world.verifiedGoogle")}
                         </span>
@@ -203,7 +304,6 @@ export function TraceMapApp() {
             </nav>
           </div>
 
-          {/* Row 2: subtitle + Leave a Memory */}
           <div className="mt-2 max-w-xl sm:mt-2.5">
             <p className="text-[0.95rem] leading-[1.65] tracking-[0.02em] text-[var(--map-muted)]">
               {t("world.subtitle")}
@@ -225,8 +325,10 @@ export function TraceMapApp() {
             <div className="order-2 lg:order-1 lg:self-stretch">
               <Sidebar
                 stats={data.stats}
-                loading={data.mapLoading}
+                loading={data.mapLoading || data.geoLoading}
                 recent={data.recent}
+                geoScope={geoScope}
+                geoTotals={data.geoTotals}
                 onFocusMemory={(memory) => {
                   if (
                     memory.lat != null &&
@@ -240,21 +342,80 @@ export function TraceMapApp() {
                       zoom: 5,
                     });
                   }
-                  setHighlightLocationId(memory.locationId);
                 }}
               />
             </div>
-            <div className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-4 lg:self-start">
-              <Map
-                stars={data.stars}
-                focus={focus}
-                placeScope={data.placeScope}
-                highlightLocationId={highlightLocationId}
-                interactionsEnabled={!welcomeOpen}
-                onOpenMemories={onOpenMemories}
-              />
+            <div className="order-1 space-y-3 lg:order-2 lg:sticky lg:top-4 lg:self-start">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CategoryFilter
+                  selected={mapCategories}
+                  onChange={setMapCategories}
+                />
+                <ul
+                  className="flex flex-wrap items-center gap-3 text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)]"
+                  aria-label={t("world.legendAria")}
+                >
+                  {CATEGORY_ORDER.map((category) => (
+                    <li key={category} className="inline-flex items-center gap-1.5">
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-2 w-2"
+                        style={{
+                          clipPath:
+                            "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
+                          backgroundColor: CATEGORY_MAP_COLORS[category].fill,
+                        }}
+                      />
+                      <span>
+                        {t(
+                          category === "read"
+                            ? "world.category.read"
+                            : category === "play"
+                              ? "world.category.play"
+                              : "world.category.apps",
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {geoScope.level === "country" ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={backToWorld}
+                    className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-white px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
+                  >
+                    {t("world.backToWorld")}
+                  </button>
+                  <p className="text-[0.78rem] tracking-[0.08em] text-[var(--map-ink)]">
+                    {geoScope.countryLabel}
+                  </p>
+                </div>
+              ) : null}
+
+              {filterEmpty ? (
+                <p className="border border-[var(--map-line)] bg-white px-4 py-3 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
+                  {t("world.filterEmpty")}
+                </p>
+              ) : (
+                <Map
+                  level={geoScope.level}
+                  geographies={data.geographies}
+                  focus={focus}
+                  selectedGeographyId={selectedGeographyId}
+                  emphasizeCategory={emphasizeCategory}
+                  interactionsEnabled={!welcomeOpen}
+                  onSelectGeography={onSelectGeography}
+                  onViewMemories={onViewMemories}
+                />
+              )}
               <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
-                {t("world.mapHelp")}
+                {t("world.mapHelpGeo")}
+              </p>
+              <p className="text-[0.72rem] leading-[1.7] text-[var(--map-muted)]">
+                {t("world.earlierOnMapNote")}
               </p>
             </div>
           </div>
@@ -262,8 +423,8 @@ export function TraceMapApp() {
           <div className="hidden lg:block">
             {viewerOpen && data.placeScope ? (
               <TraceViewer
-                city={data.placeScope.name}
-                country={data.placeScope.country}
+                city={viewerTitle}
+                country={viewerCountry}
                 traces={data.traces}
                 loading={data.tracesLoading}
                 loadingMore={data.tracesLoadingMore}
@@ -280,8 +441,8 @@ export function TraceMapApp() {
         {viewerOpen && data.placeScope ? (
           <div className="lg:hidden">
             <TraceViewer
-              city={data.placeScope.name}
-              country={data.placeScope.country}
+              city={viewerTitle}
+              country={viewerCountry}
               traces={data.traces}
               loading={data.tracesLoading}
               loadingMore={data.tracesLoadingMore}
@@ -292,7 +453,6 @@ export function TraceMapApp() {
           </div>
         ) : null}
 
-        {/* Expand below map / shell only when header button is pressed */}
         {leavePanelOpen ? (
           <div ref={leavePanelRef} className="scroll-mt-4">
             <LeaveTraceForm {...leaveTraceFormProps} />

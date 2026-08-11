@@ -22,7 +22,7 @@ type Props = {
 };
 
 /**
- * First-visit entrance for World Memory.
+ * First-visit entrance for MIAV World.
  * Must be acknowledged before the map can be used.
  */
 export function WelcomeDialog({

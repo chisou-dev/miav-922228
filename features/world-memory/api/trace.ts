@@ -3,23 +3,25 @@ import { requireTraceUser } from "@/features/world-memory/trace/requireTraceUser
 import { getPlaceById } from "@/features/world-memory/location/places";
 import { TRACE_PAGE_SIZE } from "@/features/world-memory/trace/types";
 import {
-  createTrace,
-  getTraceByUid,
   getTraceStats,
   listMemoryStars,
   listTracePins,
   listTracesByLocationId,
-  pinFromRecord,
 } from "@/features/world-memory/trace/traceRest";
-import { bodyContainsForbiddenPii } from "@/features/world-memory/trace/privacy";
 import {
-  MAX_GUEST_MESSAGE_LENGTH,
-  MAX_GOOGLE_MESSAGE_LENGTH,
-} from "@/features/world-memory/trace/messagePolicy";
+  createActivity,
+  getLatestPublicMemoryForUid,
+  listPostedWorkIds,
+} from "@/features/world-memory/trace/activityRest";
+import { ensureMiavIdentity } from "@/features/world-memory/trace/identityRest";
+import { bodyContainsForbiddenPii } from "@/features/world-memory/trace/privacy";
+import { MAX_GOOGLE_MESSAGE_LENGTH } from "@/features/world-memory/trace/messagePolicy";
 import { normalizeTraceMessage } from "@/features/world-memory/trace/messagePolicy";
 import { getSiteControl } from "@/features/dashboard/site-control/siteControlRest";
 import { TRACE_DISABLED_MESSAGE } from "@/features/dashboard/site-control/types";
-import { isValidVisitorId } from "@/features/world-memory/trace/visitorId";
+import { validateCategoryWork } from "@/features/world-memory/trace/works";
+import { parseCategoriesParam } from "@/features/world-memory/trace/aggregate";
+import { findCountry } from "@/features/world-memory/location/locations";
 
 function validatePostBody(body: Record<string, unknown>) {
   if (body.lat != null || body.lng != null) {
@@ -45,7 +47,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const view = searchParams.get("view")?.trim() || "map";
     const locationId = searchParams.get("locationId")?.trim() || "";
-    const visitorId = searchParams.get("visitorId")?.trim() || "";
     const cursor = searchParams.get("cursor")?.trim() || null;
     const limitRaw = Number(searchParams.get("limit") || TRACE_PAGE_SIZE);
     const limit = Number.isFinite(limitRaw)
@@ -53,6 +54,7 @@ export async function GET(request: Request) {
       : TRACE_PAGE_SIZE;
 
     if (view === "map") {
+      // Legacy Traces + Activities (merged in listTracePins).
       const [stars, stats, recent] = await Promise.all([
         listMemoryStars(),
         getTraceStats(),
@@ -61,10 +63,118 @@ export async function GET(request: Request) {
       return NextResponse.json({ stars, stats, recent });
     }
 
+    if (view === "geo") {
+      const categoriesResult = parseCategoriesParam(
+        searchParams.get("categories"),
+      );
+      if ("error" in categoriesResult) {
+        return NextResponse.json(
+          { error: categoriesResult.error },
+          { status: 400 },
+        );
+      }
+
+      const scopeRaw = (searchParams.get("scope") || "world").trim().toLowerCase();
+      if (scopeRaw !== "world" && scopeRaw !== "country") {
+        return NextResponse.json(
+          { error: "scope must be world or country." },
+          { status: 400 },
+        );
+      }
+
+      if (scopeRaw === "world") {
+        const { getGeographyAggregates } = await import(
+          "@/features/world-memory/trace/aggregateRest"
+        );
+        const result = await getGeographyAggregates({
+          scope: { level: "world" },
+          categories: categoriesResult,
+        });
+        return NextResponse.json(result);
+      }
+
+      const countryRaw =
+        searchParams.get("country")?.trim() ||
+        searchParams.get("countryCode")?.trim() ||
+        "";
+      if (!countryRaw) {
+        return NextResponse.json(
+          { error: "country is required for scope=country." },
+          { status: 400 },
+        );
+      }
+      const country = findCountry(countryRaw);
+      if (!country) {
+        return NextResponse.json(
+          { error: "Unknown country." },
+          { status: 400 },
+        );
+      }
+
+      const { getGeographyAggregates } = await import(
+        "@/features/world-memory/trace/aggregateRest"
+      );
+      const result = await getGeographyAggregates({
+        scope: { level: "country", countryCode: country.code },
+        categories: categoriesResult,
+      });
+      return NextResponse.json({
+        ...result,
+        country: { code: country.code, label: country.name },
+      });
+    }
+
     if (view === "memories") {
+      const categoriesResult = parseCategoriesParam(
+        searchParams.get("categories"),
+      );
+      if ("error" in categoriesResult) {
+        return NextResponse.json(
+          { error: categoriesResult.error },
+          { status: 400 },
+        );
+      }
+
+      const countryRaw =
+        searchParams.get("country")?.trim() ||
+        searchParams.get("countryCode")?.trim() ||
+        "";
+      const regionRaw = searchParams.get("region")?.trim() || "";
+
+      // Geography archive (Phase 3) — categorized Activities only.
+      if (countryRaw && !locationId) {
+        const country = findCountry(countryRaw);
+        if (!country) {
+          return NextResponse.json(
+            { error: "Unknown country." },
+            { status: 400 },
+          );
+        }
+        const { listMemoriesForGeography } = await import(
+          "@/features/world-memory/trace/aggregateRest"
+        );
+        const traces = await listMemoriesForGeography({
+          countryCode: country.code,
+          regionLabel: regionRaw || null,
+          categories: categoriesResult,
+          limit,
+        });
+        return NextResponse.json({
+          traces,
+          nextCursor: null,
+          hasMore: false,
+          scope: {
+            countryCode: country.code,
+            country: country.name,
+            region: regionRaw || null,
+            name: regionRaw || country.name,
+          },
+        });
+      }
+
       if (!locationId) {
         return NextResponse.json(
-          { error: "locationId is required." },
+          { error: "locationId or country is required." },
           { status: 400 },
         );
       }
@@ -73,48 +183,89 @@ export async function GET(request: Request) {
         limit,
         cursor,
       });
+      // Optional client-side category filter for city archive when requested.
+      let traces = page.traces;
+      if (searchParams.has("categories")) {
+        const set = new Set(categoriesResult);
+        traces = traces.filter(
+          (pin) => pin.category && set.has(pin.category),
+        );
+      }
       return NextResponse.json({
-        traces: page.traces,
+        traces,
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
         scope: { locationId },
       });
     }
 
+    if (view === "mine") {
+      const header = request.headers.get("authorization") || "";
+      if (!/^Bearer\s+/i.test(header)) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      }
+      const auth = await requireTraceUser(request);
+      if (auth.error) return auth.error;
+      if (auth.authType !== "google") {
+        return NextResponse.json(
+          { error: "Google sign-in is required." },
+          { status: 401 },
+        );
+      }
+      const { getMyMiavForUid } = await import(
+        "@/features/world-memory/my-miav/myMiavRest"
+      );
+      // Read-only — never allocates Identity on page view.
+      const mine = await getMyMiavForUid(auth.uid);
+      return NextResponse.json(mine);
+    }
+
     if (view === "status") {
       const header = request.headers.get("authorization") || "";
-      let mine = null;
-      let guestPosted = false;
-      let guestRecord = null;
-
-      if (visitorId && isValidVisitorId(visitorId)) {
-        guestRecord = await getTraceByUid(visitorId);
-        guestPosted = Boolean(guestRecord);
-      }
-
-      if (/^Bearer\s+/i.test(header)) {
-        const auth = await requireTraceUser(request);
-        if (!auth.error) {
-          const record = await getTraceByUid(auth.uid);
-          mine = record ? pinFromRecord(record) : null;
-        }
-        // Google posted state is based on Google uid only.
-        // guestPosted is still returned so the UI can explain a prior Guest Memory.
+      if (!/^Bearer\s+/i.test(header)) {
         return NextResponse.json({
-          posted: Boolean(mine),
-          mine,
-          guestPosted,
+          posted: false,
+          mine: null,
+          miavId: null,
+          postedWorkIds: [],
         });
       }
 
-      if (guestRecord) {
-        mine = pinFromRecord(guestRecord);
-      }
+      const auth = await requireTraceUser(request);
+      if (auth.error) return auth.error;
+
+      const [postedWorkIds, mine, identity] = await Promise.all([
+        listPostedWorkIds(auth.uid),
+        getLatestPublicMemoryForUid(auth.uid),
+        // Prefer existing Identity; do not allocate on status-only visits.
+        (async () => {
+          const { getMiavIdentity } = await import(
+            "@/features/world-memory/trace/identityRest"
+          );
+          const existing = await getMiavIdentity(auth.uid);
+          if (existing) return existing;
+          // Legacy Google Trace miavId without Identity yet — surface for UI.
+          const { getTraceByUid } = await import(
+            "@/features/world-memory/trace/traceRest"
+          );
+          const legacy = await getTraceByUid(auth.uid);
+          if (
+            legacy?.authType === "google" &&
+            legacy.miavId?.startsWith("MIAV-")
+          ) {
+            return { miavId: legacy.miavId };
+          }
+          return null;
+        })(),
+      ]);
+
+      const miavId = identity?.miavId || mine?.miavId || null;
 
       return NextResponse.json({
-        posted: Boolean(mine) || guestPosted,
+        posted: postedWorkIds.length > 0 || Boolean(mine),
         mine,
-        guestPosted,
+        miavId,
+        postedWorkIds,
       });
     }
 
@@ -152,9 +303,12 @@ export async function POST(request: Request) {
   }
 
   const header = request.headers.get("authorization") || "";
-  const hasBearer = /^Bearer\s+/i.test(header);
-  const visitorId =
-    typeof payload.visitorId === "string" ? payload.visitorId.trim() : "";
+  if (!/^Bearer\s+/i.test(header)) {
+    return NextResponse.json(
+      { error: "Google sign-in is required to leave a Memory." },
+      { status: 401 },
+    );
+  }
 
   try {
     const locationResult = validatePostBody(payload);
@@ -164,77 +318,29 @@ export async function POST(request: Request) {
 
     const { place, locationId } = locationResult;
 
-    if (hasBearer) {
-      const auth = await requireTraceUser(request);
-      if (auth.error) return auth.error;
-      if (auth.authType !== "google") {
-        return NextResponse.json(
-          { error: "Google sign-in is required for a long Memory." },
-          { status: 400 },
-        );
-      }
-
-      const messageResult = normalizeTraceMessage(
-        payload.message,
-        MAX_GOOGLE_MESSAGE_LENGTH,
+    const auth = await requireTraceUser(request);
+    if (auth.error) return auth.error;
+    if (auth.authType !== "google") {
+      return NextResponse.json(
+        { error: "Google sign-in is required to leave a Memory." },
+        { status: 401 },
       );
-      if (!messageResult.ok) {
-        return NextResponse.json({ error: messageResult.error }, { status: 400 });
-      }
-
-      const existing = await getTraceByUid(auth.uid);
-      if (existing) {
-        return NextResponse.json(
-          { error: "You already left a Memory with this Google account." },
-          { status: 409 },
-        );
-      }
-
-      const siteControl = await getSiteControl();
-      if (!siteControl.traceEnabled) {
-        return NextResponse.json(
-          { error: TRACE_DISABLED_MESSAGE, code: "TRACE_DISABLED" },
-          { status: 503 },
-        );
-      }
-
-      const created = await createTrace({
-        uid: auth.uid,
-        authType: "google",
-        locationId,
-        country: place.country,
-        region: "",
-        city: place.name,
-        message: messageResult.message,
-      });
-
-      return NextResponse.json({
-        trace: pinFromRecord(created),
-        ok: true,
-      });
     }
 
-    if (!visitorId || !isValidVisitorId(visitorId)) {
-      return NextResponse.json(
-        { error: "A valid visitorId is required." },
-        { status: 400 },
-      );
+    const categoryResult = validateCategoryWork(
+      payload.category,
+      payload.workId,
+    );
+    if (!categoryResult.ok) {
+      return NextResponse.json({ error: categoryResult.error }, { status: 400 });
     }
 
     const messageResult = normalizeTraceMessage(
       payload.message,
-      MAX_GUEST_MESSAGE_LENGTH,
+      MAX_GOOGLE_MESSAGE_LENGTH,
     );
     if (!messageResult.ok) {
       return NextResponse.json({ error: messageResult.error }, { status: 400 });
-    }
-
-    const existing = await getTraceByUid(visitorId);
-    if (existing) {
-      return NextResponse.json(
-        { error: "You already left a Memory from this browser." },
-        { status: 409 },
-      );
     }
 
     const siteControl = await getSiteControl();
@@ -245,9 +351,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const created = await createTrace({
-      uid: visitorId,
-      authType: "guest",
+    // Ensure Identity exists (inherits Legacy miavId when present).
+    await ensureMiavIdentity(auth.uid);
+
+    const created = await createActivity({
+      uid: auth.uid,
+      category: categoryResult.category,
+      workId: categoryResult.workId,
       locationId,
       country: place.country,
       region: "",
@@ -256,15 +366,19 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({
-      trace: pinFromRecord(created),
+      trace: created,
+      miavId: created.miavId,
       ok: true,
     });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to save memory.";
-    if (message === "TRACE_EXISTS") {
+    if (message === "ACTIVITY_EXISTS" || message === "TRACE_EXISTS") {
       return NextResponse.json(
-        { error: "You already left a Memory." },
+        {
+          error: "You already left a Memory for this work.",
+          code: "ALREADY_POSTED_FOR_WORK",
+        },
         { status: 409 },
       );
     }

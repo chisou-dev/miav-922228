@@ -7,7 +7,11 @@ export function isValidVisitorId(value: string): boolean {
   return UUID_RE.test(value);
 }
 
-/** Browser-local identity for one guest Memory per device. */
+/**
+ * Browser-local device id (localStorage).
+ * Not used for MIAV World posting identity (Google-only as of Phase 1).
+ * Kept for possible future pre-MIAV-ID Signal discovery on-device.
+ */
 export function getOrCreateVisitorId(): string {
   try {
     const existing = localStorage.getItem(VISITOR_KEY);

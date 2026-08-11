@@ -1,10 +1,18 @@
+import type { TraceCategory } from "@/features/world-memory/trace/works";
+
 export type TraceAuthType = "guest" | "google" | "anonymous";
+
+export type { TraceCategory };
 
 export type TraceRecord = {
   id: string;
   miavId: string;
   uid: string;
   authType: TraceAuthType;
+  /** Present on Phase 2+ Google posts only — omit on legacy traces. */
+  category?: TraceCategory;
+  /** Present on Phase 2+ Google posts only — omit on legacy traces. */
+  workId?: string;
   locationId: string | null;
   country: string;
   region: string;
@@ -21,6 +29,8 @@ export type TraceRecord = {
 export type TracePin = {
   miavId: string;
   authType: TraceAuthType;
+  category?: TraceCategory;
+  workId?: string;
   locationId: string | null;
   country: string;
   region: string;
@@ -31,7 +41,7 @@ export type TracePin = {
   createdAt: string;
 };
 
-/** Aggregated star on the world map. */
+/** Aggregated star on the world map (legacy city stars / earlier memories). */
 export type MemoryStar = {
   locationId: string;
   country: string;
@@ -40,6 +50,14 @@ export type MemoryStar = {
   lng: number;
   count: number;
 };
+
+export type {
+  AggregateWorkBreakdown,
+  CategoryAggregate,
+  GeographyAggregate,
+  AggregateMemoryRow,
+  AggregateScope,
+} from "@/features/world-memory/trace/aggregate";
 
 /** @deprecated Legacy cluster shape — use MemoryStar. */
 export type TraceLocationCluster = {
@@ -80,6 +98,10 @@ export type PlaceScope = {
 
 export const TRACE_COLLECTION = "trace_map";
 export const TRACE_LOCATIONS_COLLECTION = "trace_locations";
+/** Phase 2.5 — one public MIAV ID per Google account (doc id = Firebase UID). */
+export const MIAV_IDENTITIES_COLLECTION = "miav_identities";
+/** Phase 2.5 — one Memory activity per (uid, workId). */
+export const TRACE_ACTIVITIES_COLLECTION = "trace_activities";
 export const MIAV_COUNTER_DOC = "meta/miav_counter";
 export const TRACE_STATS_DOC = "meta/trace_stats";
 export const MAX_GUEST_MESSAGE_LENGTH = 50;
@@ -89,6 +111,33 @@ export const MAX_TRACE_MESSAGE_LENGTH = MAX_GOOGLE_MESSAGE_LENGTH;
 export const MESSAGE_PREVIEW_LENGTH = 40;
 export const TRACE_PAGE_SIZE = 50;
 export const ANONYMOUS_TRACE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+
+/** Public MIAV Identity — never expose Firebase UID in API responses. */
+export type MiavIdentityRecord = {
+  /** Document id equals Firebase UID (server-only). */
+  uid: string;
+  miavId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** Server Activity record — uid stays internal. */
+export type TraceActivityRecord = {
+  id: string;
+  uid: string;
+  miavId: string;
+  category: TraceCategory;
+  workId: string;
+  locationId: string | null;
+  country: string;
+  region: string;
+  city: string;
+  lat: number;
+  lng: number;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export function formatMiavId(n: number): string {
   return `MIAV-${String(n).padStart(6, "0")}`;
@@ -121,6 +170,8 @@ export function toTracePin(trace: TraceRecord): TracePin {
   return {
     miavId: trace.miavId,
     authType: trace.authType,
+    ...(trace.category ? { category: trace.category } : {}),
+    ...(trace.workId ? { workId: trace.workId } : {}),
     locationId: trace.locationId,
     country: trace.country,
     region: trace.region,

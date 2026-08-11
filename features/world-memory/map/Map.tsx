@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,20 +9,29 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-import { memoryStarSize } from "@/features/world-memory/location/places/starSize";
-import { starMotionForId } from "@/features/world-memory/location/places/starMotion";
-import type { MemoryStar, PlaceScope } from "@/features/world-memory/trace/types";
+import { useT } from "@/features/shared/i18n";
+import {
+  CATEGORY_MAP_COLORS,
+  CATEGORY_MARKER_OFFSETS,
+  CATEGORY_ORDER,
+} from "@/features/world-memory/map/categoryColors";
+import type { GeographyAggregate } from "@/features/world-memory/trace/aggregate";
+import type { TraceCategory } from "@/features/world-memory/trace/works";
 
 type Focus = { lat: number; lng: number; zoom: number } | null;
 
 type Props = {
-  stars: MemoryStar[];
+  level: "world" | "country";
+  geographies: GeographyAggregate[];
   focus: Focus;
-  placeScope: PlaceScope | null;
-  /** Extra marker highlight (e.g. Latest Memory navigation). */
-  highlightLocationId?: string | null;
+  selectedGeographyId?: string | null;
+  emphasizeCategory?: TraceCategory | null;
   interactionsEnabled?: boolean;
-  onOpenMemories: (scope: PlaceScope) => void;
+  onSelectGeography: (
+    geo: GeographyAggregate,
+    category?: TraceCategory,
+  ) => void;
+  onViewMemories: (geo: GeographyAggregate) => void;
 };
 
 function FocusController({ focus }: { focus: Focus }) {
@@ -58,35 +67,163 @@ function MapInteractionGate({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function starIcon(size: number, active: boolean, locationId: string) {
-  const motion = starMotionForId(locationId);
-  const style = [
-    `width:${size}px`,
-    `height:${size}px`,
-    `--star-breathe-dur:${motion.breatheDurationSec.toFixed(2)}s`,
-    `--star-breathe-delay:${motion.breatheDelaySec.toFixed(2)}s`,
-    `--star-color-dur:${motion.colorDurationSec.toFixed(2)}s`,
-    `--star-color-delay:${motion.colorDelaySec.toFixed(2)}s`,
-  ].join(";");
+function personLabel(count: number, one: string, many: string) {
+  return count === 1 ? one : many;
+}
+
+function geographyIcon(
+  geo: GeographyAggregate,
+  active: boolean,
+  emphasizeCategory: TraceCategory | null | undefined,
+) {
+  const cats = CATEGORY_ORDER.filter((c) =>
+    geo.categories.some((row) => row.category === c),
+  );
+  const starsHtml = cats
+    .map((category) => {
+      const offset = CATEGORY_MARKER_OFFSETS[category];
+      const color = CATEGORY_MAP_COLORS[category];
+      const emph = emphasizeCategory === category;
+      const size = emph || cats.length === 1 ? 14 : 11;
+      return `<span class="miav-geo-cat-star${emph ? " miav-geo-cat-star--emph" : ""}" data-category="${category}" style="--ox:${offset.x}px;--oy:${offset.y}px;width:${size}px;height:${size}px;background-color:${color.fill};border-color:${color.border}"></span>`;
+    })
+    .join("");
+
   return L.divIcon({
-    className: "miav-memory-star-wrap",
-    html: `<span class="miav-memory-star${active ? " miav-memory-star--active" : ""}" style="${style}"></span>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    className: `miav-geo-marker-wrap${active ? " miav-geo-marker-wrap--active" : ""}`,
+    html: `<span class="miav-geo-marker" aria-hidden="true">${starsHtml}</span>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
   });
 }
 
+function GeographyPopup({
+  geo,
+  level,
+  onOpen,
+  onView,
+}: {
+  geo: GeographyAggregate;
+  level: "world" | "country";
+  onOpen: () => void;
+  onView: () => void;
+}) {
+  const t = useT();
+  const labelKey = {
+    read: "world.category.read",
+    play: "world.category.play",
+    apps: "world.category.apps",
+  } as const;
+
+  return (
+    <div className="min-w-[11rem] max-w-[16rem] px-1 py-0.5 text-[#243447]">
+      <p className="text-[0.82rem] font-medium tracking-[0.06em]">{geo.label}</p>
+      <p className="mt-1 text-[0.72rem] tracking-[0.04em] text-[#6b7c8d]">
+        {personLabel(
+          geo.peopleCount,
+          t("world.personCount", { count: geo.peopleCount }),
+          t("world.peopleCount", { count: geo.peopleCount }),
+        )}
+        {" · "}
+        {personLabel(
+          geo.activityCount,
+          t("world.activityCountOne", { count: geo.activityCount }),
+          t("world.activityCountMany", { count: geo.activityCount }),
+        )}
+      </p>
+      <ul className="mt-2 space-y-1">
+        {CATEGORY_ORDER.map((category) => {
+          const row = geo.categories.find((c) => c.category === category);
+          if (!row) return null;
+          const color = CATEGORY_MAP_COLORS[category];
+          return (
+            <li
+              key={category}
+              className="flex items-start gap-2 text-[0.7rem] tracking-[0.04em]"
+            >
+              <span
+                aria-hidden="true"
+                className="mt-0.5 inline-block h-2 w-2 shrink-0"
+                style={{
+                  clipPath:
+                    "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
+                  backgroundColor: color.fill,
+                }}
+              />
+              <span>
+                <span className="font-medium tracking-[0.1em]">
+                  {t(labelKey[category])}
+                </span>
+                <span className="block text-[#6b7c8d]">
+                  {personLabel(
+                    row.peopleCount,
+                    t("world.personCount", { count: row.peopleCount }),
+                    t("world.peopleCount", { count: row.peopleCount }),
+                  )}
+                  {" · "}
+                  {personLabel(
+                    row.activityCount,
+                    t("world.activityCountOne", { count: row.activityCount }),
+                    t("world.activityCountMany", { count: row.activityCount }),
+                  )}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {level === "world" ? (
+          <button
+            type="button"
+            className="cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-2 py-1 text-[0.68rem] tracking-[0.1em]"
+            onClick={onOpen}
+          >
+            {t("world.openCountry")}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="cursor-pointer border border-[#9bb0c2] bg-white px-2 py-1 text-[0.68rem] tracking-[0.1em]"
+          onClick={onView}
+        >
+          {t("world.viewMemories")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Map({
-  stars,
+  level,
+  geographies,
   focus,
-  placeScope,
-  highlightLocationId = null,
+  selectedGeographyId = null,
+  emphasizeCategory = null,
   interactionsEnabled = true,
-  onOpenMemories,
+  onSelectGeography,
+  onViewMemories,
 }: Props) {
+  const t = useT();
+
+  const icons = useMemo(() => {
+    const iconMap = new globalThis.Map<string, L.DivIcon>();
+    for (const geo of geographies) {
+      iconMap.set(
+        geo.geographyId,
+        geographyIcon(
+          geo,
+          selectedGeographyId === geo.geographyId,
+          emphasizeCategory,
+        ),
+      );
+    }
+    return iconMap;
+  }, [geographies, selectedGeographyId, emphasizeCategory]);
+
   return (
     <div
-      className={`h-[min(72vh,720px)] w-full overflow-hidden border border-[var(--map-line)] bg-[#f7f9fb] ${
+      className={`h-[min(62vh,640px)] w-full overflow-hidden border border-[var(--map-line)] bg-[#f7f9fb] sm:h-[min(72vh,720px)] ${
         interactionsEnabled ? "" : "pointer-events-none"
       }`}
       aria-hidden={!interactionsEnabled}
@@ -112,33 +249,38 @@ export function Map({
         <FocusController focus={focus} />
         <MapInteractionGate enabled={interactionsEnabled} />
 
-        {stars.map((star) => {
-          const active =
-            placeScope?.locationId === star.locationId ||
-            highlightLocationId === star.locationId;
-          const size = memoryStarSize(star.count);
+        {geographies.map((geo) => {
+          const active = selectedGeographyId === geo.geographyId;
+          const categoryNames = geo.categories
+            .map((c) => c.category.toUpperCase())
+            .join(", ");
+          const aria = t("world.geoMarkerAria", {
+            label: geo.label,
+            people: geo.peopleCount,
+            activities: geo.activityCount,
+            categories: categoryNames,
+          });
           return (
             <Marker
-              key={star.locationId}
-              position={[star.lat, star.lng]}
-              icon={starIcon(size, active, star.locationId)}
-              zIndexOffset={500 + star.count + (active ? 200 : 0)}
+              key={geo.geographyId}
+              position={[geo.lat, geo.lng]}
+              icon={icons.get(geo.geographyId)}
+              title={aria}
+              zIndexOffset={500 + geo.peopleCount + (active ? 200 : 0)}
               eventHandlers={{
                 click: () => {
                   if (!interactionsEnabled) return;
-                  onOpenMemories({
-                    locationId: star.locationId,
-                    country: star.country,
-                    name: star.name,
-                  });
+                  onSelectGeography(geo);
                 },
               }}
             >
               <Popup>
-                <span className="text-[0.78rem] tracking-[0.06em] text-[#243447]">
-                  {star.name}, {star.country}
-                  {star.count > 1 ? ` · ${star.count}` : ""}
-                </span>
+                <GeographyPopup
+                  geo={geo}
+                  level={level}
+                  onOpen={() => onSelectGeography(geo)}
+                  onView={() => onViewMemories(geo)}
+                />
               </Popup>
             </Marker>
           );

@@ -15,6 +15,8 @@ export const es: MessageCatalog = {
   "nav.chapters": "Capítulos",
   "nav.books": "Libros",
   "nav.contact": "Contacto",
+  "nav.signals": "Mis Signals",
+  "nav.myMiav": "My MIAV",
   "nav.primaryAria": "Principal",
   "nav.siteAria": "Sitio",
   "shell.openSidebar": "Abrir el menú",
@@ -146,11 +148,28 @@ export const es: MessageCatalog = {
   "world.privacy": "Privacidad",
   "world.sitePolicy": "Normas del sitio",
   "world.returnToWorld": "Volver a MIAV World",
-  "world.permanentMemory": "Recuerdo permanente",
-  "world.temporaryMemory": "Recuerdo temporal",
+  "world.yourMemory": "Tu recuerdo",
   "world.verifiedGoogle": "Verificado con Google",
   "world.mapHelp":
     "Las estrellas marcan los lugares donde los lectores dejaron un recuerdo. Haz clic en una estrella para leerlos: sin GPS, sin dirección.",
+  "world.mapHelpGeo":
+    "Países y regiones reúnen Memories por READ, PLAY y APPS. Toca un grupo para ver el detalle — sin GPS, sin dirección.",
+  "world.earlierOnMapNote":
+    "Los Earlier Memories sin categoría permanecen en el archivo — no se mezclan con READ / PLAY / APPS.",
+  "world.filterCategoriesAria": "Filtrar el mapa por categoría",
+  "world.legendAria": "Colores de categoría",
+  "world.filterEmpty": "Selecciona al menos READ, PLAY o APPS para mostrar el mapa.",
+  "world.backToWorld": "← Mundo",
+  "world.scopeWorld": "Mundo",
+  "world.mapScope": "Alcance del mapa",
+  "world.openCountry": "Abrir país",
+  "world.viewMemories": "Ver Memories",
+  "world.personCount": "{count} persona",
+  "world.peopleCount": "{count} personas",
+  "world.activityCountOne": "{count} actividad",
+  "world.activityCountMany": "{count} actividades",
+  "world.geoMarkerAria":
+    "{label}: {people} personas, {activities} actividades. Categorías: {categories}",
   "world.loadingMap": "Desplegando el mapa…",
   "world.gathering": "Reuniendo…",
   "world.archive": "Archivo de huellas",
@@ -178,18 +197,21 @@ export const es: MessageCatalog = {
   "world.writeMemoryFirst": "Escribe un recuerdo breve antes de guardar.",
   "world.saveError": "No se pudo guardar el recuerdo.",
   "world.memoryLabel": "Recuerdo ({current}/{max})",
-  "world.guestLabel": "· Invitado · hasta {max}",
-  "world.googleLabel": "· Permanente · hasta {max}",
   "world.memoryPlaceholder": "Una nota breve para decir que estuviste aquí…",
-  "world.continueToPermanent": "Continuar al recuerdo permanente",
-  "world.temporaryMemorySaved": "Tu recuerdo temporal fue guardado.",
-  "world.temporaryCannotEdit": "Los recuerdos temporales no se pueden editar.",
-  "world.permanentMemorySaved": "Tu recuerdo permanente fue guardado.",
+  "world.signInWithGoogle": "Iniciar sesión con Google",
+  "world.signInRequired":
+    "Se requiere iniciar sesión con Google para dejar un recuerdo.",
+  "world.signInToLeave": "Inicia sesión para dejar un recuerdo",
+  "world.signInToLeaveHelp":
+    "Puedes elegir un lugar y escribir primero. El inicio de sesión con Google solo se pide al guardar.",
+  "world.readyToLeave": "Listo para dejar un recuerdo",
+  "world.memorySaved": "Tu recuerdo ha sido guardado.",
+  "world.writeMemorySignIn": "Iniciar sesión y escribir",
   "world.editingUnavailable": "La edición no está disponible.",
   "world.charactersAvailable": "{count} caracteres disponibles",
-  "world.memoryKindHint":
-    "Los recuerdos temporales son anónimos.\nLos recuerdos permanentes quedan ligados a tu cuenta.",
   "world.miavId": "MIAV ID",
+  "world.miavIdHint":
+    "El ID público asignado a tu Trace en MIAV World.",
   "world.copyId": "Copiar {id}",
   "world.copied": "¡Copiado!",
   "world.presenceTitle": "Presencia",
@@ -197,13 +219,12 @@ export const es: MessageCatalog = {
     "Huellas discretas en el mapa. Solo a nivel de ciudad, nunca tu ubicación exacta.",
   "world.placesWithMemories": "Lugares con recuerdos",
   "world.totalMemories": "Total de recuerdos",
-  "world.permanentMemories": "Recuerdos permanentes",
-  "world.guestMemories": "Recuerdos de invitados",
+  "world.permanentMemories": "Recuerdos de cuenta",
+  "world.earlierMemories": "Recuerdos anteriores",
   "world.traceDisabled": "El registro de huellas no está disponible temporalmente.",
   "world.privacyBlurbSignIn":
     "El inicio de sesión con Google se usa solo para identificar tu huella.",
   "world.privacyBlurbNoInfo": "No se guarda ninguna información personal.",
-  "world.privacyBlurbEditOnlyYou": "Solo tú puedes editar tu huella.",
   "world.privacyBlurbNoEditContent":
     "El sitio no edita el contenido de los usuarios.",
   "world.welcomeTitle": "Bienvenido a MIAV World",
@@ -212,17 +233,17 @@ export const es: MessageCatalog = {
   "world.privacyPolicyLabel": "Política de Privacidad",
   "world.agreeAnd": "y las",
   "world.agreePrivacyPrefix": "He leído y acepto la",
-  "world.googleDialogTitle": "Continuar al recuerdo permanente",
+  "world.googleDialogTitle": "Inicia sesión para dejar un recuerdo",
   "world.googleDialogEyebrow": "Autenticación",
   "world.googleDialogIntro":
-    "La verificación se usa solo para identificar al propietario de tu recuerdo permanente. Los datos de tu cuenta de Google nunca se muestran ni se almacenan.",
+    "La verificación se usa solo para identificar al propietario de tu recuerdo. Los datos de tu cuenta de Google nunca se muestran ni se almacenan.",
   "world.googleDoesNotStoreHeading": "Este sitio NO guarda tu:",
   "world.googleDoesNotStoreEmail": "Correo electrónico",
   "world.googleDoesNotStoreName": "Nombre",
   "world.googleDoesNotStorePhoto": "Foto de perfil",
   "world.googleDoesNotStoreAccount": "Información de la cuenta de Google",
   "world.googleUidNote":
-    "Solo se guarda un ID anónimo de Firebase, para que solo tú puedas conservar tu recuerdo.",
+    "Se guarda un identificador de cuenta privado para que solo tú puedas conservar tu recuerdo.",
   "world.googleNeverAccess": "El sitio nunca accede a tus datos de Google.",
   "world.responsibility": "Los usuarios son responsables del contenido que dejan.",
   "world.noEdit": "El operador no edita el contenido de los usuarios.",
@@ -233,10 +254,23 @@ export const es: MessageCatalog = {
   "world.memoryFieldLabel": "Recuerdo",
   "world.leftAt": "Dejado",
   "world.yourStatus": "Tu estado",
-  "world.composerHelpGoogle":
-    "Elige un continente, luego un país, luego una ciudad. Recuerdo permanente: hasta {max} caracteres.",
-  "world.composerHelpGuest":
-    "Elige un continente, luego un país, luego una ciudad. No se necesita iniciar sesión: hasta {max} caracteres.",
+  "world.composerHelp":
+    "Elige qué te trajo aquí, luego un lugar y un recuerdo breve. Hasta {max} caracteres. Se requiere iniciar sesión con Google para guardar.",
+  "world.whatBroughtYou": "¿Qué te trajo aquí?",
+  "world.chooseWork": "Elige una obra",
+  "world.chooseCategoryFirst": "Elige primero READ, PLAY o APPS.",
+  "world.alreadyLeftForWork": "Ya dejaste un recuerdo para esta obra.",
+  "world.alreadyLeftShort": "ya dejado",
+  "world.worksAlreadyLeft":
+    "{count} obra(s) ya registradas bajo tu MIAV ID.",
+  "world.moreWorksAvailable":
+    "Puedes dejar otro recuerdo para una obra diferente.",
+  "world.allWorksLeft":
+    "Ya dejaste un recuerdo para todas las obras disponibles.",
+  "world.origin": "Origen",
+  "world.category.read": "READ",
+  "world.category.play": "PLAY",
+  "world.category.apps": "APPS",
   "world.welcomeLeaveTrace": "Deja un único rastro en el mundo de MIAV-922228.",
   "world.welcomeNotAnalytics": "Esto no es analítica.",
   "world.welcomeQuietRecord":
@@ -244,10 +278,8 @@ export const es: MessageCatalog = {
   "world.welcomeOneTraceOnly": "Cada visitante puede dejar solo un rastro.",
   "world.welcomeMarkThatYouWereHere":
     "Un rastro es simplemente una marca de que estuviste aquí.",
-  "world.welcomeTemporaryExpiry": "Los rastros temporales desaparecen después de tres meses.",
-  "world.welcomePermanentRemain": "Los rastros permanentes permanecen.",
   "world.welcomeGoogleIdentify":
-    "El inicio de sesión con Google se usa solo para identificar al propietario de un rastro.",
+    "El inicio de sesión con Google se usa solo para identificar al propietario de un rastro. Ver el mapa no requiere iniciar sesión.",
   "world.welcomeRemovalIntro": "El contenido solo puede eliminarse si:",
   "world.welcomeBulletLaw": "infringe la ley",
   "world.welcomeBulletSpam": "contiene spam",
@@ -258,14 +290,14 @@ export const es: MessageCatalog = {
   "world.privacyNoProfileFields":
     "El correo electrónico, el nombre, la foto de perfil y la información de la cuenta de Google nunca se guardan.",
   "world.privacyUidOnlyEdit":
-    "Solo se guarda un ID de Firebase, para que solo tú puedas editar tu rastro.",
+    "Se guarda un identificador de cuenta privado para que solo tú puedas conservar tu rastro.",
   "world.privacyTraceBelongsToYou": "Tu rastro te pertenece.",
   "world.privacySiteProvidesPlace":
     "El sitio ofrece un espacio para que los lectores dejen un rastro, pero no edita el contenido de los usuarios.",
   "world.privacyQuietLiterarySpace":
     "Es un espacio literario discreto donde los lectores dejan un único rastro.",
   "world.privacyStoresOnly":
-    "MIAV World guarda únicamente: el ID de Firebase, el ID de MIAV, el tipo de sesión, el lugar, el mensaje y las marcas de tiempo. Los rastros temporales (anónimos) también tienen una fecha de caducidad.",
+    "MIAV World guarda únicamente: un identificador de cuenta privado, el ID de MIAV, el tipo de sesión, el lugar, el mensaje y las marcas de tiempo.",
   "world.sitePolicyIntro": "MIAV World es un lugar donde los lectores dejan un rastro.",
   "world.sitePolicyTraceBelongsToOwner": "Cada rastro pertenece a su propietario.",
   "world.sitePolicyProvidesPlace":
@@ -277,6 +309,75 @@ export const es: MessageCatalog = {
   "world.sitePolicyReasonPolicy": "infringe las normas del sitio",
   "world.sitePolicyNoGoogleProfile":
     "El sitio no guarda tu dirección de correo electrónico, nombre, foto de perfil, ni ninguna otra información de la cuenta de Google.",
+
+  // signals
+  "signals.eyebrow": "Signal",
+  "signals.title": "Mis Signals",
+  "signals.summary":
+    "Signals descubiertos en el mundo MIAV.\nLleva un Signal Code a otra obra para liberar una recompensa discreta.",
+  "signals.discovered": "{found} / {total} Signals descubiertos",
+  "signals.unknown": "Signal desconocido",
+  "signals.copy": "Copiar Signal",
+  "signals.copied": "Copiado",
+  "signals.receivedTitle": "Signal recibido",
+  "signals.addedToMySignals": "Añadido a Mis Signals.",
+  "signals.alreadyInCollection": "Ya está en Mis Signals.",
+  "signals.viewSignal": "Ver Signal",
+  "signals.receive": "Recibir Signal",
+  "signals.chapter14Title": "Signal del Capítulo 14",
+  "signals.chapter14Prompt":
+    "Un signal discreto espera al final de este capítulo.",
+  "signals.enter": "Introducir Signal",
+  "signals.enterHeading": "Introducir Signal",
+  "signals.enterHint":
+    "Pega un Signal Code para desbloquear una recompensa en este sitio.",
+  "signals.submit": "Desbloquear",
+  "signals.accepted": "Signal aceptado",
+  "signals.invalid": "Signal inválido",
+  "signals.alreadyRedeemed": "Ya canjeado",
+  "signals.rewardUnlocked": "Recompensa desbloqueada",
+  "signals.notAvailable": "No disponible para esta app",
+  "signals.source.novel": "Novela",
+  "signals.source.binary": "Binary Block",
+  "signals.source.luminous": "Luminous Structure",
+  "signals.source.writerMemo": "Writer Memo",
+  "signals.source.miavWorld": "MIAV World",
+  "signals.source.other": "Otro",
+
+  "myMiav.title": "My MIAV",
+  "myMiav.subtitle": "Tu MIAV ID y tu actividad en MIAV World.",
+  "myMiav.signInPrompt":
+    "Inicia sesión con Google para ver tu MIAV ID y tu actividad.",
+  "myMiav.loading": "Cargando…",
+  "myMiav.loadError": "No se pudo cargar My MIAV.",
+  "myMiav.tryAgain": "Intentar de nuevo",
+  "myMiav.noIdYet": "Aún no tienes MIAV ID.",
+  "myMiav.noIdHelp":
+    "Deja tu primer Memory en MIAV World para recibir tu MIAV ID.",
+  "myMiav.goToWorld": "Ir a MIAV World",
+  "myMiav.leaveAnother": "Dejar otro Memory",
+  "myMiav.activity": "Actividad",
+  "myMiav.activityCountOne": "{count} actividad",
+  "myMiav.activityCountMany": "{count} actividades",
+  "myMiav.noActivities": "Aún no hay actividad registrada.",
+
+  "signals.sectionTitle": "Signals",
+  "signals.discoveredTitle": "Signal descubierto",
+  "signals.waitingForMiavId":
+    "Este Signal te espera. Deja un Memory en MIAV World para recibir tu MIAV ID y revelarlo.",
+  "signals.noneYet": "Aún no has descubierto Signals.",
+  "signals.copySignal": "Copiar Signal",
+  "signals.copySignalAria": "Copiar el código del Signal {title}",
+  "signals.addedCount": "{count} Signals añadidos a My MIAV.",
+  "signals.claimError": "No se pudo añadir el Signal.",
+  "signals.pendingWaiting":
+    "Un Signal te espera — deja un Memory para revelarlo en My MIAV.",
+  "signals.deviceNote":
+    "Los Signals encontrados antes de tu MIAV ID permanecen en este dispositivo hasta que abras My MIAV.",
+  "signals.movedTitle": "Los Signals forman parte de My MIAV",
+  "signals.movedBody":
+    "Tus Signals ahora viven junto a tu MIAV ID. Abre My MIAV para verlos.",
+  "signals.openMyMiav": "Abrir My MIAV",
 
   // common
   "common.loading": "Cargando…",

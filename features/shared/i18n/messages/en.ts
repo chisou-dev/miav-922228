@@ -14,6 +14,8 @@ export const en = {
   "nav.chapters": "Chapters",
   "nav.books": "Books",
   "nav.contact": "Contact",
+  "nav.signals": "My Signals",
+  "nav.myMiav": "My MIAV",
   "nav.primaryAria": "Primary",
   "nav.siteAria": "Site",
   "shell.openSidebar": "Open sidebar",
@@ -143,11 +145,28 @@ export const en = {
   "world.privacy": "Privacy",
   "world.sitePolicy": "Site Policy",
   "world.returnToWorld": "Return to MIAV World",
-  "world.permanentMemory": "Permanent Memory",
-  "world.temporaryMemory": "Temporary Memory",
+  "world.yourMemory": "Your Memory",
   "world.verifiedGoogle": "Verified with Google",
   "world.mapHelp":
     "Stars mark places where readers left a Memory. Click a star to read them — no GPS, no address.",
+  "world.mapHelpGeo":
+    "Countries and regions gather Memories by READ, PLAY, and APPS. Tap a group for detail — no GPS, no address.",
+  "world.earlierOnMapNote":
+    "Earlier Memories without a category stay in the archive — they are not mixed into READ / PLAY / APPS.",
+  "world.filterCategoriesAria": "Filter map by category",
+  "world.legendAria": "Category colors",
+  "world.filterEmpty": "Select at least one of READ, PLAY, or APPS to show the map.",
+  "world.backToWorld": "← World",
+  "world.scopeWorld": "World",
+  "world.mapScope": "Map scope",
+  "world.openCountry": "Open country",
+  "world.viewMemories": "View Memories",
+  "world.personCount": "{count} person",
+  "world.peopleCount": "{count} people",
+  "world.activityCountOne": "{count} activity",
+  "world.activityCountMany": "{count} activities",
+  "world.geoMarkerAria":
+    "{label}: {people} people, {activities} activities. Categories: {categories}",
   "world.loadingMap": "Unfolding the map…",
   "world.gathering": "Gathering…",
   "world.archive": "Trace archive",
@@ -175,18 +194,20 @@ export const en = {
   "world.writeMemoryFirst": "Write a short Memory before saving.",
   "world.saveError": "Unable to save Memory.",
   "world.memoryLabel": "Memory ({current}/{max})",
-  "world.guestLabel": "· Guest · up to {max}",
-  "world.googleLabel": "· Permanent · up to {max}",
   "world.memoryPlaceholder": "A quiet note that you read here…",
-  "world.continueToPermanent": "Continue to Permanent Memory",
-  "world.temporaryMemorySaved": "Your Temporary Memory has been saved.",
-  "world.temporaryCannotEdit": "Temporary Memories cannot be edited.",
-  "world.permanentMemorySaved": "Your Permanent Memory has been saved.",
+  "world.signInWithGoogle": "Sign in with Google",
+  "world.signInRequired": "Google sign-in is required to leave a Memory.",
+  "world.signInToLeave": "Sign in to leave a Memory",
+  "world.signInToLeaveHelp":
+    "You can choose a place and write first. Google Sign-In is required only when you save.",
+  "world.readyToLeave": "Ready to leave a Memory",
+  "world.memorySaved": "Your Memory has been saved.",
+  "world.writeMemorySignIn": "Sign in & write Memory",
   "world.editingUnavailable": "Editing is not available.",
   "world.charactersAvailable": "{count} characters available",
-  "world.memoryKindHint":
-    "Temporary Memories are anonymous.\nPermanent Memories stay with your account.",
   "world.miavId": "MIAV ID",
+  "world.miavIdHint":
+    "The public ID assigned to your Trace in MIAV World.",
   "world.copyId": "Copy {id}",
   "world.copied": "Copied!",
   "world.presenceTitle": "Presence",
@@ -194,13 +215,12 @@ export const en = {
     "Quiet footprints on the map. City-level only — never your exact location.",
   "world.placesWithMemories": "Places with Memories",
   "world.totalMemories": "Total Memories",
-  "world.permanentMemories": "Permanent Memories",
-  "world.guestMemories": "Guest Memories",
+  "world.permanentMemories": "Account Memories",
+  "world.earlierMemories": "Earlier Memories",
   "world.traceDisabled": "Trace registration is temporarily unavailable.",
   "world.privacyBlurbSignIn":
     "Google Sign-In is used only to identify your Trace.",
   "world.privacyBlurbNoInfo": "No personal information is stored.",
-  "world.privacyBlurbEditOnlyYou": "Only you can edit your Trace.",
   "world.privacyBlurbNoEditContent": "The site does not edit user content.",
   "world.welcomeTitle": "Welcome to MIAV World",
   "world.welcomeEyebrow": "Entrance",
@@ -208,17 +228,17 @@ export const en = {
   "world.privacyPolicyLabel": "Privacy Policy",
   "world.agreeAnd": "and",
   "world.agreePrivacyPrefix": "I have read and agree to the",
-  "world.googleDialogTitle": "Continue to Permanent Memory",
+  "world.googleDialogTitle": "Sign in to leave a Memory",
   "world.googleDialogEyebrow": "Authentication",
   "world.googleDialogIntro":
-    "Verification is used only to identify the owner of your Permanent Memory. Google account details are never shown or stored.",
+    "Verification is used only to identify the owner of your Memory. Google account details are never shown or stored.",
   "world.googleDoesNotStoreHeading": "This website does NOT store your:",
   "world.googleDoesNotStoreEmail": "Email address",
   "world.googleDoesNotStoreName": "Name",
   "world.googleDoesNotStorePhoto": "Profile photo",
   "world.googleDoesNotStoreAccount": "Google account information",
   "world.googleUidNote":
-    "Only an anonymous Firebase UID is stored so that only you can keep your Memory.",
+    "A private account identifier is stored so that only you can keep your Memory.",
   "world.googleNeverAccess": "The site never accesses your Google data.",
   "world.responsibility": "Users are responsible for the content they leave.",
   "world.noEdit": "The operator does not edit user content.",
@@ -229,10 +249,22 @@ export const en = {
   "world.memoryFieldLabel": "Memory",
   "world.leftAt": "Left",
   "world.yourStatus": "Your Status",
-  "world.composerHelpGoogle":
-    "Choose a continent, then a country, then a city. Permanent Memory — up to {max} characters.",
-  "world.composerHelpGuest":
-    "Choose a continent, then a country, then a city. No login required — up to {max} characters.",
+  "world.composerHelp":
+    "Choose what brought you here, then a place and a short Memory. Up to {max} characters. Google Sign-In is required to save.",
+  "world.whatBroughtYou": "What brought you here?",
+  "world.chooseWork": "Choose a work",
+  "world.chooseCategoryFirst": "Choose READ, PLAY, or APPS first.",
+  "world.alreadyLeftForWork": "You already left a Memory for this work.",
+  "world.alreadyLeftShort": "already left",
+  "world.worksAlreadyLeft": "{count} work(s) already recorded under your MIAV ID.",
+  "world.moreWorksAvailable":
+    "You can leave another Memory for a different work.",
+  "world.allWorksLeft":
+    "You have already left a Memory for every available work.",
+  "world.origin": "Origin",
+  "world.category.read": "READ",
+  "world.category.play": "PLAY",
+  "world.category.apps": "APPS",
   "world.welcomeLeaveTrace": "Leave a single Trace in the world of MIAV-922228.",
   "world.welcomeNotAnalytics": "This is not analytics.",
   "world.welcomeQuietRecord":
@@ -240,10 +272,8 @@ export const en = {
   "world.welcomeOneTraceOnly": "Each visitor may leave only one Trace.",
   "world.welcomeMarkThatYouWereHere":
     "A Trace is simply a mark that you were here.",
-  "world.welcomeTemporaryExpiry": "Temporary Traces disappear after three months.",
-  "world.welcomePermanentRemain": "Permanent Traces remain.",
   "world.welcomeGoogleIdentify":
-    "Google Sign-In is used only to identify the owner of a Trace.",
+    "Google Sign-In is used only to identify the owner of a Trace. Viewing the map does not require signing in.",
   "world.welcomeRemovalIntro": "Content may be removed only if it:",
   "world.welcomeBulletLaw": "violates the law",
   "world.welcomeBulletSpam": "contains spam",
@@ -254,14 +284,14 @@ export const en = {
   "world.privacyNoProfileFields":
     "Email, display name, profile photo, and Google account information are never stored.",
   "world.privacyUidOnlyEdit":
-    "Only a Firebase UID is stored so that only you can edit your Trace.",
+    "A private account identifier is stored so that only you can keep your Trace.",
   "world.privacyTraceBelongsToYou": "Your Trace belongs to you.",
   "world.privacySiteProvidesPlace":
     "The site provides a place for readers to leave a Trace, but does not edit user content.",
   "world.privacyQuietLiterarySpace":
     "It is a quiet literary space where readers leave a single Trace.",
   "world.privacyStoresOnly":
-    "MIAV World stores only: Firebase UID, MIAV ID, auth type, location, message, and timestamps. Temporary (anonymous) traces also carry an expiry time.",
+    "MIAV World stores only: a private account identifier, MIAV ID, auth type, location, message, and timestamps.",
   "world.sitePolicyIntro": "MIAV World is a place where readers leave a Trace.",
   "world.sitePolicyTraceBelongsToOwner": "Each Trace belongs to its owner.",
   "world.sitePolicyProvidesPlace":
@@ -272,6 +302,77 @@ export const en = {
   "world.sitePolicyReasonPolicy": "it violates the Site Policy",
   "world.sitePolicyNoGoogleProfile":
     "The website does not store your email address, name, profile photo, or any other Google account information.",
+
+  // signals
+  "signals.eyebrow": "Signal",
+  "signals.title": "My Signals",
+  "signals.summary":
+    "Signals discovered across the MIAV world.\nCarry a Signal Code into another work to unlock a quiet reward.",
+  "signals.discovered": "{found} / {total} Signals discovered",
+  "signals.unknown": "Unknown Signal",
+  "signals.copy": "Copy Signal",
+  "signals.copied": "Copied",
+  "signals.receivedTitle": "Signal Received",
+  "signals.addedToMySignals": "Added to My Signals.",
+  "signals.alreadyInCollection": "Already in My Signals.",
+  "signals.viewSignal": "View Signal",
+  "signals.receive": "Receive Signal",
+  "signals.chapter14Title": "Chapter 14 Signal",
+  "signals.chapter14Prompt":
+    "A quiet signal waits at the end of this chapter.",
+  "signals.enter": "Enter Signal",
+  "signals.enterHeading": "Enter Signal",
+  "signals.enterHint":
+    "Paste a Signal Code to unlock a reward on this site.",
+  "signals.submit": "Unlock",
+  "signals.accepted": "Signal Accepted",
+  "signals.invalid": "Invalid Signal",
+  "signals.alreadyRedeemed": "Already Redeemed",
+  "signals.rewardUnlocked": "Reward Unlocked",
+  "signals.notAvailable": "Not available for this app",
+  "signals.source.novel": "Novel",
+  "signals.source.binary": "Binary Block",
+  "signals.source.luminous": "Luminous Structure",
+  "signals.source.writerMemo": "Writer Memo",
+  "signals.source.miavWorld": "MIAV World",
+  "signals.source.other": "Other",
+
+  // my miav (private identity home — Phase 4)
+  "myMiav.title": "My MIAV",
+  "myMiav.subtitle": "Your MIAV ID and MIAV World activity.",
+  "myMiav.signInPrompt":
+    "Sign in with Google to view your MIAV ID and activity.",
+  "myMiav.loading": "Loading…",
+  "myMiav.loadError": "Could not load My MIAV.",
+  "myMiav.tryAgain": "Try again",
+  "myMiav.noIdYet": "No MIAV ID yet.",
+  "myMiav.noIdHelp":
+    "Leave your first Memory in MIAV World to receive your MIAV ID.",
+  "myMiav.goToWorld": "Go to MIAV World",
+  "myMiav.leaveAnother": "Leave another Memory",
+  "myMiav.activity": "Activity",
+  "myMiav.activityCountOne": "{count} activity",
+  "myMiav.activityCountMany": "{count} activities",
+  "myMiav.noActivities": "No activity recorded yet.",
+
+  // signals phase 5
+  "signals.sectionTitle": "Signals",
+  "signals.discoveredTitle": "Signal discovered",
+  "signals.waitingForMiavId":
+    "This Signal is waiting for you. Leave a Memory in MIAV World to receive your MIAV ID and reveal it.",
+  "signals.noneYet": "No Signals discovered yet.",
+  "signals.copySignal": "Copy Signal",
+  "signals.copySignalAria": "Copy Signal code for {title}",
+  "signals.addedCount": "{count} Signals added to My MIAV.",
+  "signals.claimError": "Could not add Signal.",
+  "signals.pendingWaiting":
+    "A Signal is waiting — leave a Memory to reveal it on My MIAV.",
+  "signals.deviceNote":
+    "Signals found before your MIAV ID stay on this device until you open My MIAV.",
+  "signals.movedTitle": "Signals are part of My MIAV",
+  "signals.movedBody":
+    "Your Signals now live with your MIAV ID. Open My MIAV to view them.",
+  "signals.openMyMiav": "Open My MIAV",
 
   // common
   "common.loading": "Loading…",

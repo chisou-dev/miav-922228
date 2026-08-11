@@ -77,7 +77,7 @@ export function GoogleSignInDialog({
                 disabled={!agreed || busy}
                 onClick={onConfirm}
               >
-                {busy ? t("world.continuing") : t("world.continueToPermanent")}
+                {busy ? t("world.continuing") : t("world.signInWithGoogle")}
               </TraceDialogPrimaryButton>
               <p className="mt-2 text-[0.72rem] leading-[1.7] text-[var(--map-muted,#6b7c8f)]">
                 {t("world.verifiedGoogle")}

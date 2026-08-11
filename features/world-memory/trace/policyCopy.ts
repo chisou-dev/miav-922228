@@ -19,8 +19,6 @@ export function getWelcomeDialogBody(t: Translate) {
       t("world.welcomeQuietRecord"),
       t("world.welcomeOneTraceOnly"),
       t("world.welcomeMarkThatYouWereHere"),
-      t("world.welcomeTemporaryExpiry"),
-      t("world.welcomePermanentRemain"),
       t("world.welcomeGoogleIdentify"),
       t("world.privacyBlurbNoInfo"),
       t("world.noEdit"),

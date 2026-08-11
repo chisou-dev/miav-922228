@@ -93,5 +93,29 @@ service cloud.firestore {
 
       allow delete: if isAdmin();
     }
+
+    /**
+     * MIAV Identity — one public MIAV ID per Google account.
+     * Doc id = Firebase UID (server-only). Clients must not read/write.
+     */
+    match /miav_identities/{uid} {
+      allow read, write: if false;
+    }
+
+    /**
+     * Trace Activities — one Memory per (uid, workId).
+     * Ownership uid is stored server-side; public access is API-only.
+     */
+    match /trace_activities/{activityId} {
+      allow read, write: if false;
+    }
+
+    /**
+     * Signal claims — one claim per (uid, signalId).
+     * Public access is API-only; clients must not read/write.
+     */
+    match /miav_signal_claims/{claimId} {
+      allow read, write: if false;
+    }
   }
 }

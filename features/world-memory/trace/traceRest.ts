@@ -19,6 +19,10 @@ import {
   type TraceStats,
 } from "@/features/world-memory/trace/types";
 import {
+  isTraceCategory,
+  type TraceCategory,
+} from "@/features/world-memory/trace/works";
+import {
   findLocationByNames,
   getLocationById,
   resolveLocationCoords,
@@ -39,6 +43,8 @@ export function pinFromRecord(record: TraceRecord): TracePin {
   return {
     miavId: base.miavId,
     authType: base.authType,
+    ...(base.category ? { category: base.category } : {}),
+    ...(base.workId ? { workId: base.workId } : {}),
     locationId: coords.locationId,
     country: coords.country,
     region: coords.region,
@@ -210,11 +216,17 @@ async function firestoreFetch(
 function toTraceRecord(doc: FirestoreDocument): TraceRecord {
   const authRaw = readString(doc.fields, "authType");
   const locationIdRaw = readString(doc.fields, "locationId");
+  const categoryRaw = readString(doc.fields, "category");
+  const workIdRaw = readString(doc.fields, "workId");
+  const category = isTraceCategory(categoryRaw) ? categoryRaw : undefined;
+  const workId = workIdRaw || undefined;
   return {
     id: documentIdFromName(doc.name),
     miavId: readString(doc.fields, "miavId"),
     uid: readString(doc.fields, "uid"),
     authType: isTraceAuthType(authRaw) ? authRaw : "anonymous",
+    ...(category ? { category } : {}),
+    ...(workId ? { workId } : {}),
     locationId: locationIdRaw || null,
     country: readString(doc.fields, "country"),
     region: readString(doc.fields, "region"),
@@ -233,7 +245,8 @@ function isActiveTrace(trace: TraceRecord, now = Date.now()): boolean {
   return new Date(trace.expiresAt).getTime() > now;
 }
 
-async function allocateMiavNumber(): Promise<number> {
+/** Allocate next public MIAV number (Identity first-issue only as of Phase 2.5). */
+export async function allocateMiavNumber(): Promise<number> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const getRes = await firestoreFetch("documents/meta/miav_counter");
     let lastNumber = 0;
@@ -328,7 +341,8 @@ async function runTraceQuery(
   return records.filter((trace) => isActiveTrace(trace));
 }
 
-async function bumpLocationCount(
+/** Adjust city star aggregate (±1). Used by Legacy Trace and Activity writes. */
+export async function bumpLocationCount(
   location: {
     locationId?: string | null;
     country: string;
@@ -602,8 +616,8 @@ async function upsertLocationCluster(cluster: TraceLocationCluster) {
 }
 
 /**
- * Rebuild stats + location counts from active Traces only, and prune orphan
- * trace_locations docs so World Memory stars cannot linger after deletes.
+ * Rebuild stats + location counts from active Legacy Traces + Activities,
+ * and prune orphan trace_locations docs so stars cannot linger after deletes.
  */
 async function rebuildAggregatesFromTraces(): Promise<{
   stats: InternalTraceStats;
@@ -612,27 +626,63 @@ async function rebuildAggregatesFromTraces(): Promise<{
   const records = await runTraceQuery({
     from: [{ collectionId: TRACE_COLLECTION }],
   });
+
+  const { listAllActivities, pinFromActivity } = await import(
+    "@/features/world-memory/trace/activityRest"
+  );
+  const activities = await listAllActivities();
+
+  // Stats: Legacy Trace docs + Activity docs (people ≠ activities later).
   const stats = statsFromRecords(records);
+  stats.permanentCount += activities.length;
+  // Refresh latest from activities if newer.
+  for (const activity of activities) {
+    const pin = pinFromActivity(activity);
+    if (
+      !stats.latestCreatedAt ||
+      new Date(pin.createdAt).getTime() >
+        new Date(stats.latestCreatedAt).getTime()
+    ) {
+      stats.latestMiavId = pin.miavId;
+      stats.latestCountry = pin.country;
+      stats.latestCity = pin.city;
+      stats.latestMessagePreview = previewMessage(pin.message);
+      stats.latestCreatedAt = pin.createdAt;
+    }
+  }
   await writeTraceStats(stats);
 
   const byCity = new Map<string, TraceLocationCluster>();
-  for (const trace of records) {
-    const coords = catalogCoordsForTrace(trace);
-    const key = locationDocId(coords);
+  const addCluster = (input: {
+    locationId: string | null;
+    country: string;
+    region: string;
+    city: string;
+    lat: number;
+    lng: number;
+  }) => {
+    const key = locationDocId(input);
     const current = byCity.get(key);
     if (current) {
       current.count += 1;
     } else {
       byCity.set(key, {
-        locationId: coords.locationId,
-        country: coords.country,
-        region: coords.region,
-        city: coords.city,
-        lat: coords.lat,
-        lng: coords.lng,
+        locationId: input.locationId,
+        country: input.country,
+        region: input.region,
+        city: input.city,
+        lat: input.lat,
+        lng: input.lng,
         count: 1,
       });
     }
+  };
+
+  for (const trace of records) {
+    addCluster(catalogCoordsForTrace(trace));
+  }
+  for (const activity of activities) {
+    addCluster(catalogCoordsForTrace(activity));
   }
 
   const existingIds = await listAllLocationDocumentIds();
@@ -647,6 +697,12 @@ async function rebuildAggregatesFromTraces(): Promise<{
   for (const cluster of byCity.values()) {
     await upsertLocationCluster(cluster);
   }
+
+  stats.cityCount = byCity.size;
+  stats.countryCount = new Set(
+    [...byCity.values()].map((l) => l.country),
+  ).size;
+  await writeTraceStats(stats);
 
   return { stats, locations: [...byCity.values()] };
 }
@@ -1002,13 +1058,37 @@ export async function listTracesByLocationId(input: {
   }
 
   if (merged.size === 0) {
-    return listTracesAtCityLegacy({
+    const emptyLegacy = await listTracesAtCityLegacy({
       country: place.country,
       region: "",
       city: place.name,
-      limit: pageSize,
-      cursor: input.cursor,
+      limit: 200,
+      cursor: null,
     });
+    const { listActivitiesByLocationId, pinFromActivity, mergeMemoryPins } =
+      await import("@/features/world-memory/trace/activityRest");
+    const activityPins: TracePin[] = [];
+    for (const legacyId of legacyIds) {
+      try {
+        const acts = await listActivitiesByLocationId(legacyId, 200);
+        for (const act of acts) activityPins.push(pinFromActivity(act));
+      } catch {
+        // try next
+      }
+    }
+    const all = mergeMemoryPins(emptyLegacy.traces, activityPins);
+    const startIndex = input.cursor
+      ? all.findIndex((row) => row.createdAt === input.cursor) + 1
+      : 0;
+    const safeStart = Math.max(0, startIndex);
+    const page = all.slice(safeStart, safeStart + pageSize);
+    const hasMore = safeStart + pageSize < all.length;
+    const last = page[page.length - 1];
+    return {
+      traces: page,
+      nextCursor: hasMore && last ? last.createdAt : null,
+      hasMore,
+    };
   }
 
   const sorted = [...merged.values()].sort(
@@ -1016,16 +1096,29 @@ export async function listTracesByLocationId(input: {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
+  const { listActivitiesByLocationId, pinFromActivity, mergeMemoryPins } =
+    await import("@/features/world-memory/trace/activityRest");
+  const activityPins: TracePin[] = [];
+  for (const legacyId of legacyIds) {
+    try {
+      const acts = await listActivitiesByLocationId(legacyId, 200);
+      for (const act of acts) activityPins.push(pinFromActivity(act));
+    } catch {
+      // try next
+    }
+  }
+  const all = mergeMemoryPins(sorted.map(pinFromRecord), activityPins);
+
   const startIndex = input.cursor
-    ? sorted.findIndex((row) => row.createdAt === input.cursor) + 1
+    ? all.findIndex((row) => row.createdAt === input.cursor) + 1
     : 0;
   const safeStart = Math.max(0, startIndex);
-  const page = sorted.slice(safeStart, safeStart + pageSize);
-  const hasMore = safeStart + pageSize < sorted.length;
+  const page = all.slice(safeStart, safeStart + pageSize);
+  const hasMore = safeStart + pageSize < all.length;
   const last = page[page.length - 1];
 
   return {
-    traces: page.map(pinFromRecord),
+    traces: page,
     nextCursor: hasMore && last ? last.createdAt : null,
     hasMore,
   };
@@ -1270,6 +1363,9 @@ export async function createTrace(input: {
   city: string;
   message: string;
   locationId?: string | null;
+  /** Required for new Google posts (Phase 2+). */
+  category?: TraceCategory;
+  workId?: string;
 }): Promise<TraceRecord> {
   const existing = await getTraceByUid(input.uid);
   if (existing) {
@@ -1336,6 +1432,11 @@ export async function createTrace(input: {
       ? { timestampValue: expiresAt }
       : { nullValue: null },
   };
+
+  if (input.category && input.workId) {
+    fields.category = { stringValue: input.category };
+    fields.workId = { stringValue: input.workId };
+  }
 
   const response = await firestoreFetch(
     `documents/${TRACE_COLLECTION}?documentId=${encodeURIComponent(input.uid)}`,
@@ -1745,6 +1846,13 @@ export async function seedStoryMemories(): Promise<{
   return { created, skipped };
 }
 
+/** All Legacy Trace records (server rebuild / Phase 3 aggregation). */
+export async function listAllTraceRecords(): Promise<TraceRecord[]> {
+  return runTraceQuery({
+    from: [{ collectionId: TRACE_COLLECTION }],
+  });
+}
+
 /** @deprecated Prefer overview + location queries. Kept for emergency rebuild / bounded recent. */
 export async function listTracePins(input?: {
   limit?: number;
@@ -1762,7 +1870,18 @@ export async function listTracePins(input?: {
         direction: "DESCENDING",
       },
     ],
-    ...(limit ? { limit } : {}),
+    ...(limit ? { limit: Math.max(limit * 2, 40) } : {}),
   });
-  return records.map(pinFromRecord);
+  const legacyPins = records.map(pinFromRecord);
+
+  const { listRecentActivities, pinFromActivity, mergeMemoryPins } =
+    await import("@/features/world-memory/trace/activityRest");
+  const activities = await listRecentActivities(
+    limit ? Math.max(limit * 2, 40) : 40,
+  );
+  return mergeMemoryPins(
+    legacyPins,
+    activities.map(pinFromActivity),
+    limit,
+  );
 }

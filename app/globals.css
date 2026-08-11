@@ -566,6 +566,50 @@ header .lang-switcher__list {
   border-color: rgba(40, 36, 30, 0.5);
 }
 
+/* Phase 3 — geography marker group (country / region) */
+.miav-geo-marker-wrap {
+  background: transparent;
+  border: none;
+}
+
+.miav-geo-marker-wrap--active .miav-geo-cat-star {
+  filter: brightness(1.08);
+}
+
+.miav-geo-marker {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+.miav-geo-cat-star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  border: 1px solid rgba(40, 36, 30, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.miav-geo-cat-star--emph {
+  filter: brightness(1.12);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
 @keyframes miav-star-breathe {
   0%,
   100% {

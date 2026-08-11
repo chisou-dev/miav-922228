@@ -1,9 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { User } from "firebase/auth";
 import {
-  MAX_GUEST_MESSAGE_LENGTH,
   MAX_GOOGLE_MESSAGE_LENGTH,
   type TracePin,
 } from "@/features/world-memory/trace/types";
@@ -15,9 +20,15 @@ import {
 } from "@/features/world-memory/trace/auth";
 import { isFirebaseClientConfigured } from "@/features/firebase/client";
 import { GoogleSignInDialog } from "@/features/world-memory/trace/ui/GoogleSignInDialog";
-import { getOrCreateVisitorId } from "@/features/world-memory/trace/visitorId";
+import { MiavIdCopy } from "@/features/world-memory/trace/ui/MiavIdCopy";
 import { PlaceCascadePicker } from "@/features/world-memory/map/PlaceCascadePicker";
-import { useT } from "@/features/shared/i18n";
+import {
+  listEnabledWorksByCategory,
+  listPostableCategories,
+  type TraceCategory,
+} from "@/features/world-memory/trace/works";
+import { TraceOriginLabel } from "@/features/world-memory/viewer/TraceOriginLabel";
+import { useT, type MessageKey } from "@/features/shared/i18n";
 
 type SelectedPlace = {
   locationId: string;
@@ -29,8 +40,9 @@ type SelectedPlace = {
 
 type Props = {
   user: User | null;
-  posted: boolean;
-  guestPosted: boolean;
+  /** Public MIAV ID for this Google account (stable across Activities). */
+  miavId: string | null;
+  postedWorkIds: string[];
   mine: TracePin | null;
   selectedPlace: SelectedPlace | null;
   onSelectPlace: (place: SelectedPlace | null) => void;
@@ -39,6 +51,18 @@ type Props = {
   /** When set, panel is shown below the map — Close dismisses the panel. */
   onClose?: () => void;
 };
+
+const CATEGORY_LABEL_KEY: Record<TraceCategory, MessageKey> = {
+  read: "world.category.read",
+  play: "world.category.play",
+  apps: "world.category.apps",
+};
+
+function pickWorkForCategory(category: TraceCategory): string | null {
+  const works = listEnabledWorksByCategory(category);
+  if (works.length === 1) return works[0]!.id;
+  return null;
+}
 
 function StatusHeading({ children }: { children: ReactNode }) {
   return (
@@ -62,41 +86,6 @@ function StatusCard({ children }: { children: ReactNode }) {
   );
 }
 
-function PermanentMemoryCta({
-  onContinue,
-}: {
-  onContinue?: () => void;
-}) {
-  const t = useT();
-  if (!onContinue || !isFirebaseClientConfigured()) return null;
-  return (
-    <div className="mt-4">
-      <button
-        type="button"
-        onClick={onContinue}
-        className="min-h-[44px] w-full cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-ink)] sm:w-auto"
-      >
-        {t("world.continueToPermanent")}
-      </button>
-      <p className="mt-2 text-[0.72rem] leading-[1.7] text-[var(--map-muted)]">
-        {t("world.verifiedGoogle")}
-      </p>
-    </div>
-  );
-}
-
-function MemoryKindHint() {
-  const t = useT();
-  const [first, second] = t("world.memoryKindHint").split("\n");
-  return (
-    <p className="mt-4 border-t border-[var(--map-line)] pt-3 text-[0.72rem] leading-[1.7] text-[var(--map-muted)]">
-      {first}
-      <br />
-      {second}
-    </p>
-  );
-}
-
 function VerifiedWithGoogle() {
   const t = useT();
   return (
@@ -109,104 +98,59 @@ function VerifiedWithGoogle() {
   );
 }
 
-function MiavIdCopy({ miavId }: { miavId: string }) {
-  const t = useT();
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current != null) window.clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  async function copyId() {
-    try {
-      await navigator.clipboard.writeText(miavId);
-      setCopied(true);
-      if (timerRef.current != null) window.clearTimeout(timerRef.current);
-      timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // Clipboard may be blocked; keep silent — ID remains visible.
-    }
-  }
-
-  return (
-    <div className="mt-2">
-      <p className="text-[0.72rem] tracking-[0.08em] text-[var(--map-muted)] uppercase">
-        {t("world.miavId")}
-      </p>
-      <div className="mt-0.5 flex flex-wrap items-center gap-2">
-        <p className="font-mono text-[0.88rem] leading-[1.5] tracking-[0.04em] text-[var(--map-ink)]">
-          {miavId}
-        </p>
-        <button
-          type="button"
-          onClick={() => void copyId()}
-          aria-label={t("world.copyId", { id: miavId })}
-          className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center text-[0.95rem] text-[var(--map-muted)] hover:text-[var(--map-ink)]"
-        >
-          <span aria-hidden="true">📋</span>
-        </button>
-        {copied ? (
-          <span className="text-[0.72rem] tracking-[0.06em] text-[#4a7c59]">
-            {t("world.copied")}
-          </span>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
 /**
  * Status only — archive shows Place / Memory / Left.
- * Memory is the subject; Google is a quiet verification note.
- * Never shows Google name, email, or photo.
+ * Never shows Google name, email, photo, or Firebase UID.
  */
 function MemorySessionStatus({
   isGoogle,
-  googleMemoryPosted,
-  guestMemoryPosted,
-  googleMine,
-  onContinueGoogle,
+  accountMiavId,
+  postedWorkIds,
+  mine,
+  onSignIn,
 }: {
   isGoogle: boolean;
-  googleMemoryPosted: boolean;
-  guestMemoryPosted: boolean;
-  googleMine: TracePin | null;
-  onContinueGoogle?: () => void;
+  accountMiavId: string | null;
+  postedWorkIds: string[];
+  mine: TracePin | null;
+  onSignIn?: () => void;
 }) {
   const t = useT();
+  const hasAnyMemory = postedWorkIds.length > 0 || Boolean(accountMiavId);
 
-  // 4) Permanent Memory posted
-  if (googleMemoryPosted) {
-    const miavId = googleMine?.miavId ?? null;
+  if (isGoogle && hasAnyMemory) {
     return (
       <StatusCard>
         <p className="mt-2 flex flex-wrap items-center gap-2 text-[0.85rem] tracking-[0.04em] text-[var(--map-ink)]">
           <span aria-hidden="true" className="text-[#4a7c59]">
             ✓
           </span>
-          <span className="font-medium">{t("world.permanentMemory")}</span>
+          <span className="font-medium">{t("world.yourMemory")}</span>
         </p>
-        {miavId ? <MiavIdCopy miavId={miavId} /> : null}
-        <p className="mt-3 text-[0.85rem] leading-[1.7] text-[var(--map-ink)]">
-          {t("world.permanentMemorySaved")}
-        </p>
+        {accountMiavId ? <MiavIdCopy miavId={accountMiavId} /> : null}
+        {mine?.category && mine.workId ? (
+          <div className="mt-3">
+            <TraceOriginLabel trace={mine} />
+          </div>
+        ) : null}
+        {postedWorkIds.length > 0 ? (
+          <p className="mt-3 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
+            {t("world.worksAlreadyLeft", { count: postedWorkIds.length })}
+          </p>
+        ) : null}
         <VerifiedWithGoogle />
         <p className="mt-1 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
-          {t("world.editingUnavailable")}
+          {t("world.moreWorksAvailable")}
         </p>
       </StatusCard>
     );
   }
 
-  // 3) Permanent Memory path open (verified, not posted)
   if (isGoogle) {
     return (
       <StatusCard>
         <p className="mt-2 text-[0.85rem] font-medium tracking-[0.04em] text-[var(--map-ink)]">
-          {t("world.permanentMemory")}
+          {t("world.readyToLeave")}
         </p>
         <VerifiedWithGoogle />
         <p className="mt-2 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
@@ -216,47 +160,33 @@ function MemorySessionStatus({
     );
   }
 
-  // 2) Temporary Memory saved — optional Permanent path
-  if (guestMemoryPosted) {
-    return (
-      <StatusCard>
-        <p className="mt-2 flex flex-wrap items-center gap-2 text-[0.85rem] tracking-[0.04em] text-[var(--map-ink)]">
-          <span aria-hidden="true" className="text-[#4a7c59]">
-            ✓
-          </span>
-          <span className="font-medium">{t("world.temporaryMemory")}</span>
-        </p>
-        <p className="mt-1.5 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
-          {t("world.temporaryMemorySaved")}
-        </p>
-        <p className="mt-0.5 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
-          {t("world.temporaryCannotEdit")}
-        </p>
-        <PermanentMemoryCta onContinue={onContinueGoogle} />
-        <MemoryKindHint />
-      </StatusCard>
-    );
-  }
-
-  // 1) Temporary Memory — not posted
   return (
     <StatusCard>
       <p className="mt-2 text-[0.85rem] font-medium tracking-[0.04em] text-[var(--map-ink)]">
-        {t("world.temporaryMemory")}
+        {t("world.signInToLeave")}
       </p>
       <p className="mt-1.5 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
-        {t("world.charactersAvailable", { count: MAX_GUEST_MESSAGE_LENGTH })}
+        {t("world.signInToLeaveHelp")}
       </p>
-      <PermanentMemoryCta onContinue={onContinueGoogle} />
-      <MemoryKindHint />
+      {onSignIn && isFirebaseClientConfigured() ? (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="min-h-[44px] w-full cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-ink)] sm:w-auto"
+          >
+            {t("world.signInWithGoogle")}
+          </button>
+        </div>
+      ) : null}
     </StatusCard>
   );
 }
 
 export function LeaveTraceForm({
   user,
-  posted,
-  guestPosted,
+  miavId: accountMiavId,
+  postedWorkIds,
   mine,
   selectedPlace,
   onSelectPlace,
@@ -267,32 +197,37 @@ export function LeaveTraceForm({
   const t = useT();
   const [composerOpen, setComposerOpen] = useState(true);
   const [message, setMessage] = useState("");
+  const [category, setCategory] = useState<TraceCategory | null>(null);
+  const [workId, setWorkId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
   const [traceEnabled, setTraceEnabled] = useState(true);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+  /** After sign-in, retry the save that was interrupted — draft stays in state. */
+  const pendingSubmitAfterSignIn = useRef(false);
+  const submittingRef = useRef(false);
+
+  const postableCategories = listPostableCategories();
+  const enabledWorks = category
+    ? listEnabledWorksByCategory(category)
+    : [];
+  const showWorkPicker = Boolean(category && enabledWorks.length > 1);
 
   const authType = getTraceAuthType(user);
   const isGoogle = authType === "google";
-  const maxLength = isGoogle
-    ? MAX_GOOGLE_MESSAGE_LENGTH
-    : MAX_GUEST_MESSAGE_LENGTH;
+  const maxLength = MAX_GOOGLE_MESSAGE_LENGTH;
 
-  const googleMemoryPosted = Boolean(
-    mine?.authType === "google" || (isGoogle && posted),
+  const workAlreadyPosted = Boolean(
+    workId && postedWorkIds.includes(workId),
   );
-  // When Google is signed in, `posted` is Google-only; guest flag comes from guestPosted.
-  const guestMemoryPosted =
-    guestPosted ||
-    mine?.authType === "guest" ||
-    mine?.authType === "anonymous" ||
-    (!isGoogle && posted);
+  const hasAvailableWork = postableCategories.some((cat) =>
+    listEnabledWorksByCategory(cat).some(
+      (work) => !postedWorkIds.includes(work.id),
+    ),
+  );
 
-  const googleMine = mine?.authType === "google" ? mine : null;
-
-  const canWrite =
-    traceEnabled && (isGoogle ? !googleMemoryPosted : !guestMemoryPosted);
+  const canWrite = traceEnabled && hasAvailableWork;
 
   useEffect(() => {
     void (async () => {
@@ -310,7 +245,6 @@ export function LeaveTraceForm({
     })();
   }, []);
 
-  // Keep draft within the active auth limit (Guest 50 / Google 500).
   useEffect(() => {
     setMessage((current) =>
       current.length > maxLength ? current.slice(0, maxLength) : current,
@@ -321,44 +255,71 @@ export function LeaveTraceForm({
     if (!canWrite || !composerOpen) return;
     const id = window.setTimeout(() => messageRef.current?.focus(), 120);
     return () => window.clearTimeout(id);
-  }, [canWrite, composerOpen, isGoogle]);
+  }, [canWrite, composerOpen]);
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!canWrite) return;
+  function selectCategory(next: TraceCategory) {
+    setError(null);
+    setCategory(next);
+    const auto = pickWorkForCategory(next);
+    // Prefer an unposted work when auto-picking among many (single-work cats auto-set).
+    if (auto) {
+      setWorkId(auto);
+      return;
+    }
+    const firstOpen = listEnabledWorksByCategory(next).find(
+      (work) => !postedWorkIds.includes(work.id),
+    );
+    setWorkId(firstOpen?.id ?? null);
+  }
 
+  function draftReady(): boolean {
+    if (!category || !workId) {
+      setError(t("world.chooseCategoryFirst"));
+      return false;
+    }
+    if (postedWorkIds.includes(workId)) {
+      setError(t("world.alreadyLeftForWork"));
+      return false;
+    }
     if (!selectedPlace) {
       setError(t("world.choosePlaceFirst"));
-      return;
+      return false;
     }
     if (!message.trim()) {
       setError(t("world.writeMemoryFirst"));
-      return;
+      return false;
     }
+    return true;
+  }
 
+  const saveMemory = async (activeUser: User) => {
+    if (!draftReady()) return;
+    if (submittingRef.current) return;
+
+    submittingRef.current = true;
     setBusy(true);
     setError(null);
     try {
-      let token: string | null = null;
-      if (isGoogle && user) {
-        token = await getIdTokenOrNull(user);
-      }
-
-      const body: Record<string, string> = {
-        locationId: selectedPlace.locationId,
-        message,
-      };
+      const token = await getIdTokenOrNull(activeUser);
       if (!token) {
-        body.visitorId = getOrCreateVisitorId();
+        setError(t("world.signInRequired"));
+        pendingSubmitAfterSignIn.current = true;
+        setGoogleDialogOpen(true);
+        return;
       }
 
       const response = await fetch("/api/trace", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          locationId: selectedPlace!.locationId,
+          message,
+          category,
+          workId,
+        }),
       });
 
       const data = (await response.json().catch(() => null)) as {
@@ -372,16 +333,50 @@ export function LeaveTraceForm({
       }
 
       if (data?.trace) {
+        pendingSubmitAfterSignIn.current = false;
         onSaved(data.trace);
-        setComposerOpen(false);
         setMessage("");
+        setCategory(null);
+        setWorkId(null);
+        // Keep form open when other works remain available.
       }
     } catch (err) {
       setError(formatAuthError(err));
     } finally {
+      submittingRef.current = false;
       setBusy(false);
     }
+  };
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!canWrite) return;
+    if (!draftReady()) return;
+
+    if (!isGoogle || !user) {
+      pendingSubmitAfterSignIn.current = true;
+      setError(null);
+      setGoogleDialogOpen(true);
+      return;
+    }
+
+    await saveMemory(user);
   }
+
+  // After Google sign-in, resume the interrupted save without clearing the draft.
+  useEffect(() => {
+    if (!isGoogle || !user || !pendingSubmitAfterSignIn.current) return;
+    if (!canWrite) {
+      pendingSubmitAfterSignIn.current = false;
+      return;
+    }
+    if (!category || !workId || !selectedPlace || !message.trim()) return;
+    if (submittingRef.current) return;
+
+    pendingSubmitAfterSignIn.current = false;
+    void saveMemory(user);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGoogle, user]);
 
   return (
     <section className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-8">
@@ -392,9 +387,7 @@ export function LeaveTraceForm({
           </h2>
           {canWrite ? (
             <p className="mt-2 text-[0.82rem] leading-[1.8] text-[var(--map-muted)]">
-              {isGoogle
-                ? t("world.composerHelpGoogle", { max: MAX_GOOGLE_MESSAGE_LENGTH })
-                : t("world.composerHelpGuest", { max: MAX_GUEST_MESSAGE_LENGTH })}
+              {t("world.composerHelp", { max: MAX_GOOGLE_MESSAGE_LENGTH })}
             </p>
           ) : null}
         </div>
@@ -423,10 +416,10 @@ export function LeaveTraceForm({
       {traceEnabled ? (
         <MemorySessionStatus
           isGoogle={isGoogle}
-          googleMemoryPosted={googleMemoryPosted}
-          guestMemoryPosted={guestMemoryPosted}
-          googleMine={googleMine}
-          onContinueGoogle={() => setGoogleDialogOpen(true)}
+          accountMiavId={accountMiavId}
+          postedWorkIds={postedWorkIds}
+          mine={mine}
+          onSignIn={() => setGoogleDialogOpen(true)}
         />
       ) : null}
 
@@ -436,8 +429,94 @@ export function LeaveTraceForm({
         </p>
       ) : null}
 
+      {traceEnabled && !hasAvailableWork && isGoogle ? (
+        <p className="mt-4 text-[0.85rem] leading-[1.8] text-[var(--map-muted)]">
+          {t("world.allWorksLeft")}
+        </p>
+      ) : null}
+
       {canWrite && composerOpen ? (
         <form onSubmit={(e) => void submit(e)} className="mt-6 space-y-5">
+          <fieldset>
+            <legend className="text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
+              {t("world.whatBroughtYou")}
+            </legend>
+            <div
+              role="group"
+              aria-label={t("world.whatBroughtYou")}
+              className="mt-2 grid grid-cols-3 gap-2"
+            >
+              {postableCategories.map((item) => {
+                const selected = category === item;
+                const catWorks = listEnabledWorksByCategory(item);
+                const allDone = catWorks.every((w) =>
+                  postedWorkIds.includes(w.id),
+                );
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={selected}
+                    disabled={allDone}
+                    onClick={() => selectCategory(item)}
+                    className={`min-h-[44px] cursor-pointer border px-2 text-[0.72rem] tracking-[0.14em] disabled:cursor-not-allowed disabled:opacity-45 ${
+                      selected
+                        ? "border-[#6b879c] bg-[#dfe8f0] font-medium text-[var(--map-ink)] ring-1 ring-[#6b879c]"
+                        : "border-[var(--map-line)] bg-white text-[var(--map-muted)]"
+                    }`}
+                  >
+                    {t(CATEGORY_LABEL_KEY[item])}
+                    {allDone ? " ✓" : ""}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          {showWorkPicker ? (
+            <fieldset>
+              <legend className="text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
+                {t("world.chooseWork")}
+              </legend>
+              <div
+                role="group"
+                aria-label={t("world.chooseWork")}
+                className="mt-2 flex flex-col gap-2"
+              >
+                {enabledWorks.map((work) => {
+                  const selected = workId === work.id;
+                  const done = postedWorkIds.includes(work.id);
+                  return (
+                    <button
+                      key={work.id}
+                      type="button"
+                      aria-pressed={selected}
+                      disabled={done}
+                      onClick={() => {
+                        setError(null);
+                        setWorkId(work.id);
+                      }}
+                      className={`min-h-[44px] cursor-pointer border px-4 text-left text-[0.82rem] tracking-[0.04em] disabled:cursor-not-allowed disabled:opacity-45 ${
+                        selected
+                          ? "border-[#6b879c] bg-[#dfe8f0] font-medium text-[var(--map-ink)] ring-1 ring-[#6b879c]"
+                          : "border-[var(--map-line)] bg-white text-[var(--map-ink)]"
+                      }`}
+                    >
+                      {work.label}
+                      {done ? ` — ${t("world.alreadyLeftShort")}` : ""}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ) : null}
+
+          {workAlreadyPosted ? (
+            <p className="text-[0.82rem] text-[#8b4a4a]">
+              {t("world.alreadyLeftForWork")}
+            </p>
+          ) : null}
+
           <PlaceCascadePicker
             value={selectedPlace}
             onChange={(place) => {
@@ -451,19 +530,12 @@ export function LeaveTraceForm({
 
           <div>
             <label className="block text-[0.72rem] tracking-[0.12em] text-[var(--map-muted)]">
-              {t("world.memoryLabel", { current: message.length, max: maxLength })}
-              {isGoogle ? (
-                <span className="ml-2 normal-case tracking-[0.04em] text-[var(--map-ink)]">
-                  {t("world.googleLabel", { max: MAX_GOOGLE_MESSAGE_LENGTH })}
-                </span>
-              ) : (
-                <span className="ml-2 normal-case tracking-[0.04em]">
-                  {t("world.guestLabel", { max: MAX_GUEST_MESSAGE_LENGTH })}
-                </span>
-              )}
+              {t("world.memoryLabel", {
+                current: message.length,
+                max: maxLength,
+              })}
             </label>
             <textarea
-              key={isGoogle ? "google-memory" : "guest-memory"}
               ref={messageRef}
               value={message}
               maxLength={maxLength}
@@ -471,26 +543,11 @@ export function LeaveTraceForm({
                 setError(null);
                 setMessage(event.target.value.slice(0, maxLength));
               }}
-              rows={isGoogle ? 5 : 2}
+              rows={4}
               className="mt-2 w-full resize-y border border-[var(--map-line)] bg-white px-3 py-2.5 text-[0.85rem] leading-[1.7] text-[var(--map-ink)]"
               placeholder={t("world.memoryPlaceholder")}
             />
           </div>
-
-          {!isGoogle && isFirebaseClientConfigured() ? (
-            <div>
-              <button
-                type="button"
-                onClick={() => setGoogleDialogOpen(true)}
-                className="text-[0.78rem] tracking-[0.08em] text-[var(--map-muted)] underline decoration-[var(--map-line)] underline-offset-[0.35em]"
-              >
-                {t("world.continueToPermanent")}
-              </button>
-              <p className="mt-1 text-[0.72rem] leading-[1.7] text-[var(--map-muted)]">
-                {t("world.verifiedGoogle")}
-              </p>
-            </div>
-          ) : null}
 
           {error ? (
             <p className="text-[0.82rem] text-[#8b4a4a]">{error}</p>
@@ -499,10 +556,14 @@ export function LeaveTraceForm({
           <div className="flex flex-wrap gap-3">
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || workAlreadyPosted}
               className="min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-5 text-[0.75rem] tracking-[0.14em] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {busy ? t("world.saving") : t("world.writeMemory")}
+              {busy
+                ? t("world.saving")
+                : isGoogle
+                  ? t("world.writeMemory")
+                  : t("world.writeMemorySignIn")}
             </button>
             <button
               type="button"
@@ -519,7 +580,6 @@ export function LeaveTraceForm({
           <div className="space-y-1.5 text-[0.75rem] leading-[1.7] text-[var(--map-muted)]">
             <p>{t("world.privacyBlurbSignIn")}</p>
             <p>{t("world.privacyBlurbNoInfo")}</p>
-            <p>{t("world.privacyBlurbEditOnlyYou")}</p>
             <p>{t("world.privacyBlurbNoEditContent")}</p>
           </div>
         </form>
@@ -527,7 +587,9 @@ export function LeaveTraceForm({
 
       <GoogleSignInDialog
         open={googleDialogOpen}
-        onClose={() => setGoogleDialogOpen(false)}
+        onClose={() => {
+          if (!busy) setGoogleDialogOpen(false);
+        }}
         onConfirm={() => {
           setGoogleDialogOpen(false);
           void (async () => {
@@ -543,3 +605,4 @@ export function LeaveTraceForm({
     </section>
   );
 }
+
