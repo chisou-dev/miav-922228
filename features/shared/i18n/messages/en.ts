@@ -150,16 +150,18 @@ export const en = {
   "world.mapHelp":
     "Stars mark places where readers left a Memory. Click a star to read them — no GPS, no address.",
   "world.mapHelpGeo":
-    "Countries and regions gather Memories by READ, PLAY, and APPS. Tap a group for detail — no GPS, no address.",
+    "Countries, regions, and cities gather Memories by READ, PLAY, and APPS. Tap a group for detail — no GPS, no address.",
   "world.earlierOnMapNote":
     "Earlier Memories without a category stay in the archive — they are not mixed into READ / PLAY / APPS.",
   "world.filterCategoriesAria": "Filter map by category",
   "world.legendAria": "Category colors",
   "world.filterEmpty": "Select at least one of READ, PLAY, or APPS to show the map.",
   "world.backToWorld": "← World",
+  "world.backToCountry": "← {country}",
   "world.scopeWorld": "World",
   "world.mapScope": "Map scope",
   "world.openCountry": "Open country",
+  "world.openRegion": "Open region",
   "world.viewMemories": "View Memories",
   "world.personCount": "{count} person",
   "world.peopleCount": "{count} people",

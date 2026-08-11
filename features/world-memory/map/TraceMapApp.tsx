@@ -141,6 +141,20 @@ export function TraceMapApp() {
     data.closeViewer();
   }
 
+  function backToCountry() {
+    if (geoScope.level !== "region") return;
+    const { countryCode, countryLabel } = geoScope;
+    setGeoScope({
+      level: "country",
+      countryCode,
+      countryLabel,
+    });
+    setSelectedGeographyId(null);
+    setEmphasizeCategory(null);
+    setFocus(null);
+    data.closeViewer();
+  }
+
   function onSelectGeography(
     geo: GeographyAggregate,
     category?: TraceCategory,
@@ -163,15 +177,34 @@ export function TraceMapApp() {
       return;
     }
 
-    setFocus({ lat: geo.lat, lng: geo.lng, zoom: 6 });
+    if (geoScope.level === "country") {
+      setGeoScope({
+        level: "region",
+        countryCode: geo.countryCode || geoScope.countryCode,
+        countryLabel: geo.countryLabel || geoScope.countryLabel,
+        regionLabel: geo.label,
+      });
+      setFocus({
+        lat: geo.lat,
+        lng: geo.lng,
+        zoom: 8,
+      });
+      data.closeViewer();
+      return;
+    }
+
+    // City is leaf — select / emphasize only; use View Memories to open archive.
+    setFocus({ lat: geo.lat, lng: geo.lng, zoom: 10 });
   }
 
   function onViewMemories(geo: GeographyAggregate) {
     setSelectedGeographyId(geo.geographyId);
+    const zoom =
+      geoScope.level === "world" ? 5 : geoScope.level === "country" ? 8 : 10;
     setFocus({
       lat: geo.lat,
       lng: geo.lng,
-      zoom: geoScope.level === "world" ? 5 : 6,
+      zoom,
     });
 
     if (geoScope.level === "world") {
@@ -181,23 +214,36 @@ export function TraceMapApp() {
           country: geo.label,
           name: geo.label,
           region: null,
+          city: null,
         },
         mapCategories,
       );
       return;
     }
 
-    const countryCode =
-      geo.countryCode ||
-      (geoScope.level === "country" ? geoScope.countryCode : "");
-    const countryLabel =
-      geo.countryLabel ||
-      (geoScope.level === "country" ? geoScope.countryLabel : "");
+    if (geoScope.level === "country") {
+      const countryCode = geo.countryCode || geoScope.countryCode;
+      const countryLabel = geo.countryLabel || geoScope.countryLabel;
+      void data.loadMemories(
+        {
+          countryCode,
+          country: countryLabel,
+          region: geo.label,
+          city: null,
+          name: geo.label,
+        },
+        mapCategories,
+      );
+      return;
+    }
+
+    // Region view → city memories (leaf)
     void data.loadMemories(
       {
-        countryCode,
-        country: countryLabel,
-        region: geo.label,
+        countryCode: geo.countryCode || geoScope.countryCode,
+        country: geo.countryLabel || geoScope.countryLabel,
+        region: geo.regionLabel || geoScope.regionLabel,
+        city: geo.label,
         name: geo.label,
       },
       mapCategories,
@@ -385,12 +431,33 @@ export function TraceMapApp() {
                   <button
                     type="button"
                     onClick={backToWorld}
+                    aria-label={t("world.backToWorld")}
                     className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-white px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
                   >
                     {t("world.backToWorld")}
                   </button>
                   <p className="text-[0.78rem] tracking-[0.08em] text-[var(--map-ink)]">
                     {geoScope.countryLabel}
+                  </p>
+                </div>
+              ) : null}
+
+              {geoScope.level === "region" ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={backToCountry}
+                    aria-label={t("world.backToCountry", {
+                      country: geoScope.countryLabel,
+                    })}
+                    className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-white px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
+                  >
+                    {t("world.backToCountry", {
+                      country: geoScope.countryLabel,
+                    })}
+                  </button>
+                  <p className="text-[0.78rem] tracking-[0.08em] text-[var(--map-ink)]">
+                    {geoScope.countryLabel} / {geoScope.regionLabel}
                   </p>
                 </div>
               ) : null}

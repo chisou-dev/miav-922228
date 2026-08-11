@@ -30,6 +30,8 @@ const fixture: AggregateMemoryRow[] = [
     countryLabel: "Japan",
     regionKey: "tokyo",
     regionLabel: "Tokyo",
+    cityKey: "tokyo",
+    cityLabel: "Tokyo",
     locationId: "JP:tokyo",
   },
   {
@@ -40,6 +42,8 @@ const fixture: AggregateMemoryRow[] = [
     countryLabel: "Japan",
     regionKey: "tokyo",
     regionLabel: "Tokyo",
+    cityKey: "tokyo",
+    cityLabel: "Tokyo",
     locationId: "JP:tokyo",
   },
   {
@@ -50,6 +54,8 @@ const fixture: AggregateMemoryRow[] = [
     countryLabel: "Japan",
     regionKey: "tokyo",
     regionLabel: "Tokyo",
+    cityKey: "tokyo",
+    cityLabel: "Tokyo",
     locationId: "JP:tokyo",
   },
   {
@@ -60,6 +66,8 @@ const fixture: AggregateMemoryRow[] = [
     countryLabel: "Japan",
     regionKey: "kanagawa",
     regionLabel: "Kanagawa",
+    cityKey: "yokohama",
+    cityLabel: "Yokohama",
     locationId: "JP:yokohama",
   },
   {
@@ -70,6 +78,8 @@ const fixture: AggregateMemoryRow[] = [
     countryLabel: "France",
     regionKey: "ile-de-france",
     regionLabel: "Île-de-France",
+    cityKey: "paris",
+    cityLabel: "Paris",
     locationId: "FR:paris",
   },
 ];
@@ -140,6 +150,8 @@ const multiRegion: AggregateMemoryRow[] = [
     countryLabel: "Japan",
     regionKey: "tokyo",
     regionLabel: "Tokyo",
+    cityKey: "tokyo",
+    cityLabel: "Tokyo",
     locationId: "JP:tokyo",
   },
   {
@@ -150,6 +162,8 @@ const multiRegion: AggregateMemoryRow[] = [
     countryLabel: "Japan",
     regionKey: "kanagawa",
     regionLabel: "Kanagawa",
+    cityKey: "yokohama",
+    cityLabel: "Yokohama",
     locationId: "JP:yokohama",
   },
 ];

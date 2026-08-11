@@ -2,22 +2,22 @@ import "server-only";
 
 import {
   aggregateGeographies,
+  cityGeographyId,
   computeScopeTotals,
   regionGeographyId,
   type AggregateMemoryRow,
   type AggregateScope,
   type GeographyAggregate,
 } from "@/features/world-memory/trace/aggregate";
+import { rowFromCategorizedPin } from "@/features/world-memory/trace/aggregateRows";
 import {
+  findCity,
   findCountry,
   findRegion,
   getLocationById,
 } from "@/features/world-memory/location/locations";
 import { getPlaceById } from "@/features/world-memory/location/places";
-import {
-  isTraceCategory,
-  type TraceCategory,
-} from "@/features/world-memory/trace/works";
+import type { TraceCategory } from "@/features/world-memory/trace/works";
 import type { TracePin } from "@/features/world-memory/trace/types";
 
 type CacheEntry = {
@@ -29,74 +29,7 @@ type CacheEntry = {
 const CACHE_TTL_MS = 30_000;
 let cache: CacheEntry | null = null;
 
-function slugPart(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-/**
- * Resolve country code + region labels from catalog — never invent category.
- * Returns null when the row cannot be placed safely on the geography map.
- */
-export function rowFromCategorizedPin(pin: TracePin): AggregateMemoryRow | null {
-  if (!pin.category || !isTraceCategory(pin.category) || !pin.workId) {
-    return null;
-  }
-  if (!pin.miavId?.startsWith("MIAV-")) return null;
-
-  let countryCode = "";
-  let countryLabel = pin.country || "";
-  let regionLabel = pin.region || "";
-
-  if (pin.locationId) {
-    const loc = getLocationById(pin.locationId);
-    if (loc) {
-      countryCode = loc.countryCode;
-      countryLabel = loc.country;
-      if (!regionLabel) regionLabel = loc.region;
-    } else {
-      const place = getPlaceById(pin.locationId);
-      if (place) {
-        countryLabel = place.country || countryLabel;
-        const fromPlace = findCountry(place.country);
-        if (fromPlace) countryCode = fromPlace.code;
-        const prefix = pin.locationId.split(":")[0]?.toUpperCase();
-        if (!countryCode && prefix && /^[A-Z]{2}$/.test(prefix)) {
-          countryCode = prefix;
-        }
-      }
-    }
-  }
-
-  if (!countryCode) {
-    const country = findCountry(pin.country);
-    if (country) {
-      countryCode = country.code;
-      countryLabel = country.name;
-    }
-  }
-
-  if (!countryCode) return null;
-
-  if (!regionLabel) {
-    regionLabel = pin.city || "Unknown";
-  }
-
-  return {
-    miavId: pin.miavId,
-    category: pin.category,
-    workId: pin.workId,
-    countryCode: countryCode.toUpperCase(),
-    countryLabel: countryLabel || countryCode,
-    regionKey: slugPart(regionLabel) || "unknown",
-    regionLabel,
-    locationId: pin.locationId,
-  };
-}
+export { rowFromCategorizedPin };
 
 async function loadCategorizedSource(): Promise<CacheEntry> {
   const now = Date.now();
@@ -138,6 +71,18 @@ function resolveGeographyCoords(
   geographyId: string,
   sample: AggregateMemoryRow,
 ): { lat: number; lng: number } | null {
+  // Prefer catalog location for 3-part city ids.
+  if (geographyId.split(":").length >= 3) {
+    const loc = getLocationById(geographyId);
+    if (loc) return { lat: loc.lat, lng: loc.lng };
+    if (sample.locationId) {
+      const bySample = getLocationById(sample.locationId);
+      if (bySample) return { lat: bySample.lat, lng: bySample.lng };
+      const place = getPlaceById(sample.locationId);
+      if (place) return { lat: place.lat, lng: place.lng };
+    }
+  }
+
   if (!geographyId.includes(":")) {
     const country = findCountry(geographyId) || findCountry(sample.countryLabel);
     if (country) return { lat: country.lat, lng: country.lng };
@@ -148,10 +93,28 @@ function resolveGeographyCoords(
     findCountry(sample.countryCode) || findCountry(sample.countryLabel);
   if (!country) return null;
 
+  // City: CC:region:city
+  const parts = geographyId.split(":");
+  if (parts.length >= 3) {
+    const region = findRegion(country, sample.regionLabel);
+    if (region) {
+      const city = findCity(region, sample.cityLabel);
+      if (city) return { lat: city.lat, lng: city.lng };
+      // Known city coords in matching region by slug id suffix.
+      for (const c of region.cities) {
+        if (c.locationId === geographyId) {
+          return { lat: c.lat, lng: c.lng };
+        }
+      }
+    }
+    // No invented coords — drop marker if city unknown.
+    return null;
+  }
+
+  // Region: CC:region
   const region = findRegion(country, sample.regionLabel);
   if (region) return { lat: region.lat, lng: region.lng };
 
-  // Prefer a known city/place in this region over averaging.
   if (sample.locationId) {
     const place = getPlaceById(sample.locationId);
     if (place) return { lat: place.lat, lng: place.lng };
@@ -165,7 +128,7 @@ function resolveGeographyCoords(
     return { lat: city.lat, lng: city.lng };
   }
 
-  // Last resort: country centroid (catalog), never invented sea coords.
+  // Last resort for regions only: country centroid (catalog).
   return { lat: country.lat, lng: country.lng };
 }
 
@@ -197,6 +160,7 @@ export async function getGeographyAggregates(input: {
 export async function listMemoriesForGeography(input: {
   countryCode: string;
   regionLabel?: string | null;
+  cityLabel?: string | null;
   categories: TraceCategory[];
   limit?: number;
 }): Promise<TracePin[]> {
@@ -204,6 +168,7 @@ export async function listMemoriesForGeography(input: {
   const code = input.countryCode.toUpperCase();
   const catSet = new Set(input.categories);
   const regionQ = input.regionLabel?.trim().toLowerCase() || null;
+  const cityQ = input.cityLabel?.trim().toLowerCase() || null;
 
   const matched: TracePin[] = [];
   for (const pin of pins) {
@@ -212,6 +177,7 @@ export async function listMemoriesForGeography(input: {
     if (!row) continue;
     if (row.countryCode !== code) continue;
     if (regionQ && row.regionLabel.toLowerCase() !== regionQ) continue;
+    if (cityQ && row.cityLabel.toLowerCase() !== cityQ) continue;
     matched.push(pin);
   }
 
@@ -227,4 +193,4 @@ export async function listMemoriesForGeography(input: {
   return matched.slice(0, limit);
 }
 
-export { regionGeographyId };
+export { regionGeographyId, cityGeographyId };

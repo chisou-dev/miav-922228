@@ -26,7 +26,13 @@ function emptyStats(): TraceStats {
 
 export type GeoScope =
   | { level: "world" }
-  | { level: "country"; countryCode: string; countryLabel: string };
+  | { level: "country"; countryCode: string; countryLabel: string }
+  | {
+      level: "region";
+      countryCode: string;
+      countryLabel: string;
+      regionLabel: string;
+    };
 
 export type MemoryQueryScope =
   | PlaceScope
@@ -34,6 +40,7 @@ export type MemoryQueryScope =
       countryCode: string;
       country: string;
       region?: string | null;
+      city?: string | null;
       name: string;
       locationId?: undefined;
     };
@@ -98,8 +105,11 @@ export function useMapDataLoader() {
           scope: scope.level,
           categories: categories.join(","),
         });
-        if (scope.level === "country") {
+        if (scope.level === "country" || scope.level === "region") {
           params.set("country", scope.countryCode);
+        }
+        if (scope.level === "region") {
+          params.set("region", scope.regionLabel);
         }
         const response = await fetch(`/api/trace?${params.toString()}`);
         const data = (await response.json().catch(() => null)) as {
@@ -171,6 +181,7 @@ export function useMapDataLoader() {
         } else if ("countryCode" in scope && scope.countryCode) {
           params.set("country", scope.countryCode);
           if (scope.region) params.set("region", scope.region);
+          if (scope.city) params.set("city", scope.city);
         }
         if (categories && categories.length > 0) {
           params.set("categories", categories.join(","));

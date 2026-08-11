@@ -21,7 +21,7 @@ import type { TraceCategory } from "@/features/world-memory/trace/works";
 type Focus = { lat: number; lng: number; zoom: number } | null;
 
 type Props = {
-  level: "world" | "country";
+  level: "world" | "country" | "region";
   geographies: GeographyAggregate[];
   focus: Focus;
   selectedGeographyId?: string | null;
@@ -104,7 +104,7 @@ function GeographyPopup({
   onView,
 }: {
   geo: GeographyAggregate;
-  level: "world" | "country";
+  level: "world" | "country" | "region";
   onOpen: () => void;
   onView: () => void;
 }) {
@@ -116,7 +116,7 @@ function GeographyPopup({
   } as const;
 
   return (
-    <div className="min-w-[11rem] max-w-[16rem] px-1 py-0.5 text-[#243447]">
+    <div className="min-w-[11rem] max-w-[min(16rem,calc(100vw-3rem))] px-1 py-0.5 text-[#243447]">
       <p className="text-[0.82rem] font-medium tracking-[0.06em]">{geo.label}</p>
       <p className="mt-1 text-[0.72rem] tracking-[0.04em] text-[#6b7c8d]">
         {personLabel(
@@ -180,6 +180,15 @@ function GeographyPopup({
             onClick={onOpen}
           >
             {t("world.openCountry")}
+          </button>
+        ) : null}
+        {level === "country" ? (
+          <button
+            type="button"
+            className="cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-2 py-1 text-[0.68rem] tracking-[0.1em]"
+            onClick={onOpen}
+          >
+            {t("world.openRegion")}
           </button>
         ) : null}
         <button

@@ -73,7 +73,11 @@ export function Sidebar({
   }
 
   const scopeLabel =
-    geoScope.level === "world" ? t("world.scopeWorld") : geoScope.countryLabel;
+    geoScope.level === "world"
+      ? t("world.scopeWorld")
+      : geoScope.level === "country"
+        ? geoScope.countryLabel
+        : `${geoScope.countryLabel} / ${geoScope.regionLabel}`;
 
   return (
     <aside className="flex h-full min-h-[min(62vh,640px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:min-h-[min(72vh,720px)]">

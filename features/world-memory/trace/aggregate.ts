@@ -1,5 +1,6 @@
 /**
- * Phase 3 — pure geography aggregation (no Firestore).
+ * Phase 3/7 — pure geography aggregation (no Firestore).
+ * Hierarchy: WORLD → COUNTRY → REGION → CITY (leaf).
  * peopleCount = unique miavId; activityCount = row count.
  * Legacy uncategorized rows must never enter this pipeline.
  */
@@ -23,8 +24,15 @@ export type CategoryAggregate = {
   works: AggregateWorkBreakdown[];
 };
 
+export type GeographyLevel = "country" | "region" | "city";
+
 export type GeographyAggregate = {
-  /** Stable id: country code (JP) or countryCode:regionSlug. */
+  /**
+   * Stable id:
+   * - country: JP
+   * - region: JP:tokyo
+   * - city: JP:tokyo:shinjuku (catalog locationId when known)
+   */
   geographyId: string;
   label: string;
   lat: number;
@@ -32,9 +40,12 @@ export type GeographyAggregate = {
   peopleCount: number;
   activityCount: number;
   categories: CategoryAggregate[];
-  /** Present on region aggregates. */
+  /** Present on region / city aggregates. */
   countryCode?: string;
   countryLabel?: string;
+  /** Present on city aggregates. */
+  regionKey?: string;
+  regionLabel?: string;
 };
 
 /** One categorized Memory row used for aggregation (no Firebase UID). */
@@ -46,12 +57,21 @@ export type AggregateMemoryRow = {
   countryLabel: string;
   regionKey: string;
   regionLabel: string;
+  cityKey: string;
+  cityLabel: string;
+  /** Catalog / place id when known (preferred city geographyId). */
   locationId: string | null;
 };
 
 export type AggregateScope =
   | { level: "world" }
-  | { level: "country"; countryCode: string };
+  | { level: "country"; countryCode: string }
+  | {
+      level: "region";
+      countryCode: string;
+      regionLabel: string;
+      regionKey?: string;
+    };
 
 function slugPart(value: string): string {
   return value
@@ -68,6 +88,33 @@ export function regionGeographyId(
 ): string {
   const slug = slugPart(regionLabel) || "unknown";
   return `${countryCode.toUpperCase()}:${slug}`;
+}
+
+/**
+ * Prefer catalog 3-part locationId when present; otherwise build
+ * CC:region:city. Never use display names alone as the map key.
+ */
+export function cityGeographyId(
+  countryCode: string,
+  regionLabel: string,
+  cityLabel: string,
+  locationId?: string | null,
+): string {
+  const cc = countryCode.toUpperCase();
+  if (locationId) {
+    const parts = locationId.split(":");
+    if (
+      parts.length >= 3 &&
+      parts[0]!.toUpperCase() === cc &&
+      parts[1] &&
+      parts[2]
+    ) {
+      return `${cc}:${parts[1]}:${parts.slice(2).join(":")}`;
+    }
+  }
+  const regionSlug = slugPart(regionLabel) || "unknown";
+  const citySlug = slugPart(cityLabel) || "unknown";
+  return `${cc}:${regionSlug}:${citySlug}`;
 }
 
 export function parseCategoriesParam(
@@ -106,6 +153,8 @@ type Bucket = {
   label: string;
   countryCode: string;
   countryLabel: string;
+  regionKey?: string;
+  regionLabel?: string;
   rows: AggregateMemoryRow[];
 };
 
@@ -152,7 +201,10 @@ function finalizeBucket(
   bucket: Bucket,
   categories: readonly TraceCategory[],
   coords: { lat: number; lng: number },
-  includeCountryFields: boolean,
+  fields: {
+    includeCountry: boolean;
+    includeRegion: boolean;
+  },
 ): GeographyAggregate {
   return {
     geographyId: bucket.geographyId,
@@ -162,10 +214,16 @@ function finalizeBucket(
     peopleCount: uniquePeople(bucket.rows),
     activityCount: bucket.rows.length,
     categories: buildCategoryAggregates(bucket.rows, categories),
-    ...(includeCountryFields
+    ...(fields.includeCountry
       ? {
           countryCode: bucket.countryCode,
           countryLabel: bucket.countryLabel,
+        }
+      : {}),
+    ...(fields.includeRegion
+      ? {
+          regionKey: bucket.regionKey,
+          regionLabel: bucket.regionLabel,
         }
       : {}),
   };
@@ -175,6 +233,20 @@ export type GeographyCoordResolver = (
   geographyId: string,
   sample: AggregateMemoryRow,
 ) => { lat: number; lng: number } | null;
+
+function regionMatches(
+  row: AggregateMemoryRow,
+  scope: Extract<AggregateScope, { level: "region" }>,
+): boolean {
+  const code = scope.countryCode.toUpperCase();
+  if (row.countryCode.toUpperCase() !== code) return false;
+  if (scope.regionKey) {
+    return row.regionKey === scope.regionKey;
+  }
+  return (
+    row.regionLabel.toLowerCase() === scope.regionLabel.trim().toLowerCase()
+  );
+}
 
 /**
  * Aggregate categorized memories for map markers.
@@ -190,6 +262,31 @@ export function aggregateGeographies(
   const buckets = new Map<string, Bucket>();
 
   for (const row of filtered) {
+    if (scope.level === "region") {
+      if (!regionMatches(row, scope)) continue;
+      const geographyId = cityGeographyId(
+        row.countryCode,
+        row.regionLabel,
+        row.cityLabel,
+        row.locationId,
+      );
+      const existing = buckets.get(geographyId);
+      if (existing) {
+        existing.rows.push(row);
+      } else {
+        buckets.set(geographyId, {
+          geographyId,
+          label: row.cityLabel || geographyId,
+          countryCode: row.countryCode.toUpperCase(),
+          countryLabel: row.countryLabel,
+          regionKey: row.regionKey,
+          regionLabel: row.regionLabel,
+          rows: [row],
+        });
+      }
+      continue;
+    }
+
     if (scope.level === "country") {
       if (row.countryCode.toUpperCase() !== scope.countryCode.toUpperCase()) {
         continue;
@@ -232,12 +329,10 @@ export function aggregateGeographies(
     const coords = resolveCoords(bucket.geographyId, sample);
     if (!coords) continue;
     out.push(
-      finalizeBucket(
-        bucket,
-        categories,
-        coords,
-        scope.level === "country",
-      ),
+      finalizeBucket(bucket, categories, coords, {
+        includeCountry: scope.level === "country" || scope.level === "region",
+        includeRegion: scope.level === "region",
+      }),
     );
   }
 
@@ -259,6 +354,8 @@ export function computeScopeTotals(
   if (scope.level === "country") {
     const code = scope.countryCode.toUpperCase();
     filtered = filtered.filter((r) => r.countryCode.toUpperCase() === code);
+  } else if (scope.level === "region") {
+    filtered = filtered.filter((r) => regionMatches(r, scope));
   }
   return {
     peopleCount: uniquePeople(filtered),

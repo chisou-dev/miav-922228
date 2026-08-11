@@ -75,9 +75,13 @@ export async function GET(request: Request) {
       }
 
       const scopeRaw = (searchParams.get("scope") || "world").trim().toLowerCase();
-      if (scopeRaw !== "world" && scopeRaw !== "country") {
+      if (
+        scopeRaw !== "world" &&
+        scopeRaw !== "country" &&
+        scopeRaw !== "region"
+      ) {
         return NextResponse.json(
-          { error: "scope must be world or country." },
+          { error: "scope must be world, country, or region." },
           { status: 400 },
         );
       }
@@ -99,7 +103,12 @@ export async function GET(request: Request) {
         "";
       if (!countryRaw) {
         return NextResponse.json(
-          { error: "country is required for scope=country." },
+          {
+            error:
+              scopeRaw === "region"
+                ? "country is required for scope=region."
+                : "country is required for scope=country.",
+          },
           { status: 400 },
         );
       }
@@ -111,16 +120,54 @@ export async function GET(request: Request) {
         );
       }
 
+      if (scopeRaw === "country") {
+        const { getGeographyAggregates } = await import(
+          "@/features/world-memory/trace/aggregateRest"
+        );
+        const result = await getGeographyAggregates({
+          scope: { level: "country", countryCode: country.code },
+          categories: categoriesResult,
+        });
+        return NextResponse.json({
+          ...result,
+          country: { code: country.code, label: country.name },
+        });
+      }
+
+      // scope=region → city markers
+      const regionRaw = searchParams.get("region")?.trim() || "";
+      if (!regionRaw) {
+        return NextResponse.json(
+          { error: "region is required for scope=region." },
+          { status: 400 },
+        );
+      }
+      const { findRegion } = await import(
+        "@/features/world-memory/location/locations"
+      );
+      const region = findRegion(country, regionRaw);
+      if (!region) {
+        return NextResponse.json(
+          { error: "Unknown region." },
+          { status: 400 },
+        );
+      }
+
       const { getGeographyAggregates } = await import(
         "@/features/world-memory/trace/aggregateRest"
       );
       const result = await getGeographyAggregates({
-        scope: { level: "country", countryCode: country.code },
+        scope: {
+          level: "region",
+          countryCode: country.code,
+          regionLabel: region.name,
+        },
         categories: categoriesResult,
       });
       return NextResponse.json({
         ...result,
         country: { code: country.code, label: country.name },
+        region: { label: region.name },
       });
     }
 
@@ -140,13 +187,43 @@ export async function GET(request: Request) {
         searchParams.get("countryCode")?.trim() ||
         "";
       const regionRaw = searchParams.get("region")?.trim() || "";
+      const cityRaw = searchParams.get("city")?.trim() || "";
 
-      // Geography archive (Phase 3) — categorized Activities only.
+      // Geography archive (Phase 3/7) — categorized Activities only.
       if (countryRaw && !locationId) {
         const country = findCountry(countryRaw);
         if (!country) {
           return NextResponse.json(
             { error: "Unknown country." },
+            { status: 400 },
+          );
+        }
+        if (regionRaw) {
+          const { findRegion } = await import(
+            "@/features/world-memory/location/locations"
+          );
+          const region = findRegion(country, regionRaw);
+          if (!region) {
+            return NextResponse.json(
+              { error: "Unknown region." },
+              { status: 400 },
+            );
+          }
+          if (cityRaw) {
+            const { findCity } = await import(
+              "@/features/world-memory/location/locations"
+            );
+            const city = findCity(region, cityRaw);
+            if (!city) {
+              return NextResponse.json(
+                { error: "Unknown city." },
+                { status: 400 },
+              );
+            }
+          }
+        } else if (cityRaw) {
+          return NextResponse.json(
+            { error: "region is required when city is set." },
             { status: 400 },
           );
         }
@@ -156,6 +233,7 @@ export async function GET(request: Request) {
         const traces = await listMemoriesForGeography({
           countryCode: country.code,
           regionLabel: regionRaw || null,
+          cityLabel: cityRaw || null,
           categories: categoriesResult,
           limit,
         });
@@ -167,7 +245,8 @@ export async function GET(request: Request) {
             countryCode: country.code,
             country: country.name,
             region: regionRaw || null,
-            name: regionRaw || country.name,
+            city: cityRaw || null,
+            name: cityRaw || regionRaw || country.name,
           },
         });
       }

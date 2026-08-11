@@ -153,16 +153,18 @@ export const es: MessageCatalog = {
   "world.mapHelp":
     "Las estrellas marcan los lugares donde los lectores dejaron un recuerdo. Haz clic en una estrella para leerlos: sin GPS, sin dirección.",
   "world.mapHelpGeo":
-    "Países y regiones reúnen Memories por READ, PLAY y APPS. Toca un grupo para ver el detalle — sin GPS, sin dirección.",
+    "Países, regiones y ciudades reúnen Memories por READ, PLAY y APPS. Toca un grupo para ver el detalle — sin GPS, sin dirección.",
   "world.earlierOnMapNote":
     "Los Earlier Memories sin categoría permanecen en el archivo — no se mezclan con READ / PLAY / APPS.",
   "world.filterCategoriesAria": "Filtrar el mapa por categoría",
   "world.legendAria": "Colores de categoría",
   "world.filterEmpty": "Selecciona al menos READ, PLAY o APPS para mostrar el mapa.",
   "world.backToWorld": "← Mundo",
+  "world.backToCountry": "← {country}",
   "world.scopeWorld": "Mundo",
   "world.mapScope": "Alcance del mapa",
   "world.openCountry": "Abrir país",
+  "world.openRegion": "Abrir región",
   "world.viewMemories": "Ver Memories",
   "world.personCount": "{count} persona",
   "world.peopleCount": "{count} personas",
