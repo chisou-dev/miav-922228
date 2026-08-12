@@ -11,6 +11,9 @@ import {
   regionGeographyId,
   type AggregateMemoryRow,
 } from "../features/world-memory/trace/aggregate";
+import { listEnabledWorkIds } from "../features/world-memory/trace/works";
+
+const ALL_WORKS = listEnabledWorkIds();
 
 function assert(cond: boolean, label: string) {
   if (!cond) {
@@ -98,6 +101,7 @@ const worldAll = aggregateGeographies(
   fixture,
   { level: "world" },
   ["read", "play", "apps"],
+  ALL_WORKS,
   resolve,
 );
 const japan = worldAll.find((g) => g.geographyId === "JP");
@@ -106,6 +110,7 @@ const worldTotals = computeScopeTotals(
   fixture,
   { level: "world" },
   ["read", "play", "apps"],
+  ALL_WORKS,
 );
 
 assert(worldAll.length === 2, "world has Japan + France");
@@ -120,6 +125,7 @@ const playOnly = aggregateGeographies(
   fixture,
   { level: "world" },
   ["play"],
+  ALL_WORKS,
   resolve,
 );
 const japanPlay = playOnly.find((g) => g.geographyId === "JP");
@@ -131,6 +137,7 @@ const japanRegions = aggregateGeographies(
   fixture,
   { level: "country", countryCode: "JP" },
   ["read", "play", "apps"],
+  ALL_WORKS,
   resolve,
 );
 const tokyo = japanRegions.find((g) => g.label === "Tokyo");
@@ -171,12 +178,14 @@ const multiWorld = aggregateGeographies(
   multiRegion,
   { level: "world" },
   ["read", "play"],
+  ALL_WORKS,
   resolve,
 );
 const multiRegions = aggregateGeographies(
   multiRegion,
   { level: "country", countryCode: "JP" },
   ["read", "play"],
+  ALL_WORKS,
   resolve,
 );
 assert(multiWorld[0]?.peopleCount === 1, "same miavId country people = 1");
@@ -206,6 +215,7 @@ const emptyCats = aggregateGeographies(
   fixture,
   { level: "world" },
   [],
+  ALL_WORKS,
   resolve,
 );
 assert(emptyCats.length === 0, "empty category filter yields no markers");

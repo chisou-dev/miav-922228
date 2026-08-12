@@ -37,8 +37,8 @@ export function TraceViewer({
   // Idle (desktop empty): compact height so Leave a Memory stays in view.
   // Active: keep full viewer height for TraceList / SelectedTrace.
   const shellClass = idle
-    ? "flex flex-col border border-[var(--map-line)] bg-[var(--map-panel)] lg:sticky lg:top-4"
-    : "flex h-[min(70vh,640px)] min-h-[320px] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] lg:sticky lg:top-4 lg:h-[min(72vh,720px)]";
+    ? "trace-map-panel flex flex-col border border-[var(--map-line)] bg-[var(--map-panel)] lg:sticky lg:top-4"
+    : "trace-map-panel flex h-[min(70vh,640px)] min-h-[320px] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] lg:sticky lg:top-4 lg:h-[min(72vh,720px)]";
 
   return (
     <section className={shellClass}>

@@ -135,25 +135,34 @@ function resolveGeographyCoords(
 export async function getGeographyAggregates(input: {
   scope: AggregateScope;
   categories: TraceCategory[];
+  workIds: string[];
 }): Promise<{
   geographies: GeographyAggregate[];
   totals: { peopleCount: number; activityCount: number };
   scope: AggregateScope;
   categories: TraceCategory[];
+  workIds: string[];
 }> {
   const { rows } = await loadCategorizedSource();
   const geographies = aggregateGeographies(
     rows,
     input.scope,
     input.categories,
+    input.workIds,
     resolveGeographyCoords,
   );
-  const totals = computeScopeTotals(rows, input.scope, input.categories);
+  const totals = computeScopeTotals(
+    rows,
+    input.scope,
+    input.categories,
+    input.workIds,
+  );
   return {
     geographies,
     totals,
     scope: input.scope,
     categories: [...input.categories],
+    workIds: [...input.workIds],
   };
 }
 
@@ -162,17 +171,20 @@ export async function listMemoriesForGeography(input: {
   regionLabel?: string | null;
   cityLabel?: string | null;
   categories: TraceCategory[];
+  workIds: string[];
   limit?: number;
 }): Promise<TracePin[]> {
   const { pins } = await loadCategorizedSource();
   const code = input.countryCode.toUpperCase();
   const catSet = new Set(input.categories);
+  const workSet = new Set(input.workIds);
   const regionQ = input.regionLabel?.trim().toLowerCase() || null;
   const cityQ = input.cityLabel?.trim().toLowerCase() || null;
 
   const matched: TracePin[] = [];
   for (const pin of pins) {
     if (!pin.category || !catSet.has(pin.category)) continue;
+    if (!pin.workId || !workSet.has(pin.workId)) continue;
     const row = rowFromCategorizedPin(pin);
     if (!row) continue;
     if (row.countryCode !== code) continue;

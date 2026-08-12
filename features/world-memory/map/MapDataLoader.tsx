@@ -97,6 +97,7 @@ export function useMapDataLoader() {
     async (
       scope: GeoScope,
       categories: TraceCategory[] = [...TRACE_CATEGORIES],
+      workIds?: string[],
     ) => {
       setGeoLoading(true);
       try {
@@ -105,6 +106,9 @@ export function useMapDataLoader() {
           scope: scope.level,
           categories: categories.join(","),
         });
+        if (workIds && workIds.length > 0) {
+          params.set("workIds", workIds.join(","));
+        }
         if (scope.level === "country" || scope.level === "region") {
           params.set("country", scope.countryCode);
         }
@@ -165,6 +169,7 @@ export function useMapDataLoader() {
     async (
       scope: MemoryQueryScope,
       categories?: TraceCategory[],
+      workIds?: string[],
     ) => {
       setPlaceScope(scope);
       setTracesLoading(true);
@@ -185,6 +190,9 @@ export function useMapDataLoader() {
         }
         if (categories && categories.length > 0) {
           params.set("categories", categories.join(","));
+        }
+        if (workIds && workIds.length > 0) {
+          params.set("workIds", workIds.join(","));
         }
         const response = await fetch(`/api/trace?${params.toString()}`);
         const data = (await response.json().catch(() => null)) as {

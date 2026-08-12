@@ -12,6 +12,10 @@ export type MiavWorkDefinition = {
   label: string;
   /** When false, hidden from post UI and rejected by POST validation. */
   enabled: boolean;
+  /** Map star fill — distinct per work; falls back to category color. */
+  markerColor?: string;
+  /** Map star border — optional; derived when omitted. */
+  markerBorder?: string;
 };
 
 export const TRACE_CATEGORIES = ["read", "play", "apps"] as const;
@@ -22,12 +26,33 @@ export const MIAV_WORK_DEFINITIONS: readonly MiavWorkDefinition[] = [
     category: "read",
     label: "MIAV-922228",
     enabled: true,
+    markerColor: "#3d6b8c",
+    markerBorder: "rgba(36, 52, 71, 0.45)",
+  },
+  {
+    id: "japan-8000hz",
+    category: "read",
+    label: "JAPAN 8000Hz",
+    enabled: true,
+    markerColor: "#2a5570",
+    markerBorder: "rgba(30, 45, 60, 0.45)",
+  },
+  {
+    id: "fourth-period",
+    category: "read",
+    label: "Fourth Period",
+    enabled: true,
+    /** Quiet dusk mauve — distinct from READ blues, PLAY amber, APPS sage. */
+    markerColor: "#6b5678",
+    markerBorder: "rgba(50, 40, 58, 0.45)",
   },
   {
     id: "binary-block",
     category: "play",
     label: "Binary Block",
     enabled: true,
+    markerColor: "#c4843a",
+    markerBorder: "rgba(90, 55, 20, 0.4)",
   },
   {
     id: "luminous-structure",
@@ -41,6 +66,8 @@ export const MIAV_WORK_DEFINITIONS: readonly MiavWorkDefinition[] = [
     category: "apps",
     label: "Writer Memo",
     enabled: true,
+    markerColor: "#4a7c59",
+    markerBorder: "rgba(40, 60, 45, 0.4)",
   },
 ] as const;
 
@@ -66,6 +93,58 @@ export function listEnabledWorksByCategory(
   category: TraceCategory,
 ): MiavWorkDefinition[] {
   return listWorksByCategory(category).filter((work) => work.enabled);
+}
+
+/** All enabled works across categories (catalog order). */
+export function listEnabledWorks(): MiavWorkDefinition[] {
+  return MIAV_WORK_DEFINITIONS.filter((work) => work.enabled);
+}
+
+export function listEnabledWorkIds(): string[] {
+  return listEnabledWorks().map((work) => work.id);
+}
+
+/**
+ * Parse optional workIds query param against selected categories.
+ * Empty param → all enabled works in those categories.
+ */
+export function parseWorkIdsParam(
+  raw: string | null | undefined,
+  categories: readonly TraceCategory[],
+): string[] | { error: string } {
+  const enabledInScope = listEnabledWorks().filter((work) =>
+    categories.includes(work.category),
+  );
+
+  if (raw == null || raw.trim() === "") {
+    return enabledInScope.map((work) => work.id);
+  }
+
+  const parts = raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length === 0) {
+    return enabledInScope.map((work) => work.id);
+  }
+
+  const out: string[] = [];
+  for (const id of parts) {
+    const work = getWorkById(id);
+    if (!work) {
+      return { error: `Unknown workId: ${id}` };
+    }
+    if (!work.enabled) {
+      return { error: `Work is not available: ${id}` };
+    }
+    if (!categories.includes(work.category)) {
+      return {
+        error: `workId ${id} is not in the selected categories.`,
+      };
+    }
+    if (!out.includes(id)) out.push(id);
+  }
+  return out;
 }
 
 /** Categories that currently have at least one selectable work. */

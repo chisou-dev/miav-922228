@@ -21,6 +21,12 @@ const cases: Case[] = [
     expectOk: true,
   },
   {
+    name: "valid read + fourth-period",
+    category: "read",
+    workId: "fourth-period",
+    expectOk: true,
+  },
+  {
     name: "valid play + binary-block",
     category: "play",
     workId: "binary-block",

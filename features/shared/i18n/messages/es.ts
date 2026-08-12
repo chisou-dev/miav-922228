@@ -153,10 +153,18 @@ export const es: MessageCatalog = {
   "world.mapHelp":
     "Las estrellas marcan los lugares donde los lectores dejaron un recuerdo. Haz clic en una estrella para leerlos: sin GPS, sin dirección.",
   "world.mapHelpGeo":
-    "Países, regiones y ciudades reúnen Memories por READ, PLAY y APPS. Toca un grupo para ver el detalle — sin GPS, sin dirección.",
+    "Países, regiones y ciudades reúnen Memories por obra. Filtra por READ / PLAY / APPS y por obra — toca un grupo para ver el detalle — sin GPS, sin dirección.",
   "world.earlierOnMapNote":
     "Los Earlier Memories sin categoría permanecen en el archivo — no se mezclan con READ / PLAY / APPS.",
   "world.filterCategoriesAria": "Filtrar el mapa por categoría",
+  "world.filterWorksAria": "Filtrar el mapa por obra",
+  "world.filterWorksGroupAria": "Obras en {category}",
+  "world.filterWorkToggleAria": "{work} — {state}",
+  "world.filterOn": "seleccionado",
+  "world.filterOff": "no seleccionado",
+  "world.filterWorksEmpty":
+    "Selecciona al menos una obra en las categorías activas para mostrar el mapa.",
+  "world.workLegendAria": "Colores de obra en el mapa",
   "world.legendAria": "Colores de categoría",
   "world.filterEmpty": "Selecciona al menos READ, PLAY o APPS para mostrar el mapa.",
   "world.backToWorld": "← Mundo",
@@ -172,6 +180,8 @@ export const es: MessageCatalog = {
   "world.activityCountMany": "{count} actividades",
   "world.geoMarkerAria":
     "{label}: {people} personas, {activities} actividades. Categorías: {categories}",
+  "world.geoMarkerAriaWorks":
+    "{label}: {people} personas, {activities} actividades. Obras: {works}",
   "world.loadingMap": "Desplegando el mapa…",
   "world.gathering": "Reuniendo…",
   "world.archive": "Archivo de huellas",

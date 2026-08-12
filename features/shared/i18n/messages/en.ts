@@ -150,10 +150,18 @@ export const en = {
   "world.mapHelp":
     "Stars mark places where readers left a Memory. Click a star to read them — no GPS, no address.",
   "world.mapHelpGeo":
-    "Countries, regions, and cities gather Memories by READ, PLAY, and APPS. Tap a group for detail — no GPS, no address.",
+    "Countries, regions, and cities gather Memories by work. Filter by READ / PLAY / APPS and by work — tap a group for detail — no GPS, no address.",
   "world.earlierOnMapNote":
     "Earlier Memories without a category stay in the archive — they are not mixed into READ / PLAY / APPS.",
   "world.filterCategoriesAria": "Filter map by category",
+  "world.filterWorksAria": "Filter map by work",
+  "world.filterWorksGroupAria": "Works in {category}",
+  "world.filterWorkToggleAria": "{work} — {state}",
+  "world.filterOn": "selected",
+  "world.filterOff": "not selected",
+  "world.filterWorksEmpty":
+    "Select at least one work in the active categories to show the map.",
+  "world.workLegendAria": "Work colors on the map",
   "world.legendAria": "Category colors",
   "world.filterEmpty": "Select at least one of READ, PLAY, or APPS to show the map.",
   "world.backToWorld": "← World",
@@ -169,6 +177,8 @@ export const en = {
   "world.activityCountMany": "{count} activities",
   "world.geoMarkerAria":
     "{label}: {people} people, {activities} activities. Categories: {categories}",
+  "world.geoMarkerAriaWorks":
+    "{label}: {people} people, {activities} activities. Works: {works}",
   "world.loadingMap": "Unfolding the map…",
   "world.gathering": "Gathering…",
   "world.archive": "Trace archive",

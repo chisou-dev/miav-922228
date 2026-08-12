@@ -19,7 +19,7 @@ import { MAX_GOOGLE_MESSAGE_LENGTH } from "@/features/world-memory/trace/message
 import { normalizeTraceMessage } from "@/features/world-memory/trace/messagePolicy";
 import { getSiteControl } from "@/features/dashboard/site-control/siteControlRest";
 import { TRACE_DISABLED_MESSAGE } from "@/features/dashboard/site-control/types";
-import { validateCategoryWork } from "@/features/world-memory/trace/works";
+import { validateCategoryWork, parseWorkIdsParam } from "@/features/world-memory/trace/works";
 import { parseCategoriesParam } from "@/features/world-memory/trace/aggregate";
 import { findCountry } from "@/features/world-memory/location/locations";
 
@@ -74,6 +74,17 @@ export async function GET(request: Request) {
         );
       }
 
+      const workIdsResult = parseWorkIdsParam(
+        searchParams.get("workIds"),
+        categoriesResult,
+      );
+      if ("error" in workIdsResult) {
+        return NextResponse.json(
+          { error: workIdsResult.error },
+          { status: 400 },
+        );
+      }
+
       const scopeRaw = (searchParams.get("scope") || "world").trim().toLowerCase();
       if (
         scopeRaw !== "world" &&
@@ -93,6 +104,7 @@ export async function GET(request: Request) {
         const result = await getGeographyAggregates({
           scope: { level: "world" },
           categories: categoriesResult,
+          workIds: workIdsResult,
         });
         return NextResponse.json(result);
       }
@@ -127,6 +139,7 @@ export async function GET(request: Request) {
         const result = await getGeographyAggregates({
           scope: { level: "country", countryCode: country.code },
           categories: categoriesResult,
+          workIds: workIdsResult,
         });
         return NextResponse.json({
           ...result,
@@ -163,6 +176,7 @@ export async function GET(request: Request) {
           regionLabel: region.name,
         },
         categories: categoriesResult,
+        workIds: workIdsResult,
       });
       return NextResponse.json({
         ...result,
@@ -178,6 +192,17 @@ export async function GET(request: Request) {
       if ("error" in categoriesResult) {
         return NextResponse.json(
           { error: categoriesResult.error },
+          { status: 400 },
+        );
+      }
+
+      const workIdsResult = parseWorkIdsParam(
+        searchParams.get("workIds"),
+        categoriesResult,
+      );
+      if ("error" in workIdsResult) {
+        return NextResponse.json(
+          { error: workIdsResult.error },
           { status: 400 },
         );
       }
@@ -235,6 +260,7 @@ export async function GET(request: Request) {
           regionLabel: regionRaw || null,
           cityLabel: cityRaw || null,
           categories: categoriesResult,
+          workIds: workIdsResult,
           limit,
         });
         return NextResponse.json({
@@ -268,6 +294,12 @@ export async function GET(request: Request) {
         const set = new Set(categoriesResult);
         traces = traces.filter(
           (pin) => pin.category && set.has(pin.category),
+        );
+      }
+      if (searchParams.has("workIds")) {
+        const workSet = new Set(workIdsResult);
+        traces = traces.filter(
+          (pin) => pin.workId && workSet.has(pin.workId),
         );
       }
       return NextResponse.json({

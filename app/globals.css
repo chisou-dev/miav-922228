@@ -489,14 +489,29 @@ header .lang-switcher__list {
 
 /* Trace Map — quiet literary surface */
 .trace-map-shell {
-  --map-ink: #243447;
-  --map-muted: #6b7c8d;
-  --map-line: #d5dee7;
-  --map-panel: #ffffff;
+  --map-ink: #e8eef4;
+  --map-muted: #a8b8c8;
+  --map-line: rgba(213, 222, 231, 0.22);
+  --map-panel: rgba(255, 255, 255, 0.94);
+  --map-panel-muted: rgba(255, 255, 255, 0.72);
+  --map-canvas: #eef2f6;
   --map-accent: #5b7c99;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, #ffffff 0%, #f4f7fa 48%, #eef3f7 100%);
+    linear-gradient(
+      180deg,
+      var(--background-deep) 0%,
+      var(--background) 38%,
+      var(--background-soft) 100%
+    );
+  color: var(--map-ink);
+}
+
+/* Light panels / popups keep dark readable ink on the blue shell. */
+.trace-map-panel {
+  --map-ink: #243447;
+  --map-muted: #6b7c8d;
+  --map-line: #d5dee7;
   color: var(--map-ink);
 }
 
@@ -524,6 +539,9 @@ header .lang-switcher__list {
 
 .trace-map-shell .leaflet-popup-content {
   margin: 0;
+  --map-ink: #243447;
+  --map-muted: #6b7c8d;
+  color: var(--map-ink);
 }
 
 .miav-trace-pin {
@@ -572,7 +590,8 @@ header .lang-switcher__list {
   border: none;
 }
 
-.miav-geo-marker-wrap--active .miav-geo-cat-star {
+.miav-geo-marker-wrap--active .miav-geo-cat-star,
+.miav-geo-marker-wrap--active .miav-geo-work-star {
   filter: brightness(1.08);
 }
 
@@ -583,7 +602,8 @@ header .lang-switcher__list {
   height: 36px;
 }
 
-.miav-geo-cat-star {
+.miav-geo-cat-star,
+.miav-geo-work-star {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -605,7 +625,8 @@ header .lang-switcher__list {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
-.miav-geo-cat-star--emph {
+.miav-geo-cat-star--emph,
+.miav-geo-work-star--emph {
   filter: brightness(1.12);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
 }

@@ -6,6 +6,13 @@ import type { User } from "firebase/auth";
 import "leaflet/dist/leaflet.css";
 import { Sidebar } from "@/features/world-memory/map/Sidebar";
 import { CategoryFilter } from "@/features/world-memory/map/CategoryFilter";
+import { WorkFilter } from "@/features/world-memory/map/WorkFilter";
+import {
+  effectiveWorkIds,
+  resolveInitialMapFilter,
+} from "@/features/world-memory/map/mapFilter";
+import { workMarkerStyle } from "@/features/world-memory/map/workColors";
+import { workLabelForId } from "@/features/world-memory/my-miav/myMiavPublic";
 import { LeaveTraceForm } from "@/features/world-memory/trace/ui/LeaveTraceForm";
 import { TraceViewer } from "@/features/world-memory/viewer/TraceViewer";
 import {
@@ -20,10 +27,6 @@ import {
   type TraceCategory,
 } from "@/features/world-memory/trace/works";
 import {
-  CATEGORY_MAP_COLORS,
-  CATEGORY_ORDER,
-} from "@/features/world-memory/map/categoryColors";
-import {
   completeTraceRedirectSignIn,
   getTraceAuthType,
   signOutTrace,
@@ -37,7 +40,7 @@ const Map = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[min(62vh,640px)] items-center justify-center border border-[var(--map-line)] bg-[#f7f9fb] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)] sm:h-[min(72vh,720px)]">
+      <div className="flex h-[min(68vh,720px)] items-center justify-center border border-[var(--map-line)] bg-[var(--map-canvas)] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)] sm:h-[min(76vh,820px)] lg:h-[min(78vh,880px)]">
         {translate("world.loadingMap")}
       </div>
     ),
@@ -52,8 +55,13 @@ type SelectedPlace = {
   lng: number;
 };
 
-export function TraceMapApp() {
+export function TraceMapApp({
+  initialWorkQuery = null,
+}: {
+  initialWorkQuery?: string | null;
+}) {
   const t = useT();
+  const initialFilter = resolveInitialMapFilter(initialWorkQuery);
   const [user, setUser] = useState<User | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [leavePanelOpen, setLeavePanelOpen] = useState(false);
@@ -71,12 +79,15 @@ export function TraceMapApp() {
   const [mapCategories, setMapCategories] = useState<TraceCategory[]>([
     ...TRACE_CATEGORIES,
   ]);
+  const [mapWorkIds, setMapWorkIds] = useState<string[]>(initialFilter.workIds);
+  const formInitialWorkId = initialFilter.formWorkId;
   const [geoScope, setGeoScope] = useState<GeoScope>({ level: "world" });
   const [selectedGeographyId, setSelectedGeographyId] = useState<string | null>(
     null,
   );
-  const [emphasizeCategory, setEmphasizeCategory] =
-    useState<TraceCategory | null>(null);
+  const [emphasizeWorkId, setEmphasizeWorkId] = useState<string | null>(null);
+
+  const activeWorkIds = effectiveWorkIds(mapCategories, mapWorkIds);
 
   const data = useMapDataLoader();
 
@@ -95,9 +106,9 @@ export function TraceMapApp() {
   }, []);
 
   useEffect(() => {
-    void data.loadGeo(geoScope, mapCategories);
+    void data.loadGeo(geoScope, mapCategories, activeWorkIds);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoScope, mapCategories]);
+  }, [geoScope, mapCategories, mapWorkIds]);
 
   useEffect(() => {
     void completeTraceRedirectSignIn();
@@ -136,7 +147,7 @@ export function TraceMapApp() {
   function backToWorld() {
     setGeoScope({ level: "world" });
     setSelectedGeographyId(null);
-    setEmphasizeCategory(null);
+    setEmphasizeWorkId(null);
     setFocus({ lat: 20, lng: 0, zoom: 2 });
     data.closeViewer();
   }
@@ -150,17 +161,17 @@ export function TraceMapApp() {
       countryLabel,
     });
     setSelectedGeographyId(null);
-    setEmphasizeCategory(null);
+    setEmphasizeWorkId(null);
     setFocus(null);
     data.closeViewer();
   }
 
   function onSelectGeography(
     geo: GeographyAggregate,
-    category?: TraceCategory,
+    workId?: string,
   ) {
     setSelectedGeographyId(geo.geographyId);
-    setEmphasizeCategory(category || null);
+    setEmphasizeWorkId(workId || null);
 
     if (geoScope.level === "world") {
       setGeoScope({
@@ -217,6 +228,7 @@ export function TraceMapApp() {
           city: null,
         },
         mapCategories,
+        activeWorkIds,
       );
       return;
     }
@@ -233,6 +245,7 @@ export function TraceMapApp() {
           name: geo.label,
         },
         mapCategories,
+        activeWorkIds,
       );
       return;
     }
@@ -247,12 +260,14 @@ export function TraceMapApp() {
         name: geo.label,
       },
       mapCategories,
+      activeWorkIds,
     );
   }
 
   const viewerOpen = Boolean(data.placeScope);
   const welcomeBody = getWelcomeDialogBody(t);
-  const filterEmpty = mapCategories.length === 0;
+  const filterEmpty =
+    mapCategories.length === 0 || activeWorkIds.length === 0;
 
   const leaveTraceFormProps = {
     user,
@@ -273,10 +288,13 @@ export function TraceMapApp() {
       }
       void data.loadStatus(user);
       void data.loadMap();
-      void data.loadGeo(geoScope, mapCategories);
-      if (data.placeScope) void data.loadMemories(data.placeScope, mapCategories);
+      void data.loadGeo(geoScope, mapCategories, activeWorkIds);
+      if (data.placeScope) {
+        void data.loadMemories(data.placeScope, mapCategories, activeWorkIds);
+      }
     },
     onClose: () => setLeavePanelOpen(false),
+    initialWorkId: formInitialWorkId,
   };
 
   const viewerTitle = data.placeScope?.name ?? "";
@@ -293,7 +311,7 @@ export function TraceMapApp() {
       />
 
       <header className="border-b border-[var(--map-line)] px-5 py-5 pl-14 sm:px-8 sm:py-6 lg:pl-8">
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto w-full max-w-[88rem]">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <h1 className="text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--map-ink)]">
               {t("world.title")}
@@ -357,7 +375,7 @@ export function TraceMapApp() {
             <button
               type="button"
               onClick={() => setLeavePanelOpen(true)}
-              className="mt-3 min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-6 text-[0.78rem] tracking-[0.16em] text-[var(--map-ink)]"
+              className="mt-3 min-h-[44px] cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-6 text-[0.78rem] tracking-[0.16em] text-[#243447]"
             >
               {t("world.leaveMemory")}
             </button>
@@ -365,9 +383,9 @@ export function TraceMapApp() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-6xl space-y-8 px-5 py-8 sm:px-8">
-        <div className="desktop-shell grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
-          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
+      <div className="mx-auto w-full max-w-[88rem] space-y-8 px-5 py-8 sm:px-8">
+        <div className="desktop-shell grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] lg:items-start">
+          <div className="grid gap-6 lg:grid-cols-[minmax(200px,220px)_minmax(0,1fr)] lg:items-start">
             <div className="order-2 lg:order-1 lg:self-stretch">
               <Sidebar
                 stats={data.stats}
@@ -392,37 +410,42 @@ export function TraceMapApp() {
               />
             </div>
             <div className="order-1 space-y-3 lg:order-2 lg:sticky lg:top-4 lg:self-start">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="trace-map-panel space-y-2 rounded-sm border border-[var(--map-line)] bg-[var(--map-panel)] px-3 py-3">
                 <CategoryFilter
                   selected={mapCategories}
                   onChange={setMapCategories}
                 />
+                <WorkFilter
+                  selectedCategories={mapCategories}
+                  selectedWorkIds={mapWorkIds}
+                  onChange={setMapWorkIds}
+                />
                 <ul
-                  className="flex flex-wrap items-center gap-3 text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)]"
-                  aria-label={t("world.legendAria")}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-[var(--map-line)] pt-2 text-[0.62rem] tracking-[0.08em] text-[var(--map-muted)]"
+                  aria-label={t("world.workLegendAria")}
                 >
-                  {CATEGORY_ORDER.map((category) => (
-                    <li key={category} className="inline-flex items-center gap-1.5">
-                      <span
-                        aria-hidden="true"
-                        className="inline-block h-2 w-2"
-                        style={{
-                          clipPath:
-                            "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
-                          backgroundColor: CATEGORY_MAP_COLORS[category].fill,
-                        }}
-                      />
-                      <span>
-                        {t(
-                          category === "read"
-                            ? "world.category.read"
-                            : category === "play"
-                              ? "world.category.play"
-                              : "world.category.apps",
-                        )}
-                      </span>
-                    </li>
-                  ))}
+                  {activeWorkIds.map((workId) => {
+                    const color = workMarkerStyle(workId);
+                    return (
+                      <li
+                        key={workId}
+                        className="inline-flex max-w-full items-center gap-1.5"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="inline-block h-2 w-2 shrink-0"
+                          style={{
+                            clipPath:
+                              "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
+                            backgroundColor: color.fill,
+                          }}
+                        />
+                        <span className="truncate text-[var(--map-ink)]">
+                          {workLabelForId(workId)}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 
@@ -432,7 +455,7 @@ export function TraceMapApp() {
                     type="button"
                     onClick={backToWorld}
                     aria-label={t("world.backToWorld")}
-                    className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-white px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
+                    className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-[var(--map-panel)] px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
                   >
                     {t("world.backToWorld")}
                   </button>
@@ -450,7 +473,7 @@ export function TraceMapApp() {
                     aria-label={t("world.backToCountry", {
                       country: geoScope.countryLabel,
                     })}
-                    className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-white px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
+                    className="min-h-[40px] cursor-pointer border border-[var(--map-line)] bg-[var(--map-panel)] px-3 text-[0.72rem] tracking-[0.12em] text-[var(--map-ink)]"
                   >
                     {t("world.backToCountry", {
                       country: geoScope.countryLabel,
@@ -463,8 +486,10 @@ export function TraceMapApp() {
               ) : null}
 
               {filterEmpty ? (
-                <p className="border border-[var(--map-line)] bg-white px-4 py-3 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
-                  {t("world.filterEmpty")}
+                <p className="trace-map-panel border border-[var(--map-line)] bg-[var(--map-panel)] px-4 py-3 text-[0.82rem] leading-[1.7] text-[var(--map-muted)]">
+                  {mapCategories.length === 0
+                    ? t("world.filterEmpty")
+                    : t("world.filterWorksEmpty")}
                 </p>
               ) : (
                 <Map
@@ -472,7 +497,7 @@ export function TraceMapApp() {
                   geographies={data.geographies}
                   focus={focus}
                   selectedGeographyId={selectedGeographyId}
-                  emphasizeCategory={emphasizeCategory}
+                  emphasizeWorkId={emphasizeWorkId}
                   interactionsEnabled={!welcomeOpen}
                   onSelectGeography={onSelectGeography}
                   onViewMemories={onViewMemories}

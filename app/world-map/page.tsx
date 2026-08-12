@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WorldMapPage() {
-  return <TraceMapApp />;
+type PageProps = {
+  searchParams: Promise<{ work?: string }>;
+};
+
+export default async function WorldMapPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  return <TraceMapApp initialWorkQuery={params.work ?? null} />;
 }

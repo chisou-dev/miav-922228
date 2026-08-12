@@ -23,6 +23,7 @@ import { GoogleSignInDialog } from "@/features/world-memory/trace/ui/GoogleSignI
 import { MiavIdCopy } from "@/features/world-memory/trace/ui/MiavIdCopy";
 import { PlaceCascadePicker } from "@/features/world-memory/map/PlaceCascadePicker";
 import {
+  getWorkById,
   listEnabledWorksByCategory,
   listPostableCategories,
   type TraceCategory,
@@ -50,6 +51,8 @@ type Props = {
   onSaved: (trace: TracePin) => void;
   /** When set, panel is shown below the map — Close dismisses the panel. */
   onClose?: () => void;
+  /** One-time preselection from ?work= deep link — not synced with map filter. */
+  initialWorkId?: string | null;
 };
 
 const CATEGORY_LABEL_KEY: Record<TraceCategory, MessageKey> = {
@@ -193,12 +196,14 @@ export function LeaveTraceForm({
   onFocusLocation,
   onSaved,
   onClose,
+  initialWorkId = null,
 }: Props) {
   const t = useT();
   const [composerOpen, setComposerOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState<TraceCategory | null>(null);
   const [workId, setWorkId] = useState<string | null>(null);
+  const initialWorkApplied = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
@@ -250,6 +255,15 @@ export function LeaveTraceForm({
       current.length > maxLength ? current.slice(0, maxLength) : current,
     );
   }, [maxLength]);
+
+  useEffect(() => {
+    if (initialWorkApplied.current || !initialWorkId) return;
+    const work = getWorkById(initialWorkId);
+    if (!work?.enabled) return;
+    initialWorkApplied.current = true;
+    setCategory(work.category);
+    setWorkId(work.id);
+  }, [initialWorkId]);
 
   useEffect(() => {
     if (!canWrite || !composerOpen) return;
@@ -379,7 +393,7 @@ export function LeaveTraceForm({
   }, [isGoogle, user]);
 
   return (
-    <section className="border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-8">
+    <section className="trace-map-panel border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-[1rem] font-medium tracking-[0.14em] text-[var(--map-ink)] uppercase">

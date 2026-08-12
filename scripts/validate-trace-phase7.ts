@@ -15,7 +15,7 @@ import {
 import { rowFromCategorizedPin } from "../features/world-memory/trace/aggregateRows";
 import { TRACE_PUBLIC_FORBIDDEN_KEYS } from "../features/world-memory/trace/privacy";
 import type { TracePin } from "../features/world-memory/trace/types";
-import { getWorkById } from "../features/world-memory/trace/works";
+import { getWorkById, listEnabledWorkIds } from "../features/world-memory/trace/works";
 import {
   buildLocationId,
   findCountry,
@@ -175,12 +175,13 @@ const coords: Record<string, { lat: number; lng: number }> = {
 const resolve = (id: string) => coords[id] || null;
 
 const ALL = ["read", "play", "apps"] as const;
+const ALL_WORKS = listEnabledWorkIds();
 
 // A — World
-const world = aggregateGeographies(fixture, { level: "world" }, ALL, resolve);
+const world = aggregateGeographies(fixture, { level: "world" }, ALL, ALL_WORKS, resolve);
 const japan = world.find((g) => g.geographyId === "JP");
 const france = world.find((g) => g.geographyId === "FR");
-const worldTotals = computeScopeTotals(fixture, { level: "world" }, ALL);
+const worldTotals = computeScopeTotals(fixture, { level: "world" }, ALL, ALL_WORKS);
 
 assert(world.length === 2, "A world has Japan + France");
 assert(japan?.peopleCount === 4, "A Japan people = 4");
@@ -198,6 +199,7 @@ const japanRegions = aggregateGeographies(
   fixture,
   { level: "country", countryCode: "JP" },
   ALL,
+  ALL_WORKS,
   resolve,
 );
 const tokyo = japanRegions.find((g) => g.label === "Tokyo");
@@ -207,7 +209,7 @@ assert(tokyo?.activityCount === 3, "B Tokyo activities = 3");
 assert(kanagawa?.peopleCount === 2, "B Kanagawa people = 2");
 assert(kanagawa?.activityCount === 2, "B Kanagawa activities = 2");
 assert(
-  computeScopeTotals(fixture, { level: "country", countryCode: "JP" }, ALL)
+  computeScopeTotals(fixture, { level: "country", countryCode: "JP" }, ALL, ALL_WORKS)
     .peopleCount === 4,
   "B Japan scope totals people = 4 (not 2+2)",
 );
@@ -217,6 +219,7 @@ const tokyoCities = aggregateGeographies(
   fixture,
   { level: "region", countryCode: "JP", regionLabel: "Tokyo" },
   ALL,
+  ALL_WORKS,
   resolve,
 );
 const shinjuku = tokyoCities.find((g) => g.label === "Shinjuku");
@@ -231,6 +234,7 @@ const kanagawaCities = aggregateGeographies(
   fixture,
   { level: "region", countryCode: "JP", regionLabel: "Kanagawa" },
   ALL,
+  ALL_WORKS,
   resolve,
 );
 const yokohama = kanagawaCities.find((g) => g.label === "Yokohama");
@@ -243,24 +247,28 @@ const crossWorld = aggregateGeographies(
   crossCity,
   { level: "world" },
   ["read", "play"],
+  ALL_WORKS,
   resolve,
 );
 const crossRegions = aggregateGeographies(
   crossCity,
   { level: "country", countryCode: "JP" },
   ["read", "play"],
+  ALL_WORKS,
   resolve,
 );
 const crossTokyo = aggregateGeographies(
   crossCity,
   { level: "region", countryCode: "JP", regionLabel: "Tokyo" },
   ["read", "play"],
+  ALL_WORKS,
   resolve,
 );
 const crossKanagawa = aggregateGeographies(
   crossCity,
   { level: "region", countryCode: "JP", regionLabel: "Kanagawa" },
   ["read", "play"],
+  ALL_WORKS,
   resolve,
 );
 assert(crossWorld[0]?.peopleCount === 1, "E/H country people = 1 across cities");
@@ -288,12 +296,14 @@ const playTokyo = aggregateGeographies(
   fixture,
   { level: "region", countryCode: "JP", regionLabel: "Tokyo" },
   ["play"],
+  ALL_WORKS,
   resolve,
 );
 const playKanagawa = aggregateGeographies(
   fixture,
   { level: "region", countryCode: "JP", regionLabel: "Kanagawa" },
   ["play"],
+  ALL_WORKS,
   resolve,
 );
 assert(playTokyo[0]?.peopleCount === 2, "G PLAY Shinjuku people = 2");
@@ -304,6 +314,7 @@ const emptyCats = aggregateGeographies(
   fixture,
   { level: "world" },
   [],
+  ALL_WORKS,
   resolve,
 );
 assert(emptyCats.length === 0, "G empty filter → no markers");

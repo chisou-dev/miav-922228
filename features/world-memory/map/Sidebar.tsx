@@ -80,7 +80,7 @@ export function Sidebar({
         : `${geoScope.countryLabel} / ${geoScope.regionLabel}`;
 
   return (
-    <aside className="flex h-full min-h-[min(62vh,640px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:min-h-[min(72vh,720px)]">
+    <aside className="trace-map-panel flex h-full min-h-[min(68vh,720px)] flex-col border border-[var(--map-line)] bg-[var(--map-panel)] px-5 py-6 sm:min-h-[min(76vh,820px)]">
       <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)]">
         {t("world.archive")}
       </p>

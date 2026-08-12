@@ -11,12 +11,12 @@ import {
 import L from "leaflet";
 import { useT } from "@/features/shared/i18n";
 import {
-  CATEGORY_MAP_COLORS,
-  CATEGORY_MARKER_OFFSETS,
-  CATEGORY_ORDER,
-} from "@/features/world-memory/map/categoryColors";
+  workIdsFromGeography,
+  workMarkerOffsets,
+  workMarkerStyle,
+} from "@/features/world-memory/map/workColors";
+import { workLabelForId } from "@/features/world-memory/my-miav/myMiavPublic";
 import type { GeographyAggregate } from "@/features/world-memory/trace/aggregate";
-import type { TraceCategory } from "@/features/world-memory/trace/works";
 
 type Focus = { lat: number; lng: number; zoom: number } | null;
 
@@ -25,11 +25,11 @@ type Props = {
   geographies: GeographyAggregate[];
   focus: Focus;
   selectedGeographyId?: string | null;
-  emphasizeCategory?: TraceCategory | null;
+  emphasizeWorkId?: string | null;
   interactionsEnabled?: boolean;
   onSelectGeography: (
     geo: GeographyAggregate,
-    category?: TraceCategory,
+    workId?: string,
   ) => void;
   onViewMemories: (geo: GeographyAggregate) => void;
 };
@@ -74,18 +74,17 @@ function personLabel(count: number, one: string, many: string) {
 function geographyIcon(
   geo: GeographyAggregate,
   active: boolean,
-  emphasizeCategory: TraceCategory | null | undefined,
+  emphasizeWorkId: string | null | undefined,
 ) {
-  const cats = CATEGORY_ORDER.filter((c) =>
-    geo.categories.some((row) => row.category === c),
-  );
-  const starsHtml = cats
-    .map((category) => {
-      const offset = CATEGORY_MARKER_OFFSETS[category];
-      const color = CATEGORY_MAP_COLORS[category];
-      const emph = emphasizeCategory === category;
-      const size = emph || cats.length === 1 ? 14 : 11;
-      return `<span class="miav-geo-cat-star${emph ? " miav-geo-cat-star--emph" : ""}" data-category="${category}" style="--ox:${offset.x}px;--oy:${offset.y}px;width:${size}px;height:${size}px;background-color:${color.fill};border-color:${color.border}"></span>`;
+  const workIds = workIdsFromGeography(geo.categories);
+  const offsets = workMarkerOffsets(workIds);
+  const starsHtml = workIds
+    .map((workId) => {
+      const offset = offsets.get(workId) ?? { x: 0, y: 0 };
+      const color = workMarkerStyle(workId);
+      const emph = emphasizeWorkId === workId;
+      const size = emph || workIds.length === 1 ? 14 : 11;
+      return `<span class="miav-geo-work-star${emph ? " miav-geo-work-star--emph" : ""}" data-work="${workId}" style="--ox:${offset.x}px;--oy:${offset.y}px;width:${size}px;height:${size}px;background-color:${color.fill};border-color:${color.border}"></span>`;
     })
     .join("");
 
@@ -116,9 +115,9 @@ function GeographyPopup({
   } as const;
 
   return (
-    <div className="min-w-[11rem] max-w-[min(16rem,calc(100vw-3rem))] px-1 py-0.5 text-[#243447]">
+    <div className="min-w-[11rem] max-w-[min(18rem,calc(100vw-3rem))] px-1 py-0.5 text-[var(--map-ink)]">
       <p className="text-[0.82rem] font-medium tracking-[0.06em]">{geo.label}</p>
-      <p className="mt-1 text-[0.72rem] tracking-[0.04em] text-[#6b7c8d]">
+      <p className="mt-1 text-[0.72rem] tracking-[0.04em] text-[var(--map-muted)]">
         {personLabel(
           geo.peopleCount,
           t("world.personCount", { count: geo.peopleCount }),
@@ -131,43 +130,73 @@ function GeographyPopup({
           t("world.activityCountMany", { count: geo.activityCount }),
         )}
       </p>
-      <ul className="mt-2 space-y-1">
-        {CATEGORY_ORDER.map((category) => {
-          const row = geo.categories.find((c) => c.category === category);
-          if (!row) return null;
-          const color = CATEGORY_MAP_COLORS[category];
+      <ul className="mt-2 space-y-2">
+        {geo.categories.map((row) => {
+          const color = workMarkerStyle(row.works[0]?.workId ?? "");
           return (
-            <li
-              key={category}
-              className="flex items-start gap-2 text-[0.7rem] tracking-[0.04em]"
-            >
-              <span
-                aria-hidden="true"
-                className="mt-0.5 inline-block h-2 w-2 shrink-0"
-                style={{
-                  clipPath:
-                    "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
-                  backgroundColor: color.fill,
-                }}
-              />
-              <span>
-                <span className="font-medium tracking-[0.1em]">
-                  {t(labelKey[category])}
-                </span>
-                <span className="block text-[#6b7c8d]">
-                  {personLabel(
-                    row.peopleCount,
-                    t("world.personCount", { count: row.peopleCount }),
-                    t("world.peopleCount", { count: row.peopleCount }),
-                  )}
-                  {" · "}
-                  {personLabel(
-                    row.activityCount,
-                    t("world.activityCountOne", { count: row.activityCount }),
-                    t("world.activityCountMany", { count: row.activityCount }),
-                  )}
-                </span>
-              </span>
+            <li key={row.category}>
+              <p className="flex items-center gap-2 text-[0.68rem] font-medium tracking-[0.1em]">
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-2 w-2 shrink-0"
+                  style={{
+                    clipPath:
+                      "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
+                    backgroundColor: color.fill,
+                  }}
+                />
+                {t(labelKey[row.category])}
+              </p>
+              <ul className="mt-1 space-y-1 pl-4">
+                {row.works.map((work) => {
+                  const workColor = workMarkerStyle(work.workId);
+                  const workLabel = workLabelForId(work.workId);
+                  return (
+                    <li
+                      key={work.workId}
+                      className="text-[0.68rem] tracking-[0.04em] text-[var(--map-muted)]"
+                    >
+                      <span className="inline-flex items-start gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 inline-block h-1.5 w-1.5 shrink-0"
+                          style={{
+                            clipPath:
+                              "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)",
+                            backgroundColor: workColor.fill,
+                          }}
+                        />
+                        <span>
+                          <span className="font-medium text-[var(--map-ink)]">
+                            {workLabel}
+                          </span>
+                          <span className="block">
+                            {personLabel(
+                              work.peopleCount,
+                              t("world.personCount", {
+                                count: work.peopleCount,
+                              }),
+                              t("world.peopleCount", {
+                                count: work.peopleCount,
+                              }),
+                            )}
+                            {" · "}
+                            {personLabel(
+                              work.activityCount,
+                              t("world.activityCountOne", {
+                                count: work.activityCount,
+                              }),
+                              t("world.activityCountMany", {
+                                count: work.activityCount,
+                              }),
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </li>
           );
         })}
@@ -176,7 +205,7 @@ function GeographyPopup({
         {level === "world" ? (
           <button
             type="button"
-            className="cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-2 py-1 text-[0.68rem] tracking-[0.1em]"
+            className="cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-2 py-1 text-[0.68rem] tracking-[0.1em] text-[var(--map-ink)]"
             onClick={onOpen}
           >
             {t("world.openCountry")}
@@ -185,7 +214,7 @@ function GeographyPopup({
         {level === "country" ? (
           <button
             type="button"
-            className="cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-2 py-1 text-[0.68rem] tracking-[0.1em]"
+            className="cursor-pointer border border-[#9bb0c2] bg-[#e8eef4] px-2 py-1 text-[0.68rem] tracking-[0.1em] text-[var(--map-ink)]"
             onClick={onOpen}
           >
             {t("world.openRegion")}
@@ -193,7 +222,7 @@ function GeographyPopup({
         ) : null}
         <button
           type="button"
-          className="cursor-pointer border border-[#9bb0c2] bg-white px-2 py-1 text-[0.68rem] tracking-[0.1em]"
+          className="cursor-pointer border border-[#9bb0c2] bg-[var(--map-panel)] px-2 py-1 text-[0.68rem] tracking-[0.1em] text-[var(--map-ink)]"
           onClick={onView}
         >
           {t("world.viewMemories")}
@@ -208,7 +237,7 @@ export function Map({
   geographies,
   focus,
   selectedGeographyId = null,
-  emphasizeCategory = null,
+  emphasizeWorkId = null,
   interactionsEnabled = true,
   onSelectGeography,
   onViewMemories,
@@ -223,16 +252,16 @@ export function Map({
         geographyIcon(
           geo,
           selectedGeographyId === geo.geographyId,
-          emphasizeCategory,
+          emphasizeWorkId,
         ),
       );
     }
     return iconMap;
-  }, [geographies, selectedGeographyId, emphasizeCategory]);
+  }, [geographies, selectedGeographyId, emphasizeWorkId]);
 
   return (
     <div
-      className={`h-[min(62vh,640px)] w-full overflow-hidden border border-[var(--map-line)] bg-[#f7f9fb] sm:h-[min(72vh,720px)] ${
+      className={`trace-map-frame h-[min(68vh,720px)] w-full overflow-hidden border border-[var(--map-line)] bg-[var(--map-canvas)] sm:h-[min(76vh,820px)] lg:h-[min(78vh,880px)] ${
         interactionsEnabled ? "" : "pointer-events-none"
       }`}
       aria-hidden={!interactionsEnabled}
@@ -260,14 +289,14 @@ export function Map({
 
         {geographies.map((geo) => {
           const active = selectedGeographyId === geo.geographyId;
-          const categoryNames = geo.categories
-            .map((c) => c.category.toUpperCase())
+          const workNames = workIdsFromGeography(geo.categories)
+            .map((id) => workLabelForId(id))
             .join(", ");
-          const aria = t("world.geoMarkerAria", {
+          const aria = t("world.geoMarkerAriaWorks", {
             label: geo.label,
             people: geo.peopleCount,
             activities: geo.activityCount,
-            categories: categoryNames,
+            works: workNames,
           });
           return (
             <Marker

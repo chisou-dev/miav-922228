@@ -148,6 +148,26 @@ export function filterRowsByCategories(
   return rows.filter((row) => set.has(row.category));
 }
 
+export function filterRowsByWorkIds(
+  rows: AggregateMemoryRow[],
+  workIds: readonly string[],
+): AggregateMemoryRow[] {
+  if (workIds.length === 0) return [];
+  const set = new Set(workIds);
+  return rows.filter((row) => set.has(row.workId));
+}
+
+function applyRowFilters(
+  rows: AggregateMemoryRow[],
+  categories: readonly TraceCategory[],
+  workIds: readonly string[],
+): AggregateMemoryRow[] {
+  return filterRowsByWorkIds(
+    filterRowsByCategories(rows, categories),
+    workIds,
+  );
+}
+
 type Bucket = {
   geographyId: string;
   label: string;
@@ -165,7 +185,9 @@ function uniquePeople(rows: AggregateMemoryRow[]): number {
 function buildCategoryAggregates(
   rows: AggregateMemoryRow[],
   categories: readonly TraceCategory[],
+  workIds: readonly string[],
 ): CategoryAggregate[] {
+  const workSet = new Set(workIds);
   const result: CategoryAggregate[] = [];
   for (const category of TRACE_CATEGORIES) {
     if (!categories.includes(category)) continue;
@@ -174,10 +196,12 @@ function buildCategoryAggregates(
 
     const workMap = new Map<string, AggregateMemoryRow[]>();
     for (const row of catRows) {
+      if (!workSet.has(row.workId)) continue;
       const list = workMap.get(row.workId) || [];
       list.push(row);
       workMap.set(row.workId, list);
     }
+    if (workMap.size === 0) continue;
 
     const works: AggregateWorkBreakdown[] = [...workMap.entries()]
       .map(([workId, workRows]) => ({
@@ -187,10 +211,12 @@ function buildCategoryAggregates(
       }))
       .sort((a, b) => a.workId.localeCompare(b.workId));
 
+    const includedRows = catRows.filter((row) => workSet.has(row.workId));
+
     result.push({
       category,
-      peopleCount: uniquePeople(catRows),
-      activityCount: catRows.length,
+      peopleCount: uniquePeople(includedRows),
+      activityCount: includedRows.length,
       works,
     });
   }
@@ -200,20 +226,22 @@ function buildCategoryAggregates(
 function finalizeBucket(
   bucket: Bucket,
   categories: readonly TraceCategory[],
+  workIds: readonly string[],
   coords: { lat: number; lng: number },
   fields: {
     includeCountry: boolean;
     includeRegion: boolean;
   },
 ): GeographyAggregate {
+  const filteredRows = applyRowFilters(bucket.rows, categories, workIds);
   return {
     geographyId: bucket.geographyId,
     label: bucket.label,
     lat: coords.lat,
     lng: coords.lng,
-    peopleCount: uniquePeople(bucket.rows),
-    activityCount: bucket.rows.length,
-    categories: buildCategoryAggregates(bucket.rows, categories),
+    peopleCount: uniquePeople(filteredRows),
+    activityCount: filteredRows.length,
+    categories: buildCategoryAggregates(filteredRows, categories, workIds),
     ...(fields.includeCountry
       ? {
           countryCode: bucket.countryCode,
@@ -256,9 +284,10 @@ export function aggregateGeographies(
   rows: AggregateMemoryRow[],
   scope: AggregateScope,
   categories: readonly TraceCategory[],
+  workIds: readonly string[],
   resolveCoords: GeographyCoordResolver,
 ): GeographyAggregate[] {
-  const filtered = filterRowsByCategories(rows, categories);
+  const filtered = applyRowFilters(rows, categories, workIds);
   const buckets = new Map<string, Bucket>();
 
   for (const row of filtered) {
@@ -328,12 +357,12 @@ export function aggregateGeographies(
     if (!sample) continue;
     const coords = resolveCoords(bucket.geographyId, sample);
     if (!coords) continue;
-    out.push(
-      finalizeBucket(bucket, categories, coords, {
-        includeCountry: scope.level === "country" || scope.level === "region",
-        includeRegion: scope.level === "region",
-      }),
-    );
+    const finalized = finalizeBucket(bucket, categories, workIds, coords, {
+      includeCountry: scope.level === "country" || scope.level === "region",
+      includeRegion: scope.level === "region",
+    });
+    if (finalized.activityCount === 0) continue;
+    out.push(finalized);
   }
 
   return out.sort(
@@ -349,8 +378,9 @@ export function computeScopeTotals(
   rows: AggregateMemoryRow[],
   scope: AggregateScope,
   categories: readonly TraceCategory[],
+  workIds: readonly string[],
 ): { peopleCount: number; activityCount: number } {
-  let filtered = filterRowsByCategories(rows, categories);
+  let filtered = applyRowFilters(rows, categories, workIds);
   if (scope.level === "country") {
     const code = scope.countryCode.toUpperCase();
     filtered = filtered.filter((r) => r.countryCode.toUpperCase() === code);
