@@ -6,7 +6,7 @@ service cloud.firestore {
     // Used only for Trace deletion in cases of spam, terms violations, or legal duty.
     // The operator never edits Trace content through the client.
     function adminUid() {
-      return 'PiaoGLZXS7SvlRawNwlIj4WGdi12';
+      return 'noTZ7xhgyXbdjq1A0CkKlUgCAf32';
     }
 
     function isSignedIn() {
