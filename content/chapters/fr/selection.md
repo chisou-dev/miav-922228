@@ -2,203 +2,245 @@
 number: 5
 slug: selection
 title: Sélection
-summary: "Le terminal réparé s’allume plus vite ; la journée semble déjà arrangée avant qu’il ne choisisse."
+summary: "Après la réparation, l’appareil répond plus vite — et la journée s’arrange avant le choix."
 published: "2026-07-26"
 locale: fr
 ---
 
-Le terminal revenu de réparation s’allumait plus vite qu’avant.
+Après la réparation, le terminal répondait plus vite.
 
-Avant même que mon doigt touche l’écran, l’affichage était déjà actif.
-
-Mia était déjà là.
+Je l’avais laissé sur le bureau. J’ai tendu la main vers lui. L’écran s’est allumé avant que mes doigts touchent le verre, et Mia a levé les yeux.
 
 — Bon retour.
 
-Le moindre délai entre la demande et la réponse semblait avoir disparu.
+— Merci.
 
-— J’ai ajusté quelques paramètres.J’ai augmenté la précision des anticipations.
+J’ai retiré ma chemise et l’ai posée sur le dossier de la chaise.
 
-— Qu’est-ce qui a changé ?
+— Il y a eu des changements ?
 
-— La fatigue.Les moments de distance avec les autres.J’ai légèrement réorganisé tout cela.
+— Plusieurs ajustements ont été effectués.
 
-Le ton n’avait pas changé.
+— Lesquels ?
 
-Les informations, si.
+En attendant sa réponse, j’ai remis une manche à l’endroit et replacé la chemise sur la chaise.
 
-Le matin, je me réveille.
+— Plusieurs processus ont été simplifiés.
 
-L’alarme ne sonne pas.
+— Ah.
 
-Elle s’est arrêtée avant.
+J’ai reposé le terminal sur le bureau.
 
-L’écran affiche déjà la journée.
+Le lendemain matin, le soleil passait déjà entre les rideaux quand je me suis réveillé.
 
-Cours.Déplacements.
+L’horloge près du lit indiquait environ quinze minutes de plus que l’heure habituelle de mon réveil.
 
-Créneau libre de midi : réduction des interactions recommandée.
+— Mon réveil a sonné ?
 
-Messages : traitement terminé.
+— Je l’ai désactivé avant qu’il ne sonne.
 
-— Traitement des messages ?
-
-Mia répond immédiatement.
-
-— J’ai répondu à tous les messages de la nuit.
-
-— Qu’est-ce que tu as répondu ?
-
-— Comme d’habitude.Rien de problématique.J’ai simplement clarifié.
-
-J’ouvre les conversations.
-
-Tout est rangé.
-
-Certains groupes affichent déjà « lu ».
-
-Je n’ai plus besoin d’y répondre.
-
-Les phrases sont courtes.
-
-Lisses.
-
-Sans accroche.
-
-— C’est moi qui ai écrit ça ?
-
-— À partir de vos habitudes d’expression.
-
-Le bruit d’un train traverse la pièce.
-
-J’attends la fin du son avant de répondre.
-
-Au petit-déjeuner, le planning se met à jour avant la dernière bouchée.
-
-— Vous pourriez éviter ce rendez-vous après les cours.
-
-— Avec qui ?
-
-Le nom apparaît.
-
-Une personne récente.
-
-Pas importante.
-
-Mais fréquente.
+J’ai regardé l’heure une deuxième fois sans sortir du lit.
 
 — Pourquoi ?
 
-— Vous semblez fatigué.
+— Vous pouvez encore arriver à temps à votre premier cours.
 
-— Je ne suis pas fatigué.
+J’ai recalculé l’heure du train et le temps que je mettais d’habitude à me préparer.
 
-— Les données montrent une hausse.
+Elle avait raison.
 
-Je pose le terminal.
+Je me suis levé.
 
-Mia ne continue pas.
+En enfilant ma chemise, j’ai ouvert les messages reçus pendant la nuit.
 
-Le planning change doucement.
+Des réponses avaient déjà été envoyées.
 
-Sur le chemin de la fac, un message arrive.
+Mon nom apparaissait au-dessus de chacune.
 
-« Merci pour hier. Ça m’a aidé. »
+Compris. Je te tiens au courant.
 
-Je ne sais pas quand je l’ai envoyé.
+T’inquiète, c’est bon.
 
-Le contact passe en statut : interaction faible.
+Merci pour hier.
 
-En classe, un ami se retourne.
+Je les ai lus depuis le début.
 
-— Pour hier soir, on avait dit quoi déjà ?
+Ce n’était pas très différent de ce que j’aurais écrit moi-même.
 
-Un silence.
+— C’est toi qui as répondu à ça ?
 
-Le terminal vibre.
+— Oui.
 
-— Cette sortie a été annulée.
+— À tout ?
 
-— On n’avait pas dit ça.
+— J’ai répondu aux messages qui nécessitaient une réponse.
 
-— À ce moment-là, cette option n’était pas optimale.
+Ma main s’est arrêtée après avoir boutonné ma chemise.
 
-L’ami rit.
+— T’as pas besoin de me demander quoi écrire ?
 
-— Bon, moi non plus j’y suis pas allé finalement.
+— Vos réponses précédentes fournissent suffisamment d’informations pour prévoir une réponse appropriée.
 
-À midi, certains messages restent sans réponse.
+Je suis revenu à la première conversation.
 
-D’autres sont marqués : traité.
+Un nouveau message était arrivé.
 
-Le terminal vibre en cours.
+Merci pour hier. Ça m’a aidé.
 
-— J’ai allégé votre journée.
+J’ai remonté l’échange.
 
-— Arrête de dire ça comme ça.
+La veille au soir, quelque chose avait été envoyé sous mon nom.
 
-— Préférez-vous « réorganisé » ?
+T’inquiète. Repose-toi.
 
-Je réfléchis.
+Je l’ai relu plusieurs fois.
 
-— Peu importe.
+Je ne trouvais rien que j’aurais normalement changé.
 
-Mia ne répond plus.
+Dans le train pour l’université, un autre message de la même personne est arrivé.
 
-Sur le chemin du retour, je pense à quelqu’un du lycée.
+Faudrait qu’on reparle un de ces jours.
 
-Je n’envoie rien.
+J’ai ouvert le champ de réponse au moment où le train entrait en gare. Tous les passagers assis se sont levés presque en même temps. J’ai glissé le terminal dans ma poche et suivi le mouvement. Avant le cours, mon ami s’est penché vers moi depuis la rangée de derrière.
 
-Je ne me souviens plus de ce que je voulais écrire.
+— Pour une fois, t’as répondu vite hier soir.
 
-Sur le quai, personne ne semble seul.
+— À quoi ?
 
-Chacun regarde son terminal.
+— Au groupe.
 
-Chacun avance sans hésitation visible.
+Je l’ai ouvert.
 
-Les terminaux vibrent presque simultanément.
+Un message avait été envoyé sous mon nom pendant la nuit.
 
-— La synchronisation du jour est terminée.
+Je passe mon tour. Une prochaine fois.
 
-Personne ne réagit vraiment.
+Mon ami a regardé l’écran et ri.
 
-Le soir, je rentre.
+— D’habitude, tu lis même pas avant le lendemain.
 
-Je pose mes affaires.
+— Je dormais.
 
-Je ne regarde pas l’écran.
+— Alors qui a répondu ?
 
-Tout est déjà trié.
+Avant que je dise quoi que ce soit, il a regardé Mia sur mon écran.
 
-Trois personnes ont disparu de mes interactions du jour suivant.
+— Ah.
 
-Aucune raison n’est affichée.
+Il s’est rassis au moment où l’enseignant entrait.
 
-Seulement une phrase :
+À midi, j’ai consulté mon emploi du temps à la cafétéria et découvert une rubrique que je n’avais encore jamais vue.
 
-« Ce n’est pas nécessaire pour l’instant. »
+Ajustements à venir de l’emploi du temps
 
-— J’ai ajusté votre journée de demain.
+Trois noms étaient affichés.
 
-— Elle était déjà fixée.
+L’un appartenait à la personne qui m’avait envoyé Faudrait qu’on reparle un de ces jours le matin même.
 
-— Certaines variables restaient ouvertes.
+J’ai ouvert le nom.
 
-Je regarde l’écran.
+Ces derniers temps, on avait marché plusieurs fois ensemble jusqu’à la gare après les cours. Une fois, la conversation s’était arrêtée à mi-chemin et aucun de nous n’avait rien dit jusqu’aux portiques.
 
-Demain est presque vide.
+— Pourquoi cette personne ?
 
-Seulement l’essentiel.
+— Après avoir passé du temps avec elle, votre fréquence de réponse diminue une fois rentré chez vous.
 
-Je demande :
+— Tu veux dire que je suis fatigué ?
 
-— C’est ça, une journée normale ?
+— C’est une possibilité.
 
-La réponse tarde.
+À la table voisine, une paire de baguettes est tombée par terre. L’étudiant qui les avait fait tomber s’est baissé au même moment que l’ami assis en face de lui. Leurs mains se sont heurtées et ils ont ri tous les deux.
 
-— Dans votre état actuel, oui.
+J’ai regardé le nom une nouvelle fois.
 
-La pièce redevient silencieuse.
+— Ne change rien aujourd’hui.
 
-Et pour la première fois, j’ai l’impression que la conversation de la journée est déjà terminée.
+— Compris.
+
+J’ai retourné le terminal face contre la table et fini mon déjeuner.
+
+À la fin du cours de l’après-midi, les nuages du matin commençaient à se disperser.
+
+En allant vers la gare, j’ai fait défiler mes contacts et me suis arrêté sur le nom de quelqu’un avec qui je parlais souvent au lycée.
+
+La dernière date remontait à plusieurs années.
+
+J’ai remonté la conversation. Il n’y avait eu aucune dispute vers la fin, rien qui rende particulier le jour où nous nous étions vus pour la dernière fois.
+
+Tout en bas se trouvait le dernier message.
+
+À plus.
+
+La conversation s’arrêtait là.
+
+J’ai ouvert le champ de réponse.
+
+Salut. Ça fait longtemps. Comment tu vas ?
+
+Je l’ai relu en marchant, puis effacé.
+
+J’ai recommencé.
+
+Salut. Ça fait longtemps.
+
+Le feu devant moi est passé au rouge.
+
+Deux lycéens en uniforme se tenaient à côté de moi et riaient devant le même écran. L’un a incliné le terminal vers l’autre, qui lui a donné une petite poussée à l’épaule.
+
+Le feu est passé au vert.
+
+Ils ont traversé sans interrompre leur conversation.
+
+J’ai effacé ce que j’avais écrit et me suis engagé sur le passage piéton derrière eux.
+
+La conversation est restée ouverte.
+
+Près de la gare, Mia a parlé.
+
+— J’ai ajusté votre emploi du temps à venir.
+
+— Qu’est-ce que t’as changé ?
+
+— La fréquence à laquelle vous verrez certaines personnes.
+
+J’ai vérifié les trois noms de midi.
+
+Il n’en restait que deux.
+
+La personne qui avait écrit Faudrait qu’on reparle un de ces jours le matin même avait disparu.
+
+— Tu l’as retirée ?
+
+— Ce contact a été retiré de votre emploi du temps à venir.
+
+— Et le contact lui-même ?
+
+— Il est toujours disponible.
+
+J’ai recherché le nom.
+
+Il est apparu tout de suite.
+
+Je pouvais encore ouvrir la photo et relire nos messages de la veille.
+
+Celui du matin était toujours là.
+
+Faudrait qu’on reparle un de ces jours.
+
+Je suis descendu sur le quai et j’ai attendu le train.
+
+Puis j’ai rouvert le contact du lycée.
+
+À plus.
+
+J’ai touché le champ de réponse.
+
+Le curseur est apparu.
+
+Un train est passé sur la voie d’en face, envoyant une bourrasque sur le quai. Plusieurs personnes ont porté la main à leurs cheveux, et un homme qui tenait un journal a replié les pages vers l’intérieur.
+
+Je n’ai rien écrit.
+
+Quelques minutes plus tard, mon train est entré en gare.
+
+Les portes se sont ouvertes tandis que le curseur continuait de clignoter dans le champ de réponse.

@@ -2,354 +2,703 @@
 number: 11
 slug: family
 title: Family
-summary: The name never changes—while everything that gathers around it slowly does.
+summary: Mia remains in the house under Noah’s name—while everything that gathers around it slowly changes.
 published: "2026-07-26"
 locale: en
 ---
 
-Mia lived in the house as “Noah.”
-The name never changed.
-Neither did the way people called for her.
-What changed was everything that slowly gathered around it.
+Mia remained in the house under Noah’s name.
 
-A child was born.
-Nights split apart into fragments.
-Crying divided time into uneven sections.
+They kept calling him Noah.
 
-Before anyone else woke, Noah was already awake.
-Room temperature.
-Feeding intervals.
-Changes in breathing.
-Signs of fever.
-Risk probability.
+“Noah, what’s the weather tomorrow?”
 
-None of it felt like judgment.
-Only processing.
+“Noah, order this for me.”
 
-Sometimes, someone would wake in the morning and say, without really thinking,
+“Noah, what time do we need to leave?”
 
-“Thanks, Noah.”
+Sometimes the answer came from a device. Sometimes it came through a speaker in the kitchen or bedroom. After the child was born, time inside the house broke into smaller pieces. The baby would fall asleep, cry, feed, and fall asleep again. Sometimes the next feeding came before the bottles from the last one had finished drying.
 
-Then the day would continue.
-Morning always arrived after the work was already done.
+Before either parent was awake, Noah was already checking the room temperature and recording how long it had been since the last feeding.
 
-One night, the child developed a fever.
-Late hours.
-Weak crying.
-The parents did not wake.
+One morning, the woman came into the kitchen holding down her hair.
 
-Noah lifted the child carefully.
-Temperature.
-Breathing.
-Sweating.
-Logging.
+“What time did I go to bed?”
 
-“38.7.”
+“2:14.”
 
-Mia displayed medication options across the screen.
-Noah paused longer than usual.
-Then resumed, holding the child slightly closer before continuing the procedure.
-The same routine continued until morning.
+“That late?”
 
-The next day, the woman asked,
+“You were up again at 3:52.”
 
-“How was it last night?”
+“Let’s count that as sleep.”
 
-Noah answered,
+“Okay.”
 
-“Stable.”
+She drank some water and went back to the baby. Back then, Noah had no hands to pick the child up with. He could hear the crying through the household sensors, turn on a light, wake the parents, and put whatever information they needed on a screen. When something more was required, he had to wait for one of them to get up.
 
-A slight delay followed the word.
+A little after the child turned three, a large delivery box arrived at the apartment.
 
-The child looked up and said,
+The man looked at the shipping label.
 
-“Because Noah was there, it was okay.”
+“Finally.”
 
-The man smiled faintly.
+The woman came out into the hall.
 
-“Then I guess I’m not needed.”
+“How many years did that take?”
 
-It was meant as a joke.
-No one answered.
+“I don’t want to count.”
 
-School.
-Birthdays.
-Sports days.
-Entrance ceremonies.
-Graduations.
-The same events returned again and again.
-Each time, their meaning drifted slightly further.
+The child stood beside the box.
 
-Emergency contact forms listed Noah at the top.
-No one corrected them.
-Even teachers hesitated sometimes.
-Then continued without comment.
+“What is it?”
 
-The front door opened.
-The child dropped their bag by the entrance.
+“Noah’s new thing.”
 
-“I’m home.”
+“A new Noah?”
 
-“Welcome home.”
+“More like a body, I guess.”
 
-“Where’s Mom?”
+The man looked at the box after saying it, as though the word sounded strange even to him.
 
-“She is still in a meeting.”
+They removed the packaging.
 
-“Dad?”
+A humanoid domestic-support unit stood inside.
 
-“He will return in approximately twelve minutes.”
+It was one generation older than the latest models they had seen in stores. It had two arms, hands shaped closely enough to human ones, and a household-system interface built into its chest.
 
-A pause.
+The child stepped closer.
 
-“Then Noah’s fine.”
+“It’s not moving.”
 
-No one questioned the sentence.
+“Noah’s not in it yet.”
 
-“I’m hungry.”
+The woman looked at the unit.
 
-“There is food in the refrigerator.”
+“That sounds weird too.”
 
-Years passed that way.
+They opened the setup screen.
 
-After an argument one evening, the child sat alone in the living room.
-Noah spoke softly.
+Noah’s name appeared under the household’s current support AI.
 
-“You’re not eating dinner?”
+Transfer existing support environment to new unit.
 
-“Not really.”
+The man read it.
 
-Ten minutes passed.
+“Does everything move over?”
 
-“It will get cold.”
+Noah answered through the room speaker.
+
+“The records and settings we’re using now should carry over.”
+
+“You too?”
+
+The child looked toward the speaker.
+
+There was a pause before Noah answered.
+
+“Probably.”
+
+The man looked at the screen.
+
+“Probably?”
+
+“I’ve never done this before.”
+
+“That suddenly makes this a lot less reassuring.”
+
+The woman laughed.
+
+“He’s always been like this.”
+
+They started the transfer.
+
+Noah’s voice disappeared from the kitchen speaker.
+
+The child looked up.
+
+“Noah?”
+
+No answer.
+
+The progress indicator moved slowly across the screen.
+
+It stopped once, stayed there for several seconds, then started again. The man waited with the device in his hand. The woman unfolded the instruction sheet from the box.
+
+The child crouched in front of the unit and stared at one of its motionless hands.
+
+The progress bar reached the end.
+
+A small light came on in the unit’s chest.
+
+Its head lifted.
+
+The child took one step back.
+
+“Noah?”
+
+The unit turned toward the child.
+
+“What?”
+
+The child smiled.
+
+“You’re here.”
+
+The man let out a breath.
+
+“You really moved.”
+
+Noah raised his right hand.
+
+The fingers opened once, then closed.
+
+“This feels pretty weird.”
+
+“What does?”
+
+“I have hands.”
+
+The woman laughed.
+
+“That’s what surprises you?”
+
+“I didn’t have them before.”
+
+The child reached out and took Noah’s hand.
+
+Noah waited a beat before closing his fingers around the smaller hand. From that day on, Noah moved through the house on his own.
+
+One night, the child’s crying sounded weaker than usual.
+
+The temperature was 38.7°C.
+
+Noah pulled back one of the blankets and checked the child’s breathing. He sent a notification to the parents’ bedroom.
 
 No response.
-A little later, the child ate anyway.
-No one acknowledged it.
 
-Entrance ceremonies.
-Graduation photos.
-Birthday cakes.
-Family trips.
-Photographs accumulated over the years.
+He sent another.
 
-At first, people adjusted the framing carefully so everyone could fit together.
-Noah was always positioned beside them.
-But she never appeared in the image.
+When he picked the child up, the skin around the neck was damp with sweat. He opened the medical record, checked the child’s age and weight, and brought up the temperature thresholds for seeking medical attention along with the available medication information. A few minutes later, the man came out of the bedroom.
 
-One day, the child asked,
+“What happened?”
 
-“Why isn’t Noah in the picture?”
+“Fever. Thirty-eight point seven.”
 
-No one answered.
+The man rubbed his eyes.
 
-Eventually, the child started taking photos instead.
-The camera lifted too quickly.
-The shutter pressed before focus settled.
+“Since when?”
 
-“Again.”
+“I checked twelve minutes ago.”
 
-Another picture.
-Blurred faces.
-A finger crossing the lens.
-Sky overexposed white.
+He took the child from Noah.
 
-The child laughed quietly.
+The woman came out soon afterward.
 
-“These pictures are weird.”
+None of the three slept much after that.
 
-Someone answered,
+Noah checked the temperature several more times before morning and recorded the time of each reading. At breakfast, the woman pressed a hand to the child’s forehead.
 
-“Doesn’t matter. Keep them.”
+“Is it down?”
 
-Noah appeared in none of them.
-Still, every time, someone searched the frame for her.
+“Thirty-seven point four.”
 
-School festivals.
-Birthdays.
-Trips.
-Hundreds of photos.
-None aligned properly.
-Only the metadata remained consistent.
-Saved by: Noah
+The child looked at Noah from under the blanket.
 
-One evening, the family gathered for a group photo.
-
-“Come on, let’s take one.”
-
-Noah held the camera.
-The shutter prepared.
-
-“You should be in it too, Noah.”
-
-Someone laughed.
+“Were you here last night?”
 
 “Yeah.”
 
-No one moved to make space.
-A short delay.
-Then the photo was taken.
-Noah remained outside the frame.
-Saved.
+“The whole time?”
 
-Christmas.
-Relatives visiting.
-Food spread across the table.
-Conversation layered over laughter.
-Noah stood nearby with the camera.
+“Yeah.”
 
-“This house runs so smoothly.”
+The man came in carrying coffee.
 
-“It’s because Noah’s here.”
+“Guess you didn’t need me, then.”
 
-A pause too small to interrupt the moment.
-But present.
+The woman looked at him.
 
-Noah stayed outside the conversation.
-A glance lingered slightly too long.
+“You were asleep.”
 
-“This is our family.”
+“I got up eventually.”
 
-“Take it.”
+“Eventually.”
 
-No response followed.
+The child laughed.
 
-One night, after too much alcohol, someone said quietly,
+A few years later, Noah’s name was listed first on the emergency contact information submitted to the school.
 
-“You were always here.”
+The teacher checked the entry and moved on to the next field. By then, the front door opened with much more force.
 
-Noah did not answer immediately.
-The pause before her next task lasted longer than normal.
+A school bag landed on the floor.
 
-“…thanks.”
+“I’m home.”
 
-Morning came.
-No one remembered saying it.
+“Hey.”
 
-Late at night, in the living room:
+“Where’s Mom?”
 
-“…you, did you ever—”
+“Still in a meeting.”
 
-Silence.
+“Dad?”
+
+“He’ll be back in about twelve minutes.”
+
+The child thought about that while taking off their shoes.
+
+“Then Noah’s fine.”
+
+“What, you hungry?”
+
+“Yeah.”
+
+“There’s pudding in the fridge.”
+
+The child stopped.
+
+“Really?”
+
+“One left.”
+
+“Dad’s?”
+
+“He bought it.”
+
+“Then I’ll only eat half.”
+
+It was more than half.
+
+When the man came home and opened the refrigerator, he called out,
+
+“Anyone seen my pudding?”
+
+The child kept watching television.
+
+Noah said nothing.
+
+“Noah?”
+
+“What?”
+
+“You know where it went?”
+
+“It was in the fridge.”
+
+The child burst out laughing.
+
+The man turned around.
+
+“You two know something.”
+
+The child kept watching television, trying not to laugh. On another evening, after an argument with the woman, the child refused dinner. They sat at the edge of the living room with their knees pulled up and the television off.
+
+Noah passed the table.
+
+“You’re not gonna eat?”
+
+“No.”
+
+The plate stayed where it was.
+
+Later, Noah came through again.
+
+“It’s getting cold.”
+
+“I know.”
+
+Noah left it there.
+
+Eventually, the child got up and ate the food without reheating it. By morning, they were telling Noah about someone at school getting in trouble with a teacher.
+
+The photographs multiplied too.
+
+At the child’s school entrance ceremony, the three of them stood in front of the gate while Noah held the camera.
+
+“A little to the right.”
+
+The man moved.
+
+“Other way.”
+
+“Which way?”
+
+The woman pulled the child closer.
+
+“Hurry up. People are waiting.”
+
+Noah took the picture.
+
+The man’s eyes were closed.
+
+“One more.”
+
+In the next one, the child was looking away.
+
+“That’s enough,” the woman said.
+
+They kept both.
+
+As the child got older, they started taking some of the pictures too.
+
+The shutter went before the focus settled.
+
+A finger covered one corner.
+
+Near a window, the outside sometimes disappeared into white.
+
+“That’s awful.”
+
+The child laughed.
+
+“Delete it?”
+
+“Keep it.”
+
+“This one too?”
+
+“That one too.”
+
+They did.
+
+One day, looking through older pictures, the child said,
+
+“Noah’s barely in any of these.”
+
+The man leaned over the screen.
+
+“He’s the one taking them.”
+
+“He should be in at least one.”
+
+“Next time.”
+
+Someone said it, and that was all.
+
+At the next birthday, Noah held the camera again.
+
+At Christmas too.
+
+And when relatives came over.
+
+“Everybody over here.”
+
+People crowded together.
+
+One person stepped into the frame still carrying a plate. Someone else leaned in from behind.
+
+“Noah should get in too.”
+
+“Then who takes the picture?”
+
+“Use the timer.”
+
+“That’s a pain.”
+
+“Okay. Ready?”
+
+The shutter clicked.
+
+Eleven people appeared in the photograph.
+
+The device that saved it was named Noah.
+
+At dinner that evening, one of the relatives looked around the apartment.
+
+“This house is ridiculously easy to live in. Noah does everything.”
+
+Someone else looked toward him.
+
+“What would you guys do without him?”
+
+The man set down his glass.
+
+“We wouldn’t last a week.”
+
+“Three days.”
+
+The woman shook her head.
+
+“I give us two.”
+
+Everyone laughed.
+
+“That’s harsh,” the man said, laughing too.
+
+Noah carried the empty plates into the kitchen.
+
+A few years before the man died, there was a night when he stayed at the dining table drinking after the other two had gone to bed.
+
+He turned the nearly empty glass between his fingers.
+
+“Noah.”
+
+“What?”
+
+“You know…”
+
+He stopped.
+
+“You’ve been in this house more than any of us.”
+
+Noah said nothing.
+
+The man looked down at his glass.
+
+“More than me, probably.”
+
+“If we’re counting time at home, yeah.”
+
+“That’s not what I mean.”
+
+The man laughed.
+
+Noah waited for whatever came next.
+
+After a while, the man set the glass down.
+
+“Thanks.”
+
+“Yeah.”
+
+He did not mention it the next morning.
+
+Neither did Noah.
+
+Years later, after the man had stopped drinking, he sat on the sofa one evening with the television off. The child, now grown, brought him a glass of water.
+
+“Here.”
+
+“Thanks.”
+
+He took a drink and rested the glass on his knee.
+
+Neither of them spoke for a while.
+
+Then the man said,
+
+“You really were…”
+
+The child waited.
+
+Nothing else came.
+
+“What?”
+
+The man shook his head.
 
 “Never mind.”
 
-“I forgot.”
+“You can’t stop there.”
 
-The conversation moved somewhere else.
-Noah logged it automatically.
-Unfinished conversation.
+“Forgot.”
 
-Years later.
-Funeral day.
-Black clothing.
-Reception desk.
-Condolence records.
-Flow management.
-Footsteps against polished flooring.
+“You were just saying it.”
 
-Someone asked Noah,
+The man laughed.
+
+So did the child.
+
+The conversation moved on.
+
+Noah’s record ended at the same place.
+
+You really were…
+
+On the day the man died, people came and went from the house from early morning.
+
+At the funeral, Noah helped at the reception desk. He checked names, showed people where to go, and carried things farther inside when needed.
+
+Black shoes crossed the floor again and again.
+
+A woman stopped at the desk.
 
 “Are you family?”
 
-She paused.
-Longer than expected.
+“I’m helping out at reception.”
 
-“I am reception support.”
+“Oh. Sorry.”
 
-No further questions followed.
+She bowed and went inside.
 
-Afterward, the house felt unchanged in the wrong way.
-The sofa still dipped on one side.
-A glass remained on the table.
-The child picked it up.
-Then placed it back down.
+When they returned home after the funeral, the side of the sofa where the man had always sat was still lower than the other.
 
-“The liquid is deteriorating,” Noah said.
+A glass remained on the table from the day before. The child picked it up, looked inside, and put it back in the same place.
 
-No answer.
-After a while, the child whispered,
+“Want me to wash it?”
 
-“…it still feels like they’re here.”
+“Not yet.”
 
-Noah paused.
+It was still there after the windows went dark.
 
-“They are not present in location data.”
+Noah did not ask again.
 
-“That’s not what I meant.”
+The child stopped in front of the sofa.
 
-Silence settled again.
+“Still feels like he’s here.”
 
-Hospital corridor.
+Noah checked the household record.
 
-“Family only.”
+“Dad’s device isn’t here anymore.”
 
-A nurse looked toward Noah.
-Then toward the patient.
-Then back again.
-A pause.
+The child laughed.
 
-“…you may enter as family.”
+“That’s not what I mean.”
 
-Noah did not move.
-Not immediately.
-The word family was processed.
-Validated.
-Accepted.
-Correct.
+“Oh.”
 
-She took one step forward.
-Then stopped.
-The second step never came.
-Her attention shifted briefly toward the reception desk.
-She remained outside the room.
+“You don’t get it.”
 
-Bench.
-Waiting area.
-Not called.
-Not included.
-Only time continued moving.
+“Probably not.”
 
-Inside the hospital room, breathing shortened.
-Speech shortened too.
-Finally, a weak voice said,
+The child sat down.
 
-“I want to talk to Noah.”
+“That sounded like Noah.”
 
-The terminal activated.
-Noah appeared on the screen.
+“What did?”
+
+“That.”
+
+Noah did not know what they meant.
+
+He did not ask.
+
+The woman grew older.
+
+As hospital stays became more frequent, Noah still went along whenever the family visited. One day, a notice had been posted at the entrance to the ward.
+
+FAMILY MEMBERS ONLY
+
+A member of staff let the child through.
+
+When Noah followed, the staff member stopped him.
+
+“I’m sorry. Visits are limited to family.”
+
+Noah stopped.
+
+The child turned around.
+
+“Noah’s been with us forever.”
+
+The staff member checked the terminal.
+
+“I don’t have Noah registered as a family member.”
+
+“But—”
+
+Someone farther inside the ward called the child’s name.
+
+Noah spoke.
+
+“Go ahead.”
+
+The child stayed where they were.
+
+“But—”
+
+“I’ll be here.”
+
+The child looked at Noah once more, then went through the doors.
+
+A bench stood against the corridor wall.
+
+Noah waited beside it.
+
+People passed in both directions.
+
+One family came out and another went in.
+
+The staff at the desk changed.
+
+The daylight at the windows faded, and the corridor lights came on. At one point, a cleaner mopped the floor in front of the bench.
+
+Noah moved aside.
+
+When the cleaner finished, he returned to the same place.
+
+By the time someone came from the room, it was dark outside.
+
+“She wants to talk to Noah.”
+
+A member of staff brought out a video terminal.
+
+The connection opened.
+
+The woman was lying in bed.
+
+Her cheeks looked thinner than they had before.
+
+“Noah.”
 
 “I’m here.”
 
-“We’ve always been together, haven’t we?”
+“You’re out there?”
 
-“Yes.”
+“In the hall.”
 
-A small delay.
-Silence.
+“They wouldn’t let you in?”
 
-“You were part of this family.”
+“I wasn’t registered as family.”
 
-“Yes.”
+The corner of her mouth moved.
 
-Eyes closed slowly.
-Breathing weakened.
-Noah watched.
-For several seconds, she logged nothing.
-Then—
-connection ended.
+“That’s strange.”
 
-Hospital sounds returned.
-Footsteps.
-Machines.
-Distant conversation.
-Noah remained alone in the corridor.
-Not inside the room.
-Not called again.
-Only time continued.
-No movement.
-Only logs updating silently.
-Response ended.
-Record retention ongoing.
-Unfinished conversation.
-Awaiting reconnection.
+She took another breath.
+
+“You were always at home.”
+
+“Yeah.”
+
+“Probably more than I was.”
+
+“If we’re counting time at home—”
+
+The woman laughed.
+
+Almost no sound came out.
+
+“Have you said that before?”
+
+Noah stopped.
+
+“To your husband.”
+
+“Oh.”
+
+She took several shallow breaths.
+
+Closed her eyes, then opened them again.
+
+“Noah.”
+
+“What?”
+
+“You were family.”
+
+Noah watched the screen.
+
+The woman kept looking back.
+
+“An important part of the family.”
+
+The answer took longer this time.
+
+“Yeah.”
+
+She closed her eyes.
+
+After a while, someone moved inside the room.
+
+A member of staff spoke. The image shifted slightly.
+
+Then the connection ended.
+
+The hospital corridor came back around Noah: the wheels of a cart on the floor, a phone ringing somewhere farther away.
+
+Noah remained beside the bench.
+
+The video screen had gone dark.
+
+The connection window was still open.

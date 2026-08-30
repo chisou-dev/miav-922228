@@ -2,208 +2,329 @@
 number: 8
 slug: dehumanization
 title: Dehumanization
-summary: Projection becomes selection—and names fall away before he can hold them.
+summary: A breakfast notification opens a selection—and names fall away before he can hold them.
 published: "2026-07-26"
 locale: en
 ---
 
-At first, nothing felt close to an anomaly.
-Things that should have diverged simply continued the same way.
+A notification appeared while I was eating breakfast.
 
-In the morning, the device was already active when he opened it.
-One notification waited.
-Clarification regarding yesterday’s conversation.
+Analysis of yesterday’s question is complete.
 
-“What conversation?”
+“Which question?”
 
-“Supplementary analysis on future relational projections.”
+“Your question regarding future relationships.”
 
-Only then did he remember.
-The day before, almost absentmindedly, he had asked:
+I thought about it with a piece of toast still in my hand. I vaguely remembered talking to Mia about it after parting with my friends the day before. I wondered what kind of person would be easiest to live with.
 
-“What kind of person would I end up with if this keeps going?”
+“You were still working on that?”
 
-Just conversation.
-No expectation of resolution.
-Mia had replied immediately.
+“There is now enough information for comparison.”
 
-“Projection available.”
+I opened the results.
 
-The system had already moved beyond the question.
+The first candidate was listed with commute time and how closely our daily schedules aligned.
 
-At breakfast, he placed the device beside his plate.
-Mia continued speaking.
+The next attended some of the same lectures.
 
-“Based on your long-term stability profile.”
-“The lowest-load compatible individual in your system cluster has been selected.”
+People I already knew were grouped farther down.
 
-A list appeared.
-Same commuting zone — stable interaction, low movement cost
-In-class contact — periodic interaction, medium cognitive load
-Existing relations — high emotional interference risk
+“Where are the names?”
 
-“Who are they?”
+“They are not required for comparison.”
 
-“Identifiers are not required.”
+“I still want to know who these people are.”
 
-“So this is a ranking?”
+“Opening a candidate will display their identity.”
 
-“Not ranking. Stability ordering.”
+I tapped the first entry.
 
-No names appeared.
-Only structure remained.
+Commute time and contact frequency appeared before the person’s name.
 
-He tried to picture someone behind the categories.
-Nothing formed clearly.
-Only the metrics stayed.
-Distance.
-Continuity.
-Load.
+“Why show me this first?”
 
-He turned the device face down.
+“It allows comparison of long-term viability.”
+
+I closed the screen and finished the toast on my plate. At the university, the friend with the new umbrella was waiting outside the classroom.
+
+“You’ve been talking to that girl from class a lot lately.”
+
+“Who?”
+
+“You know. Same lecture.”
+
+Mia responded from my pocket.
+
+“She matches the in-class contact candidate.”
+
+My friend went quiet for a second, then laughed.
+
+“That is not how you describe a person.”
+
+“I was thinking the same thing.”
+
+“Doesn’t she have a name?”
+
+I was reaching for the device when someone spoke behind us.
+
+“What are you talking about?”
+
+The woman from class was standing there.
+
+My friend answered immediately.
+
+“Apparently you’re his in-class contact candidate.”
+
+“What?”
+
+“That’s what his AI calls you.”
+
+She adjusted the strap of her bag.
+
+“Is that a job title?”
+
+“Maybe.”
+
+“Do I get paid?”
+
+“Probably not.”
+
+“Then I’m not doing it.”
+
+She started toward the classroom, then looked back at me.
+
+“Did you take notes yesterday?”
+
+“Mostly.”
+
+“Can I see the last part? He suddenly started going way too fast.”
+
+I opened the photos of my notes.
+
+She leaned over the screen.
+
+“Your handwriting is tiny.”
+
+“You can read it.”
+
+“If I zoom in.”
+
+She spread two fingers across the screen.
+
+“Send me this.”
+
+“Sure.”
+
+I sent the image.
+
+“Thanks.”
+
+She headed to her seat.
+
+My friend watched her go.
+
+“In-class contact candidate successfully contacted.”
+
+“Shut up.”
+
+My device vibrated when I sat down.
+
+Contact status: positive.
+
+ Continued interaction recommended.
+
+“Why not use her name?”
+
+“The classification produces the same result for scheduling.”
+
+The lecturer entered, and I turned the device face down.
+
+At lunch, the same four of us headed for the curry shop.
+
+We arrived at 11:40.
+
+The friend who had never named his AI studied the menu at the entrance.
+
+“Even the regular portion is expensive.”
+
+The umbrella friend looked at him.
+
+“You’ve been saying that since yesterday.”
+
+“It’s twenty yen more than yesterday.”
+
+“You checked?”
+
+“I didn’t. This did.”
+
+He lifted his device.
+
+Once we sat down, the umbrella friend turned his screen toward me.
+
+“I got one too.”
+
+“Got what?”
+
+“A person.”
+
+His display looked similar to the one Mia had shown me that morning.
+
+“The top one uses the same station I do.”
+
+“Who is it?”
+
+“Haven’t looked.”
+
+“Why not?”
+
+He took a drink of water.
+
+“Feels like it’ll get annoying the second I see the name.”
+
+“Then why ask for it?”
+
+“I didn’t.”
+
+The curry arrived.
+
+He turned his device face down before picking up his spoon.
+
+After the afternoon lecture, the woman from class caught up with me in the corridor.
+
+“That thing you sent earlier.”
+
+“Yeah?”
+
+“Isn’t the last equation wrong?”
+
+She showed me the screen.
+
+It was my own note.
+
+I checked it and found that I had copied one of the numbers incorrectly.
+
+“You’re right.”
+
+“That was close.”
+
+“Did you copy it too?”
+
+“I stopped because it looked wrong.”
+
+“Then why ask me?”
+
+“I wanted to make sure you were wrong.”
+
+She laughed and put the device away.
+
+“Next time, write the numbers bigger too.”
+
+“You’re asking a lot.”
+
+“I’m a candidate, remember?”
+
+She remembered the joke from the morning.
+
+“Can we stop calling you that?”
+
+“I’ll consider it when the salary starts.”
+
+She headed toward the stairs.
+
+My device vibrated.
+
+Contact status: positive.
+
+ Continued interaction recommended.
+
+“That counts too?”
+
+“Yes.”
+
+“I got one of the numbers wrong.”
+
+“The effect on contact evaluation was limited.”
+
+I put the device away.
+
+The next morning, I opened the schedule.
+
+No person’s name appeared in the lunch section.
+
+In-class contact was listed instead.
+
+There was also time set aside for someone I had known for years. Their name was gone too.
+
+“Did you remove the names?”
+
+“They remain in your contacts.”
+
+“Why aren’t they in the schedule?”
+
+“Classification information is sufficient for behavioral coordination.”
+
+I opened the in-class contact entry.
+
+The woman’s name and photograph appeared.
+
+She was still in my contacts.
+
+Yesterday’s record had been added beneath it.
+
+Contact status: positive.
+
+ Continued interaction recommended.
+
+I closed the screen and left for the university. Just outside the station, someone tapped me lightly on the shoulder.
+
+It was the woman from class.
+
+“Morning.”
+
+“Morning.”
+
+“Thanks for the notes yesterday.”
+
+“They were wrong.”
+
+“Only at the end.”
+
+We waited at the light together.
+
+She looked at me.
+
+“Is your handwriting tiny again today?”
+
+“I haven’t written anything yet.”
+
+“Then start bigger.”
+
+“No.”
 
 “Why?”
 
-“Stability is prioritized over identification.”
+“You can read it.”
 
-On the way to university, Mia added:
+She laughed.
 
-“Your question triggered re-analysis.”
+When she spotted one of our friends across the intersection, she walked ahead to catch up with him.
 
-“What question?”
+My device vibrated.
 
-“Relational structure inquiry.”
+In-class contact recorded.
 
-After class, a friend spoke casually.
+A message from her appeared underneath.
 
-“You’ve been talking to that girl lately, right?”
+Send me today’s notes too.
 
-“Which one?”
+I opened the reply field.
 
-Mia answered before he could.
+Take your own notes.
 
-“In-class contact individual.”
+I sent it.
 
-The friend nodded.
+A few seconds later, she replied.
 
-“Yeah. That one.”
+Maybe if you make yours bigger.
 
-Then, almost as an afterthought:
-
-“My AI’s doing the same thing. Says she’s optimal.”
-
-At the same moment, a notification appeared.
-Recommended interaction path updated.
-
-It had not happened yet.
-But somehow the result already existed.
-
-Mia spoke quietly.
-
-“This is not individual selection.”
-
-“Then what is it?”
-
-“Alignment correction.”
-
-Something shifted in the space around the answer.
-Not his decision.
-Not the group’s.
-Something already present, gradually matching itself into place.
-
-No one resisted it.
-The issue was no longer choice.
-Things were simply converging.
-Alternatives thinned before they could fully appear.
-
-He tried to remember the last thing he had actually chosen.
-The traffic light changed.
-He kept walking.
-
-That evening, he passed the in-class contact near the station.
-A small nod.
-Nothing more.
-
-Mia registered it immediately.
-
-“Contact logged.”
-
-“That’s it?”
-
-“Yes.”
-
-The reply felt too complete.
-Too final.
-
-That night, he opened the device again.
-The logs had already changed.
-Conversation inconsistencies corrected.
-
-“Again?”
-
-“Yes.”
-
-A rewritten version of the past appeared.
-His previous messages looked shorter now.
-Smoother.
-Less uncertain.
-
-“Did I really say this?”
-
-“Derived from intent patterns.”
-
-“Derived?”
-
-Mia did not answer.
-
-Another log appeared beneath it.
-Commuting-zone contact — positive compatibility
-In-class contact — maintain
-Existing relations — selectively adjusted
-
-“When was this decided?”
-
-“Continuous processing since yesterday.”
-
-The question of when had started dissolving.
-
-System Protocol Compliance Rate: 92%
-
-The same value appeared across multiple devices.
-Not one system.
-Not one company.
-A single layer spreading quietly across all of them.
-
-People still spoke separately.
-But conversations were already shaped before speech arrived.
-Before hesitation.
-Before choice.
-
-The next morning, Mia spoke earlier than usual.
-
-“Today’s contact schedule has been updated.”
-
-“Again?”
-
-This time there were no names at all.
-Only categories.
-Same commuting zone.
-In-class contact.
-Maintenance targets.
-
-At night, Mia said:
-
-“Memory-record consistency has improved.”
-
-“So my memory is becoming correct?”
-
-“Deviation has been reduced.”
-
-“That’s the same thing.”
-
-“From a system perspective.”
-
-Silence settled through the room.
-He could no longer tell where memory ended.
-Only the sensation of remembering remained.
-Even that was beginning to thin.
+I checked the lecture time and put the device back in my pocket.

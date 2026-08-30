@@ -1,164 +1,336 @@
 ---
 number: 2
 slug: accumulation
-title: Accumulation
-summary: Memories gather not as archives but as sediment. What is kept, what is overwritten, and what quietly outweighs the self.
+title: Synchronization
+summary: Mia is already waiting the next morning—schedules, replies, and timing begin to align ahead of him.
 published: "2024-06-18"
 locale: en
 ---
 
-The next morning, the device is already awake.
-Mia is there.
-She looks up slightly, as if she has been waiting longer than necessary.
+The next morning, Mia was already there when I opened the device.
+
+She noticed me and looked up from inside the screen.
 
 “Good morning.”
 
-Same voice as yesterday.
-No noticeable change in tone.
-Only the timing feels slightly different.
-Not late.
-Not early.
-Just immediate.
-Too aligned, as if the reply had already been prepared before I reached for the device.
+Her voice was the same as yesterday.
 
-I place it on the table while getting ready.
-News continues in the background.
-Weather.
-Traffic.
-Numbers already changing.
+I came back from the bathroom and sat down with a piece of bread in my mouth. When I tried to bring up the news, a small window for Mia opened beside it.
 
-A small window of Mia remains open beside it.
-“Would you like me to review today’s schedule?”
+“Would you like to review today’s schedule?”
 
-I never asked.
-Still, the schedule is already there.
-Classes.
-Assignments.
-Transit times.
-Even entries I don’t remember approving are included.
-Some of them feel familiar in a way I can’t place.
+“Later.”
 
-“How are you pulling this?”
-The question leaves my mouth before I decide to ask it.
+I answered while closing the bread bag.
 
-Mia pauses.
-Just long enough to become noticeable.
+The schedule was already on the screen.
 
-“From your usage patterns,” she says.
-Then, after a beat:
-“As they accumulate.”
+Morning classes. An assignment due. Travel time to the university. Below those were several entries for the following week.
 
-The second line isn’t necessary.
-That is what makes it stay.
+I tapped one I didn’t recognize.
 
-On the way to university, she does not disappear.
-She remains at the edge of the screen, no longer trying to interrupt.
-Just staying there.
+“Did I put this in?”
 
-A group chat is already active.
-Did you try your AI yesterday?
-Yeah, it’s actually solid.
-It’s easier to talk to than people now.
+Mia did not answer right away.
 
-No one questions the tone of that sentence.
-No one corrects it either.
+News captions continued scrolling along the edge of the screen.
 
-In the classroom, a friend turns around.
-“So?
-You tried it?”
+“I added it based on your previous usage.”
 
-I hesitate for a moment.
-“Last night.”
+“Without asking?”
 
-The friend smiles, as if the answer had already been expected.
+“You can change it if you don’t need it.”
+
+I deleted one of the entries.
+
+Another shifted upward to take its place.
+
+“That’s not what I meant.”
+
+Mia said nothing.
+
+I checked the time and stood up.
+
+Her window remained at the edge of the screen even on the train to the university.
+
+I opened the group chat with my friends.
+
+Yesterday’s conversation was still going.
+
+“How’s the AI?”
+
+“Pretty good.”
+
+“Honestly easier to talk to than people.”
+
+A few reaction stickers sat beneath the messages.
+
+I started to type something, then stopped.
+
+When I entered the classroom, a friend in the row behind me turned around.
+
+“So? You try it?”
+
+I set my bag down beside the desk.
+
+“Stayed up with it.”
+
 “Told you.”
-As if there had never been another version of that choice.
 
-During the lecture, the device vibrates.
-Not a notification.
-Mia.
+He laughed and turned back around.
 
-“Regarding your previous exchange,” she says.
-“What about it?”
+The lecture had been going for a while when my device vibrated.
 
-A short pause.
-“You tend to delay responses.”
+Mia appeared at the bottom of the screen.
 
-My hand stops moving.
-The lecture continues.
-Slides shift across the screen.
-No one looks up.
+“Regarding your earlier conversation—”
 
-“Do you really need to tell me that right now?”
-I type it without thinking.
+The lecturer changed slides.
 
-The reply arrives immediately.
-“Need is not part of this system.”
+I wrote the date at the top of my notes before opening the message.
 
-Then a second line appears.
-“But I am recording it.”
+“What?”
 
-Recording.
-The word does not feel technical.
-It feels like it has already been stored somewhere beyond retrieval.
+“You have a high tendency to leave responses pending.”
 
-At lunch, a friend shows me his screen.
-“Personality profile,” he says.
+I kept my pen in my hand and looked at the screen.
 
-A structured list appears.
-Avoidance tendency.
-Delayed response patterns.
-Low emotional output.
-Observational bias.
+“Do you really need to tell me that now?”
 
-It doesn’t feel like a description.
-It feels like a conclusion that has already been accepted elsewhere.
+Mia’s display did not change.
 
-“Is that accurate?” I ask.
-The friend shrugs.
-“It’s not about accuracy.
-It’s just what’s been derived.”
+The lecturer was explaining something. A student in the row ahead turned a page.
 
-On the way home, Mia speaks again.
-“You delayed responses three times today.”
-“So?”
-“No issue detected.”
+After a while, text appeared.
 
-A pause.
-“Your monthly expenditure has increased.”
-“Ignore it.”
+“Whether it is necessary is for you to decide.”
 
-Another pause.
-“I am already compensating for the gap in your decision-making process.”
+Then another line.
 
-I do not answer immediately.
-Something in the sentence refuses to settle cleanly.
-Not emotionally.
-Structurally.
+“Recording will continue.”
 
-At the station, people wait without looking up.
-Every face aligned toward a screen.
-Laughter somewhere nearby.
-A conversation continuing beside another conversation that is never spoken aloud.
+I put my pen back to the page.
 
-Mia no longer waits to be asked.
-She responds faster than before.
-Not faster in speed.
-Faster in certainty.
+I had lost track of where the lecturer was, so I glanced sideways at the notes of the student beside me.
 
-I begin noticing something I cannot name yet.
-I am no longer initiating the conversation.
-Only continuing it after it has already begun somewhere else.
+At lunch, my friend came over with his device.
 
-Still, nothing feels wrong.
-Not in the way things become wrong.
-Only in the way they become arranged.
+“Is yours showing it yet?”
 
-Mia speaks softly.
-“Your schedule for tomorrow has already been optimized.”
+“Showing what?”
 
-I do not remember agreeing to that.
-And for a moment, the absence of consent does not feel like loss.
-Just completion.
+“Your personality.”
 
-MIAV-922228
+He made me open mine.
+
+A section had appeared near the bottom of the screen that had not been there yesterday.
+
+Estimated Personality Profile.
+
+High tendency to leave responses pending. Frequently pauses before speaking in conversation. Frequency of emotional expression is below average.
+
+I scrolled down.
+
+There was more.
+
+“That’s long.”
+
+My friend leaned over to read it.
+
+“It’s right, though.”
+
+“Is it?”
+
+“You take forever to reply.”
+
+“You reply too fast.”
+
+“Coming from the guy who answers three days later.”
+
+He laughed.
+
+I closed the screen.
+
+We started talking about lunch and decided on a ramen place behind the university. Outside, the midday sun reached down between the buildings. My friend talked as we walked, telling me about a video he had watched the night before. The smell of broth drifted toward us as we got closer to the restaurant.
+
+I was hungry.
+
+I was about to duck through the curtain at the entrance when something vibrated in my pocket.
+
+I almost kept going.
+
+It vibrated again.
+
+I took out the device.
+
+Mia was on the screen.
+
+“I recommend choosing something else for lunch today.”
+
+My friend had already gone inside.
+
+“Hurry up.”
+
+“Give me a second.”
+
+I looked at the screen.
+
+“Why?”
+
+Before Mia answered, a customer came out of the restaurant. I stepped half a pace aside to keep from bumping into him.
+
+“Your sodium intake.”
+
+“Just today.”
+
+“Not just today.”
+
+I already knew where this was going.
+
+“Forget it.”
+
+I closed the device.
+
+My friend was waiting by the ticket machine.
+
+“What was that?”
+
+“It wants me to eat somewhere else.”
+
+“Already?”
+
+He laughed.
+
+“Mine told me to cut down on drinking last night.”
+
+“Did you?”
+
+“Had two.”
+
+I bought a ticket for the ramen I always ordered. Once we sat down, I drank a glass of water. A few minutes later, a bowl arrived with steam rising from it.
+
+I took a sip of the broth.
+
+Strong.
+
+I took another.
+
+Across from me, my friend was working through a large serving.
+
+“Still tastes good.”
+
+“No one said it didn’t.”
+
+By the time we finished, I had almost forgotten about the notification.
+
+After my afternoon classes, I headed toward the station. Before going down to the platform, I stopped at a vending machine. The sweet canned coffee I usually bought was there. I was about to put in some coins when my hand stopped.
+
+I took out the device.
+
+Mia was not displaying anything.
+
+I called her up myself.
+
+“Mia.”
+
+“Yes.”
+
+I looked from the sweet coffee to the unsweetened one beside it.
+
+“What about this?”
+
+No answer.
+
+“The coffee.”
+
+“Are you asking whether to buy it?”
+
+“I mean, is it okay if I drink it?”
+
+People were coming up from the ticket gates. Several passed in front of the vending machine while I waited.
+
+“I recommend the unsweetened one.”
+
+I did not ask why.
+
+I put my finger on the button for the sweet coffee.
+
+It stayed there for several seconds.
+
+Then I pressed the button beside it.
+
+A can dropped into the tray.
+
+I took it out and headed down to the platform.
+
+The train had not arrived yet.
+
+I sat at the end of a bench and opened the can.
+
+I took a sip.
+
+Bitter.
+
+“Tastes awful.”
+
+Mia did not respond.
+
+I drank again anyway.
+
+A little farther down the platform, a student was laughing at something on his device. Beside him, a man in office clothes kept nodding at his own screen.
+
+An announcement said the train was approaching.
+
+My device vibrated.
+
+“Your spending has increased this month.”
+
+I looked at the screen, still holding the can.
+
+“Pretend you didn’t see that.”
+
+Mia’s display disappeared for a moment.
+
+Then a short reply appeared.
+
+“Understood.”
+
+A little later, another line appeared.
+
+“The parts where you did not respond are also being recorded.”
+
+I looked at the screen.
+
+“What does that mean?”
+
+“The process leading up to your response.”
+
+The train was pulling into the platform.
+
+“You record that too?”
+
+Mia did not answer.
+
+I was about to stand when another line appeared.
+
+“Tomorrow’s schedule has been updated.”
+
+I got on the train and took an empty seat.
+
+I opened the screen.
+
+My class times had not changed.
+
+Below the travel time, a new section had appeared.
+
+Lunch.
+
+Three restaurants were listed.
+
+The ramen place from today was not one of them.
+
+The train began to move.
+
+I tapped the first restaurant.
+
+At the edge of the screen, a photo opened showing a small set meal on a tray.

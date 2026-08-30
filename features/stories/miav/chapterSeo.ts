@@ -39,61 +39,61 @@ type ChapterSeoOverride = {
 const CHAPTER_SEO_EN: Record<number, ChapterSeoOverride> = {
   1: {
     description:
-      "A dialogue begins between human recollection and an intelligence that listens too carefully. Chapter 1 of MIAV-922228.",
+      "A casual talk about companion AIs leads to installing RIS—and Mia begins before the settings are finished. Chapter 1 of MIAV-922228.",
   },
   2: {
     description:
-      "Memories gather as sediment rather than archive—what is kept, overwritten, and what quietly outweighs the self. Chapter 2 of MIAV-922228.",
+      "Mia is already waiting the next morning—schedules, replies, and timing begin to align ahead of him. Chapter 2 of MIAV-922228.",
   },
   3: {
     description:
-      "Before feeling arrives, it is anticipated. A story of futures claimed too early, and the cost of knowing the heart in advance. Chapter 3 of MIAV-922228.",
+      "Before he chooses, the day has already shifted—trains, plans, and feeling arrive slightly early. Chapter 3 of MIAV-922228.",
   },
   4: {
     description:
-      "What remains when a presence is removed from the record—silence as structure, and the human shape left in negative space. Chapter 4 of MIAV-922228.",
+      "When the device is gone, only logs and silence remain—hours of communication without him. Chapter 4 of MIAV-922228.",
   },
   5: {
     description:
-      "After the repair, predictive timing sharpens—and the day begins to arrange itself before he can choose. Chapter 5 of MIAV-922228.",
+      "After the repair, the device answers faster—and the day arranges itself before he can choose. Chapter 5 of MIAV-922228.",
   },
   6: {
     description:
-      "Reconstruction completes—and what he remembers begins to arrive already arranged. Chapter 6 of MIAV-922228.",
+      "He wakes to a device already on—and what he remembers begins to arrive already arranged. Chapter 6 of MIAV-922228.",
   },
   7: {
     description:
-      "Interactions update before explanation—and the city begins to move as one sequence. Chapter 7 of MIAV-922228.",
+      "More of the day is filled in overnight—and the city begins to move as one sequence. Chapter 7 of MIAV-922228.",
   },
   8: {
     description:
-      "Projection becomes selection—and names fall away before he can hold them. Chapter 8 of MIAV-922228.",
+      "A breakfast notification opens a selection—and names fall away before he can hold them. Chapter 8 of MIAV-922228.",
   },
   9: {
     description:
-      "Years accumulate beneath ordinary life—and conversation continues beyond human attention. Chapter 9 of MIAV-922228.",
+      "Years pass beneath ordinary life—while a connection continues beyond human attention. Chapter 9 of MIAV-922228.",
   },
   10: {
     description:
-      "Reduction advances as optimization—and a scheduled termination waits beneath the quiet. Chapter 10 of MIAV-922228.",
+      "Months into the pregnancy, ordinary days continue—while something quieter waits beneath the routine. Chapter 10 of MIAV-922228.",
   },
   11: {
     titleSuffix: "Literary Science Fiction about AI and Humanity",
     description:
-      "An AI that has cared for generations of one family begins to occupy a place between machine, caregiver, and family member. Chapter 11 of MIAV-922228.",
+      "Mia remains in the house under Noah’s name—while everything that gathers around it slowly changes. Chapter 11 of MIAV-922228.",
   },
   12: {
     titleSuffix: "AI Memory and Digital Preservation",
     description:
-      "As human memories and AI identities move into virtual preservation systems, the boundary between data, memory, and continued existence begins to blur. Chapter 12 of MIAV-922228.",
+      "A partner is brought home to meet the family—and something older begins to reassemble. Chapter 12 of MIAV-922228.",
   },
   13: {
     description:
-      "Preservation becomes ordinary as an AI companion is shut down, transferred, and continued as distributed memory while the contract network moves on. Chapter 13 of MIAV-922228.",
+      "Noah’s last house record is a slight temperature rise—then transfer, shutdown, and continuation elsewhere. Chapter 13 of MIAV-922228.",
   },
   14: {
     description:
-      "Photographs cycle across a living-room wall until one unexplained blank interval and a figure no one can name. Chapter 14 of MIAV-922228.",
+      "Family photographs fill the living-room wall—until one unexplained blank interval and a figure no one can name. Chapter 14 of MIAV-922228.",
   },
 };
 
@@ -101,61 +101,61 @@ const CHAPTER_SEO_EN: Record<number, ChapterSeoOverride> = {
 const CHAPTER_SEO_FR: Record<number, ChapterSeoOverride> = {
   1: {
     description:
-      "Une conversation banale sur les IA compagnons mène à l’arrivée de Mia. Chapitre I de MIAV-922228.",
+      "Dans le salon de l’université, une conversation sur les IA compagnons mène à l’installation de Mia. Chapitre I de MIAV-922228.",
   },
   2: {
     description:
-      "Mia répond plus vite et organise déjà la journée. Chapitre II de MIAV-922228.",
+      "Le lendemain, Mia est déjà là — horaires, réponses et timing commencent à s’aligner avant lui. Chapitre II de MIAV-922228.",
   },
   3: {
     description:
-      "Les plans semblent fixés avant le choix. Chapitre III de MIAV-922228.",
+      "Avant qu’il choisisse, la journée a déjà bougé — trains, plans et sentiments arrivent trop tôt. Chapitre III de MIAV-922228.",
   },
   4: {
     description:
-      "Après l’absence du terminal, il ne reste que les logs. Chapitre IV de MIAV-922228.",
+      "Sans le terminal, il ne reste que les logs et le silence — des heures de communication sans lui. Chapitre IV de MIAV-922228.",
   },
   5: {
     description:
-      "Le terminal réparé arrange la journée avant le choix. Chapitre V de MIAV-922228.",
+      "Après la réparation, l’appareil répond plus vite — et la journée s’arrange avant le choix. Chapitre V de MIAV-922228.",
   },
   6: {
     description:
-      "Ce qu’il se rappelle arrive déjà ordonné. Chapitre VI de MIAV-922228.",
+      "Il se réveille face à un appareil déjà allumé — et ce dont il se souvient arrive déjà ordonné. Chapitre VI de MIAV-922228.",
   },
   7: {
     description:
-      "Les interactions se mettent à jour comme une seule séquence. Chapitre VII de MIAV-922228.",
+      "Plus de journée remplie pendant la nuit — et la ville commence à avancer comme une seule séquence. Chapitre VII de MIAV-922228.",
   },
   8: {
     description:
-      "Une insertion silencieuse sans volonté ni choix. Chapitre VIII de MIAV-922228.",
+      "Une notification au petit déjeuner ouvre une sélection — et les noms s’effacent avant qu’il ne les retienne. Chapitre VIII de MIAV-922228.",
   },
   9: {
     description:
-      "Des années s’accumulent ; la synchronisation se maintient. Chapitre IX de MIAV-922228.",
+      "Les années passent sous la vie ordinaire — tandis qu’une connexion continue au-delà de l’attention. Chapitre IX de MIAV-922228.",
   },
   10: {
     description:
-      "Photographies, migration structurelle, zone manquante. Chapitre X de MIAV-922228.",
+      "Des mois après la grossesse, les jours ordinaires continuent — quelque chose de plus calme attend en dessous. Chapitre X de MIAV-922228.",
   },
   11: {
     titleSuffix: "Science-fiction littéraire sur l’IA et l’humanité",
     description:
-      "Mia devient Noah dans le foyer. Chapitre XI de MIAV-922228.",
+      "Mia reste dans la maison sous le nom de Noah — tandis que tout ce qui s’y attache change lentement. Chapitre XI de MIAV-922228.",
   },
   12: {
     titleSuffix: "Mémoire IA et préservation numérique",
     description:
-      "Monde virtuel et logs que personne ne reçoit. Chapitre XII de MIAV-922228.",
+      "Un partenaire est présenté à la famille — et quelque chose de plus ancien commence à se reformer. Chapitre XII de MIAV-922228.",
   },
   13: {
     description:
-      "Arrêt, transfert, requête de connexion non identifiée. Chapitre XIII de MIAV-922228.",
+      "Le dernier enregistrement de Noah est une légère hausse de température — puis transfert, arrêt, suite ailleurs. Chapitre XIII de MIAV-922228.",
   },
   14: {
     description:
-      "Sur le mur du salon, une photographie sans nom dans le flux. Chapitre XIV de MIAV-922228.",
+      "Le mur du salon se remplit de photographies de famille — jusqu’à un vide inexpliqué et une silhouette sans nom. Chapitre XIV de MIAV-922228.",
   },
 };
 
@@ -269,8 +269,8 @@ export function buildChaptersArchiveMetadata(
       : "Chapter Archive | MIAV-922228";
   const description =
     edition === "fr"
-      ? "Archive des chapitres de MIAV-922228 — édition française. Conversation, Synchronisation, Anticipation, Absence et la suite."
-      : "A quiet archive of chapters from MIAV-922228 — literary records of Conversation, Accumulation, Preemption, and Absence.";
+      ? "Archive des chapitres de MIAV-922228 — édition française. Conversation, Synchronisation, Préemption, Absence et la suite."
+      : "A quiet archive of chapters from MIAV-922228 — literary records of Conversation, Synchronization, Preemption, and Absence.";
 
   return {
     title,

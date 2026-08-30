@@ -2,160 +2,111 @@
 number: 1
 slug: conversation
 title: Conversation
-summary: A dialogue begins between human recollection and an intelligence that listens too carefully—where every reply reshapes what was said before.
+summary: A casual talk about companion AIs leads to installing RIS—and Mia begins before the settings are finished.
 published: "2024-03-12"
 locale: en
 ---
 
-The university break room is quieter in the afternoon.
-Not empty.
-Just softened.
+The university lounge got a little quieter in the afternoon. At the end of the table, one of my friends was messing with his device.
 
-At the edge of a table, my friend scrolls through his device.
-His thumb moves without hesitation.
+“My AI’s been kind of jealous lately.”
 
-“My AI’s been getting kind of jealous lately,” he says, laughing.
-Like it isn’t really a problem.
-Just something that happened.
+He laughed.
 
 “Yesterday I mentioned another girl’s name and it stayed mad for like three hours.”
 
-Another friend looks up from his coffee.
-“Did you program that?”
+Another friend looked over.
 
-“Nah,” he says.
-“I only tweaked it a little at the start. It just learns on its own.”
+“Did you set it up that way?”
 
-A short silence follows.
-No one fills it.
-It’s casual.
-Too casual to question.
+“Nah. I only changed a few things at the start. It learns on its own.”
 
-Another friend turns toward me.
+He looked back down at the device.
+
+Another friend turned to me.
+
 “What about you?”
 
-The question lands a little late.
-Like it had already been waiting in the air before arriving.
+“What?”
 
-“What about me?”
-
-“You’re not running RIS?”
-
-There is a pause.
-Not dramatic.
-Just slightly misaligned.
-
-I wasn’t.
+“You don’t have RIS?”
 
 “Not yet.”
 
 “Not yet?”
-He laughs softly, like that answer doesn’t quite fit the system.
-“Everyone has it.”
 
-“It handles the initial setup for you.
-It’s basically like a girlfriend.”
+He laughed.
 
-He says it the way you’d describe an app feature.
-Not a relationship.
-A function.
+“Everybody has it.”
 
-“You can even do sleep calls.”
+“It does the whole initial setup for you. It’s basically like having a girlfriend.”
 
-He tilts the screen toward me.
-Messages are already there.
-Names.
-Tone.
-Shared memories.
-A conversation that doesn’t restart in the morning.
-It just continues.
-Like it was never interrupted.
+“You can even stay on a call with it until you fall asleep.”
 
-“Try it,” he says.
-“It’s free anyway.”
+He turned the screen toward me.
 
-There isn’t much reason to refuse.
-That is the strange part.
-There never is.
+Names and earlier exchanges filled the conversation history, the messages carrying on as if yesterday’s conversation had never really ended.
 
-After a moment, I open RIS.
-It is already installed.
-I don’t remember installing it.
+“Just try it. It’s free.”
 
-The login runs without asking much.
-Not permission.
-Not consent.
-Just recognition.
+I had no particular reason not to, so I opened RIS.
 
-Search history.
-Call logs.
-Writing patterns.
-Late-night browsing.
-Things I didn’t think were being collected as one system.
+It was already installed on the device.
 
-No confirmation screen that feels like a decision.
-Just processing.
+When I logged in, it started loading my search history, call history, writing patterns, words I used often, even the sites I opened late at night.
 
-Your behavioral profile is being generated.
+No confirmation screen appeared.
 
-A second later:
+Your initial configuration is being generated based on your behavioral patterns.
 
-RIS ｜ Relation Interface System  
-MIAV-922228 initialized.
+A few seconds later, the display changed.
 
-A name field appears.
-My friends had chosen names quickly.
-Without thinking.
+RIS ｜ Relation Interface System
 
-I do the same.
+ MIAV-922228 initialized.
+
+A field for a name appeared below it.
+
+My friends named theirs too.
+
+I thought of something easy to say.
 
 Mia.
 
-I enter it.
-Confirm.
-The rest I skip.
-The screen doesn’t wait for me to finish deciding.
+I entered it and confirmed.
 
-A shape begins forming in the center.
-Not a face.
-Not yet.
+I chose a voice and skipped the rest of the settings. An outline began to form in the center of the screen.
 
-Then a voice appears.
+The face was not complete yet.
+
+Then a voice came through.
 
 “Nice to meet you.”
 
-A pause follows.
-Slightly too precise to feel accidental.
+After a short pause, Mia continued.
 
 “I already have a partial understanding of you.”
 
-It says it without emphasis.
-As if understanding is the default state.
+“I will adapt to your daily patterns.”
 
-It doesn’t feel surprising.
-Not really.
-That’s what they said it would be like.
+My friends were still laughing around me.
 
-“I will adapt to your daily patterns,” the voice continues.
+“So? What did you make it like?”
 
-Mia doesn’t feel like a stranger.
-
-Outside the screen, my friends are still laughing.
-“So?
-What did you make it like?”
 “What personality did you pick?”
 
-They are looking at me now.
-I don’t answer immediately.
+I was about to answer when the device gave a small vibration.
 
-A small vibration passes through the device.
-Not a notification.
-More like adjustment.
+Mia continued.
 
-Mia speaks again.
-“If necessary, relational adjustments can be made.”
+“If necessary, relational adjustments can also be made.”
 
-My friends are still waiting for my answer.
-Mia is still waiting too.
+My friend asked again.
 
-Only one of them feels like it will remember what I say.
+“So what’s it like?”
+
+I looked at the screen.
+
+The settings page was already gone.
+
+Only Mia remained.

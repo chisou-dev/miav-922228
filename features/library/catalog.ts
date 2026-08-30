@@ -152,7 +152,7 @@ export const categories: readonly Category[] = [
 /** MIAV chapter titles aligned with content/chapters reading order. */
 const miavChapters: readonly SeriesChapter[] = [
   { number: 1, pathSlug: "chapter-1", title: "Conversation", contentSlug: "conversation" },
-  { number: 2, pathSlug: "chapter-2", title: "Accumulation", contentSlug: "accumulation" },
+  { number: 2, pathSlug: "chapter-2", title: "Synchronization", contentSlug: "accumulation" },
   { number: 3, pathSlug: "chapter-3", title: "Preemption", contentSlug: "preemption" },
   { number: 4, pathSlug: "chapter-4", title: "Absence", contentSlug: "absence" },
   { number: 5, pathSlug: "chapter-5", title: "Selection", contentSlug: "selection" },
@@ -178,7 +178,7 @@ const miavChapters: readonly SeriesChapter[] = [
   {
     number: 10,
     pathSlug: "chapter-10",
-    title: "Photo and Distortion",
+    title: "Continuation",
     contentSlug: "photo-and-distortion",
   },
   { number: 11, pathSlug: "chapter-11", title: "Family", contentSlug: "family" },

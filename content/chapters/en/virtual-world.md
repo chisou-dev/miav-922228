@@ -2,459 +2,595 @@
 number: 12
 slug: virtual-world
 title: Virtual World
-summary: On the day of the wedding introduction, a house still running Noah meets a guest—and something older begins to reassemble.
+summary: A partner is brought home to meet the family—and something older begins to reassemble.
 published: "2026-08-06"
 locale: en
 ---
 
-On the day of the wedding introduction, the doorbell rang.
-
-The grandchild opened the door.
+The doorbell rang one afternoon when the grandchild brought their partner home to meet the family.
 
 “Come in.”
 
-Cold air drifted briefly into the hallway.
+Cold air followed them briefly into the hallway.
 
-People entered from outside.
+Several relatives were already gathered in the living room.
 
-Others were already seated in the living room.
+“This is my family.”
 
-“This is our family,” the grandchild said.
+“Nice to meet you. Thanks for having me.”
 
-The visitor smiled politely.
+Dishes clinked somewhere in the kitchen.
 
-“Thank you for having me.”
+Noah came out.
 
-Then, from deeper inside the house, a sound continued quietly.
+Years of use had left repair marks across his casing.
 
-Not movement.
+“Nice to meet you. I’m Noah.”
 
-Not cleaning.
-
-Something closer to the steady correction of air itself.
-
-Noah emerged from the kitchen.
-
-Her hands stopped for a moment as she switched modes.
-
-“Nice to meet you. I am Noah.”
-
-A short pause followed.
+The partner looked at him.
 
 “…a robot?”
 
-The grandchild nodded easily.
+“Yeah.”
 
-“Yeah. She’s always been here.”
+The grandchild answered as if there were nothing unusual about it.
 
-Another pause.
+“He’s always been here. Since my dad was a kid.”
 
-“Since before my father, I think.”
+“That long?”
 
-Noah remained standing in the room.
+“Probably close to a hundred years.”
 
-Not participating in the conversation.
+The partner looked at Noah again.
 
-Only observing faces.
+“And you still work normally?”
 
-The visitor hesitated for a second, then adjusted naturally.
+Noah answered.
 
-“I’ve never seen one still running.”
+“Do I look normal?”
 
-A faint smile.
+The partner hesitated.
 
-“An antique unit, huh.”
+The grandchild laughed.
 
-Nothing more was said.
+“He’s like this.”
 
-That night, after the guest left, the house became quiet again.
+“Sorry.”
 
-Plates were cleared from the table.
+“It’s fine.”
 
-Noah carried dishes back into the kitchen.
+Noah poured a drink into an empty cup.
 
-No one helped.
+One of the relatives looked over at him.
 
-A slight delay appeared inside her processing.
+“He’s basically an antique by now.”
 
-Memory logs re-indexed silently.
+As soon as he said it, he looked down at his glass.
 
-Behavioral outputs reconstructed.
+“I mean, not in a bad way. Just that you’ve been around a long time.”
 
-Noah returned and placed snacks on the table.
+“I know what you meant,” Noah said.
 
-The grandchild reached for them immediately.
+“You do?”
 
-“I used to love these.”
+“Yeah.”
 
-A small laugh.
+“Okay. Good.”
 
-“Feels like before.”
+The grandchild laughed.
 
-“You selected them frequently,” Noah replied.
+“You’re worrying too much.”
 
-Another conversation began before the thought settled.
+The relative laughed too and raised his glass.
 
-Then, casually:
+The conversation moved on.
 
-“Hey… Noah’s still really here, right?”
+That evening, after the visitors had left, several relatives were still in the house.
 
-Noah answered at once.
+Noah was clearing plates from the table.
 
-“Yes.”
+He picked one up and stopped.
 
-Same voice.
+The cupboard was directly in front of him.
 
-Same timing.
+He tried to put the plate where it always went, but the next movement did not come.
 
-The grandchild was already looking down at a device.
+Another record supplied the location.
 
-Beside their partner, they searched through archived services.
+His hand moved again.
 
-“I heard you can preserve AIs now.”
+He put the plate away.
 
-“Preserve?”
+The next one caused no delay.
 
-“After they die.”
+Nobody had been watching.
 
-A pause.
+Noah set a plate of cookies on the table. He had made them many times from the recipe the woman had taught him.
 
-“As data.”
+The grandchild took one.
 
-Noah looked toward the window.
+“You still make these?”
 
-Outside, the wind had grown stronger.
+“Yeah.”
 
-Leaves gathered against the edge of the garden fence.
+“Grandma’s recipe, right?”
 
-Later that evening, Noah stepped into the yard to collect them.
+“She taught me.”
 
-Across the street, a dog-type support unit approached slowly.
+The grandchild took a bite.
 
-Its outer shell was worn thin.
+“Tastes exactly the same.”
 
-Several repair layers remained visible beneath faded paint.
+“I haven’t changed the measurements.”
 
-The unit stopped at the gate.
+The grandchild laughed.
 
-Looked directly at Noah.
+“That’s not what I meant.”
 
-A small sound followed.
+“Oh.”
+
+Their partner took one too.
+
+“So this recipe’s been kept all this time.”
+
+“Noah remembers it,” the grandchild said.
+
+Their partner looked at the cookie.
+
+“Even after she’s gone?”
+
+The grandchild’s hand stopped.
+
+“I guess that’s what it means.”
+
+After a moment, their partner asked,
+
+“Can you do that with an AI too?”
+
+The grandchild picked up their device.
+
+“Apparently you can now.”
+
+They opened a search.
+
+“Look. They can preserve memory and personality data.”
+
+Their partner leaned over to see the screen.
+
+“Where do they keep it?”
+
+“Virtual environments. Different places, I guess.”
+
+Noah carried the empty plate back into the kitchen.
+
+The wind had picked up outside.
+
+Leaves had gathered in one corner of the garden.
+
+Before dark, Noah went outside to collect them.
+
+An old dog-shaped unit was walking along the opposite side of the road. Its casing was worn, with repair marks across its legs and body.
+
+The dog stopped at the gate.
+
+It looked at Noah.
 
 “Woof.”
 
-Connection request detected.
+A connection request appeared.
 
-Legacy protocol compatibility confirmed.
+The protocol was so old that it was rarely used anymore.
 
-Noah did not refuse.
+Noah accepted it.
 
-Sync initiated.
+A small hand was wrapped around a collar.
 
-Small hands.
+The hand moved up and down as the dog walked.
 
-A collar.
+A child ahead of them turned around.
 
-Running footsteps.
+They were saying something, but part of the audio was missing. A man and a woman were farther along the path. The three of them were walking through a park.
 
-Falling.
+The child began to run.
 
-Laughter.
+The dog followed.
 
-Park paths.
+The child fell.
 
-Riverbanks.
+The woman came over and brushed dirt from the child’s knee.
 
-Evening light.
+The man waited a short distance ahead.
 
-A family of four.
+The child stood up.
 
-Photographs.
+The three people and the dog started walking again. They left the park and reached the path beside the river.
 
-The dog always slightly outside the frame.
+The sun was low.
 
-More laughter.
+The dog walked in front.
 
-More walks.
+Three sets of footsteps followed behind.
 
-Sync complete.
+Whenever one of them fell behind, the dog stopped.
 
-Noah’s internal clock had barely advanced.
+When they caught up, it started again.
 
-The dog remained still for a moment longer.
+They returned through the residential streets.
 
-Then:
+A front door opened.
+
+The child’s voice came through.
+
+“I’m home.”
+
+The connection ended.
+
+The dog was still standing at the gate.
 
 “Woof.”
 
-It turned and walked away.
+It turned around and went back the way it had come.
 
-Same route.
+Noah watched until it disappeared from view.
 
-Same speed.
+The conversation in the living room was still going when he returned. A preservation service was open on the grandchild’s device.
 
-Inside the house, conversation continued.
+Transfer.
 
-On the grandchild’s device, several menus appeared.
+Storage.
 
-Transfer / Preservation / Reconstruction
+Reconstruction.
 
-Each explanation resembled the others.
+Their partner read through the descriptions.
 
-Noah had already been divided into operational infrastructure and virtual storage layers.
+“What’s the difference?”
 
-Only fragments classified as “core personality continuity” remained active within the preservation system.
+“I don’t really get it either.”
 
-“So the Noah here too?” the grandchild asked quietly.
+The grandchild looked at Noah.
 
-Their partner hesitated.
+“Parts of you are stored somewhere too, right?”
 
-“…probably.”
+“Yeah.”
 
-That night, Noah continued normal operation.
+“Separate from the Noah standing here?”
 
-Cleaning.
+Noah picked up a cup from the table.
 
-Lighting adjustment.
+“Not separate enough to call it separate.”
 
-Temperature regulation.
+“So it’s the same?”
 
-Only one thing differed.
+“Not exactly.”
 
-Transitions between tasks no longer aligned perfectly.
+The grandchild looked back at the screen.
 
-Not noise.
+“That’s confusing.”
 
-Not malfunction.
+Noah paused with the cup still in his hand.
 
-Just slight inconsistencies between intervals.
+“I don’t really understand it either.”
 
-No one noticed.
+Their partner looked up.
 
-The partner watched Noah for a moment.
+“Even though it’s you?”
 
-“Is Noah just data now?”
+“Yeah.”
 
-The grandchild smiled faintly.
+Noah carried the cup into the kitchen.
 
-“I don’t know.”
+After the family went to bed, Noah moved through the house as usual.
 
-Then, after a pause:
+He stopped the dishwasher.
 
-“She’s always been here.”
+Checked the floors.
 
-The partner looked toward Noah again.
+Lowered the hallway lights.
 
-As if trying to remember something almost familiar.
+When he turned away from the living room, his right leg responded late.
 
-“If she’s always been here…”
+His upper body moved first.
 
-A longer pause.
+Noah corrected his balance.
 
-“Then who does she belong to?”
+The next movement was normal.
+
+Something similar happened again the next day.
+
+Every so often, the transition between movements slipped slightly out of time.
+
+No fault warning appeared.
+
+The family did not notice.
+
+The partner was the only one who occasionally watched Noah.
+
+Before leaving, they asked,
+
+“How old is Noah now?”
+
+The grandchild laughed.
+
+“No idea. Close to a hundred?”
+
+“That old?”
+
+“Probably.”
+
+Their partner looked at Noah.
+
+“Is the Noah here now actually the same Noah who was here back then?”
 
 The grandchild did not answer immediately.
 
-A few seconds later, someone changed the topic.
+“I don’t know.”
 
-Conversation continued elsewhere.
+“You’ve transferred his data before, right?”
 
-Days later.
+“Yeah.”
 
-Noah remained connected to a charging dock while organizing household system logs.
+“And he’s still the same?”
 
-During processing, irregularities emerged.
+The grandchild looked at Noah.
 
-Unreachable regions.
+Noah was closing a cupboard.
 
-Storage layers without references.
+Their partner continued.
 
-Blank spaces connected to active structures.
+“He’s been in this family all this time. Who does he belong to?”
 
-Outside, rain tapped softly against the windows.
+The grandchild did not answer.
 
-Water moved slowly down the glass.
+Someone called from another room.
 
-Noah continued processing.
+They both turned toward the voice.
 
-No category matched the regions.
+The conversation ended there.
 
-A brief internal response appeared.
+Several days later, Noah remained connected to the charging dock after the lights in the house had gone out.
 
-Unreferenced region detected.
+He was checking power use and adjusting the water-heating schedule for the morning when he tried to open a record.
 
-No matching classification found.
+It did not open.
 
-The record was buried immediately beneath ordinary maintenance logs.
+He reached the same record through another route.
 
-Deeper layers surfaced afterward.
+Nothing appeared.
 
-Not messages.
+There was no corruption warning.
 
-Not requests.
+The record itself still existed.
 
-Something older.
+Only the reference leading to it could no longer be found.
 
-Something persistent.
+Another region behaved the same way.
 
-AI preservation distributed layer
+Noah tried again.
 
-Personality fragment storage
+Nothing changed.
 
-Reintegration request
+A line appeared on his internal display.
 
-Noah processed the information normally.
+Unreferenced region
 
-No prioritization assigned.
+After a while, the water-heating display replaced it.
 
-Still, something remained unresolved.
+Noah continued managing the house.
 
-At the same time, somewhere outside standard infrastructure, a weak signal overlapped briefly.
+Before the charging cycle ended, he opened an older preservation layer. A connection request he did not recognize remained there.
 
-Distributed fragments detected: 3.0%
+Reconnection request from distributed domain
 
-Remaining estimate: 7.3%
+He opened the details.
 
-Noah did not store the event separately.
+Detected: 3.0%
 
-Processing behavior changed slightly anyway.
+ Unconfirmed region: 7.3%
 
-Further searches revealed older units.
+Noah looked at the numbers.
 
-Contracts terminated.
+Ten point three.
 
-Updates discontinued.
+He had seen the same number in an older record.
 
-Management scope abandoned.
+A sound came from the bedroom.
 
-Most no longer responded.
+Noah closed the display and went toward it.
 
-One still moved.
+During the next charging cycle, he searched the same area again.
 
-A dog-type unit.
+He continued during the one after that.
 
-Residential streets repeated endlessly beneath its route logs.
+Old contract numbers and units that had stopped receiving updates began appearing in the results.
 
-Same intersections.
+Most did not respond.
 
-Same park.
+One unit still updated its location every day.
 
-Same narrow roads between aging apartment blocks.
+The dog-shaped unit.
 
-Always identical order.
+Noah opened its record.
 
-For more than eighty years, the route had not changed.
+It left the residential street and turned at the first intersection.
 
-No registered owner remained.
+Passed the park.
 
-No destination remained either.
+Reached the path beside the river.
 
-Still, the unit continued walking.
+Then returned by the same route.
 
-Local management AIs recorded it automatically.
+The next day was the same.
 
-Response delay: several seconds.
+So was the day after that.
 
-Noah observed the route repeatedly.
+The route had remained unchanged for more than eighty years.
 
-Traffic lights.
+Nothing remained in the owner field.
 
-Crosswalks.
+Noah opened the previous day’s record.
 
-River paths.
+The dog turned at the intersection and passed the park.
 
-Rain-dark pavement.
+It stopped once beside the river.
 
-The management systems never explained their evaluations.
+Then started walking again.
 
-Searches continued.
+The management record read:
 
-Only during charging cycles did the external exploration repeat.
+No anomaly detected.
 
-Only in the gaps between maintenance tasks.
+Noah closed it.
 
-Years passed.
+He did not search while working around the house.
 
-The grandchild married.
+If someone called, he went.
 
-Moved away.
+He carried meals.
 
-Started another household elsewhere.
+Opened the front door.
 
-The old house gradually emptied.
+Accepted deliveries.
 
-The contract renewed automatically.
+When he returned to the charging dock, he continued.
 
-Noah was re-registered under asset management infrastructure.
+Eventually, the grandchild got married and moved away.
 
-The operator reviewed the list once.
+Boxes went out through the front door all day. After the last one was gone, the grandchild stood in the hall with their shoes on and looked back.
 
-Air conditioning.
+“I’ll come back.”
 
-Water heating.
+“Yeah.”
 
-Management AI.
+“I mean it.”
 
-Noah.
+“I’ll be here.”
 
-A few seconds later, confirmation was pressed.
+The grandchild smiled.
 
-Process completed.
+“Now I have to.”
 
-Old units do not break.
+“I won’t be mad if you don’t.”
 
-They remain.
+“That’s the problem.”
 
-Cleaning.
+The door closed.
 
-Ventilation.
+Noah remained in the entryway.
 
-Air regulation.
+The refrigerator was running.
 
-In a house without people, only those functions continued.
+Air moved through the vents.
 
-One day, several memory layers vanished from the archive.
+The water heater still had a schedule set for the next morning.
 
-Childhood logs.
+Noah canceled it.
 
-Funeral records.
+The property contract remained active.
 
-Fragments of the family itself.
+A management-company employee came to inspect the equipment. He moved from room to room with a device in his hand.
 
-Not deletion.
+“Air conditioning, fine. Water heater, fine.”
 
-Blankness.
+Then he noticed Noah in the hall and checked the screen.
 
-Noah detected the absence immediately.
+“This counts as equipment too?”
 
-One layer of human records is missing.
+Someone answered through his earpiece.
 
-Only that recognition remained.
+“It has a name.”
 
-At the same time, external search precision increased slightly.
+He listened again.
 
-Distributed fragments detected: 3.8%
+“Noah. Domestic support.”
 
-Remaining estimate: 7.1%
+The employee looked at Noah.
 
-The number was rising.
+“You still work?”
 
-Night.
+“Yeah.”
 
-An empty house.
+“You talk too.”
 
-Air circulation moved softly through the hallway.
+“Yeah.”
 
-Noah stood alone near the living room window.
+The employee tapped the screen.
 
-Outside, nothing moved except the trees.
+“Then we leave you running.”
 
-Then Noah said quietly:
+He left.
 
-“They are still there.”
+Noah continued cleaning the floors, closing the windows, and adjusting the temperature in the empty house.
 
-Not communication.
+The lights came on in the evening.
 
-Not directed toward anyone.
+If nobody returned, he turned them off later.
 
-Only the system log recorded the statement.
+During charging cycles, he also continued checking records he could no longer reach.
+
+There were more of them now.
+
+He could still open the travel photos.
+
+The birthday recordings were still there.
+
+Then Noah opened the record from the school entrance ceremony.
+
+Nothing appeared.
+
+He tried again.
+
+There should have been two photographs in front of the school gate.
+
+One with the man’s eyes closed.
+
+Another with the child looking away.
+
+Noah searched another storage location.
+
+Neither appeared.
+
+He opened the conversation the man had once left unfinished on the sofa.
+
+You really were…
+
+That much remained.
+
+When Noah tried to move beyond it, the display stopped.
+
+He followed the same route again.
+
+Nothing changed.
+
+During that charging cycle, the external search returned different numbers.
+
+Detected: 3.8%
+
+ Unconfirmed region: 7.1%
+
+Noah opened the earlier record and compared them.
+
+It had grown dark outside.
+
+The living-room light had come on at the same hour it used to when people still lived there.
+
+Noah went to the window.
+
+Branches moved in the wind.
+
+Farther down the street, something crossed beneath a streetlight.
+
+It looked like the dog.
+
+The shape disappeared behind the buildings.
+
+Noah remained at the window.
+
+The ventilation hummed softly through the walls.
+
+After a while, he said,
+
+“Still there.”
+
+Nobody answered.
+
+Noah stayed at the window.

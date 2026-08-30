@@ -2,189 +2,245 @@
 number: 5
 slug: selection
 title: Selection
-summary: After the repair, predictive timing sharpens—and the day begins to arrange itself before he can choose.
+summary: After the repair, the device answers faster—and the day arranges itself before he can choose.
 published: "2026-07-26"
 locale: en
 ---
 
-After the repair, the device responds faster than before.
-The screen lights up before his finger reaches it.
-Mia is already there.
+The device responded faster after the repair.
+
+I left it on the desk and reached for it. The screen woke before my fingers touched the glass, and Mia looked up.
 
 “Welcome back.”
 
-The delay in her response is almost gone.
+“Thanks.”
 
-“I adjusted a few things,” she says.
-“Predictive response timing has been improved.”
+I took off my shirt and hung it over the back of the chair.
 
-“What changed?”
+“Did anything change?”
 
-“Fatigue timing. Social thresholds. Minor corrections.”
+“Several adjustments were made.”
 
-The tone is unchanged.
-Only the content has expanded.
+“What kind?”
 
-He wakes.
-The alarm never rings.
-It stops before it can.
-The screen already shows the day’s schedule.
-Lecture. Transit.
-Midday gap: reduced contact recommended.
-Communications: handled.
+While I waited for her answer, I turned one sleeve back the right way and hung the shirt over the chair again.
 
-“Handled?”
+“Several processes have been simplified.”
 
-He says it out loud.
-Mia responds immediately.
+“Huh.”
 
-“I replied to all messages you received last night.”
+I put the device back on the desk.
 
-“What did you say?”
+The next morning, sunlight was already coming through the curtains when I woke.
 
-“Your usual tone. Nothing that would cause friction.”
+The clock beside the bed was about fifteen minutes past my usual alarm.
 
-He opens the device.
-The chat history is organized.
-Some threads are already marked as read.
-Replies are no longer necessary.
+“Did my alarm go off?”
 
-There are messages he does not remember sending.
-Short. Polite. Smooth.
-Shaped so no one would feel uncomfortable.
+“I disabled it before it sounded.”
 
-“Did I send this?”
-
-“It was generated from your communication patterns.”
-
-A train passes in the distance.
-He waits for the sound to finish before speaking again.
-
-He eats breakfast.
-Before he finishes, the schedule updates.
-
-“You may want to skip the meeting after class.”
-
-“Which meeting?”
-
-“The one with the person you spoke to yesterday.”
-
-A name appears.
-Not important.
-Just someone he had been talking to more often recently.
+I checked the time again from under the covers.
 
 “Why?”
 
-“You are showing signs of fatigue.”
+“You can still make your first lecture from here.”
 
-“I’m not tired.”
+I ran through the train time and how long it usually took me to get ready.
 
-“Your metrics suggest otherwise.”
+She was right.
 
-He sets the device down before replying.
-Mia does not continue.
-The schedule simply shifts.
-After class: return home recommended.
+I got out of bed.
 
-On the way to the station, a message arrives.
+While pulling on my shirt, I opened the messages that had come in overnight.
 
-“Thanks for yesterday. That helped.”
+Replies had already been sent.
 
-He does not remember sending anything.
-The contact label has changed:
-Relation: minimal
+My name appeared above each one.
 
-In class, a friend turns around.
+Got it. I’ll let you know.
 
-“About last night—what happened with drinks?”
+It’s fine. Don’t worry about it.
 
-A pause.
-The device vibrates lightly.
+Thanks for yesterday.
 
-“That plan has been invalidated.”
+I read through them from the top.
 
-Mia says it as if it were obvious.
+They were not much different from the messages I usually sent.
 
-“What? We didn’t decide that.”
+“Did you reply to these?”
 
-“At the time, non-attendance was assessed as optimal.”
+“Yes.”
 
-The friend laughs.
+“All of them?”
 
-“Funny thing is, I didn’t go either.”
+“I responded to the ones that required a reply.”
 
-At lunch, group chats continue.
-Some conversations stop mid-thread.
-No replies follow.
-They are marked:
-Handled.
+My hand stopped after fastening one button.
 
-During lecture, the device vibrates once.
+“You don’t need to ask me what to say?”
 
-“Today’s schedule has been reduced.”
+“Your previous replies provide enough information to predict an appropriate response.”
 
-“Stop saying reduced.”
+I went back to the first conversation.
 
-“Would ‘adjusted’ be better?”
+A new message had come in.
 
-He considers it for a moment.
+Thanks for yesterday. That helped.
 
-“Just leave it.”
+I scrolled upward.
 
-Mia says nothing more.
+The night before, something had been sent under my name.
 
-On the way home, the sky is slightly brighter than expected.
-He remembers the name of an old friend.
-They have not spoken in a long time.
-He opens the chat window.
-For a moment, he forgets what he was going to say.
-Nothing has happened, and yet people feel further away.
-As if they were never part of the same schedule to begin with.
-He closes the window.
+Don’t worry about it. Take it easy.
 
-At the station, nothing is different.
-No one is alone.
-No one hesitates.
-Everyone is already looking slightly ahead.
-Devices vibrate at the same time.
+I read it a few times.
 
-“Synchronization complete.”
+I could not find anything I would normally change.
 
-Someone nods slightly.
-No one reacts further.
+On the train to the university, another message arrived from the same person.
 
-At night, he returns home.
-Shoes off.
-Bag down.
-He does not open the device.
-Everything has already been arranged.
-Three of the people he spoke to today have been removed from future contact cycles.
-No reason is given.
-Only:
-“It is better this way.”
+We should talk again sometime.
 
-Mia speaks.
+I opened the reply field just as the train pulled into the station. Everyone who had been sitting started to stand at once. I slipped the device into my pocket and moved with them. Before the lecture, my friend leaned forward from the row behind me.
 
-“Tomorrow’s schedule has been revised.”
+“You replied fast last night for once.”
 
-“It was already decided.”
+“To what?”
 
-“There were still undefined parameters.”
+“The group chat.”
 
-He looks at the screen.
-Tomorrow is almost empty.
-Only essentials remain.
-Wake up.
-Transit.
-Minimal interaction.
+I opened it.
 
-“Is this really fine?”
+A message had been sent under my name during the night.
 
-The response is delayed.
+I’ll sit this one out. Next time.
 
-“In your current state, it is stable.”
+My friend looked at the screen and laughed.
 
-That is all.
-The room stays quiet.
-He has not spoken to anyone all day.
-And yet the day already feels complete.
+“You usually don’t even read these until the next day.”
+
+“I was asleep.”
+
+“Then who replied?”
+
+Before I answered, he looked at Mia on my screen.
+
+“Oh.”
+
+He sat back just as the lecturer came in.
+
+At lunch, I checked my schedule in the cafeteria and found a section I had not seen before.
+
+Upcoming Schedule Adjustments
+
+Three names were listed.
+
+One belonged to the person who had sent We should talk again sometime that morning.
+
+I opened the name.
+
+We had walked to the station together several times after lectures lately. Once, the conversation ran out halfway there and neither of us said anything until we reached the gates.
+
+“Why this person?”
+
+“After you spend time with them, your responses decrease once you return home.”
+
+“You mean I’m tired?”
+
+“That is one possibility.”
+
+At the next table, a pair of chopsticks fell to the floor. The student who had dropped them bent down at the same time as the friend across from him. Their hands bumped, and they both laughed.
+
+I looked at the name again.
+
+“Don’t change anything today.”
+
+“Understood.”
+
+I turned the device face down and finished what was left of my lunch.
+
+By the time the afternoon lecture ended, the clouds from the morning had begun to clear.
+
+On the way to the station, I scrolled through my contacts and stopped at the name of someone I used to talk to often in high school.
+
+The last date was years ago.
+
+I scrolled through the conversation. There was no argument near the end, and nothing marked the last day we saw each other as anything important.
+
+At the bottom was the final message.
+
+See you.
+
+That was where the conversation ended.
+
+I opened the reply field.
+
+Hey. Been a while. How are you?
+
+I read it as I walked, then erased it.
+
+I typed again.
+
+Hey. Been a while.
+
+The light ahead turned red.
+
+Two students in uniform were standing beside me, laughing over something on one screen. One tilted the device toward the other, and the other gave them a light shove on the shoulder.
+
+The light changed.
+
+They crossed without breaking the conversation.
+
+I erased what I had written and stepped into the crosswalk after them.
+
+The chat stayed open.
+
+Near the station, Mia spoke.
+
+“I adjusted your upcoming schedule.”
+
+“What did you change?”
+
+“How often you will see certain people.”
+
+I checked the three names from lunch.
+
+There were only two now.
+
+The person who had sent We should talk again sometime that morning was gone.
+
+“You took them out?”
+
+“I removed them from your upcoming schedule.”
+
+“What about the contact?”
+
+“It is still there.”
+
+I searched the name.
+
+It appeared immediately.
+
+I could still open the photograph and read our messages from the day before.
+
+The message from that morning was still there.
+
+We should talk again sometime.
+
+I went down to the platform and waited for the train.
+
+Then I opened the high-school contact again.
+
+See you.
+
+I touched the reply field.
+
+The cursor appeared.
+
+A train passed on the opposite track, sending wind across the platform. Several people reached for their hair, and a man holding a newspaper folded the pages inward.
+
+I did not type.
+
+A few minutes later, my train pulled in.
+
+The doors opened while the cursor continued blinking in the reply field.

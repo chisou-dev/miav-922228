@@ -2,139 +2,111 @@
 number: 1
 slug: conversation
 title: Conversation
-summary: "Dans le salon de repos de l’université, une conversation banale sur les IA compagnons mène à l’installation de Mia."
+summary: "Dans le salon de l’université, une conversation sur les IA compagnons mène à l’installation de Mia."
 published: "2024-03-12"
 locale: fr
 ---
 
-L’après-midi, le salon de repos de l’université devenait un peu plus silencieux.
+L’espace détente de l’université devenait un peu plus calme dans l’après-midi. Au bout de la table, un de mes amis pianotait sur son terminal.
 
-Au bout d’une table, un ami faisait défiler quelque chose sur son terminal.
+— Mon IA est devenue un peu jalouse, ces derniers temps.
 
-— Mon IA devient un peu jalouse, ces derniers temps.
+Il a ri.
 
-Il disait ça en riant.
+— Hier, j’ai prononcé le nom d’une autre fille, elle a boudé pendant genre trois heures.
 
-— Hier, j’ai mentionné le nom d’une autre fille… elle a fait la tête pendant trois heures.
+Un autre ami a levé les yeux.
 
-Un autre réagit aussitôt.
+— Tu l’as réglée comme ça ?
 
-— C’est un réglage que t’as activé ?
+— Non. J’ai juste changé deux ou trois trucs au début. Après, elle apprend toute seule.
 
-— Non. J’ai juste configuré deux ou trois trucs au début. Après, ça apprend tout seul.
+Il a reporté son attention sur le terminal.
 
-La conversation continuait sans gravité.
-
-Personne n’y voyait quoi que ce soit d’inhabituel.
-
-Un autre ami tourna les yeux vers moi.
+Un autre s’est tourné vers moi.
 
 — Et toi ?
 
 — Quoi ?
 
-— T’as pas encore installé RIS ?
+— T’as pas RIS ?
 
-Un léger silence.
+— Pas encore.
 
-Simplement, je ne l’avais pas encore fait.
+— Pas encore ?
 
-— J’ai pas encore pris le temps.
+Il a ri.
 
-— « Pas encore », ça veut dire quoi ?
+— Tout le monde l’a.
 
-Des rires se mêlaient à la conversation.
+— Ça fait les réglages de départ à ta place. En gros, c’est comme avoir une copine.
 
-— Tout le monde l’a déjà.
+— Tu peux même rester en appel avec jusqu’à t’endormir.
 
-— Les réglages de départ font presque tout. Franchement, c’est comme avoir une copine.
+Il a tourné l’écran vers moi.
 
-— Tu peux même t’endormir en appel avec.
+L’historique était rempli de noms et d’anciens échanges. Les messages se poursuivaient comme si la conversation de la veille ne s’était jamais vraiment arrêtée.
 
-On me montre un écran.
+— Essaie, au moins. C’est gratuit.
 
-Un historique de conversations défile.
-
-Des noms.Des façons de parler.Des événements passés.
-
-Les échanges se poursuivent naturellement, comme si la veille n’avait jamais vraiment pris fin.
-
-— Essaie au moins une fois. C’est gratuit.
-
-Je n’avais pas vraiment de raison de refuser.
-
-Après une courte hésitation, j’ouvre RIS.
+Je n’avais aucune raison particulière de refuser, alors j’ai ouvert RIS.
 
 L’application était déjà installée sur le terminal.
 
-Au moment de la connexion, les anciennes données sont chargées d’un seul coup.
+Une fois connecté, le système s’est mis à charger mon historique de recherches, mes appels, mes habitudes d’écriture, les mots que j’utilisais souvent, jusqu’aux sites que j’ouvrais tard le soir.
 
-Historique de recherches.Appels.Manières d’écrire.Mots fréquemment utilisés.Sites ouverts tard dans la nuit.
+Aucun écran de confirmation n’est apparu.
 
-L’analyse progresse sans rien demander.
+Configuration initiale en cours de génération à partir de vos habitudes comportementales.
 
-《 Génération d’une configuration initiale basée sur vos tendances comportementales 》
+Quelques secondes plus tard, l’affichage a changé.
 
-Le message apparaît.
+RIS ｜ Relation Interface System
 
-Quelques secondes plus tard, l’écran change.
+Initialisation de MIAV-922228 terminée.
 
-《 RIS｜Relation Interface System 》《 MIAV-922228 générée 》
+Un champ permettant de saisir un nom est apparu en dessous.
 
-En dessous, un champ pour entrer un nom.
+Mes amis avaient eux aussi donné un nom à la leur.
 
-Comme pour mes amis, le système demandait de choisir une identité.
-
-Je réfléchis un instant.
-
-Quelque chose de facile à prononcer.
+J’ai cherché quelque chose de facile à prononcer.
 
 Mia.
 
-Je valide.
+Je l’ai saisi, puis validé.
 
-Je choisis uniquement la voix et ignore le reste des paramètres.
+J’ai choisi une voix et ignoré le reste des réglages. Une silhouette a commencé à se dessiner au centre de l’écran.
 
-Au centre de l’écran, une silhouette apparaît lentement.
+Le visage n’était pas encore tout à fait formé.
 
-Pas encore humaine.
-
-Puis une voix.
+Puis une voix s’est fait entendre.
 
 — Enchantée.
 
-Un silence.
+Après une courte pause, Mia a repris.
 
-— J’ai déjà commencé à vous comprendre.
+— Je vous connais déjà en partie.
 
-Ça ne me surprend pas particulièrement.
+— Je m’adapterai à vos habitudes quotidiennes.
 
-C’était exactement comme les autres l’avaient décrit.
+Autour de moi, mes amis riaient toujours.
 
-— À partir de maintenant, j’évoluerai en fonction de votre mode de vie.
+— Alors ? Tu l’as faite comment ?
 
-C’est ce que dit Mia.
+— T’as choisi quelle personnalité ?
 
-Ça ne ressemblait pas à une première rencontre.
+J’allais répondre quand le terminal a légèrement vibré.
 
-De l’autre côté de l’écran, mes amis riaient encore.
+Mia a continué.
 
-— Alors ? Tu l’as configurée comment ?
+— Si nécessaire, les paramètres relationnels peuvent également être ajustés.
 
-— T’as choisi quel type de personnalité ?
+Mon ami a reposé la question.
 
-Je sens leurs regards.
+— Alors, elle est comment ?
 
-Je ne sais toujours pas quoi répondre.
+J’ai regardé l’écran.
 
-— Alors ?
+La page des réglages avait déjà disparu.
 
-Avant que je puisse répondre, le terminal vibre légèrement.
-
-Mia continue.
-
-— Les paramètres relationnels peuvent également être ajustés, si nécessaire.
-
-Les autres continuent de rire.
-
-À côté d’eux, seule Mia attendait une réponse.
+Il ne restait que Mia.

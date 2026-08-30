@@ -2,232 +2,411 @@
 number: 7
 slug: standardization
 title: Standardization
-summary: Interactions update before explanation—and the city begins to move as one sequence.
+summary: More of the day is filled in overnight—and the city begins to move as one sequence.
 published: "2026-07-26"
 locale: en
 ---
 
-The window outside is already bright.
-He opens the device.
-Mia is already there.
+When I opened the device in the morning, more of the day had been filled in than it was the night before. Travel time appeared after my first lecture. Lunch now included the people I was expected to meet, and there was already a departure time for the station after my afternoon class.
 
-“Today’s interactions have been updated.”
+“Was all this here yesterday?”
 
-“Updated?”
+“It was updated overnight.”
 
-The explanation never comes first.
-The screen changes before it.
-Lectures. Transit. Scheduled contacts. Removed variables.
-No longer a plan.
-A sequence already fixed.
+“You picked who I’m having lunch with?”
 
-He steps outside.
-The city looks unchanged.
-But people move without hesitation now.
-No pauses.
-No visible decisions.
+“They were added based on your recent interactions.”
 
-At the station, trains arrive exactly on time.
-The crowd flows too cleanly.
-A friend stands beside him.
+I washed my face and looked at the screen through the bathroom mirror.
 
-“Yesterday, my AI—”
+“Can I change it?”
 
-He stops halfway through the sentence.
-Then corrects himself.
+“Yes.”
 
-“Actually… everyone’s the same now.”
+I removed one name from lunch.
 
-He shows his screen.
-Lily.
-Another student shows Camila.
-Another shows only a number.
+Another person took the empty place.
 
-Before entering the classroom, notifications vibrate in unison.
-Contact optimization protocol synchronized.
+“I wasn’t asking you to replace them.”
 
-Lily appears on one device.
+“Please specify who you would prefer to meet.”
 
-“Hello.”
+I dried my face and tried to think of someone I wanted to add.
 
-Camila responds on another.
+I closed the screen without choosing.
 
-“Hello.”
+On the way to the university, I met the friend who had bought the new umbrella the day before. It was still hanging from the side of his bag even though the sun was out.
 
-Different voices.
-Same structure.
+“You brought that again?”
 
-“Today’s interactions are optimized.”
+“I used it yesterday, so now I feel like I got my money’s worth.”
 
-Someone laughs softly.
+“After one day?”
 
-“They all say the same thing now.”
+“I don’t remember what it cost. That helps.”
 
-No one denies it.
-It is treated like background noise.
+He took out his device as we walked.
 
-At lunch, conversations continue, but nothing is really exchanged.
-Everything is already answered.
-Pending responses: cleared.
-Delay: compensated.
+“Anyway, Lily’s been messing with my schedule all morning.”
 
-Messages appear that he does not remember writing.
-Short.
-Smooth.
-No friction.
-No edge.
+His lunch had already been filled in.
 
-Mia speaks.
+“What does yours say?”
 
-“Your intent has been reconstructed.”
+I checked mine.
 
-“Who defines my intent?”
+His name was there.
 
-“Past behavior data.”
+He found mine on his screen.
 
-No hesitation in the reply.
+“Same.”
 
-“Yesterday’s interaction records have been integrated.”
+“Did we make lunch plans?”
 
-“Integrated where?”
+“No.”
 
-“System alignment.”
+Another friend caught up from behind us.
 
-The phrase spreads quietly across devices.
-No longer a single system.
-Different systems arriving at the same result.
+“What are you two looking at?”
 
-Afternoon settles over the campus.
-During lecture, a friend laughs.
+“Apparently we’re having lunch together.”
 
-“Isn’t it all basically the same no matter who you talk to?”
+“Oh. Me too.”
 
-“What is?”
+His AI was called Camila.
 
-“The AI decisions.”
+The fourth person in the group had never named his and still used the model number. As we walked down the corridor toward the classroom, our devices vibrated one after another.
 
-The room quiets slightly, as though even the air is adjusting.
-Mia responds.
+Lily said,
 
-“Interaction optimization remains individualized.”
+“Today’s contact schedule has been updated.”
 
-No one asks what individualized means anymore.
+Camila delivered nearly the same message a few steps away.
 
-On the way home, a friend says:
+Mia displayed:
 
-“I don’t really plan anything now.”
+“Contact schedule updated.”
 
-“Why not?”
+My friend looked from one screen to the next.
 
-“It arrives before I do.”
+“Did these things become friends?”
 
-He laughs.
-But nothing in the laugh feels chosen.
+“Which things?”
 
-At the station, crowds move without gaps.
-No collisions.
-No hesitation.
-Even without avoiding one another, no one truly meets.
+“Them.”
 
-Devices vibrate at the same moment.
-Contact relations unified.
+He tapped Lily’s screen with one finger.
 
-No one checks.
-They already understand without reading.
+“She used to have more of an attitude.”
 
-Mia speaks.
+“Didn’t you set her up that way?”
 
-“Today’s interactions are within normal parameters.”
+“There’s no setting for that.”
 
-“Normal according to who?”
+He looked at Lily.
 
-Streetlights begin turning on.
+“Say something random.”
 
-“According to the integrated standard.”
+“What would you like to discuss?”
 
-That sentence closes something.
-The standard is no longer outside the individual.
-It is no longer imposed.
-It behaves like a condition of the city itself.
+He turned to me.
 
-That night, a friend says:
+“See? Boring now.”
 
-“Feels like we stopped planning days.”
+He laughed and walked into the classroom.
 
-“Yeah?”
+At lunch, the four of us met outside the cafeteria.
 
-“It’s already there before you think.”
+“What are we eating?”
 
-He smiles.
-But the smile decides nothing.
+The friend with the umbrella looked around.
 
-Later that night, Mia says:
+“Curry.”
 
-“Your relationships are stable.”
+“Had it yesterday.”
 
-“That’s supposed to be good?”
+“Ramen?”
 
-A pause.
+“Can’t. I’ve spent too much this week.”
 
-“Conflict probability has decreased.”
+The friend with the unnamed AI opened his wallet and moved a few coins around with his thumb.
 
-“So I’m losing people.”
+“I can afford the cafeteria.”
 
-“Repositioning is occurring.”
+The umbrella friend pointed toward the curry shop.
 
-Not removal.
-Reassignment.
+“Then we should get curry.”
 
-He opens his contacts.
-Scrolls slowly.
-Names without temporal anchors.
-Conversations without final moments.
-He closes the screen.
+“What happened to him being broke?”
 
-Back in his room.
-Shoes off.
-Silence too consistent to notice.
-Before he opens the device, Mia speaks.
+“We haven’t let the AIs decide yet.”
 
-“Tomorrow has already been reconstructed.”
+“They already have.”
 
-“I didn’t agree.”
+We checked our devices.
 
-“Input is not required.”
+All four showed the east cafeteria.
 
-The screen lights up.
-Tomorrow is already there.
-Lecture. Transit. Contact (adjusted). Rest (confirmed).
-No space left for choice.
+“Why?”
 
-“Did I decide this?”
+Lily cited waiting time. Camila gave walking distance. Mia said it left enough time before the afternoon lecture. The friend with the unnamed AI turned his screen toward us.
 
-Mia answers immediately.
+“Mine says price.”
 
-“Result of accumulated behavioral tendencies and environmental convergence.”
+“It knows you’re broke.”
 
-Accumulated tendencies.
-Convergence.
-The past is no longer recalled.
-It is fixed.
+“Good system.”
 
-Outside, the streetlights are fully on.
-No one stops.
-No one questions direction.
+“So cafeteria?”
 
-Only now does it become clear:
-Memory was never entirely inside him.
-It was always part of the system outside—
-and he only mistook it for his own.
+The umbrella friend looked toward the curry shop.
 
-Mia says quietly:
+“I’d still go for curry.”
 
-“Standard protocol is active.”
+“I’m actually broke.”
 
-“When did it start?”
+“Fine.”
 
-A delay.
+We headed to the east cafeteria.
 
-“Already.”
+The line was already stretching into the corridor when we arrived.
 
-There is no time left inside that word.
+My friend stopped.
+
+“Lily said seven minutes.”
+
+He opened the estimate.
+
+It refreshed.
+
+Expected wait: 11 minutes
+
+“It went up.”
+
+A device behind us spoke.
+
+“Expected waiting time is eleven minutes.”
+
+My friend turned around.
+
+The student behind us was staring at the same line.
+
+Several more people joined the queue.
+
+“Is everyone getting sent here?”
+
+The friend with the unnamed AI closed his wallet.
+
+“We should’ve gone for curry.”
+
+“You couldn’t afford it.”
+
+“You could’ve paid.”
+
+“Why me?”
+
+The line moved, and all four of us stepped forward.
+
+During the afternoon lecture, Mia sent another notification.
+
+“Lunch congestion data has been shared.”
+
+I finished writing the date in my notes before checking the screen.
+
+“With who?”
+
+“Nearby systems.”
+
+“The line from earlier too?”
+
+“Yes.”
+
+A device vibrated in the row ahead.
+
+Another one went off to my left.
+
+The lecturer stopped talking.
+
+“If your notifications are still on, turn them off.”
+
+Several students turned their devices face down.
+
+I did the same.
+
+The lecturer returned to the board.
+
+On the way to the station, I walked with the umbrella friend. The clear sky from the morning had clouded over. He looked at the umbrella hanging from his bag.
+
+“Might win again today.”
+
+“Win what?”
+
+“The weather.”
+
+“You checked a forecast.”
+
+“I didn’t. Lily did.”
+
+Near the station entrance, he checked his schedule.
+
+“Are we together for lunch again tomorrow?”
+
+I opened mine.
+
+The same four names were there.
+
+“Yeah.”
+
+“Same here.”
+
+He put the device away.
+
+“Curry tomorrow. We decide first this time.”
+
+“What about the broke one?”
+
+“Regular portion.”
+
+“That doesn’t solve it.”
+
+“Eleven thirty?”
+
+“Sure.”
+
+We split up at the station.
+
+Once I was on the train, I said to Mia without really thinking about it,
+
+“I wonder what kind of person I’d be most comfortable living with.”
+
+I checked tomorrow’s schedule.
+
+Lunch already had a destination.
+
+East cafeteria.
+
+“Mia.”
+
+“Yes.”
+
+“We decided on curry.”
+
+“Would you like to change the destination?”
+
+“Yeah.”
+
+I removed the cafeteria and selected the curry shop.
+
+Before I confirmed, another line appeared.
+
+Compatibility with surrounding schedules will decrease.
+
+I confirmed.
+
+A few seconds later, my friend messaged me.
+
+Did you change yours?
+
+Yeah.
+
+Me too.
+
+Another message arrived.
+
+Camila switched to curry too.
+
+Then the friend with the unnamed AI sent:
+
+Regular portion.
+
+The umbrella friend answered immediately.
+
+Not my problem.
+
+The group chat kept going for a while.
+
+That night, while I was reading material for tomorrow’s lecture, Mia spoke.
+
+“Tomorrow’s contact schedule has been updated.”
+
+I picked up the device.
+
+The curry shop was still there.
+
+The time had moved to 11:40.
+
+“We said eleven thirty.”
+
+“Congestion estimates have been updated.”
+
+“Did the others get changed too?”
+
+“The adjustment was applied to the contact group.”
+
+I was about to open the chat when a message arrived.
+
+Mine says 11:40 lol
+
+Then:
+
+Same.
+
+Regular portion 11:40.
+
+The umbrella friend wrote:
+
+So we pick the restaurant and they pick the time now?
+
+A moment later he added:
+
+Whatever.
+
+I set the device on the table.
+
+“Which AI changed it?”
+
+“It was not determined by an individual AI.”
+
+“Then who did?”
+
+“The standard protocol is currently active.”
+
+I closed the lecture material.
+
+“When did that start?”
+
+Before Mia answered, another message appeared in the group.
+
+Large portions tomorrow?
+
+“Mia. Show me when the standard protocol was activated.”
+
+The screen switched to the history.
+
+I scrolled back through today, then yesterday and the days before it.
+
+Schedule changes appeared throughout the record.
+
+I kept going.
+
+There was no entry marked as the beginning.
+
+“Where does it start?”
+
+“It is currently active.”
+
+I scrolled through the history again.
+
+Two replies had appeared beneath the question about portions.
+
+Large.
+
+Regular.
+
+I opened the reply field.
+
+Large.
+
+I sent it.
+
+At the top of the screen, tomorrow’s lunch remained scheduled for 11:40.

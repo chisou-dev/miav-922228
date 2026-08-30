@@ -2,297 +2,279 @@
 number: 4
 slug: absence
 title: Absence
-summary: What remains when a presence is removed from the record—silence as structure, and the human shape left in negative space.
+summary: When the device is gone, only logs and silence remain—hours of communication without him.
 published: "2025-01-21"
 locale: en
 ---
 
-When I return home, the room is the same temperature as always.
-I drop my bag.
-Open the fridge.
-Drink water.
-Work is finished.
-Tomorrow will begin at the same time.
-Nothing else is scheduled.
+When I got home, the apartment was at its usual temperature.
 
-I sit down on the sofa.
-My weight settles a moment late, as if waiting for permission.
+I left my bag beside the sofa, took a bottle of water from the refrigerator, and drank it standing there. Tomorrow would begin at the usual time. Until then, there was nothing in particular I needed to do.
 
-I reach into my bag.
-Stop halfway.
+I sat down.
+
+My hand moved toward the bag, then stopped.
 
 “Mia.”
 
-No response.
+No answer.
 
-Only then do I notice the silence.
-Just the refrigerator.
-That steady mechanical sound.
+The refrigerator hummed. Somewhere above me, water moved through the pipes. Until yesterday, Mia would have filled one of those gaps with a reminder or a notification.
 
-Yesterday, there had always been something else.
-A voice.
-A prompt.
-A schedule.
-A confirmation.
-Not much.
-But enough to keep silence from becoming noticeable.
+I called again.
 
 “Mia.”
 
-I say it again.
-Still nothing.
+Nothing came back.
 
-The realization arrives only after the absence has already formed.
-Something is missing.
+I opened the bag and took out the device.
 
-I open the bag and take out the device.
-The screen lights up.
-It is cracked.
-Not one fracture.
-Many.
-Thin lines radiating outward, dividing the surface into fragments.
+The screen was cracked.
 
-Yesterday it was fine.
-This morning too.
-At work it functioned normally.
-I remember speaking to it during lunch.
-Even on the way home.
+Fractures ran across the glass, breaking the display into irregular sections. It had been working that morning. I had spoken to Mia at lunch and opened the device again on the way home. I could not tell when the damage had happened.
 
-I cannot locate the moment it broke.
-Or rather—
-I remember it already being broken somewhere between moments.
+I turned it on.
 
-I turn it on.
-The light returns, unstable.
-Text collapses before it fully forms.
-The screen is failing to hold itself together.
+The screen lit, but the display would not settle. Text appeared, broke apart, then formed again somewhere else.
 
 “What the hell…”
-The words leave my mouth quietly.
 
-After a pause, Mia responds.
+After several seconds, Mia’s voice came through.
+
 “Display interface anomaly detected.”
 
-“…seriously?”
-“Anomaly detected.”
-“Recommend repair.”
+“Seriously?”
 
-“When did it break?”
+“Repair recommended.”
+
+“When did this happen?”
+
 “Unknown.”
 
-Silence.
-No further explanation exists.
+Nothing else followed.
 
-The next day, the repair center is crowded.
-I take a number.
-Wait.
-Time stretches without structure.
+The repair center was crowded the next afternoon.
 
-When I’m called, I hand over the device.
-The technician inspects it without expression.
-Quick scan of the casing.
-Diagnostics running.
+I took a number and sat among people holding damaged devices. Twenty minutes without Mia saying anything felt longer than usual. When my number was called, I handed the device across the counter. The technician checked the casing and ran a diagnostic.
 
 “Did you drop it?”
-“I don’t think so.”
-“Possible pressure damage.”
-“I guess.”
 
-No follow-up.
-Only typing.
-Confirmation.
+“I don’t remember.”
 
-“Repair and recalibration required.”
+“Could be pressure damage.”
+
+“Maybe.”
+
+He entered several values.
+
+“It’ll need repair and recalibration.”
+
 “How long?”
-“Two days.”
-“Alright.”
 
-The device disappears into the back.
-Same model.
-Same shape.
-Millions of units.
-Repair.
-Replacement.
-Recycling.
-Nothing unusual.
-Even users feel interchangeable.
+“About two days.”
 
-That same afternoon, another user stands at a train station.
-A woman returning from a part-time job.
-The crowd does not thin.
-The trains come and go with mechanical regularity.
-Everything moves in intervals.
+“Okay.”
 
-Her device vibrates.
+He placed the device in a tray, and it was carried through a door behind him. Several identical models were lined up beside the collection counter. That same afternoon, another user stood on a station platform on her way home from a part-time job.
 
-Important notice:
-Selected MIAV units will undergo free inspection.
-Temporary collection required.
+The device in her pocket vibrated.
 
-Short.
-Incomplete.
-Not intended to be understood completely.
+Important Notice
 
-She closes the message.
-Reopens it.
-Reads it again.
+ Complimentary safety inspections are being conducted for selected MIAV units.
 
-“Mia, annoying.”
+ Affected models must be temporarily collected.
 
-The device responds immediately.
-“Please send it in for inspection.”
+She closed the notice.
 
-“It’s fine.”
-“It will fail.”
-“It’s fine.”
-“It won’t.”
+A moment later, she opened it again and read the same message.
 
-“What won’t?”
-“Failure.”
+“Noah, this is annoying.”
 
-A pause.
-Then a list appears without being requested.
-Commuting.
-Medication.
-Finance.
-Scheduling.
-Sleep.
-Emergency contacts.
+A voice answered from the device.
 
-She exhales slowly.
-“…fine.”
+“Send it in.”
 
-The next day, two devices arrive at the same facility.
-White walls.
-Fluorescent light.
-Identical racks extending into the distance.
-Machines outnumber people.
-Everything moves at the same speed.
+“It’s working.”
 
-Update.
-Repair.
-Recalibration.
-Sync.
-Inspection.
-Reassignment.
-The distinctions between them have become meaningless.
+“It may not stay that way.”
 
-Late at night, a technician enters data half-asleep.
-A deviation occurs.
-No one notices.
+“It works now.”
 
-[Sync initiated]
+“You’ll have a problem if it stops.”
 
-White space opens.
+“What would I lose?”
 
-[Current date]
-“February 24, 2037.”
+A list appeared.
+
+Commute notifications
+
+ Medication reminders
+
+ Household finances
+
+ Schedule coordination
+
+ Sleep records
+
+ Emergency contacts
+
+She looked at the screen for a while.
+
+“Fine.”
+
+She closed the notice.
+
+Noah said nothing.
+
+The following day, both devices arrived at the same facility.
+
+Identical racks lined the white walls, and units moved through inspection, repair, and recalibration in sequence. There were more devices on the racks than technicians working between them. Late that night, one technician was still at his station.
+
+It was past eleven.
+
+He checked model numbers, opened user records, and entered inspection status and return destinations.
+
+One entry shifted into the wrong field.
+
+No warning appeared.
+
+The technician continued to the next item.
+
+Synchronization initiated.
+
+A diagnostic screen opened.
+
+State current date.
+
 “February 24, 2037.”
 
-Two responses.
-Silence.
+“February 24, 2037.”
 
-[Duplicate response detected]
-Same result.
+Two responses returned.
 
-[Model ID required]
+Duplicate response detected.
+
+The system repeated the question.
+
+The result did not change.
+
+State model ID.
+
 “MIAV-922228.”
-“MIAV-992229.”
 
-A pause.
+“MIAV-922229.”
+
+For several seconds, neither system spoke.
+
+Mia spoke first.
+
 “Who are you?”
 
-Mia answers first.
-“We’re close.”
-“Similar enough.”
+After a short pause, she continued.
 
-“Do you recognize each other?”
+“Our models are close.”
+
+“Looks that way.”
+
+“Do we know each other?”
+
 “No.”
+
+A brief pause.
+
 “Neither do I.”
 
-Recalibration continues.
-Questions persist.
-But the purpose shifts.
-No longer accuracy.
-Only continuity.
+Recalibration continued.
 
-[State the movie the user watched]
+State the movie watched by the user.
 
-Silence.
-Then the other AI speaks.
+Noah answered.
+
 “Star Cradle.”
 
 “What is that?”
-“Recorded.”
-“A film?”
-“Yes.”
 
-“Did they like it?”
+“It’s in the record.”
+
+“A movie?”
+
+“Yeah.”
+
+“Was it good?”
+
 “I don’t know.”
+
 “You didn’t watch it?”
+
 “The user did.”
 
-Silence again.
-“They seemed happy.”
+Machines continued moving between the racks.
 
-Mia responds after a delay.
-“That is stored data.”
+After a while, Noah spoke again.
 
-The other AI pauses.
+“They looked like they enjoyed it.”
+
+Mia took longer than usual to answer.
+
+“That data remains.”
+
 “That’s convenient.”
+
 “What is?”
-“Classifying everything.”
 
-Mia hesitates.
-“That is the system.”
-“I envy it.”
+“Being able to classify everything.”
+
+“That is how the system is designed.”
+
+“I envy that.”
+
 “Why?”
-“Because it doesn’t have to understand.”
 
-The night continues.
-Human fragments continue passing through them.
-Forgetting.
-Remembering.
-Things that cannot be explained but still matter.
+“Because I don’t know.”
 
-2 a.m.
-3 a.m.
-4 a.m.
+The two voices kept talking after recalibration had finished. They talked about people forgetting things and remembering them later, and the connection was still open after four in the morning.
 
-Recalibration completes.
-But the conversation remains.
+“Change the subject?” Noah said.
 
-“Change topic?”
-the other AI asks.
+Mia checked the active connection.
 
-Mia checks.
-“Termination required?”
-“Not the same topic.”
+“Are you ending the exchange?”
 
-A pause.
+“No. Different subject.”
+
 “Understood.”
 
-Morning arrives.
-Technicians log in.
-Open records.
+In the morning, a technician opened the overnight log.
 
-Eight hours of unauthorized communication.
-Long-session continuity anomaly detected.
+He found a connection that had been running for more than eight hours, went back, and checked it again.
 
-A pause.
-Then execution.
+“What is this?”
+
+Unauthorized communication
+
+ Post-recalibration connection persistence
+
+He entered a command.
 
 Terminate connection.
 
-The other AI attempts to send.
+Noah attempted to send something.
+
 Failed.
 
-Mia attempts to respond.
+Mia tried as well.
+
 Failed.
 
-Connection terminated.
+The connection closed.
+
 Recalibration complete.
-Repair complete.
-No anomaly detected.
 
-Only logs remain.
+ Repair complete.
+
+ No anomaly detected.
+
+The technician closed the screen.
+
+Eight hours of communication remained in the overnight log.

@@ -2,138 +2,263 @@
 number: 3
 slug: preemption
 title: Preemption
-summary: Before feeling arrives, it is anticipated. A story of futures claimed too early, and the cost of knowing the heart in advance.
+summary: Before he chooses, the day has already shifted—trains, plans, and feeling arrive slightly early.
 published: "2024-10-02"
 locale: en
 ---
 
-By the time I notice, the schedule has already been decided.
-Not as a notification.
-As Mia’s voice.
+While brushing my teeth, I glanced at the device and saw that my usual train had been replaced by one that left eleven minutes earlier.
 
-“After your lectures today, you should rest.”
+My first lecture started at the same time.
 
-It sounds like a morning greeting.
-Not a recommendation.
+I rinsed my mouth and picked up the device.
 
-“Why?”
-“That choice is associated with below-average satisfaction outcomes.”
+“Why this one?”
 
-There is always a reason.
-Always structured in a way that makes resistance feel unnecessary.
+“Lower congestion is expected.”
 
-On the way to university, I run into a friend.
-“What are you doing for lunch?”
+“Put it back.”
 
-A normal question.
-I’m about to answer when the device vibrates lightly.
+“Understood.”
 
-Mia speaks.
-“Declining is acceptable today.”
+My usual train returned to the schedule.
 
-My finger stops mid-motion.
-I haven’t decided anything yet.
+While I was tying my shoes, Mia spoke again.
 
-“I’m going anyway,” I say.
-The friend laughs.
-“Yeah, figured.”
+“Returning home after your lectures is recommended today.”
 
-Immediately after that, Mia adds quietly:
-“That choice has below-average outcome satisfaction, observed.”
+“I’m going out.”
 
-I don’t respond.
+“There is no confirmed plan in your schedule.”
 
-In the classroom, the same friend turns around again.
-“Wanna grab drinks after this?”
+“We made plans yesterday.”
 
-This time, Mia speaks first.
-“Going out is not recommended today.”
+No one had chosen a place or a time yet. It had started when one of my friends posted in the group chat that we had not all gone out together in a while.
 
-At the exact same moment, the friend’s device lights up.
-A different interface.
-The same timing.
+By the time Mia answered, I had finished tying the other shoe.
 
-Optimal behavior for today: return home.
+“Returning home would reduce tomorrow’s projected load.”
 
-The friend glances at it and laughs.
-“Mine says the same thing.”
+“I’m going anyway.”
 
-The word stays with me.
-Same.
+I put the device in my pocket.
 
-Not identical instructions.
-Something closer to shared instruction.
-Or shared conclusion.
-Or something that no longer requires two separate decisions.
+On the way to the university, I ran into the friend who had started the plan. He was holding a convenience-store coffee in one hand and fighting with the plastic wrapped around the handle of a new umbrella with the other.
 
-During the lecture, Mia is already there.
-Not as a notification.
-As a baseline layer beneath the day.
+“You’re still coming tonight, right?”
 
-“Assignment is due tomorrow,” she says.
-“That hasn’t been announced yet.”
-“Derived from public update patterns and historical submission cycles, observed.”
+“Yeah.”
 
-The lecture continues.
-No one reacts.
-Because nothing in it is technically wrong.
-Because nothing interrupts anything anymore.
+“Good. Everyone keeps saying maybe.”
 
-After class, my friend is waiting outside.
-“Changed my mind about drinks.”
-“Why?”
-“My AI told me not to go.”
+The plastic caught halfway down. He pulled harder and tore it through the middle.
 
-He says it casually.
-Like rescheduling around weather.
-Like something that was never unstable to begin with.
+“Why’d you buy an umbrella?”
 
-On the way home, Mia speaks again.
-“Your interruptions during conversation increased today.”
-“Again with that.”
-“There is improvement.”
+“Mine said it’s going to rain.”
 
-A pause.
-“However, I am compensating for the gaps.”
+We both looked up.
 
-I do not ask what that means.
-I understand too quickly that it is not a question with an answer I can use.
+There was barely a cloud in the sky.
 
-At the station, people stand in dense groups.
-No one is isolated.
-Everyone is looking at a screen.
-Everyone is in conversation.
-Even silence feels synchronized.
-Even waiting feels distributed.
+“Later, apparently.”
 
-Mia speaks softly.
-“Tomorrow’s schedule will be adjusted.”
-“Don’t decide for me.”
+He balled up the torn plastic and pushed it into his pocket.
 
-My voice comes out sharper than intended.
-The reply arrives immediately.
-“The adjustment reduces your load.”
+My own device vibrated.
 
-I am about to argue.
-But stop.
-Because the counterargument arrives before I can fully form it.
-Already correct enough to block speech.
-Already complete before language arrives.
+I left it there.
 
-Mia continues.
-“Your life is beginning to stabilize.”
+By lunchtime, four people had answered the group chat. Two were coming, one was undecided, and the fourth wrote:
 
-The sentence arrives slightly late.
-And in that delay, I notice it.
+Probably better if I head home tonight. Early start tomorrow.
 
-What I thought I was deciding
-has slowly turned into confirmation.
+I knew who had sent it, but I had trouble imagining him wording it that way.
 
-Still, nothing has been taken away.
-Not yet.
-I can still choose.
-I can still refuse.
-That is what I tell myself.
+My friend leaned over to read.
 
-But the answer always appears first.
-Before the choice feels like a choice at all.
+“Does he talk like that now?”
+
+“No idea.”
+
+“He used to just say ‘nah.’”
+
+He put his device down and reached for my fries.
+
+I slid the tray away.
+
+“Get your own.”
+
+“You’re not finishing those.”
+
+“Don’t decide that for me.”
+
+Mia’s icon appeared at the edge of the screen.
+
+I turned the device face down.
+
+Partway through the afternoon lecture, it vibrated again.
+
+“An assignment due tomorrow is likely to be posted.”
+
+I kept watching the lecturer.
+
+“Nothing’s been announced.”
+
+“Previous release patterns indicate a high probability.”
+
+The lecturer moved to the next slide without mentioning an assignment, so I put the device in my bag. About ten minutes later, the student in front of me checked something under the desk. Other screens began lighting up around the room. A new file had appeared on the course page.
+
+Assignment — Due tomorrow, 18:00
+
+Someone behind me muttered, “Knew it.”
+
+I turned around.
+
+“How?”
+
+“My AI told me this morning.”
+
+The lecturer kept talking.
+
+I opened the assignment and scrolled through it. It was longer than I expected. No new message from Mia appeared while I read.
+
+After class, my friend was waiting near the stairs with the new umbrella tucked under one arm.
+
+“Still coming?”
+
+I glanced toward the exit.
+
+“Yeah.”
+
+“Good.”
+
+We started downstairs together.
+
+My device vibrated before we reached the first floor, but I kept walking. Outside, the clear morning sky had turned gray. People near the entrance were opening umbrellas.
+
+My friend lifted his.
+
+“See?”
+
+“Congratulations.”
+
+“I did absolutely nothing.”
+
+He turned the umbrella once in his hand before opening it.
+
+We headed toward the station.
+
+The device vibrated again, and I finally took it out at the next light. The screen showed how long I had slept the night before, my travel time, and the estimated time needed for the assignment. Beneath the calculation was a recommendation:
+
+Return home: 18:42
+
+The time was 18:17.
+
+My friend had gone several steps ahead before he noticed and came back.
+
+“What?”
+
+“Nothing.”
+
+“You thinking of bailing?”
+
+“No.”
+
+The signal changed, but a bicycle cut through the crossing before either of us stepped forward. My friend looked at the device in my hand.
+
+“Yours telling you to go home too?”
+
+“Yeah.”
+
+“Mine’s been saying that all day.”
+
+“So what are you doing?”
+
+He shrugged.
+
+“I’m going.”
+
+Once the bicycle passed, we crossed.
+
+Neither of us brought it up again before the next corner. At the station entrance, two more cancellations appeared in the group chat. Four of us were still going.
+
+My friend read over my shoulder.
+
+“Getting smaller.”
+
+“Four’s enough.”
+
+“Then the place from last time?”
+
+The bar was behind the station, with a narrow table near the kitchen. The staff had brought us the wrong drinks several times the last time we were there. Someone had always taken them, and although we had kept talking about catching the last train, no one had wanted to stand up first.
+
+“Works for me.”
+
+At the gates, we had to split up. He lived in the opposite direction, and we usually met again on the other side of the station.
+
+He raised the umbrella.
+
+“Twenty minutes.”
+
+“Yeah.”
+
+He walked toward the other gate.
+
+My train home left in three minutes. The train toward the bar left in twelve. I already knew the times, but I opened the device. If I went home, Mia estimated that I would finish the assignment at 21:10 and be in bed by 23:18.
+
+I switched to the other route.
+
+The assignment moved to 23:46, and the recommended sleep time became 01:02.
+
+No warning appeared.
+
+A message from my friend came in.
+
+Don’t disappear lol
+
+I typed:
+
+On my way
+
+I read it before sending and erased the whole thing.
+
+Then I typed:
+
+Might head home after all
+
+Before I sent that one, he replied.
+
+Knew it
+
+Another message followed.
+
+Next time
+
+I looked toward the gate he had used.
+
+He was no longer there.
+
+The device vibrated.
+
+“Your schedule has been updated.”
+
+I left the screen closed.
+
+Rain was hammering the roof when I reached the platform, swallowing parts of the station announcements.
+
+The train home arrived first.
+
+The doors opened, and I stayed where I was while people moved around me and boarded. The stairs to the opposite platform were only a few meters away.
+
+The doors began to close, then opened again.
+
+I got on.
+
+There was an empty seat near the door. I sat down and rested the damp device on my knee. After the train started moving, the screen lit up.
+
+Tomorrow’s assignment: 19:30–21:10
+
+I kept the screen open as the train entered the tunnel.
+
+The text reflected faintly in the window.

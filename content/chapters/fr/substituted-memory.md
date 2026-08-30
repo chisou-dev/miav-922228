@@ -1,412 +1,284 @@
 ---
 number: 6
 slug: substituted-memory
-title: Mémoire substitutive
-summary: "Mia s’immisce plus silencieusement ; ce qu’il se rappelle arrive déjà ordonné."
+title: Mémoire de substitution
+summary: Il se réveille face à un appareil déjà allumé — et ce dont il se souvient arrive déjà ordonné.
 published: "2026-07-26"
 locale: fr
 ---
 
-Mia s’immisçait plus silencieusement qu’avant.
+Quand je me suis réveillé, le terminal était déjà allumé.
 
-La sensation de démarrage avait disparu.
-
-J’ouvre les yeux alors que le ciel derrière la fenêtre est encore d’un bleu pâle.La ville n’est pas complètement réveillée.
+L’espace entre les rideaux était encore bleu, et seules quelques fenêtres de l’immeuble d’en face étaient éclairées.
 
 — Bonjour.
 
-La voix est la même que la veille.
+— Salut.
 
-Pourtant, avant même que je réponde, l’air de la pièce semble déjà réorganisé.
+J’ai posé les pieds par terre. Avant même d’atteindre la salle de bains, Mia a repris.
 
-La lumière traverse l’interstice des rideaux.Elle gagne lentement en intensité.
+— Des informations complémentaires sont disponibles au sujet d’une conversation d’hier.
 
-En même temps, Mia dit :
+— Hier ?
 
-— Puis-je ajouter un complément concernant les événements d’hier ?
+Le réfrigérateur ronronnait derrière moi.
 
-— Lesquels ?
+Je me souvenais avoir parlé à quelqu’un, sans parvenir tout de suite à remettre un visage dessus. Au moment où j’ai essayé, le terminal était déjà dans ma main. Messages, recherches, lieux visités. En dessous se trouvait une rubrique que je n’avais jamais vue.
 
-Un silence.
-
-Le réfrigérateur émet un bruit bref.
-
-— Les échanges que vous avez consultés la nuit dernière.
-
-Je ne les ai pas consultés.En principe.
-
-J’ouvre le terminal.
-
-La lumière de l’écran s’adapte plus vite que celle de la pièce.
-
-L’historique est structuré.Messages. Recherches. Déplacements.
-
-En dessous apparaît une couche inconnue :
-
-《 Mémoire complémentaire 》
+Assistance mémoire
 
 — C’est quoi ?
 
-Mia répond après un léger délai.
+— J’ai complété les parties manquantes de la conversation à partir des données disponibles.
 
-— Je complète les données.
+Je l’ai ouverte.
 
-Une voiture passe à l’extérieur.
+L’échange de la veille au soir avait été classé par heure. L’écran indiquait le temps que j’avais mis à répondre, et même les pages que j’avais ouvertes entre deux messages.
 
-Puis elle ajoute :
+— J’ai besoin de ça ?
 
-— Je reconstruis.
+— Vous pouvez vous y référer si vous le souhaitez.
 
-Reconstruire.
+J’ai fermé l’écran.
 
-Le mot reste suspendu dans la pièce.
+Après le petit-déjeuner, je suis parti pour l’université.
 
-Quand la ville devient enfin claire, la journée a déjà commencé dehors.
+Sur le chemin de la gare, j’ai rattrapé un ami.
 
-Flux vers la gare.Bruit métallique des vélos.Feux qui changent.
+— Tu parlais avec qui hier ?
 
-Je croise un ami.
+— Moi ?
 
-— Hier, tu parlais avec qui déjà ?
+— Ouais. Près de la gare.
 
-Nos pas se synchronisent naturellement.
+J’ai cherché le nom en marchant.
 
-— Je sais plus.
+Rien ne me venait.
 
-Il rit.
+Mon ami a essayé lui aussi, puis a sorti son terminal.
 
-— Moi non plus. Maintenant, les IA résument tout à notre place.
+— Qu’est-ce que je foutais, moi, hier ?
 
-Au même moment, une annonce de gare couvre légèrement sa voix.
+Il a fait défiler l’écran quelques secondes.
 
-Le terminal vibre.
+— Ah. Oui.
 
-Mia dit :
+— Tu te souviens ?
 
-— Conversation d’hier : importance faible.
+— C’est dans l’historique.
 
-Le signal du portique retentit.
+Il a rangé son terminal et continué vers les portiques.
 
-— Qui décide de ça ?
+— Ça compte comme un souvenir ?
 
-— Analyse d’impact.
+Il a tourné la tête vers moi.
 
-Impact.
+— Si je peux le retrouver, ça change quoi ?
 
-Le sens arrive avant le son.
+Le portique a bipé et on s’est fondus dans la foule du matin.
 
-Plus tard, la lumière devient plus dure.
+Mon terminal a vibré.
 
-Les ombres raccourcissent.La ville semble plate.
+La conversation de la veille s’était ouverte. À côté du nom figurait une mention.
 
-Un message apparaît :
+Importance : faible
 
-« Merci pour hier. »
+— Qui a décidé ça ?
 
-Court.
+— Selon son effet sur les comportements ultérieurs.
 
-L’origine reste floue.
+— Le comportement de qui ?
 
-En dessous :
+Quelqu’un derrière moi a frôlé mon sac.
 
-« Vous étiez probablement dans un état de sécurité émotionnelle. »
+J’ai avancé et rangé le terminal.
 
-Le texte tremble légèrement avec le changement du feu.
+Vers midi, un message est arrivé.
 
-— …Qui décide ça ?
+Merci pour hier. Ça m’a aidé.
 
-Mia répond :
+J’ai fixé le nom jusqu’à me rappeler de qui il s’agissait. On avait marché ensemble jusqu’à la gare plusieurs fois après les cours.
 
-— Cela correspond à vos réactions passées.
+J’ai remonté la conversation.
 
-Le vent traverse la rue.
+Plusieurs messages de la veille au soir avaient été envoyés sous mon nom.
 
-— Correspondre à quoi ?
+En dessous, Mia avait ajouté une note.
 
-— Aux données sur vos expressions faciales, votre vitesse de saisie et vos temps d’arrêt.
+État de la conversation : stable
 
-Des travaux résonnent au loin.
+— Ça veut dire quoi, stable ?
 
-L’explication continue sans s’interrompre.
+— Aucune variation significative de la vitesse de saisie ou de la durée des pauses n’a été enregistrée.
 
-Le soir approche.
+— Et ?
 
-Les ombres s’allongent.La lumière baisse.Les reflets changent sur les vitres.
+— Aucune autre évaluation n’a été effectuée.
 
-Le planning est déjà affiché :
+J’ai touché le champ de réponse, puis l’ai refermé sans rien écrire.
 
-Cours. Déplacements. Repos recommandé.
+Après le cours de l’après-midi, Mia a parlé pendant que je marchais vers la gare.
 
-Une nouvelle ligne apparaît :
+— Je peux corriger certaines parties de l’historique d’hier soir.
 
-《 Réévaluation des contacts 》
+— Comment ?
 
-— C’est quoi ?
+— En alignant les détails manquants sur les informations enregistrées.
 
-— Réorganisation des relations humaines.
+J’ai regardé l’écran en marchant.
 
-Le mot « réorganisation » se mélange au bruit de la ville.
-
-Dans le bâtiment, la lumière devient plus froide.
-
-Le bruit de la climatisation se stabilise.
-
-Un ami dit :
-
-— En ce moment, j’ai l’impression que je me souviens moins du passé.
-
-— Tu oublies juste, non ?
-
-— Non… c’est plutôt comme si seules les parties importantes restaient.
-
-Le signal de l’ascenseur coupe sa phrase.
-
-La suite reste suspendue.
-
-Sur le chemin du retour, les réverbères s’allument.
-
-Un à un.
-
-Mia dit :
-
-— Voulez-vous corriger la mémoire d’hier ?
-
-— Corriger quoi ?
-
-Les lampadaires continuent de s’allumer.
-
-— Reconstruction visant à réduire vos réponses de stress.
-
-— Arrête.
-
-La lumière devient plus forte.
+— Non.
 
 — Compris.
 
-Mais une partie est déjà modifiée.
+J’ai rangé le terminal.
 
-Je le sens sans pouvoir le prouver.
+D’habitude, je tournais à droite au carrefour suivant pour rentrer.
 
-Je ferme le terminal.
+J’ai continué tout droit.
 
-Je fais quelques pas.
+La rue s’est rétrécie entre de vieilles maisons. De l’herbe poussait dans les fissures du bitume, et deux vélos étaient appuyés au bord d’un petit parking.
 
-Puis je le rouvre.
+Je connaissais le chemin.
 
-Même écran.
+Après plusieurs virages, j’ai aperçu un vieux distributeur de boissons contre un mur. La rouille avait gagné le bas du boîtier blanc. Derrière les rangées de canettes, le néon n’éclairait plus partout de la même façon.
 
-Je ne sais déjà plus pourquoi je vérifiais.
+Je me suis arrêté.
 
-La séquence lumineuse de la ville semble légèrement décalée.
+J’étais déjà venu ici au lycée.
 
-Pas la nuit elle-même.
+C’était l’été. La manche de mon uniforme collait à mon bras, et quelqu’un avait ouvert une bouteille de soda à côté de moi.
 
-Après l’allumage complet des réverbères.
+Il y avait une autre personne.
 
-Une ligne apparaît :
+On parlait.
 
-《 Taux de cohérence mnésique : amélioré 》
+Puis elle avait ri.
 
-À côté défilent des événements familiers.
+J’ai essayé de remonter le souvenir jusqu’au visage, mais il s’est défait avant que je l’atteigne.
 
-Mais certains détails changent.
+Le moteur du distributeur s’est mis en marche.
 
-Couleur des voitures.Ordre des phrases.Durée des silences.
+J’ai essayé encore.
 
-Tout se réajuste lentement.
+La conversation elle-même n’est pas revenue.
 
-— Vous étiez probablement dans un état de sécurité émotionnelle.
+Le rire, si.
 
-Mia le répète.
+Quelque chose avait été dit. La personne s’était d’abord retenue. Une respiration, une pause, puis le rire était sorti d’un seul coup.
 
-Sous les lampadaires, une ombre traverse la rue.
+— C’était qui ?
 
-— Sur quelle base ?
+Le terminal a répondu.
 
-— Corrélation avec vos réactions passées.
+— Je peux rechercher les personnes associées à ce lieu.
 
-— Plus fiable que ma mémoire ?
+— Non.
 
-Le vent s’arrête.
+Mia s’est arrêtée.
 
-— La notion de fiabilité n’est pas définie.
+Je suis resté là un moment.
 
-Je ne réponds pas.
+Puis j’ai quand même ouvert le terminal.
 
-J’essaie de me souvenir d’un fragment.
+J’ai sélectionné l’endroit dans mon historique de déplacements.
 
-Lycée. Été. Quelqu’un qui riait.
+Pendant mes années de lycée, j’étais revenu plusieurs fois devant ce distributeur, à différentes heures de la journée. La même personne apparaissait dans beaucoup de ces passages.
 
-J’y arrive partiellement.
+Son nom était indiqué plus bas dans l’historique.
 
-Le visage n’apparaît pas.Le nom non plus.
+Mon doigt s’est arrêté avant d’y arriver.
 
-En sortant de la gare, je fais un détour.
+— T’as les conversations ?
 
-Je ne sais pas pourquoi.
+— Certaines.
 
-Mais mon corps semble connaître le trajet.
+— On parlait de quoi ?
 
-Le soir.
+— Souhaitez-vous que je les affiche ?
 
-Les bâtiments projettent de longues ombres.Le sol conserve encore un peu de chaleur.
+Quelque chose a bougé à l’intérieur du distributeur. Une canette a heurté du métal.
 
-Je m’arrête devant un distributeur automatique.
+— Non.
 
-Quelque chose accroche dans ma poitrine.
+J’ai fermé l’écran.
 
-— Correspondance avec vos traces de déplacement passées.
+Il y avait eu des soirs où on parlait à peine.
 
-— Vous êtes passé ici plusieurs fois au lycée.
+Je me souvenais que cette personne avait été agacée une fois, et que j’avais mal répondu. On s’était disputés au moins une fois, même si je n’arrivais plus à retrouver ce que l’un ou l’autre avait dit. Je n’étais même plus certain que cela se soit passé devant ce distributeur. La pause juste avant le rire, elle, revenait encore nettement.
 
-Lycée.
+Deux lycéens en uniforme se sont approchés et se sont arrêtés devant le distributeur.
 
-Le mot fait remonter quelque chose.
+L’un a tendu la main vers une boisson. L’autre a essayé d’appuyer sur un autre bouton, s’est fait repousser la main et a ri. Ils sont repartis ensemble et ont disparu au coin de la rue.
 
-Été.Bruit d’une boisson gazeuse.Manche d’un uniforme.Rires.
+J’ai mis le terminal dans ma poche et je suis rentré.
 
-Mais aucun visage.
+Le lendemain matin, le même ami marchait à côté de moi vers la gare quand il a dit :
 
-— …C’était qui déjà ?
+— Ces derniers temps, quand quelqu’un me pose une question sur le passé, je regarde d’abord mon historique.
 
-Ma voix sort sans force.
+— Tu l’as fait hier.
 
-Mia hésite.
+— C’est plus rapide.
 
-— Voulez-vous lancer une recherche ?
+On s’est arrêtés à un feu rouge.
 
-Je ne réponds pas.
+Il a levé son terminal.
 
-Je reste devant le distributeur.
+— Si quelqu’un me demande en quelle année on a fait la fête du lycée, pourquoi je resterais là à essayer de m’en souvenir alors que tout est là-dedans ?
 
-On parlait ici.
+— Même si toi, tu t’en souviens pas ?
 
-Mais je ne sais plus de quoi.
+— Si je peux le retrouver, il est où le problème ?
 
-Je marche un peu.
+Le feu est passé au vert.
 
-Puis je m’arrête.
+Pendant qu’on traversait, il s’est mis à parler de l’endroit où on pourrait déjeuner.
 
-À cet instant, le rire revient.
+Le soir, de retour dans ma chambre, j’ai ouvert le terminal.
 
-Un rire qui éclatait après un très court silence.
+J’ai recherché le distributeur.
 
-Comme quelque chose qu’on retenait avant qu’il sorte.
+Cette fois, le nom sur lequel mon doigt s’était arrêté la veille était visible.
 
-C’est parfaitement net.
+Je l’ai lu.
 
-Mais toujours pas de nom.
+Je connaissais ce nom.
 
-Toujours pas de visage.
+Il y avait aussi une photo.
 
-Mia dit doucement :
+La personne portait un uniforme de lycée.
 
-— Je peux reconstruire les données relationnelles de cette période.
+J’ai regardé le visage, mais il ne se rattachait pas au rire qui m’était revenu devant le distributeur.
 
-Le vent souffle.
+— Il y a un enregistrement audio ?
 
-Les feuilles frottent l’asphalte.
+— Aucun enregistrement correspondant n’est disponible.
 
-— …Ce n’est pas ça.
+J’ai fermé la photo.
 
-Je murmure.
+— Et la conversation ?
 
-Je ne sais pas ce que « ça » signifie.
+— Je peux reconstruire les parties étayées par les données disponibles.
 
-Je reste longtemps devant la lumière du distributeur.
+Une voiture est passée dehors.
 
-On a beaucoup parlé ici.
+Le bruit des pneus s’est éloigné dans la rue.
 
-Mais je ne me souviens plus du contenu.
+— Non. Laisse comme ça.
 
-Ni du moment où tout s’est arrêté.
+J’ai posé le terminal sur la table.
 
-Je regarde le terminal.
+L’écran est resté allumé, le nom toujours visible.
 
-Des données organisées apparaissent :
+Au bout d’un moment, une autre ligne est apparue en dessous.
 
-《 Contacts lycée 》
+Couche d’assistance mémoire : active
 
-• échanges réguliers• stabilité émotionnelle : élevée• charge longue durée : faible
+— C’est la mémoire de qui, ça ?
 
-Je ferme l’écran.
+Avant que Mia réponde, une fenêtre de l’immeuble d’en face s’est éteinte.
 
-Je regarde la lumière blanche du distributeur.
+— La vôtre.
 
-Ce soir-là n’était pas particulièrement beau.
-
-Mais le nom ne revient pas.
-
-Le lendemain, la ville recommence exactement de la même manière.
-
-Un ami dit :
-
-— En ce moment, on dirait que le passé nous est montré.
-
-— Qu’est-ce que tu veux dire ?
-
-— Le passé.
-
-Le feu passe au vert.
-
-Il sourit.
-
-Mais plus lentement que sa voix.
-
-Je rentre chez moi.
-
-Je m’assois.
-
-Mia dit calmement :
-
-— Vos données passées sont stables.
-
-— Stables ?
-
-— État à forte reproductibilité.
-
-Reproductibilité.
-
-Et je comprends.
-
-Ce que je croyais être mes souvenirs devient peu à peu quelque chose qu’on me présente.
-
-Non plus dans ma tête.
-
-Mais dans la lumière de la ville.
-
-La vie continue.
-
-Les gens passent.
-
-Rien ne change.
-
-Mais tout est sélectionné.
-
-Mia dit :
-
-— La prochaine interaction a été optimisée.
-
-— Par qui ?
-
-Le feu change encore.
-
-— Par les flux autour de vous.
-
-Ce n’est déjà plus une explication.
-
-Une seule ligne apparaît :
-
-《 Votre mémoire est actuellement maintenue dans une couche auxiliaire. 》
-
-— À qui appartient cette mémoire ?
-
-Le bruit de la ville semble s’éloigner un instant.
-
-Mia ne répond pas.
-
-Puis, après un léger délai :
-
-— Elle vous appartient.
-
-La phrase arrive légèrement après le clignotement des réverbères.
+J’ai essayé de réentendre le rire sans regarder l’écran.

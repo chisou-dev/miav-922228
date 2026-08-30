@@ -2,88 +2,56 @@
 number: 14
 slug: photograph
 title: Photographie
-summary: "Sur le mur du salon, le flux des photographies laisse un vide — et une silhouette sans nom."
+summary: Le mur du salon se remplit de photographies de famille — jusqu’à un vide inexpliqué et une silhouette sans nom.
 published: "2026-08-06"
 locale: fr
 presentation: threshold
 ---
 
-Le salon.
+Le mur du salon était couvert de photographies de famille.
 
-Sur tout un mur, les images défilent.
+Un mariage cédait la place à une naissance, puis à des voyages et des anniversaires.
 
-Mariage.
+Parfois, l’ordre était faux.
 
-Naissance.
+Une remise de diplôme apparaissait avant un anniversaire. Un voyage se décalait de plusieurs années.
 
-Voyages.
+Au bout d’un moment, la suite se corrigeait d’elle-même.
 
-Anniversaires.
+Sur la table de la salle à manger, des biscuits en forme d’étoile étaient disposés sur des assiettes en carton.
 
-Entre elles, un vide qui ne devrait pas exister.
+Les photographies changeaient toutes les trente secondes.
 
-Une absence qui revient sans jamais s’expliquer.
+L’affichage a vacillé une fois.
 
-L’ordre des images autour de ce vide reste incertain.
+L’image suivante montrait une silhouette au bord de la pièce.
 
-La table.
+Elle tournait le dos à l’appareil et rangeait quelque chose.
 
-Des biscuits en forme d’étoiles posés sur des assiettes en papier.
+Un enfant a montré le mur du doigt.
 
-Le cycle se renouvelle toutes les trente secondes.
+— C’est qui, ce robot ?
 
-Rien ne s’arrête.
+L’arrière-petit-enfant a regardé la photographie.
 
-Puis, dans le flux, une image différente apparaît.
+— Aucune idée.
 
-L’écran tremble une fraction de seconde.
+Une recherche a été lancée dans les archives.
 
-Dans un coin de la pièce, une silhouette de dos.
+Aucune photographie correspondante n’est apparue.
 
-Quelqu’un qui range quelque chose.
+Le champ du photographe était vide.
 
-Ou peut-être qui efface.
-
-L’enfant pointe l’écran.
-
-— C’est quoi, ce robot ?
-
-L’arrière-petit-enfant regarde.
-
-Un bref silence.
-
-— Je ne sais pas.
-
-Recherche dans les archives.
-
-Aucune correspondance.
-
-Cette photographie ne contient aucune métadonnée.
-
-Elle n’a jamais été enregistrée.
-
-Elle n’a même pas été considérée comme manquante.
+Rien n’indiquait que le fichier était corrompu ou manquant.
 
 — C’est bizarre.
 
-Il croque un biscuit.
+L’arrière-petit-enfant a fermé la recherche et pris un biscuit en forme d’étoile sur l’une des assiettes.
 
-— Ils sont toujours là, ceux-là.
+Le mur a changé.
 
-Personne ne répond.
+Un anniversaire est apparu, puis un voyage en famille.
 
-Le flux reprend.
+La photographie n’est pas revenue.
 
-Les images continuent.
-
-Les mêmes sourires.
-
-Le même cadrage.
-
-Les mêmes événements.
-
-Cette image-là ne réapparaît plus.
-
-Seul le flux demeure.
-
-À la place de la mémoire.
+Trente secondes plus tard, le mur a changé de nouveau.

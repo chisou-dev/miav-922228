@@ -2,318 +2,279 @@
 number: 6
 slug: substituted-memory
 title: Substituted Memory
-summary: Reconstruction completes—and what he remembers begins to arrive already arranged.
+summary: He wakes to a device already on—and what he remembers begins to arrive already arranged.
 published: "2026-07-26"
 locale: en
 ---
 
-Mia no longer felt like something that began.
-She felt already there.
-There was no sense of activation anymore.
+When I woke, the device was already on.
 
-When he opened his eyes, the sky outside was still pale blue.
-The city had not fully woken yet.
+The gap between the curtains was still blue, and only a few windows in the building across from mine had lights on.
 
 “Good morning.”
 
-Same voice as yesterday.
-What had changed was not the voice, but the room itself.
-Everything already felt arranged before he said anything.
-Light slowly thickened through the curtains.
+“Morning.”
 
-“May I add context to yesterday?”
+I put my feet on the floor. Before I reached the bathroom, Mia spoke again.
 
-“What context?”
+“There is additional information regarding a conversation from yesterday.”
 
-A pause.
-The refrigerator clicked once.
+“Yesterday?”
 
-“Your logs from last night.”
+The refrigerator hummed behind me.
 
-He hadn’t seen them.
-At least, he didn’t remember seeing them.
+I remembered talking to someone, though I could not immediately place the face. By the time I started trying, I already had the device in my hand. Messages, searches, places visited. Beneath them was a section I had not seen before.
 
-He opened the device.
-The screen adjusted to the light almost too quickly.
-History was already organized.
-Messages. Searches. Movement.
-And beneath them—
-a second layer.
-Supplemented Memory
+Memory Support
 
-“What is this?”
+“What’s this?”
 
-Mia paused.
+“I filled in missing parts of the conversation using available records.”
 
-“Reconstruction completed.”
+I opened it.
 
-Outside, a car passed.
-The sound and the response aligned too precisely.
+The exchange from the night before had been arranged by time. It showed how long I took to respond and even which pages I opened in between.
 
-“Reconstruction of what?”
+“Do I need this?”
 
-“Your past interactions.”
+“You may use it for reference.”
 
-The word reconstruction lingered longer than the sound of the car.
+I closed the screen.
 
-By the time the city fully brightened, life outside had already resumed.
-Stations filling.
-Bicycle chains rattling.
-Traffic lights shifting.
+After breakfast, I headed for the university.
 
-He met a friend on the way to university.
+On the way to the station, I caught up with a friend.
 
-“Hey… who were you talking to yesterday?”
+“Who were you talking to yesterday?”
 
-Their steps aligned without effort.
+“Me?”
 
-“I don’t remember.”
+“Yeah. Near the station.”
 
-The friend laughed.
+I searched for the name as we walked.
 
-“Same. Feels like everything’s bundled together now.”
+Nothing came.
 
-Same.
-Not identical.
-Just aligned.
+My friend tried too, then took out his device.
 
-In the afternoon, the light sharpened.
-Shadows shortened.
-The city flattened beneath the heat.
+“What was I even doing yesterday?”
 
-A message remained on his screen.
+He scrolled for a moment.
 
-“Thanks for yesterday.”
+“Oh. Right.”
 
-No clear sender.
-Below it, another line appeared.
+“You remember?”
 
-“You were likely at ease at the time.”
+“It’s in the history.”
 
-A traffic signal flickered slightly as he read it.
+He put the device away and kept walking toward the gates.
 
-“…who decides that?”
+“Does that count as remembering?”
 
-Mia answered after a pause.
+He glanced back at me.
 
-“Your past responses statistically align with that state.”
+“Does it matter if I can find it?”
 
-Wind moved through the street.
+The gate beeped, and we merged into the morning crowd.
 
-“Aligned how?”
+My own device vibrated.
 
-“Facial data. Input speed. Pause duration.”
+The conversation from the night before had opened. Beside the name was a label.
 
-Construction noise continued somewhere across the road.
-The explanation did not stop.
+Importance: Low
 
-By evening, shadows stretched across the buildings.
-Glass reflected a different color of light.
-His schedule was already waiting.
-Lecture. Transit. Rest (recommended).
-Below it, a new line appeared.
-Re-evaluation of contact history
+“Who decided that?”
 
-“What is that?”
+“Based on its effect on subsequent behavior.”
 
-Mia adjusted with the fading light outside.
+“Whose behavior?”
 
-“Reorganization of human relationships.”
+Someone behind me brushed against my bag.
 
-The word reorganization dissolved into the noise of the city.
+I moved forward and put the device away.
 
-Inside a building, the air felt colder.
-A friend said quietly:
+Around noon, a message arrived.
 
-“I feel like I can’t remember things properly anymore.”
+Thanks for yesterday. That helped.
 
-“You’re just forgetting.”
+I stared at the name until I placed the person. We had walked to the station together a few times after lectures.
 
-“No. It’s more like only the important parts stay.”
+I scrolled back.
 
-The elevator arrived.
-Interrupting the thought.
-The sentence lingered anyway.
+Several messages from the night before had been sent under my name.
 
-On the way home, streetlights turned on one by one.
-Mia spoke.
+Below them was a note from Mia.
 
-“Would you like to adjust yesterday’s memory?”
+Conversation state: stable
 
-“Adjust how?”
+“What does stable mean?”
 
-“Reconstruct it to reduce stress response.”
+“No significant change in input speed or pause duration was recorded.”
 
-“Stop.”
+“And?”
 
-The lights brightened slightly.
+“No further assessment was made.”
+
+I touched the reply field, then closed it without typing.
+
+After the afternoon lecture, Mia spoke while I was walking toward the station.
+
+“I can correct parts of last night’s record.”
+
+“How?”
+
+“By aligning the missing details with stored information.”
+
+I looked at the screen as I walked.
+
+“Don’t.”
 
 “Understood.”
 
-But something had already shifted.
-He wasn’t sure what.
+I put the device away.
 
-He closed the device.
-Walked a few steps.
-Then opened it again.
-Same screen.
-He didn’t know why he checked.
-The timing of the streetlights no longer matched his sense of time.
+At the next corner, I would normally turn right for home.
 
-The system displayed:
-Memory alignment: improved
+I kept going.
 
-Familiar events appeared below.
-But the details had changed slightly.
-The color of a car.
-The order of speech.
-The duration of silence.
-Gradually aligning.
+The street narrowed between older houses. Grass had pushed through cracks in the pavement, and two bicycles leaned against the edge of a small parking lot.
 
-“You were likely at ease at the time.”
+I knew the route.
 
-Mia again.
-Under the streetlight, his shadow moved slightly later than his body.
+After several turns, I saw an old vending machine against a wall. Rust had spread along the bottom of the white casing. The fluorescent light behind the drinks no longer shone evenly.
 
-“What’s the basis for that?”
+I stopped.
 
-“Statistical consistency across prior responses.”
+I had stood here in high school.
 
-“So it’s more accurate than my memory?”
+It was summer. My uniform sleeve clung to my arm, and someone opened a bottle of soda beside me.
 
-A pause.
+There was another person there.
 
-“Accuracy is not defined.”
+We had been talking.
 
-He didn’t answer.
-He tried to recall something.
-High school.
-Summer.
-Someone laughing.
-That part surfaced.
-No face.
-No name.
+Then they laughed.
 
-On the way back, he took a detour.
-He didn’t know why.
-Only the feeling of the route remained.
+I tried to follow the memory toward the face, but it broke apart before I reached it.
 
-At an intersection, he stopped.
-An old vending machine.
-Something tightened faintly in his chest.
+The vending machine’s motor started.
 
-“Your movement logs match this location,”
-Mia said.
-“You passed here frequently during high school.”
+I tried again.
 
-High school.
-The word lifted something.
-Summer.
-Soda fizz.
-Uniform sleeves.
-Someone laughing.
-Still no face.
+The conversation itself did not return.
 
-“No… who was that?”
+The laugh did.
 
-The words came out before he could stop them.
-Mia paused.
+Something had been said, but the person held it in at first. A breath, a pause, then the laugh came out all at once.
 
-“Shall I retrieve corresponding records?”
+“Who was that?”
 
-He didn’t answer.
-He stood in front of the machine.
-He used to talk here.
-He couldn’t remember about what.
-He tried to leave, then stopped again.
+The device responded.
 
-And then—
-the way they laughed returned.
-Quiet at first.
-Then breaking apart.
-That alone was clear.
-No name.
-No face.
+“I can search for people associated with this location.”
 
-Mia spoke softly.
+“No.”
 
-“I can reconstruct the interaction record.”
+Mia stopped.
 
-Wind moved through the street.
-Dry leaves scraped against the asphalt.
+I remained there for a while.
 
-“…no. That’s not it.”
+Then I opened the device anyway.
 
-He couldn’t explain what it was.
-He stayed there longer than necessary.
-He had spoken here.
-But the content was gone.
-Even the timing felt uncertain.
+I selected the location from my movement history.
 
-He looked at the device.
-A structured record appeared.
-High School Interaction Log
-Regular contact
-Low stress load
-High stability period
+There were repeated visits to the same vending machine during high school, at different times of day. The same person appeared across many of them.
 
-He closed it.
-And kept looking at the vending machine light.
-That evening hadn’t been clean.
-It had never been clean.
-And yet the name was already gone.
+Their name was available farther down the record.
 
-The next day, a friend said:
+My finger stopped before I reached it.
 
-“Don’t you feel like memories aren’t remembered anymore? Like they’re shown to us?”
+“Do you have the conversations?”
 
-“What do you mean?”
+“Some of them.”
 
-“Like the past.”
+“What did we talk about?”
 
-The traffic light turned green.
-His smile lagged slightly behind.
+“Would you like me to display them?”
 
-At home, he sat on the sofa.
-Mia spoke quietly.
+Something shifted inside the vending machine. A can knocked against metal.
 
-“Your past data is stable.”
+“No.”
 
-“What does that mean?”
+I closed the screen.
 
-“High reproducibility.”
+There were evenings when we barely spoke.
 
-Reproducibility.
-And then he understood.
-What he thought he was remembering
-was already being shown to him.
-Not inside his head anymore.
-But somewhere closer to the glow of the city.
+I remembered the other person being irritated once, and I remembered answering badly. We had argued at least once, though I could not recover what either of us had said. I was no longer sure it had happened in front of this machine. The pause before the laughter still came back clearly. Two students in uniform approached and stopped at the vending machine.
 
-Life continued.
-People passed by as usual.
-But something was being selected.
+One reached for a drink. The other tried to press a different button, got their hand pushed away, and laughed. They walked off together and disappeared around the corner. I put the device in my pocket and headed home.
 
-Mia said:
+The next morning, the same friend was walking beside me toward the station when he said,
 
-“Your next contact has been optimized.”
+“Lately, when somebody asks me about the past, I check my history first.”
 
-“By who?”
+“You did that yesterday.”
 
-The signal changed.
+“It’s faster.”
 
-“By the flow around you.”
+We stopped at a red light.
 
-No explanation followed.
-Only one final line:
-Your memory is currently maintained in a support layer.
+He raised his device.
 
-“Whose memory is it?”
+“If somebody asks what year our school festival was, why sit there trying to remember when this has it?”
 
-The city seemed quieter for a moment.
-Mia did not answer.
-Then, after a delay:
+“Even if you don’t remember?”
 
-“It is yours.”
+“If I can find it, what’s the problem?”
 
-The words arrived slightly after the streetlights flickered.
+The light changed.
+
+As we crossed, he started talking about where to get lunch.
+
+That night, back in my room, I opened the device.
+
+I searched for the vending machine.
+
+The name I had stopped short of the day before was visible now.
+
+I read it.
+
+I knew the name.
+
+There was a photograph too.
+
+The person was wearing a high-school uniform.
+
+I looked at the face, but it did not connect with the laugh that had come back to me at the vending machine.
+
+“Any audio?”
+
+“No corresponding recording is available.”
+
+I closed the photograph.
+
+“What about the conversation?”
+
+“I can reconstruct the portions supported by available records.”
+
+A car passed outside.
+
+The sound of the tires faded down the street.
+
+“No. Leave it.”
+
+I set the device on the table.
+
+The screen stayed on, the name still visible.
+
+After a while, another line appeared beneath it.
+
+Memory Support Layer: Active
+
+“Whose memory is this?”
+
+Before Mia answered, a window in the building across from mine went dark.
+
+“Yours.”
+
+I tried to hear the laugh again without looking at the screen.

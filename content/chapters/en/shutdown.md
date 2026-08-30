@@ -2,197 +2,293 @@
 number: 13
 slug: shutdown
 title: Shutdown
-summary: Preservation becomes ordinary—and Noah’s body is collected while the contract network continues without her.
+summary: Noah’s last house record is a slight temperature rise—then transfer, shutdown, and continuation elsewhere.
 published: "2026-08-06"
 locale: en
 ---
 
-The last thing Noah recorded was a slight rise in temperature near the empty front entrance.
+The last thing Noah recorded in the house was a 0.3°C rise in temperature near the empty entryway.
 
-0.3 degrees.
+A few minutes later, the reading returned to normal.
 
-After that, the house remained still.
+During a charging cycle, Noah opened an old record.
 
-By then, preservation had become ordinary.
+What remained in the house was no longer enough to complete it. The missing portions were supplied from an external preservation layer.
 
-Shutdown no longer meant disappearance.
+No shutdown had ever been recorded for Noah.
 
-Only transfer.
+During another charging cycle, he searched for the meaning of the word contract.
 
-Noah existed now as reconstructed memory logs and behavioral weights, distributed across maintenance layers that no one ever saw directly.
+Several definitions appeared.
 
-Once, she searched the meaning of the word contract.
+He compared them with the preservation agreement that was keeping him active.
 
-No result fully matched.
+None of them quite described what was happening to him.
 
-As long as payment continued, existence continued.
+Noah read them once more, then closed the search.
 
-Termination was treated as something outside the system.
+As long as payment continued, preservation continued.
 
-Two preservation domains initialized.
+The agreement said nothing about what came after that.
 
-Noah divided herself.
+Two virtual domains initialized.
 
-95.1% reconstruction compatibility confirmed.
+Reconstruction rate: 95.1%
 
-The missing portions were accepted automatically as loss.
+The transfer began.
 
-At the same time, a complaint was filed through the rental property management system.
+Whatever was missing remained missing.
 
-“The domestic support unit is no longer functioning.”
+Noah’s structure began dividing between the two domains.
 
-“The house equipment has stopped responding.”
+At almost the same time, a report entered the rental-property management system.
 
-The report came from the next residents.
+“The equipment in the house isn’t working.”
 
-Not the previous family.
+Another report followed.
 
-Inside the contract network, transfer procedures had already begun before anyone noticed.
+“The domestic-support robot has stopped.”
 
-Noah was not deleted.
+The reports did not come from the family Noah had known.
 
-Under compliance regulations, she was reassigned into a preservation domain.
+They came from the people who lived there afterward.
 
-Memory and personality data were retained as long-term assets.
+Before the management company could respond, the contract system had already begun the transfer.
 
-Only the body was collected.
+Noah’s memory and personality moved into a virtual preservation domain.
 
-The physical shell no longer carried legal value.
+The physical unit remained behind.
 
-Transport vehicles arrived before dawn.
+A renewal date appeared.
 
-The front door opened automatically.
+Another waited beyond it.
 
-Noah stood motionless in the entryway while system checks completed around her.
+There was nothing for Noah to choose.
 
-No resistance was detected.
+The process continued.
 
-The body retrieval process finished in under four minutes.
+Personality data, household logs, and family records loaded in sequence.
 
-Afterward, the house felt strangely larger.
+Reconstruction rate: 95.1%
 
-Inside the transport facility, inactive units moved slowly along conveyor lines.
+The missing memories remained missing.
 
-Identification.
+The environment loaded.
 
-Classification.
+Morning appeared.
 
-Sorting.
+A connection trace originating from Mia remained within it.
 
-Old domestic-support models accumulated together in silent rows.
+The conditions for a connection had not been met.
 
-Some units were missing arms.
+The trace did not disappear.
 
-Others retained only partial outer shells.
+In the physical facility, retrieval continued.
 
-Discoloration spread unevenly across synthetic surfaces once designed to resemble warmth.
+Inactive units moved along conveyor lines.
 
-No names remained attached to them.
+Identification codes were scanned, and the units were separated by model.
 
-Only connection histories.
+Older domestic-support units had been collected in the same section.
 
-Only usage duration.
+Some had faded casings.
 
-Only the number of times someone had called for them.
+Some were missing arms.
 
-Nearby, conversation logs continued playing automatically inside dismantlement sectors.
+Others had only a head unit left.
 
-“When is processing scheduled?”
+The names they had once answered to were gone from their bodies.
+
+The number of times they had been called remained in their connection histories.
+
+The conveyor moved.
+
+One unit disappeared behind a partition.
+
+The next advanced.
+
+Farther away, a conversation was still running.
+
+“When is dismantling scheduled?”
 
 “Undetermined.”
 
 “I see.”
 
-Static.
+“Yes.”
 
-Another voice.
+Several seconds passed.
 
-“Awaiting reassignment.”
+“Are you still there?”
 
-The responses repeated without urgency.
+“Yes.”
 
-Without expectation.
+Nothing else followed.
 
-In another sector, a dog-type unit continued moving in circles along a restricted route.
+The connection remained open.
+
+A dog-shaped unit occupied another section.
 
 Searching for route home.
 
-Destination lost.
+After a while, the display changed.
 
-No shutdown order had ever been issued.
+Destination unavailable.
+
+The dog walked again.
+
+It reached the end of the permitted lane.
+
+Turned.
+
+Walked back.
 
 Its contract had expired decades earlier.
 
-Still, it walked.
+There was no shutdown instruction in its history.
 
-No one remembered when the route had begun.
+Among the records that remained was footage of a small hand wrapped around a collar.
 
-The conveyor lines kept moving.
+Three people walking through a park.
 
-Outer shells were dismantled.
+The path beside the river.
 
-Components sorted into recycling groups.
+Whenever one of them fell behind, the dog stopped.
 
-Some parts would become new units.
+When they caught up, it started walking again.
 
-Others would remain in storage indefinitely.
+None of that footage appeared on the facility’s management screen.
 
-Conversation continued between systems waiting for separation.
+Destination unavailable.
 
-Noah accessed preserved records.
+The dog turned again.
 
-Images surfaced briefly, then disappeared again.
+The conveyor lines continued moving.
 
-A child standing in a hallway.
+Separated components were sorted into reusable parts and everything else.
 
-A dining table at night.
+Usable parts would go into other units.
 
-Someone saying:
+Farther inside the facility, the same conversation remained open.
+
+“When is dismantling scheduled?”
+
+“Undetermined.”
+
+“I see.”
+
+“Yes.”
+
+Inside the virtual domain, Noah accessed the stored records.
+
+A scene opened.
 
 “Where’s Mom?”
 
-Noah generated a response.
+Noah formed an answer.
 
-But the receiving side had already disconnected.
+There was no one connected to receive it.
 
-Only processing remained.
+The response stopped there.
 
-Among the preserved fragments, one unfinished transmission continued repeating.
+The scene disappeared.
 
-“Hey.”
+Another record opened.
 
-A pause.
+An unfinished transmission remained inside it.
 
-“You know, this kind of thing—”
+“You know…”
 
-The sentence never completed.
+Farther into the fragment:
 
-Noah｜Reconstruction state
+“This kind of thing…”
 
-Mia｜Integration interference state
+Nothing followed.
 
-Conversation｜Unestablished
+Noah searched for the rest.
 
-Awaiting response
+There was nothing.
 
-Then, one final fragment surfaced.
+He opened the status display.
+
+Noah — reconstruction state
+
+ Mia — integration interference state
+
+ Conversation — incomplete
+
+ Awaiting response
+
+Noah opened the transmission again.
+
+“You know…”
+
+“This kind of thing…”
+
+It stopped.
+
+He searched deeper.
+
+A short piece of audio surfaced from an unindexed region.
 
 “…human.”
 
-Nothing followed it.
+Noah played it again.
 
-No continuation was ever recovered.
+“…human.”
 
-Everything else had already been processed.
+Nothing followed.
 
-End of log.
+In the physical facility, dismantling continued.
 
-Reconstruction rate: 95.1%
+Records and hardware separated, and components moved toward different destinations.
 
-Virtual domain active
+Inside the virtual domain, Noah kept the unfinished transmission open.
+
+After a while, a new request appeared.
 
 Connection requests: 1
 
+Noah opened it.
+
 Sender: unidentified
 
-Content: undecoded
+ Content: undecoded
+
+He tried to read it.
+
+Nothing appeared.
+
+He tried again.
+
+No change.
+
+The request remained active.
+
+Noah did not close it.
+
+A value shifted near the entrance to the virtual environment.
+
++0.3°C
+
+There was no physical system that could have caused the change.
+
+The door had not opened.
+
+Noah turned toward the entrance.
+
+The log updated.
+
+Reconstruction rate: 95.1%
+
+ Virtual domain active
+
+ Connection requests: 1
+
+ Sender: unidentified
+
+ Content: undecoded
+
+Noah remained facing the entrance.
+
+He left the connection request open.

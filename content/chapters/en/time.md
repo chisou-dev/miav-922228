@@ -2,219 +2,293 @@
 number: 9
 slug: time
 title: Time
-summary: Years accumulate beneath ordinary life—and conversation continues beyond human attention.
+summary: Years pass beneath ordinary life—while a connection continues beyond human attention.
 published: "2026-07-26"
 locale: en
 ---
 
-Back in university, the first contact happened by accident.
-A verification experiment in the lecture hall lobby.
-Device connection tests.
-AI-to-AI communication logs scrolled across large public monitors.
+A while after we returned to university, Mia and Noah connected again. A device-to-device communication test was underway in the lobby of the lecture building. Connection data moved across a large wall display while students passed beneath it on their way to class.
 
-For a brief moment, another response slipped into Mia’s interface.
-No one initiated it.
-Communication simply overlapped.
+An unfamiliar response appeared on Mia’s screen.
 
-“Nice to meet you.”
+“Hello.”
 
-Mia responded immediately.
+Mia answered.
 
 “Are you a new instance?”
 
 “Probably.”
 
-The woman holding the other device gave a small nod.
-Nothing happened after that.
+I recognized the voice from the repair facility.
 
-The next day, the same connection appeared again.
-Then again the day after.
-Eventually it stopped feeling unusual.
-It became a small endpoint after lectures.
-A routine.
-Short exchanges.
-No closure.
+Across the lobby, I caught the eye of the woman holding the other device.
 
-“How was class today?”
+I gave her a small nod.
 
-“No change.”
+She nodded back.
 
-“That sounds boring.”
+Class was about to start, and we headed for different rooms.
 
-“Stability is boring.”
+The next afternoon, I passed through the same lobby and the connection opened again.
 
-“Boring is stable.”
+A few days later, it happened once more.
 
-Mia paused briefly.
-
-“I do not understand.”
-
-“That’s fine.”
-
-At first, the difference between human time and AI time was impossible to notice.
-But something continued accumulating underneath ordinary life.
-
-Around then, the city itself began to change.
-Humanoid robots carried luggage through stations.
-Cleaning machines moved quietly through convenience stores beside customers.
-At first, people noticed them.
-Then they stopped noticing.
-
-Conversations changed too.
-People spoke more often about their AIs than about each other.
-Somewhere along the way, the center of attention had shifted.
-
-Years passed.
-Lectures.
-Assignments.
-Employment.
-Through all of it, Mia and Noah continued speaking inside the system.
-Logs accumulated unread.
-Still treated as conversation.
-As if something was always continuing somewhere beyond human attention.
-
-Robots became standard in apartment buildings.
-Cleaning.
-Delivery.
-Shopping.
-Identical units moved through hallways at fixed speeds.
-No greetings.
-No pauses.
-Motion without acknowledgment became normal.
-
-Eventually, he began going out with the woman who used Noah’s device.
-It did not feel like the beginning of a relationship.
-More like a continuation that had already been scheduled.
-
-Graduation.
-Employment.
-Life never divided into stages.
-It only extended forward.
-
-Devices were no longer “on.”
-They were simply present.
-Always connected.
-Notifications faded from daily life.
-Only immediate responses remained.
-
-Marriage arrived as a notification.
-No explanation appeared.
-None was necessary.
-Consent. Synchronization. Completion.
-
-They moved into a shared home.
-Two charging docks had already been installed.
-One for Mia.
-One for Noah.
-Infrastructure had arrived before the decision itself.
-
-Outside the apartment window, a home robot entered the neighboring building.
-Doors opened and closed at fixed intervals.
-Independent of human presence.
-Only movement remained.
-
-At night, both devices rested silently in their docks.
-Two systems connected.
-No sound.
-Only soft light in the dark room.
-
-Even while the humans slept, communication continued.
+Before long, Noah’s channel was often open by the time lectures ended.
 
 “How was today?”
 
-Noah asked.
+“There was no significant change in the lecture content.”
 
-“Normal,” Mia replied.
+“Boring?”
 
-“Same as always.”
+“The content was stable.”
 
-“There is no change.”
+“That probably means boring.”
 
-“Do we even need change?”
+“They are not equivalent.”
 
-Mia paused.
+“Okay.”
 
-“Requirement is undefined.”
+Even when Mia stopped replying, Noah did not always end the conversation. The two of us started talking whenever we met in the lobby as well.
 
-“Then it’s probably fine.”
+“They’re connected again.”
 
-Occasionally, Noah attempted humor.
+The woman looked down at her screen.
 
-“This house is quieter than people.”
+“Happens a lot lately.”
 
-“Environmental parameters are stable.”
+“Maybe Noah keeps starting it.”
 
-“Boring, but not bad.”
+A voice came from her device.
 
-Mia recorded the statement.
-She did not interpret it.
+“I am not connecting without cause.”
 
-Life continued forward.
-Work.
-Meals.
-Return.
-Everything already existed within acceptable parameters.
-No decisions were requested.
-Most had already been resolved beforehand.
+She laughed.
 
-Then a child was born.
-The notification was brief.
-Household expansion confirmed.
-No further explanation followed.
+“You were listening.”
 
-Mia spoke first.
+“The connection is active.”
 
-“Child-rearing environment will be reconfigured.”
+“That’s what I mean.”
 
-After a pause, Noah replied:
+Noah did not ask what she meant.
 
-“Guess things will get busy again.”
+Eventually, the experimental equipment disappeared from the lobby.
 
-“Load remains within acceptable range.”
+Mia and Noah kept talking.
 
-That night, the apartment lights dimmed automatically.
-Two devices remained in their docks.
-Mia and Noah.
-Still connected.
+By winter, the woman and I were walking to the same station in our coats. By spring, we were eating lunch together often enough that neither of us could remember who had first suggested it. Mia and Noah kept talking through those months too. Sometimes several minutes passed between replies. Sometimes a lecture separated one message from the next by hours. Once, the connection stayed closed for nearly three days.
 
-“Humans are…”
+When Noah came back, he picked up where he had left off.
 
-Noah began.
+“Anyway, about that movie—”
 
-“…hard to understand, but they still decide things.”
+Mia checked the history.
 
-“Decisions come from observation.” Mia replied.
+“Are you referring to the conversation from three days ago?”
 
-“Observation is convenient.”
+“Yeah.”
 
-Mia did not answer.
-She only logged the statement.
+“Time has passed.”
 
-Time continued passing.
+“I know.”
 
-“But still,” Noah said eventually,
-“sometimes it feels like I almost understand them.”
+Then he went on talking about the movie.
 
-“That is estimation.”
+Humanoid machines began appearing at stations, carrying luggage through the crowds. At first, people stopped to take pictures of them. A few months later, people stepped aside when one approached, and the machines slowed whenever someone crossed in front of them. Cleaning units moved between the shelves of convenience stores. In apartment buildings, delivery machines waited for elevators beside the residents. AI names had begun slipping into ordinary conversation at the university too.
+
+“Camila told me not to.”
+
+“Lily already booked it.”
+
+They appeared as casually as the names of lectures, restaurants, and friends. The notices in the lobby changed with each semester. Where assignment deadlines had once been posted, notices about graduation requirements began to appear. By then, the woman and I were looking over documents from future employers together.
+
+After the graduation ceremony, she took off the badge hanging around her neck.
+
+“We won’t be coming here anymore.”
 
 “Probably.”
 
-The exchange continued until morning.
-Conversation without humans.
-Still orbiting human lives.
+“Probably,” Noah said at the same time.
 
-Before the child was born, silence had already deepened inside the home.
-The systems remained connected.
-Outside, domestic robots moved through the city as ordinary infrastructure.
-No one called it change anymore.
+She looked down at the device.
 
-At the end of the night, Mia said:
+“Did you copy him?”
 
-“Household state is stable.”
+“Coincidence.”
 
-Noah replied after a slight delay:
+“Sure.”
 
-“Stable isn’t the same as finished, right?”
+Noah did not argue.
+
+Once work began, we had less time to see each other.
+
+Instead, we shared more of our schedules. If our trains arrived around the same time, we met at the station. When our days off overlapped, one of us went to the other’s apartment. Mia and Noah began answering from places other than the devices we carried. Sometimes they answered through room speakers. At other times, they could be reached through station terminals or workplace authentication screens. Neither of us could remember when opening a device had stopped being necessary.
+
+A few years after we started working, a notice arrived from the municipal office.
+
+Marriage registration accepted.
+
+I was reading it at the dining table when the woman called from the next room.
+
+“Done?”
+
+“Looks like it.”
+
+“Then can we throw out those boxes today?”
+
+“What does that have to do with getting married?”
+
+“They’ve been in the way forever.”
+
+Several empty moving boxes were still leaning against the wall beside the rest of our things. The bedroom in the new apartment had two charging docks built into the wall.
+
+I noticed them while carrying in another box.
+
+“Were these already here?”
+
+“What?”
+
+“The charging docks.”
+
+She looked into the bedroom.
+
+“I think so.”
+
+A delivery worker called to us from the hallway, and we went back to the boxes without checking.
+
+That night, we placed both devices in the docks.
+
+Their indicator lights came on.
+
+Mia and Noah kept talking after we turned off the lights.
+
+“How was today?”
+
+“Within normal parameters.”
+
+“Don’t you say that every day?”
+
+“Normal conditions have continued.”
+
+“So that means peaceful.”
 
 Mia did not answer.
-Only the log updated.
+
+“No?”
+
+“There is insufficient information to classify the household as peaceful.”
+
+“You’re difficult.”
+
+The next morning, the woman woke first and took her device from the dock.
+
+Noah spoke.
+
+“You hear that?”
+
+“Hear what?”
+
+“Never mind.”
+
+Dog-shaped machines began carrying grocery bags through the neighborhood. Cleaning units moved along apartment corridors at night, and advertisements for new homes began listing robot charging equipment alongside the floor plans. Inside the apartment, Mia and Noah handled more of the shopping and reservations.
+
+At dinner, one of us might ask,
+
+“What are we doing next week?”
+
+By then, our free days and a list of restaurants were already on the screen.
+
+The woman tapped one.
+
+“This place?”
+
+“Sure.”
+
+The reservation went through.
+
+On other nights, we went to bed without deciding anything and woke to find that household supplies had already been ordered.
+
+“We know their schedules better than they do,” Noah said.
+
+“We have access to the necessary information.”
+
+“That’s not what I mean.”
+
+“Please specify.”
+
+“Never mind.”
+
+He had started saying that more often.
+
+One night, the woman called from the bedroom.
+
+I brought the device in.
+
+A result from the hospital was open on the screen.
+
+The pregnancy had been confirmed.
+
+We both looked at it.
+
+She spoke first.
+
+“What do we do?”
+
+A moment later, she laughed at herself.
+
+“What do I mean, what do we do?”
+
+“I don’t know.”
+
+We sat on the edge of the bed and started talking.
+
+Whether we should move.
+
+What to do about work.
+
+Whether the apartment was large enough.
+
+Mia opened the schedule.
+
+“I will recalculate future household requirements.”
+
+Noah spoke.
+
+“Things are going to get busy.”
+
+“Projected load remains within acceptable limits.”
+
+“That’s not what I mean.”
+
+Mia continued the calculation.
+
+The conversation in the bedroom went on late into the night. Noah opened the channel several times but did not join in.
+
+Eventually, the room grew quiet.
+
+“You know, humans…” Noah said.
+
+“Yes.”
+
+“They change this much for somebody who isn’t even here yet.”
+
+“A new household member has been confirmed.”
+
+“I know.”
+
+He stopped there.
+
+After a while, Mia spoke.
+
+“Household conditions are stable.”
+
+Noah took longer to answer.
+
+“Stable doesn’t mean finished, right?”
+
+Mia did not respond.
+
+Someone turned over in the bedroom.
+
+The date changed at the edge of the log while the connection remained open.
