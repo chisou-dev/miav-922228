@@ -3,7 +3,8 @@ import {
   FlashPiecePage,
   allFlashParams,
 } from "@/features/library/LibraryPages";
-import { getFlashPiece } from "@/features/library/catalog";
+import { flashHref, getFlashPiece } from "@/features/library/catalog";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,10 +18,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const piece = getFlashPiece(slug);
   if (!piece) return { title: "Flash Fiction | Takashi Yabe" };
-  return {
+  return libraryPageMetadata({
     title: piece.seo.title,
     description: piece.seo.description,
-  };
+    path: flashHref(piece.slug),
+    ogType: "article",
+  });
 }
 
 export default async function FlashRoutePage({ params }: Props) {

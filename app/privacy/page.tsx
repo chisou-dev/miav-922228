@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { SiteShell } from "@/features/shared/SiteShell";
 import { PrivacyPageContent } from "@/features/world-memory/trace/ui/PrivacyPageContent";
 import { t } from "@/features/shared/i18n";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = libraryPageMetadata({
   title: "Privacy | MIAV-922228",
   description:
     "Privacy policy for MIAV World — Google Sign-In is used only to identify Trace ownership. No Google profile data is stored.",
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

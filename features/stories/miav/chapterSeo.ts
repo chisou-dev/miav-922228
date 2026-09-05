@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { BreadcrumbItem } from "@/features/library/catalog";
+import { AUTHOR_NAME, type BreadcrumbItem } from "@/features/library/catalog";
 import type { ChapterMeta } from "@/features/stories/miav/chapters";
 import {
   CHAPTER_EDITION_COPY,
@@ -223,6 +223,8 @@ export function buildChapterMetadata(
   return {
     title,
     description,
+    authors: [{ name: AUTHOR_NAME, url: "/author" }],
+    creator: AUTHOR_NAME,
     alternates: {
       canonical: canonicalPath,
       languages: chapterLanguageAlternates(chapter.slug),
@@ -275,6 +277,8 @@ export function buildChaptersArchiveMetadata(
   return {
     title,
     description,
+    authors: [{ name: AUTHOR_NAME, url: "/author" }],
+    creator: AUTHOR_NAME,
     alternates: {
       canonical: canonicalPath,
       languages: archiveLanguageAlternates(),

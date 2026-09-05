@@ -7,6 +7,14 @@ export function absoluteUrl(path: string) {
   return `${base}${normalized}`;
 }
 
+function authorPerson() {
+  return {
+    "@type": "Person",
+    name: AUTHOR_NAME,
+    url: absoluteUrl("/author"),
+  };
+}
+
 function JsonLdScript({ data }: { data: Record<string, unknown> }) {
   return (
     <script
@@ -22,15 +30,17 @@ type WorkFields = {
   genre: string;
   url: string;
   inLanguage?: string;
+  hasPart?: readonly { name: string; position: number; url: string }[];
 };
 
-/** Schema.org Book for individual works (chapters / flash). */
+/** Schema.org Book for a literary work (series archive, flash, or continue landing). */
 export function BookJsonLd({
   title,
   description,
   genre,
   url,
   inLanguage = "en",
+  hasPart,
 }: WorkFields) {
   return (
     <JsonLdScript
@@ -38,14 +48,21 @@ export function BookJsonLd({
         "@context": "https://schema.org",
         "@type": "Book",
         name: title,
-        author: {
-          "@type": "Person",
-          name: AUTHOR_NAME,
-        },
+        author: authorPerson(),
         description,
         genre,
         inLanguage,
         url: absoluteUrl(url),
+        ...(hasPart && hasPart.length > 0
+          ? {
+              hasPart: hasPart.map((part) => ({
+                "@type": "Chapter",
+                name: part.name,
+                position: part.position,
+                url: absoluteUrl(part.url),
+              })),
+            }
+          : {}),
       }}
     />
   );
@@ -65,10 +82,7 @@ export function CreativeWorkSeriesJsonLd({
         "@context": "https://schema.org",
         "@type": "CreativeWorkSeries",
         name: title,
-        author: {
-          "@type": "Person",
-          name: AUTHOR_NAME,
-        },
+        author: authorPerson(),
         description,
         genre,
         inLanguage,
@@ -108,15 +122,51 @@ export function ChapterJsonLd({
         position,
         inLanguage,
         url: absoluteUrl(url),
-        author: {
-          "@type": "Person",
-          name: AUTHOR_NAME,
-        },
+        author: authorPerson(),
         isPartOf: {
           "@type": "Book",
           name: workName,
           url: absoluteUrl(workUrl),
+          author: authorPerson(),
         },
+      }}
+    />
+  );
+}
+
+/** Homepage: site (project) vs Person — distinct from the Book at /chapters. */
+export function WebSiteJsonLd({
+  name,
+  description,
+}: {
+  name: string;
+  description: string;
+}) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name,
+        url: getSiteUrl(),
+        description,
+        inLanguage: "en",
+        creator: authorPerson(),
+      }}
+    />
+  );
+}
+
+/** Author page — only fields already published on /author. */
+export function PersonJsonLd({ description }: { description: string }) {
+  return (
+    <JsonLdScript
+      data={{
+        "@context": "https://schema.org",
+        "@type": "Person",
+        name: AUTHOR_NAME,
+        url: absoluteUrl("/author"),
+        description,
       }}
     />
   );

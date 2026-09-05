@@ -1,4 +1,11 @@
 import type { MetadataRoute } from "next";
+import {
+  categories,
+  flashHref,
+  flashPieces,
+  seriesHref,
+  seriesList,
+} from "@/features/library/catalog";
 import { getAllChapters } from "@/features/stories/miav/chapters";
 import {
   chapterArchivePath,
@@ -18,6 +25,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "weekly",
       priority: 1,
+    },
+    {
+      url: `${baseUrl}/works`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       url: `${baseUrl}${chapterArchivePath("en")}`,
@@ -83,6 +102,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  const libraryRoutes: MetadataRoute.Sitemap = [
+    ...categories.map((category) => ({
+      url: `${baseUrl}${category.path}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    })),
+    ...seriesList.map((series) => ({
+      url: `${baseUrl}${seriesHref(series.id)}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: series.id === "miav-922228" ? 0.85 : 0.7,
+    })),
+    ...flashPieces.map((piece) => ({
+      url: `${baseUrl}${flashHref(piece.slug)}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.65,
+    })),
+  ];
+
   const chapterRoutes: MetadataRoute.Sitemap = [];
 
   for (const chapter of enChapters) {
@@ -127,5 +167,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  return [...staticRoutes, ...chapterRoutes];
+  return [...staticRoutes, ...libraryRoutes, ...chapterRoutes];
 }

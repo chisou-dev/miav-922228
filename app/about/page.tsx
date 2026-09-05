@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { aboutPage, categories } from "@/features/library/catalog";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { t } from "@/features/shared/i18n";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = libraryPageMetadata({
   title: aboutPage.seo.title,
   description: aboutPage.seo.description,
-};
+  path: "/about",
+});
 
 export default function AboutPage() {
   const breadcrumbs = [

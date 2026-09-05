@@ -5,13 +5,15 @@ import { getAllChapters } from "@/features/stories/miav/chapters";
 import {
   CHAPTER_EDITION_COPY,
   type ChapterEdition,
+  chapterArchivePath,
+  chapterPath,
   editionToContentLocale,
 } from "@/features/stories/miav/edition";
 import { EditionSwitcher } from "@/features/stories/miav/EditionSwitcher";
 import { MiavChapterArchiveList } from "@/features/stories/miav/MiavChapterList";
 import { MIAV_OG_IMAGE } from "@/features/stories/miav/miavVisual";
 import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
-import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { BookJsonLd, BreadcrumbJsonLd } from "@/features/library/jsonLd";
 import { miavChapterBreadcrumbs } from "@/features/stories/miav/chapterSeo";
 
 function formatArchiveDate(
@@ -45,6 +47,18 @@ export async function ChaptersIndexPage({ edition = "en" }: Props) {
 
   return (
     <SiteShell>
+      <BookJsonLd
+        title="MIAV-922228"
+        description={lead}
+        genre="Literary Science Fiction"
+        url={chapterArchivePath(edition)}
+        inLanguage={edition}
+        hasPart={chapters.map((chapter) => ({
+          name: chapter.title,
+          position: chapter.number,
+          url: chapterPath(chapter.slug, edition),
+        }))}
+      />
       <BreadcrumbJsonLd items={breadcrumbs} />
       <main className="pb-36 sm:pb-48">
         <LibraryBreadcrumbs items={breadcrumbs} />

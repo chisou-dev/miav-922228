@@ -8,6 +8,7 @@ import {
 } from "@/features/library/catalog";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
 import { BreadcrumbJsonLd } from "@/features/library/jsonLd";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import {
   SfDivider,
   SfSection,
@@ -15,10 +16,11 @@ import {
 } from "@/features/shared/SfSection";
 import { chapterArchivePath } from "@/features/stories/miav/edition";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = libraryPageMetadata({
   title: worksLibrary.seo.title,
   description: worksLibrary.seo.description,
-};
+  path: "/works",
+});
 
 /** Category-to-category separators on /works (not the section start line). */
 const CATEGORY_DIVIDERS: readonly SfSectionVariant[] = ["split", "trace"];

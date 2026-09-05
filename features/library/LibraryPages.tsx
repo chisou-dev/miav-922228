@@ -28,8 +28,8 @@ import {
 } from "@/features/library/jsonLd";
 import { MiavChapterReader } from "@/features/stories/miav/MiavChapterReader";
 import { MiavSeriesChapterList } from "@/features/stories/miav/MiavChapterList";
-import { miavWorkId } from "@/features/stories/miav/work";
 import { chapterCanonicalPath } from "@/features/stories/miav/chapterSeo";
+import { miavWorkId } from "@/features/stories/miav/work";
 
 function Prose({ text }: { text: string }) {
   const blocks = text.split(/\n\n+/).filter(Boolean);
@@ -92,12 +92,32 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
   return (
     <>
       <BreadcrumbJsonLd items={breadcrumbs} />
-      <CreativeWorkSeriesJsonLd
-        title={series.title}
-        description={series.summary}
-        genre={series.genre}
-        url={seriesHref(series.id)}
-      />
+      {series.id === miavWorkId ? (
+        <BookJsonLd
+          title={series.title}
+          description={series.summary}
+          genre={series.genre}
+          url="/chapters"
+          hasPart={series.chapters.flatMap((chapter) =>
+            chapter.contentSlug
+              ? [
+                  {
+                    name: chapter.title,
+                    position: chapter.number,
+                    url: chapterCanonicalPath(chapter.contentSlug),
+                  },
+                ]
+              : [],
+          )}
+        />
+      ) : (
+        <CreativeWorkSeriesJsonLd
+          title={series.title}
+          description={series.summary}
+          genre={series.genre}
+          url={seriesHref(series.id)}
+        />
+      )}
       <LibraryShell
         eyebrow="Series"
         title={series.title}
