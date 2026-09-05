@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { SiteShell } from "@/features/shared/SiteShell";
 import { SitePolicyPageContent } from "@/features/world-memory/trace/ui/SitePolicyPageContent";
 import { t } from "@/features/shared/i18n";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = libraryPageMetadata({
   title: "Site Policy | MIAV-922228",
   description:
     "Site policy for MIAV World — Traces belong to their owners; the operator does not edit user content.",
-};
+  path: "/site-policy",
+});
 
 export default function SitePolicyPage() {
   return (

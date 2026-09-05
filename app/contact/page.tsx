@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/features/contact/ContactForm";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { SfSection } from "@/features/shared/SfSection";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = libraryPageMetadata({
   title: "Contact | MIAV-922228",
   description:
     "Contact the MIAV-922228 project for inquiries regarding the work, publications, or press.",
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

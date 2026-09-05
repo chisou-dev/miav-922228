@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Shippori_Mincho } from "next/font/google";
 import { AppLayout } from "@/features/core/AppLayout";
-import { getSiteUrl } from "@/features/shared/site";
+import { AUTHOR_NAME } from "@/features/library/catalog";
+import { getSiteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/features/shared/site";
 import { miavOgMetadataImages } from "@/features/stories/miav/miavVisual";
 import "./globals.css";
 
@@ -12,26 +13,26 @@ const shipporiMincho = Shippori_Mincho({
   display: "swap",
 });
 
-const siteTitle = "MIAV-922228 | Literary SF Project by Takashi Yabe";
-const siteDescription =
-  "Official website of MIAV-922228, a literary science fiction project exploring AI, memory, and human emotions.";
 const ogImages = miavOgMetadataImages();
+const siteTitle = `${SITE_NAME} | Literary SF Project by ${AUTHOR_NAME}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: siteTitle,
-  description: siteDescription,
+  description: SITE_DESCRIPTION,
+  authors: [{ name: AUTHOR_NAME, url: "/author" }],
+  creator: AUTHOR_NAME,
   openGraph: {
     title: siteTitle,
-    description: siteDescription,
+    description: SITE_DESCRIPTION,
     type: "website",
-    siteName: "MIAV-922228",
+    siteName: SITE_NAME,
     images: ogImages,
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
-    description: siteDescription,
+    description: SITE_DESCRIPTION,
     images: ogImages.map((image) => image.url),
   },
 };
