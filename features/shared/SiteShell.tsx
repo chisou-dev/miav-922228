@@ -4,11 +4,10 @@ import { LanguageSwitcher, useT, type MessageKey } from "@/features/shared/i18n"
 import { sfSectionClass } from "@/features/shared/SfSection";
 
 const navLinks = [
-  { href: "/#about", labelKey: "nav.about" },
+  { href: "/author", labelKey: "nav.about" },
   { href: "/chapters", labelKey: "nav.chapters" },
   { href: "/books", labelKey: "nav.books" },
   { href: "/world-map", labelKey: "nav.world" },
-  { href: "/author#contact", labelKey: "nav.contact" },
 ] as const satisfies readonly { href: string; labelKey: MessageKey }[];
 
 export function SiteHeader() {

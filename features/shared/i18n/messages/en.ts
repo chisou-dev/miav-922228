@@ -94,9 +94,12 @@ export const en = {
   "apps.writerMemo.description": "A simple, private memo app for writers.",
 
   // about / contact (home sections)
+  "home.booksBody":
+    "Part I and Part II — Kindle and chapter archive, in English and French.",
   "home.aboutTitle": "About MIAV",
   "home.aboutBody":
     "MIAV is an independent literary science fiction project bringing together stories, browser games, and digital experiments. Across fiction and interactive works, it explores memory, artificial intelligence, loneliness, technology, and human existence.",
+  "home.aboutAuthorCta": "About / Author →",
   "home.contactTitle": "Contact",
   "home.contactBody":
     "For inquiries regarding the project, publications, or press, please get in touch.",

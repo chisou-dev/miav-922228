@@ -96,9 +96,12 @@ export const es: MessageCatalog = {
     "Una app de notas simple y privada para escritores.",
 
   // about / contact (home sections)
+  "home.booksBody":
+    "Parte I y Parte II — Kindle y archivo de capítulos, en inglés y francés.",
   "home.aboutTitle": "Acerca de MIAV",
   "home.aboutBody":
     "MIAV es un proyecto independiente de ciencia ficción literaria que reúne relatos, juegos de navegador y experimentos digitales. A través de la ficción y las obras interactivas, explora la memoria, la inteligencia artificial, la soledad, la tecnología y la existencia humana.",
+  "home.aboutAuthorCta": "Acerca de / Autor →",
   "home.contactTitle": "Contacto",
   "home.contactBody":
     "Si tienes preguntas sobre el proyecto, publicaciones o prensa, escríbenos.",
