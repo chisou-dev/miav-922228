@@ -3,11 +3,13 @@
 import { LanguageSwitcher, useT, type MessageKey } from "@/features/shared/i18n";
 import { sfSectionClass } from "@/features/shared/SfSection";
 
+const navLinkClassName =
+  "transition-opacity duration-300 hover:text-[var(--foreground)]";
+
 const navLinks = [
-  { href: "/author", labelKey: "nav.about" },
-  { href: "/chapters", labelKey: "nav.chapters" },
   { href: "/books", labelKey: "nav.books" },
   { href: "/world-map", labelKey: "nav.world" },
+  { href: "/author", labelKey: "nav.about" },
 ] as const satisfies readonly { href: string; labelKey: MessageKey }[];
 
 export function SiteHeader() {
@@ -15,21 +17,28 @@ export function SiteHeader() {
 
   return (
     <header className="flex flex-col gap-8 pt-10 pl-11 sm:flex-row sm:items-baseline sm:justify-between sm:gap-10 sm:pt-14 lg:pl-0">
-      <a
-        href="/"
-        className="text-[0.8rem] tracking-[0.18em] text-[var(--foreground)]"
-      >
-        MIAV-922228
-      </a>
+      <p className="text-[0.8rem] tracking-[0.18em] text-[var(--foreground)]">
+        <span>MIAV-922228</span>
+        <span
+          className="text-[var(--foreground-muted)] normal-case tracking-[0.14em]"
+          aria-hidden="true"
+        >
+          {" "}
+          —{" "}
+        </span>
+        <a
+          href="/chapters"
+          className={`${navLinkClassName} text-[var(--foreground-muted)] uppercase tracking-[0.14em]`}
+        >
+          {t("nav.chapters")}
+        </a>
+      </p>
       <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 sm:justify-end">
         <nav aria-label={t("nav.primaryAria")}>
           <ul className="flex flex-wrap gap-x-8 gap-y-3 text-[0.8rem] tracking-[0.14em] text-[var(--foreground-muted)] uppercase sm:justify-end">
             {navLinks.map((item) => (
               <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="transition-opacity duration-300 hover:text-[var(--foreground)]"
-                >
+                <a href={item.href} className={navLinkClassName}>
                   {t(item.labelKey)}
                 </a>
               </li>
