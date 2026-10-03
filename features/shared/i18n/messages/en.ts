@@ -91,6 +91,8 @@ export const en = {
   "apps.openApp": "Open App",
   "apps.comingSoon": "Coming Soon",
   "apps.eyebrow": "APP",
+  "apps.nextAppEyebrow": "Next app",
+  "apps.nextAppAria": "Future apps",
   "apps.writerMemo.description": "A simple, private memo app for writers.",
 
   // about / contact (home sections)

@@ -29,8 +29,7 @@ const NAV = [
   match: (path: string) => boolean;
 }[];
 
-/** Homepage APPS block — same anchor as HomePage `#apps`. */
-const APPS_HREF = "https://writer-memo.vercel.app/";
+const APPS_HREF = "/apps";
 
 type Props = {
   collapsed: boolean;
@@ -41,7 +40,7 @@ type Props = {
 
 /**
  * Site-wide navigation — Home / World Memory / Works / Game / Apps.
- * Game opens the external miav-games project. Apps scrolls to homepage APPS.
+ * Game opens the external miav-games project. Apps opens the /apps listing.
  * Language switcher lives in SiteShell only (not duplicated here).
  */
 export function AppSidebar({
@@ -115,9 +114,12 @@ export function AppSidebar({
             <li>
               <a
                 href={APPS_HREF}
-                className="app-sidebar-link"
-                target="_blank"
-                rel="noopener noreferrer"
+                className={
+                  pathname === "/apps"
+                    ? "app-sidebar-link is-active"
+                    : "app-sidebar-link"
+                }
+                aria-current={pathname === "/apps" ? "page" : undefined}
                 onClick={onNavigate}
               >
                 {t("nav.apps")}

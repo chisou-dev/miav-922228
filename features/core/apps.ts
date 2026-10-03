@@ -1,6 +1,6 @@
 /**
- * MIAV site app listings (homepage APPS area).
- * Add entries here to show more apps — HomePage maps this list.
+ * MIAV site app listings (/apps page).
+ * Add entries here — the /apps page maps this list via AppListing.
  * Set `url` when an app is published — UI switches Coming Soon → Open App.
  *
  * Privacy: outbound launch links only.

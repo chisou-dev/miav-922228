@@ -92,6 +92,8 @@ export const es: MessageCatalog = {
   "apps.openApp": "Abrir la app",
   "apps.comingSoon": "Próximamente",
   "apps.eyebrow": "APLICACIÓN",
+  "apps.nextAppEyebrow": "Próxima aplicación",
+  "apps.nextAppAria": "Aplicaciones futuras",
   "apps.writerMemo.description":
     "Una app de notas simple y privada para escritores.",
 
