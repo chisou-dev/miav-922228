@@ -49,7 +49,7 @@ export const miavBooks: Book[] = [
     partLabel: "PART I",
     title: "MIAV-922228",
     description:
-      "The first volume of a literary SF project about the relationship between humans and artificial intelligence.",
+      "The first volume of a literary series about the relationship between humans and artificial intelligence.",
     editions: [
       {
         id: "english-kindle",

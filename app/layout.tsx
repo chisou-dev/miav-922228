@@ -14,7 +14,7 @@ const shipporiMincho = Shippori_Mincho({
 });
 
 const ogImages = miavOgMetadataImages();
-const siteTitle = `${SITE_NAME} | Literary SF Project by ${AUTHOR_NAME}`;
+const siteTitle = `${SITE_NAME} | Stories, Games & Digital Works by ${AUTHOR_NAME}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),

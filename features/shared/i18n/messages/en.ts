@@ -34,7 +34,7 @@ export const en = {
   "home.brand": "MIAV-922228",
   "home.tagline": "READ. PLAY. LEAVE A TRACE.",
   "home.lead":
-    "Stories, browser games, and digital experiments from one literary science fiction project—exploring memory, artificial intelligence, technology, loneliness, and human existence.",
+    "Quiet, character-driven stories, browser games, apps, and digital experiments exploring people, memory, relationships, technology, and time.",
   "home.ctaStart": "START HERE",
   "home.ctaStories": "READ STORIES",
   "home.ctaGames": "PLAY GAMES",
@@ -44,7 +44,7 @@ export const en = {
   "home.startTitle": "START HERE",
   "home.readTitle": "READ",
   "home.readBody":
-    "Short speculative fiction about memory, technology, and human existence.",
+    "Quiet, character-driven fiction about people, memory, relationships, technology, and time.",
   "home.readEnter": "Enter Works",
   "home.readChapters": "Chapters",
   "home.readBooks": "Books",
@@ -100,7 +100,7 @@ export const en = {
     "Part I and Part II — Kindle and chapter archive, in English and French.",
   "home.aboutTitle": "About MIAV",
   "home.aboutBody":
-    "MIAV is an independent literary science fiction project bringing together stories, browser games, and digital experiments. Across fiction and interactive works, it explores memory, artificial intelligence, loneliness, technology, and human existence.",
+    "MIAV is an independent creative project bringing together quiet, character-driven stories, browser games, apps, and digital experiments.",
   "home.aboutAuthorCta": "About / Author →",
   "home.contactTitle": "Contact",
   "home.contactBody":

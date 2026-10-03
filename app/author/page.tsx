@@ -4,7 +4,7 @@ import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { AuthorPage } from "@/features/stories/miav/AuthorPage";
 
 const authorDescription =
-  "Takashi Yabe is a writer of literary science fiction. His work explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.";
+  "Takashi Yabe writes quiet, character-driven fiction. His work explores people, memory, relationships, technology, loneliness, and human existence.";
 
 export const metadata: Metadata = libraryPageMetadata({
   title: "Author | Takashi Yabe — MIAV-922228",

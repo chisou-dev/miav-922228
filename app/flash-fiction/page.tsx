@@ -9,7 +9,7 @@ export const metadata: Metadata = libraryPageMetadata({
   title: category?.seo.title ?? "Flash Fiction | Takashi Yabe",
   description:
     category?.seo.description ??
-    "Short speculative fiction from MIAV-922228.",
+    "Short fiction from MIAV-922228 — quiet stories readable in a few minutes.",
   path: "/flash-fiction",
 });
 

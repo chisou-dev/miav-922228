@@ -3,7 +3,7 @@ const PRODUCTION_SITE_URL = "https://miav-922228.com";
 export const SITE_NAME = "MIAV-922228";
 
 export const SITE_DESCRIPTION =
-  "Official website of MIAV-922228, a literary science fiction project exploring AI, memory, and human emotions.";
+  "Official website of MIAV-922228 — quiet, character-driven stories, browser games, apps, and digital experiments.";
 
 export function getSiteUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();

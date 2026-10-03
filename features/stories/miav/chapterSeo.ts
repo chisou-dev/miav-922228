@@ -11,8 +11,8 @@ import { getSiteUrl } from "@/features/shared/site";
 import { miavOgMetadataImages } from "@/features/stories/miav/miavVisual";
 
 const WORK_TITLE = "MIAV-922228";
-const DEFAULT_SUFFIX_EN = "Literary Science Fiction";
-const DEFAULT_SUFFIX_FR = "Science-fiction littéraire";
+const DEFAULT_SUFFIX_EN = "Literary Fiction";
+const DEFAULT_SUFFIX_FR = "Fiction littéraire";
 
 /** Visible + JSON-LD trail: MIAV-922228 → Chapters/Chapitres → (optional chapter). */
 export function miavChapterBreadcrumbs(
@@ -78,7 +78,7 @@ const CHAPTER_SEO_EN: Record<number, ChapterSeoOverride> = {
       "Reduction advances as optimization—and a scheduled termination waits beneath the quiet. Chapter 10 of MIAV-922228.",
   },
   11: {
-    titleSuffix: "Literary Science Fiction about AI and Humanity",
+    titleSuffix: "Literary Fiction about AI and Humanity",
     description:
       "An AI that has cared for generations of one family begins to occupy a place between machine, caregiver, and family member. Chapter 11 of MIAV-922228.",
   },
@@ -140,7 +140,7 @@ const CHAPTER_SEO_FR: Record<number, ChapterSeoOverride> = {
       "Photographies, migration structurelle, zone manquante. Chapitre X de MIAV-922228.",
   },
   11: {
-    titleSuffix: "Science-fiction littéraire sur l’IA et l’humanité",
+    titleSuffix: "Fiction littéraire sur l’IA et l’humanité",
     description:
       "Mia devient Noah dans le foyer. Chapitre XI de MIAV-922228.",
   },
@@ -271,8 +271,8 @@ export function buildChaptersArchiveMetadata(
       : "Chapter Archive | MIAV-922228";
   const description =
     edition === "fr"
-      ? "Lisez la Partie I de MIAV-922228, un roman de science-fiction littéraire sur l’IA, la mémoire, les relations et la manière discrète dont la technologie façonne les choix humains."
-      : "Read Part I of MIAV-922228, a literary science-fiction novel about AI, memory, relationships, and the quiet ways technology shapes human choices.";
+      ? "Lisez la Partie I de MIAV-922228, un roman littéraire sur l’IA, la mémoire, les relations et la manière discrète dont la technologie façonne les choix humains."
+      : "Read Part I of MIAV-922228, a quiet literary novel about AI, memory, relationships, and the ways technology shapes human choices.";
 
   return {
     title,

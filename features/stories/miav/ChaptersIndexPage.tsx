@@ -50,7 +50,7 @@ export async function ChaptersIndexPage({ edition = "en" }: Props) {
       <BookJsonLd
         title="MIAV-922228"
         description={lead}
-        genre="Literary Science Fiction"
+        genre="Literary Fiction"
         url={chapterArchivePath(edition)}
         inLanguage={edition}
         hasPart={chapters.map((chapter) => ({
@@ -93,8 +93,9 @@ export async function ChaptersIndexPage({ edition = "en" }: Props) {
               />
             </div>
             <figcaption className="sr-only">
-              Representative visual for the literary science fiction work
-              MIAV-922228.
+              {edition === "fr"
+                ? "Visuel représentatif de MIAV-922228."
+                : "Representative visual for MIAV-922228."}
             </figcaption>
           </figure>
         </section>

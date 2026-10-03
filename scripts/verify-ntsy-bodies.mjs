@@ -42,7 +42,8 @@ for (const part of parts) {
   const { content } = matter(fs.readFileSync(mdPath, "utf8"));
   const bodyFromMd = content.trim();
 
-  if (bodyFromSource !== bodyFromMd) {
+  const norm = (s) => s.replace(/\r\n/g, "\n");
+  if (norm(bodyFromSource) !== norm(bodyFromMd)) {
     failed++;
     console.error(`MISMATCH ${pathSlug}`);
     console.error(`  source len ${bodyFromSource.length} md len ${bodyFromMd.length}`);

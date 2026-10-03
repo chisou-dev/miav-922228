@@ -18,7 +18,7 @@ export function LibraryShell({
   title: string;
   summary?: string;
   breadcrumbs?: BreadcrumbItem[];
-  /** When set, shows Works / Literary SF / Entertainment SF / Flash Fiction hops. */
+  /** When set, shows Works / Literary Fiction / Entertainment / Flash Fiction hops. */
   categoryNavHref?: string;
 }) {
   return (

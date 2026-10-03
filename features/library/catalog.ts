@@ -101,22 +101,22 @@ export type FlashPiece = {
 export const worksLibrary = {
   title: "Works",
   summary:
-    "Fiction and stories within MIAV-922228—literary science fiction, speculative fiction, and short works exploring memory, technology, and human existence.",
+    "Fiction and stories within MIAV-922228—quiet, character-driven works about people, memory, relationships, technology, and time.",
   seo: {
     title: "Works | MIAV-922228",
     description:
-      "Literary science fiction, speculative fiction, and flash fiction from the MIAV-922228 project.",
+      "Quiet, character-driven fiction within MIAV-922228, from literary and contemporary stories to shorter works.",
   },
 } as const satisfies { title: string; summary: string; seo: PageSeo };
 
 export const aboutPage = {
   title: "About MIAV",
   summary:
-    "MIAV-922228 is an independent literary science fiction project of stories, browser games, and digital experiments.\n\nCreated by Takashi Yabe, it explores memory, artificial intelligence, loneliness, technology, and human existence through quiet speculative fiction.",
+    "MIAV-922228 is an independent creative project bringing together quiet, character-driven stories, browser games, apps, and digital experiments.\n\nCreated by Takashi Yabe, it explores people, memory, relationships, technology, loneliness, and the passage of time through fiction and interactive works.",
   seo: {
     title: "About | MIAV-922228",
     description:
-      "MIAV-922228 is an independent literary science fiction project by Takashi Yabe, bringing together stories, browser games, and digital experiments.",
+      "MIAV-922228 is an independent creative project by Takashi Yabe—quiet, character-driven stories, browser games, apps, and digital experiments.",
   },
 } as const satisfies { title: string; summary: string; seo: PageSeo };
 
@@ -124,12 +124,13 @@ export const categories: readonly Category[] = [
   {
     id: "literary-sf",
     path: "/literary-sf",
-    title: "Literary SF",
-    summary: "Stories exploring memory, technology, and human existence.",
+    title: "Literary Fiction",
+    summary:
+      "Quiet, character-driven stories exploring people, memory, relationships, technology, and time.",
     seo: {
-      title: "Literary SF | MIAV-922228",
+      title: "Literary Fiction | MIAV-922228",
       description:
-        "Literary science fiction series from MIAV-922228 exploring memory, technology, and human existence.",
+        "Quiet, character-driven literary fiction from MIAV-922228 exploring people, memory, relationships, technology, and time.",
     },
   },
   {
@@ -151,7 +152,7 @@ export const categories: readonly Category[] = [
     seo: {
       title: "Flash Fiction | MIAV-922228",
       description:
-        "Short speculative fiction from MIAV-922228 — quiet stories readable in a few minutes.",
+        "Short fiction from MIAV-922228 — quiet stories readable in a few minutes.",
     },
   },
 ] as const;
@@ -220,12 +221,12 @@ export const seriesList: readonly Series[] = [
     categoryId: "literary-sf",
     title: "MIAV-922228",
     summary:
-      "A literary science fiction series exploring memory, artificial intelligence, and the future of human relationships.",
-    genre: "Literary Science Fiction",
+      "A quiet literary series exploring memory, artificial intelligence, relationships, and the passage of time.",
+    genre: "Literary Fiction",
     seo: {
-      title: "MIAV-922228 | Literary Science Fiction",
+      title: "MIAV-922228 | Literary Fiction",
       description:
-        "A literary science fiction series exploring memory, AI, and human relationships.",
+        "A quiet literary series exploring memory, AI, relationships, and the passage of time.",
     },
     featured: true,
     worksFeaturedNote: "The latest chapter is available.",
@@ -272,11 +273,11 @@ export const seriesList: readonly Series[] = [
     title: "Fourth Period",
     summary:
       "A series of quiet stories inspired by moral education and childhood memories.",
-    genre: "Literary Science Fiction",
+    genre: "Literary Fiction",
     seo: {
-      title: "Fourth Period | Literary Science Fiction",
+      title: "Fourth Period | Literary Fiction",
       description:
-        "A literary SF series of quiet stories inspired by moral education and childhood memories.",
+        "A literary fiction series of quiet stories inspired by moral education and childhood memories.",
     },
     chapters: [
       {
@@ -367,7 +368,7 @@ export const flashPieces: readonly FlashPiece[] = [
     seo: {
       title: "The Silver Thread | Flash Fiction",
       description:
-        "A quiet speculative flash fiction story about a silver thread, vanished wishes, and what can no longer be agreed upon.",
+        "A quiet flash fiction story about a silver thread, vanished wishes, and what can no longer be agreed upon.",
     },
     body: [
       "The thread appeared one morning in a place no one remembered.",

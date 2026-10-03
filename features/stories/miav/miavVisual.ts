@@ -9,7 +9,7 @@ export const MIAV_OG_IMAGE = {
   path: "/images/miav/miav-og.png",
   width: 1280,
   height: 720,
-  alt: "Representative science-fiction visual for MIAV-922228",
+  alt: "Representative visual for MIAV-922228",
 } as const;
 
 export function miavOgImageAbsoluteUrl(): string {

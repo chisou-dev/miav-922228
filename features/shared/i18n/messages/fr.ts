@@ -35,7 +35,7 @@ export const fr: MessageCatalog = {
   "home.brand": "MIAV-922228",
   "home.tagline": "LIRE. JOUER. LAISSER UNE TRACE.",
   "home.lead":
-    "Des histoires, des jeux dans le navigateur et des expériences numériques issus d'un même projet de science-fiction littéraire—explorant la mémoire, l'intelligence artificielle, la technologie, la solitude et l'existence humaine.",
+    "Des histoires discrètes et centrées sur les personnages, des jeux de navigateur, des applications et des expériences numériques—autour des personnes, de la mémoire, des relations, de la technologie et du temps.",
   "home.ctaStart": "COMMENCER ICI",
   "home.ctaStories": "LIRE LES HISTOIRES",
   "home.ctaGames": "JOUER AUX JEUX",
@@ -45,7 +45,7 @@ export const fr: MessageCatalog = {
   "home.startTitle": "COMMENCER ICI",
   "home.readTitle": "LIRE",
   "home.readBody":
-    "De courtes fictions spéculatives sur la mémoire, la technologie et l'existence humaine.",
+    "Des fictions discrètes et centrées sur les personnages—autour des personnes, de la mémoire, des relations, de la technologie et du temps.",
   "home.readEnter": "Entrer dans les œuvres",
   "home.readChapters": "Chapitres",
   "home.readBooks": "Livres",
@@ -102,7 +102,7 @@ export const fr: MessageCatalog = {
     "Partie I et Partie II — Kindle et archive des chapitres, en anglais et en français.",
   "home.aboutTitle": "À propos de MIAV",
   "home.aboutBody":
-    "MIAV est un projet indépendant de science-fiction littéraire qui réunit histoires, jeux de navigateur et expériences numériques. À travers la fiction et les œuvres interactives, il explore la mémoire, l'intelligence artificielle, la solitude, la technologie et l'existence humaine.",
+    "MIAV est un projet créatif indépendant qui réunit des histoires discrètes et centrées sur les personnages, des jeux de navigateur, des applications et des expériences numériques.",
   "home.aboutAuthorCta": "À propos / Auteur →",
   "home.contactTitle": "Contact",
   "home.contactBody":

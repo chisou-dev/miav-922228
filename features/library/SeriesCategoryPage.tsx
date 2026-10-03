@@ -13,7 +13,7 @@ import { SfSection } from "@/features/shared/SfSection";
 
 type Props = {
   categoryId: Exclude<CategoryId, "flash-fiction">;
-  /** Literary SF uses Featured + Other; Entertainment lists all series. */
+  /** Literary Fiction uses Featured + Other; Entertainment lists all series. */
   showFeatured?: boolean;
 };
 

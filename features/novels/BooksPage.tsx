@@ -26,8 +26,8 @@ export function BooksPage() {
           </h1>
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
-            A literary science fiction project exploring AI, memory, emotion,
-            and human existence — Part I and Part II.
+            A quiet literary series exploring AI, memory, emotion,
+            relationships, and human existence — Part I and Part II.
           </p>
         </header>
 

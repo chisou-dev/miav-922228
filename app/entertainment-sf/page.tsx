@@ -9,7 +9,7 @@ export const metadata: Metadata = libraryPageMetadata({
   title: category?.seo.title ?? "Entertainment | Takashi Yabe",
   description:
     category?.seo.description ??
-    "Entertainment science fiction from MIAV-922228.",
+    "Story-driven fiction across genres from MIAV-922228.",
   path: "/entertainment-sf",
 });
 

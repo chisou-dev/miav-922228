@@ -26,7 +26,7 @@ export function AuthorPage() {
           </h1>
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
-            A writer of literary science fiction.
+            A writer of quiet, character-driven fiction.
           </p>
         </header>
 
@@ -39,11 +39,11 @@ export function AuthorPage() {
           </h2>
           <div className="mt-10 space-y-8 text-[1.02rem] leading-[2.3] tracking-[0.012em] text-[var(--foreground)] sm:mt-12 sm:text-[1.1rem] sm:leading-[2.45]">
             <p>
-              Takashi Yabe is a writer of literary science fiction.
+              Takashi Yabe writes quiet, character-driven fiction.
             </p>
             <p>
-              His work explores memory, artificial intelligence, loneliness,
-              technology, and human existence through quiet speculative fiction.
+              His work explores people, memory, relationships, technology,
+              loneliness, and human existence.
             </p>
           </div>
         </SfSection>
@@ -64,8 +64,9 @@ export function AuthorPage() {
             </a>
           </p>
           <p className="mt-8 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:text-base sm:leading-[2.1]">
-            A literary science fiction project concerned with how people live,
-            remember, and feel in an age reshaped by artificial intelligence.
+            An independent creative project of quiet, character-driven stories
+            and digital works—exploring how people live, remember, and relate in
+            an age shaped by technology and artificial intelligence.
           </p>
           <p className="mt-12">
             <a

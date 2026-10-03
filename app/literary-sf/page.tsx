@@ -6,10 +6,10 @@ import { libraryPageMetadata } from "@/features/library/pageMetadata";
 const category = getCategory("literary-sf");
 
 export const metadata: Metadata = libraryPageMetadata({
-  title: category?.seo.title ?? "Literary SF | Takashi Yabe",
+  title: category?.seo.title ?? "Literary Fiction | Takashi Yabe",
   description:
     category?.seo.description ??
-    "Literary science fiction series from MIAV-922228.",
+    "Quiet, character-driven literary fiction from MIAV-922228.",
   path: "/literary-sf",
 });
 
