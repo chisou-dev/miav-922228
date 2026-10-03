@@ -1,7 +1,13 @@
 import { AuthorContactSection } from "@/features/contact/AuthorContactSection";
 import { SfSection, sfSectionClass } from "@/features/shared/SfSection";
 
-const themes = ["AI", "Memory", "Emotion", "Human Existence"] as const;
+const themes = [
+  "Memory",
+  "Relationships",
+  "Technology",
+  "Time",
+  "Human Existence",
+] as const;
 
 export function AuthorPage() {
   return (
@@ -38,9 +44,6 @@ export function AuthorPage() {
             Profile
           </h2>
           <div className="mt-10 space-y-8 text-[1.02rem] leading-[2.3] tracking-[0.012em] text-[var(--foreground)] sm:mt-12 sm:text-[1.1rem] sm:leading-[2.45]">
-            <p>
-              Takashi Yabe writes quiet, character-driven fiction.
-            </p>
             <p>
               His work explores people, memory, relationships, technology,
               loneliness, and human existence.
