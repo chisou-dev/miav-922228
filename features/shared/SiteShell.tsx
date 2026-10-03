@@ -8,7 +8,7 @@ const navLinks = [
   { href: "/chapters", labelKey: "nav.chapters" },
   { href: "/books", labelKey: "nav.books" },
   { href: "/world-map", labelKey: "nav.world" },
-  { href: "/contact", labelKey: "nav.contact" },
+  { href: "/author#contact", labelKey: "nav.contact" },
 ] as const satisfies readonly { href: string; labelKey: MessageKey }[];
 
 export function SiteHeader() {

@@ -227,20 +227,6 @@ export function HomePage() {
               {t("home.aboutBody")}
             </p>
           </SfSection>
-
-          <SfSection id="contact" variant="terminal" className={sectionBase}>
-            <h2 className="text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]">
-              {t("home.contactTitle")}
-            </h2>
-            <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
-              {t("home.contactBody")}
-            </p>
-            <p className="mt-12 sm:mt-14">
-              <a href="/contact" className={linkClassName}>
-                {t("home.contactCta")}
-              </a>
-            </p>
-          </SfSection>
         </div>
       </main>
     </SiteShell>

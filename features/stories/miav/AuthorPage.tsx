@@ -1,3 +1,4 @@
+import { AuthorContactSection } from "@/features/contact/AuthorContactSection";
 import { SfSection, sfSectionClass } from "@/features/shared/SfSection";
 
 const themes = ["AI", "Memory", "Emotion", "Human Existence"] as const;
@@ -109,6 +110,8 @@ export function AuthorPage() {
             Return to chapters
           </a>
         </nav>
+
+        <AuthorContactSection />
       </main>
     </div>
   );
