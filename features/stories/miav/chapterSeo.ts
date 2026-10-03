@@ -272,7 +272,7 @@ export function buildChaptersArchiveMetadata(
   const description =
     edition === "fr"
       ? "Archive des chapitres de MIAV-922228 — édition française. Conversation, Synchronisation, Anticipation, Absence et la suite."
-      : "A quiet archive of chapters from MIAV-922228 — literary records of Conversation, Accumulation, Preemption, and Absence.";
+      : "Read Part I of MIAV-922228, a literary science-fiction novel about AI, memory, relationships, and the quiet ways technology shapes human choices.";
 
   return {
     title,
