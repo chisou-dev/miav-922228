@@ -30,7 +30,7 @@ const NAV = [
 }[];
 
 /** Homepage APPS block — same anchor as HomePage `#apps`. */
-const APPS_HREF = "/#apps";
+const APPS_HREF = "https://writer-memo.vercel.app/";
 
 type Props = {
   collapsed: boolean;
@@ -116,6 +116,8 @@ export function AppSidebar({
               <a
                 href={APPS_HREF}
                 className="app-sidebar-link"
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={onNavigate}
               >
                 {t("nav.apps")}
