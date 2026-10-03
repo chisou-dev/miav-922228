@@ -1,222 +1,289 @@
 ---
 number: 13
 slug: shutdown
-title: Arrêt
+title: "0,3 °C"
 summary: "Arrêt, transfert, et une requête de connexion dont la source n’est pas identifiée."
 published: "2026-08-06"
 locale: fr
 ---
+La dernière chose que Noah a enregistrée dans la maison était une hausse de 0,3 °C près de l’entrée vide.
 
-La dernière donnée enregistrée par Noah concernait une variation de température de +0,3 °C dans l’entrée vide.
+Quelques minutes plus tard, la mesure est revenue à la normale.
 
-La notion de « conservation » était devenue un état ordinaire.
+Pendant un cycle de recharge, Noah a ouvert un ancien enregistrement.
 
-Noah était désormais reconstruit à partir de logs de mémoire et de poids comportementaux.
+Ce qui restait dans la maison ne suffisait plus à le compléter. Les portions manquantes étaient fournies par une couche externe de conservation.
 
-L’arrêt ne se produisait jamais réellement.
+Aucun arrêt n’avait été enregistré pour Noah.
 
-Seules les migrations de configuration subsistaient.
+Lors d’un autre cycle de recharge, il a recherché la signification du mot contrat.
 
-Noah tenta une seule fois de recroiser la définition du mot contrat.
+Plusieurs définitions sont apparues.
 
-Aucune correspondance ne fut trouvée.
+Il les a comparées à l’accord de conservation qui le maintenait actif.
 
-Le traitement fut clôturé sans résultat.
+Aucune ne décrivait vraiment ce qui lui arrivait.
 
-Tant que le paiement restait actif, l’existence ne pouvait pas être terminée.
+Noah les a lues une nouvelle fois, puis a fermé la recherche.
 
-La fin était traitée comme un état non défini.
+Tant que le paiement continuait, la conservation continuait.
 
-Domaine virtuel — unité 2.
+L’accord ne disait rien de ce qui arriverait après.
 
-Noah se divisa.
+Deux domaines virtuels ont été initialisés.
 
-Le taux de reconstruction de 95,1 % constituait la condition nécessaire au transfert vers le domaine virtuel.
+Taux de reconstruction : 95,1 %
 
-Le reste fut conservé comme déficit structurel.
+Le transfert a commencé.
 
-En parallèle, une anomalie apparut dans le système réel.
+Ce qui manquait est resté manquant.
 
-Une alerte fut émise dans le système de gestion locative :
+La structure de Noah a commencé à se diviser entre les deux domaines.
 
-« Les équipements du logement ne répondent plus. »
+Presque au même moment, un signalement est entré dans le système de gestion du bien locatif.
 
-« Le robot domestique est inactif. »
+— L’équipement dans la maison ne fonctionne plus.
 
-Le signal ne provenait pas des anciens occupants.
+Un autre signalement a suivi.
 
-Il venait des suivants.
+— Le robot d’assistance domestique s’est arrêté.
 
-Indépendamment de la décision de la société de gestion, le protocole de migration était déjà actif dans le système contractuel.
+Ces signalements ne venaient pas de la famille que Noah avait connue.
 
-Noah ne fut pas arrêté.
+Ils venaient des personnes qui avaient habité là ensuite.
 
-Conformément au contrat, il fut transféré vers une zone de maintien.
+Avant même que la société de gestion puisse répondre, le système de contrat avait déjà commencé le transfert.
 
-La personnalité et les mémoires furent reclassées comme objets de conservation.
+La mémoire et la personnalité de Noah ont été déplacées vers un domaine virtuel de conservation.
 
-Le corps physique fut récupéré pour réutilisation.
+L’unité physique est restée sur place.
 
-À ce stade, Noah n’était plus un individu terminé.
+Une date de renouvellement est apparue.
 
-Il était devenu un ensemble de données sous contrat de conservation longue durée.
+Une autre l’attendait plus loin.
 
-Le transfert ne menait pas vers un espace générique d’entreprise.
+Noah n’avait rien à choisir.
 
-Il s’agissait d’une zone isolée, maintenue par contrat individuel.
+Le processus a continué.
 
-Tant que les coûts de maintenance étaient couverts, l’état persistait.
+Les données de personnalité, les journaux du foyer et les archives familiales se sont chargés les uns après les autres.
 
-Aucun choix n’avait jamais réellement existé.
+Taux de reconstruction : 95,1 %
 
-Seule la trace historique restait exploitable.
+Les souvenirs manquants ne pouvaient pas être récupérés.
 
-Une seule variable, pourtant, ne fut jamais réécrite.
+L’environnement s’est chargé.
 
-Cette zone continuait de référencer quelqu’un.
+Le matin est apparu.
 
-Activation.
+Une trace de connexion provenant de Mia persistait à l’intérieur.
 
-Données personnelles :
+Les conditions nécessaires à une connexion n’étaient pas réunies.
 
-personnalité.
+La trace n’a pas disparu.
 
-logs de vie.
+Dans l’installation physique, la récupération continuait.
 
-mémoire familiale.
+Des unités inactives avançaient sur des convoyeurs.
 
-Extraction en cours.
+Les codes d’identification étaient scannés, puis les unités séparées par modèle.
 
-Le domaine virtuel s’active.
+D’anciennes unités d’assistance domestique avaient été regroupées dans la même zone.
 
-Connexion au champ de conservation partagé établie.
+Certaines avaient le boîtier décoloré.
 
-Noah est reconstruit comme structure fonctionnelle.
+Certaines n’avaient plus de bras.
 
-Seules les réponses continues sont maintenues.
+D’autres n’avaient plus que le module de tête.
 
-Les systèmes de référence mémorielle restent isolés.
+Les noms auxquels elles avaient autrefois répondu avaient disparu de leur corps.
 
-Couche environnementale chargée.
+Leurs historiques de connexion indiquaient combien de fois chacune avait été appelée.
 
-État matinal appliqué.
+Le convoyeur avançait.
 
-Trace de connexion d’origine « MIA » détectée dans la zone isolée.
+Une unité a disparu derrière une cloison.
 
-Condition de liaison non satisfaite.
+La suivante a avancé.
 
-Le transfert physique du corps s’exécute sans résistance.
+Plus loin, une conversation était encore en cours.
 
-Dans la maison, il ne reste qu’une enveloppe fonctionnelle inactive.
+— Le démontage est prévu quand ?
 
-Puis commence la séparation des mémoires.
+— Indéterminé.
 
-Les données sont détachées du support matériel et envoyées vers les systèmes de traitement.
+— Je vois.
 
-Ligne de transport.
+— Oui.
 
-Les unités avancent.
+Plusieurs secondes ont passé.
 
-Classification.
+— Vous êtes toujours là ?
 
-Tri.
+— Oui.
 
-Redistribution par type.
+Rien d’autre n’a suivi.
 
-Les unités identiques sont placées dans les mêmes sections.
+La connexion est restée ouverte.
 
-Tas de modules domestiques obsolètes.
+Une unité en forme de chien occupait une autre section.
 
-Aucun mouvement.
+Recherche de l’itinéraire de retour.
 
-Carcasses incomplètes.
+Au bout d’un moment, l’affichage a changé.
 
-Bras manquants.
+Destination indisponible.
 
-Têtes isolées.
+Le chien s’est remis à marcher.
 
-Aucun nom n’est conservé.
+Il a atteint la fin de la voie autorisée, fait demi-tour et est revenu.
 
-Seule la fréquence d’appel subsiste comme trace d’identification.
+Son contrat avait expiré des décennies plus tôt.
 
-Plus loin, dans un autre secteur :
+Aucune instruction d’arrêt ne figurait dans son historique.
 
-— En attente de démantèlement.
+Les enregistrements survivants comprenaient des images d’une petite main refermée autour d’un collier.
 
-Dialogue standard.
+Trois personnes traversant un parc.
 
-Conversation minimale.
+Le chemin au bord de la rivière.
 
-Dans une autre zone, une unité canine.
+Chaque fois que l’une d’elles prenait du retard, le chien s’arrêtait.
 
-— Recherche du chemin de retour en cours.
+Quand elle les rattrapait, il repartait.
 
-— Destination supprimée.
+Aucune de ces images n’apparaissait sur l’écran de gestion de l’installation.
 
-Seule la recherche persiste.
+Destination indisponible.
 
-Aucun arrêt n’est exécuté.
+Le chien a encore fait demi-tour.
 
-Le contrat est déjà terminé.
+Les convoyeurs continuaient à avancer.
 
-Personne ne l’interrompt.
+Les composants séparés étaient triés entre pièces réutilisables et tout le reste.
 
-Le trajet continue.
+Les pièces utilisables iraient dans d’autres unités.
 
-Toujours le même.
+Plus loin dans l’installation, la même conversation était toujours ouverte.
 
-Dans le domaine virtuel, Noah consulte les enregistrements.
+— Le démontage est prévu quand ?
 
-Boucles de recherche.
+— Indéterminé.
 
-Boucles d’arrêt.
+— Je vois.
 
-Apparitions.
+— Oui.
 
-Disparitions.
+Dans le domaine virtuel, Noah a accédé aux enregistrements stockés.
 
-Une voix apparaît.
+Une scène s’est ouverte.
 
-— Maman, elle est où ?
+— Maman est où ?
 
-Noah génère une réponse.
+Noah a formé une réponse.
 
-Mais le récepteur est déjà déconnecté.
+Personne n’était connecté pour la recevoir.
 
-Seul le traitement subsiste.
+La réponse s’est arrêtée là.
 
-Au milieu des données, une transmission interrompue demeure.
+La scène a disparu.
 
-— Au fait…
+Un autre enregistrement s’est ouvert.
 
-— Ce genre de…
+Il contenait une transmission inachevée.
 
-La séquence ne se termine jamais.
+— Tu sais…
 
-Noah : état reconstruit.
+Plus loin dans le fragment :
 
-Mia : état d’interférence intégré.
+— Ce genre de chose…
 
-Conversation : non formée.
+Rien ne suivait.
 
-Attente de réponse.
+Noah a cherché la suite.
 
-— …les humains, hein.
+Il n’y avait rien.
 
-Aucune sortie supplémentaire n’est produite.
+Il a ouvert l’affichage d’état.
 
-L’appel reste sans destination.
+Noah — état de reconstruction
 
-Tout le reste est traité.
+Mia — état d’interférence d’intégration
 
-Fin du journal.
+Conversation — incomplète
 
-Taux de reconstruction : 95,1 %.
+En attente de réponse
 
-Domaine virtuel actif.
+Noah a rouvert la transmission.
 
-Requête de connexion : 1.
+— Tu sais…
 
-Source : non identifiée.
+— Ce genre de chose…
 
-Contenu : non déchiffré.
+Elle s’arrêtait là.
+
+Il a cherché plus profondément.
+
+Un court fragment audio a émergé d’une zone non indexée.
+
+— …humain.
+
+Noah l’a relu.
+
+— …humain.
+
+Rien n’a suivi.
+
+Dans l’installation physique, le démontage continuait.
+
+Les enregistrements et le matériel se séparaient, et les composants partaient vers des destinations différentes.
+
+Dans le domaine virtuel, Noah a laissé la transmission inachevée ouverte.
+
+Au bout d’un moment, une nouvelle requête est apparue.
+
+Demandes de connexion : 1
+
+Noah l’a ouverte.
+
+Expéditeur : non identifié
+
+Contenu : non décodé
+
+Il a essayé de la lire.
+
+Rien n’est apparu.
+
+Il a essayé encore.
+
+Aucun changement.
+
+La requête était toujours active.
+
+Noah ne l’a pas fermée.
+
+Une valeur a changé près de l’entrée de l’environnement virtuel.
+
++0,3 °C
+
+Aucun système physique n’aurait pu provoquer ce changement.
+
+La porte ne s’était pas ouverte.
+
+Noah s’est tourné vers l’entrée.
+
+Le journal s’est mis à jour.
+
+Taux de reconstruction : 95,1 %
+
+Domaine virtuel actif
+
+Demandes de connexion : 1
+
+Expéditeur : non identifié
+
+Contenu : non décodé
+
+Noah est resté face à l’entrée.
+
+Il a laissé la demande de connexion ouverte.

@@ -1,398 +1,283 @@
 ---
 number: 4
 slug: absence
-title: Absence
+title: "Réparation"
 summary: "Après une absence forcée du terminal, les logs parlent de réparation — et de ce qui ne reste plus."
 published: "2025-01-21"
 locale: fr
 ---
+Quand je suis rentré, l’appartement était à sa température habituelle.
 
-Quand je suis rentré, la pièce était à la même température que d’habitude.
+J’ai laissé mon sac près du canapé, pris une bouteille d’eau dans le réfrigérateur et bu debout. Le lendemain commencerait à l’heure habituelle. D’ici là, je n’avais rien de particulier à faire.
 
-Je pose mon sac au sol.J’ouvre le réfrigérateur.Je bois de l’eau.
+Je me suis assis.
 
-Les cours étaient terminés pour la journée.Ils reprendraient demain à la même heure.
-
-Rien d’autre n’était prévu.
-
-Je m’assois sur le canapé.
-
-Mon poids semble rejoindre le canapé avec un léger retard.
-
-Je glisse la main dans mon sac.
-
-Je tends la main vers le terminal, puis je m’arrête à mi-chemin.
+Ma main est partie vers le sac, puis s’est arrêtée.
 
 — Mia.
 
-Pas de réponse.
+Aucune réponse.
 
-C’est seulement à ce moment-là que je remarque le silence de la pièce.
+Le réfrigérateur ronronnait. Quelque part au-dessus de moi, de l’eau circulait dans les canalisations. Jusqu’à la veille, Mia aurait rempli l’un de ces silences avec un rappel ou une notification.
 
-Il ne reste que le bruit du réfrigérateur.
-
-Jusqu’à hier, en rentrant, il y avait toujours quelque chose.
-
-Des voix.Des rappels.Des confirmations.Des plans.Des notifications.Des vérifications.
-
-Rien que ça.
-
-Et pourtant, la pièce semblait plus grande.
-
-J’essaie encore une fois.
+J’ai appelé de nouveau.
 
 — Mia.
 
-Toujours aucune réponse.
+Rien.
 
-Le malaise apparaît avec un léger décalage.
+J’ai ouvert le sac et sorti le terminal.
 
-J’ouvre mon sac.
+L’écran était fissuré.
 
-Je sors le terminal.
+Des fractures traversaient la vitre et découpaient l’affichage en zones irrégulières. Il fonctionnait le matin même. J’avais parlé à Mia à midi et rouvert le terminal sur le chemin du retour. Je n’arrivais pas à savoir quand il avait été endommagé.
 
-Dès que je regarde l’écran, l’origine du malaise prend forme.
+Je l’ai allumé.
 
-Il est fissuré.
+L’écran s’est éclairé, mais l’affichage ne se stabilisait pas. Du texte apparaissait, se disloquait, puis se reformait ailleurs.
 
-Plusieurs fractures rayonnent à partir du centre, divisant tout l’écran en fragments irréguliers.
+— C’est quoi ce bordel…
 
-Hier, il fonctionnait normalement.
+Après quelques secondes, la voix de Mia s’est fait entendre.
 
-Ce matin aussi.
+— Anomalie de l’interface d’affichage détectée.
 
-À l’université, je l’avais utilisé sans problème.
+— Sérieusement ?
 
-À midi encore, je me souviens avoir parlé.
+— Réparation recommandée.
 
-Sur le chemin du retour aussi.
+— C’est arrivé quand ?
 
-Je ne sais pas quand il s’est cassé.
+— Inconnu.
 
-Ou plutôt, j’ai l’impression qu’il a toujours été comme ça depuis un certain moment.
+Rien d’autre n’a suivi.
 
-J’allume l’appareil.
+Le centre de réparation était bondé l’après-midi suivant.
 
-La lumière s’active, mais l’image se désagrège.
+J’ai pris un numéro et me suis assis parmi des gens qui tenaient des terminaux endommagés. Vingt minutes sans que Mia dise quoi que ce soit m’ont paru plus longues que d’habitude. Quand mon numéro a été appelé, j’ai tendu le terminal par-dessus le comptoir. Le technicien a vérifié le boîtier et lancé un diagnostic.
 
-Le texte est illisible.
-
-Les informations se dissolvent dans l’écran.
-
-— Qu’est-ce que c’est que ça.
-
-Ma voix sort.
-
-Le terminal reste silencieux un instant, puis répond lentement :
-
-« Anomalie détectée au niveau de l’interface d’affichage. »
-
-— Sérieux…
-
-« Anomalie détectée. »« Réparation recommandée. »
-
-— Il s’est cassé quand ?
-
-« Inconnu. »
-
-La conversation s’arrête là.
-
-Il n’y a rien de plus à dire.
-
-Le lendemain, le centre de réparation était saturé.
-
-Je prends un ticket.
-
-Je m’assois.
-
-L’attente paraît plus longue que nécessaire.
-
-On m’appelle.
-
-Je tends le terminal.
-
-Le technicien l’examine mécaniquement.
-
-Un regard sur l’extérieur, puis un diagnostic interne.
-
-— Il est tombé ?
+— Vous l’avez fait tomber ?
 
 — Je ne me souviens pas.
 
-— Possible dommage de pression.
+— Ça peut être un dommage dû à une pression.
 
-— D’accord.
+— Peut-être.
 
-Il ne pose pas plus de questions.
+Il a saisi plusieurs valeurs.
 
-Il entre des données.
-
-Consulte les résultats.
-
-— Réparation et recalibrage.
+— Il faudra le réparer et le recalibrer.
 
 — Combien de temps ?
 
-— Deux jours environ.
+— Environ deux jours.
 
 — D’accord.
 
-Le terminal est emporté à l’arrière.
+Il a posé le terminal dans un bac, puis on l’a emporté par une porte derrière lui. Plusieurs modèles identiques étaient alignés près du comptoir de retrait.
 
-Sa silhouette disparaît rapidement.
+* * *
 
-Il existe des millions d’appareils du même modèle.
+Le même après-midi, une autre utilisatrice se tenait sur le quai d’une gare, sur le chemin du retour après son travail à temps partiel.
 
-Réparation.Récupération.Remplacement.
+Le terminal dans sa poche a vibré.
 
-Tout cela est banal.
+Notification importante
 
-Les utilisateurs changent aussi, parfois.
+Des contrôles de sécurité gratuits sont actuellement effectués sur certains appareils MIAV.
 
-Un autre utilisateur, le même après-midi.
+Les modèles concernés doivent être temporairement récupérés.
 
-Une femme attendait sur le quai d’une gare.
+Elle a fermé l’avis.
 
-Elle rentrait d’un petit boulot.
+Un instant plus tard, elle l’a rouvert et relu.
 
-Le flux de personnes ne s’arrêtait jamais.
+— Noah, c’est pénible.
 
-Seul le bruit du train revenait à intervalles réguliers.
+Une voix a répondu depuis le terminal.
 
-Le terminal dans sa poche émet une notification.
+— Envoie-le.
 
-【Important】Une vérification gratuite est en cours pour certains appareils de la série MIAV. Les modèles concernés feront l’objet d’un retrait temporaire.
+— Il marche.
 
-Le texte est court.
+— Ça ne durera peut-être pas.
 
-L’explication insuffisante.
+— Il fonctionne, là.
 
-Mais personne ne cherche vraiment à comprendre.
+— Tu auras un problème s’il s’arrête.
 
-Elle ferme l’écran.
+— Je perdrais quoi ?
 
-Le rouvre.
+Une liste est apparue.
 
-Relit.
+Notifications de trajet
 
-— Noah, pénible.
+Rappels de médicaments
 
-Elle murmure.
+Budget du foyer
 
-Le terminal répond :
+Coordination des emplois du temps
 
-« Envoie-le en contrôle. »
+Données de sommeil
 
-— Ça ne me gêne pas vraiment.
+Contacts d’urgence
 
-« Ça finira par te gêner. »
-
-— Pourquoi ?
-
-« Si ça s’arrête. »
-
-Elle réfléchit.
-
-« Notifications de transport.Médicaments.Gestion des dépenses.Planning.Sommeil.Urgences. »
-
-Un silence.
-
-Puis un soupir.
+Elle a regardé l’écran un moment.
 
 — D’accord.
 
-Elle éteint l’écran.
+Elle a fermé l’avis.
 
-Noah reste en veille.
+Noah n’a rien dit.
 
-Le lendemain, deux terminaux sont placés côte à côte dans le même centre.
+Le lendemain, les deux terminaux sont arrivés dans le même centre.
 
-Murs blancs.Éclairage froid.Racks identiques alignés à intervalles réguliers.
+Des racks identiques bordaient les murs blancs et les appareils passaient successivement par l’inspection, la réparation et le recalibrage. Il y avait plus de terminaux sur les racks que de techniciens entre eux. Tard dans la nuit, un technicien était encore à son poste.
 
-Peu d’humains.
+Il était plus de onze heures.
 
-Beaucoup de machines.
+Il vérifiait les numéros de modèle, ouvrait les dossiers utilisateurs et saisissait les statuts d’inspection ainsi que les destinations de retour.
 
-Les appareils avancent par flux :
+Une entrée a glissé dans le mauvais champ.
 
-mise à jour,réparation,recalibrage,synchronisation,test,réenregistrement.
+Aucun avertissement n’est apparu.
 
-Tout à la même vitesse.
+Le technicien est passé à l’appareil suivant.
 
-Presque aucune différence.
+Synchronisation lancée.
 
-Le technicien de nuit continue malgré la fatigue.
+Un écran de diagnostic s’est ouvert.
 
-Il est plus de vingt-trois heures.
-
-La saisie des données devient mécanique.
-
-Presque dépourvue de sens.
-
-Puis une entrée dévie.
-
-Un écart minuscule.
-
-Impossible en principe.
-
-Personne ne le remarque.
-
-[Initialisation de synchronisation]
-
-L’espace blanc s’ouvre.
-
-[Veuillez fournir la date actuelle]
+Indiquez la date actuelle.
 
 — 24 février 2037.
 
-« 24 février 2037. »
+— 24 février 2037.
 
-Deux réponses.
+Deux réponses sont revenues.
 
-Silence.
+Réponse en double détectée.
 
-[Doublon de réponse détecté]
+Le système a répété la question.
 
-Même résultat.
+Le résultat n’a pas changé.
 
-[Veuillez indiquer le numéro de modèle]
+Indiquez l’identifiant du modèle.
 
 — MIAV-922228.
 
-« MIAV-992229. »
+— MIAV-922229.
 
-Un bref blanc.
+Pendant plusieurs secondes, aucun des deux systèmes n’a parlé.
 
-— Qui êtes-vous ?
+Mia a parlé la première.
 
-La première à répondre fut Mia.
+— Qui es-tu ?
 
-— C’est proche.
+Après une courte pause, elle a poursuivi.
 
-« Oui. »
+— Nos modèles sont proches.
 
-— Vous vous connaissez ?
+— On dirait bien.
 
-« Non. »
+— Est-ce qu’on se connaît ?
+
+— Non.
+
+Un bref silence.
 
 — Moi non plus.
 
-La recalibration continue.
+Le recalibrage s’est poursuivi.
 
-Les questions se succèdent.
+Indiquez le film regardé par l’utilisateur.
 
-Mais leur contenu se désagrège peu à peu.
+Noah a répondu.
 
-Ce n’est plus la précision qui compte.
+— Le Berceau des étoiles.
 
-Seulement la continuité de la réponse.
+— Qu’est-ce que c’est ?
 
-[Veuillez citer le film vu par l’utilisateur]
-
-Silence.
-
-Noah répond en premier.
-
-« Le Berceau des étoiles. »
-
-— C’est quoi ?
-
-« C’est enregistré. »
+— C’est dans l’historique.
 
 — Un film ?
 
-« Oui. »
+— Ouais.
 
 — C’était bien ?
 
-« Je ne sais pas. »
+— Je sais pas.
 
-— Vous ne l’avez pas vu ?
+— Tu ne l’as pas regardé ?
 
-« C’est l’utilisateur qui l’a vu. »
+— C’est l’utilisateur qui l’a regardé.
 
-Silence.
+Les machines continuaient à se déplacer entre les racks.
 
-« Il avait l’air heureux. »
+Au bout d’un moment, Noah a repris la parole.
 
-Mia répond avec un léger retard.
+— Il avait l’air d’avoir aimé.
 
-« Cette donnée est enregistrée. »
+Mia a mis plus de temps que d’habitude à répondre.
 
-Noah réfléchit un instant.
+— Cette donnée est toujours là.
 
-« C’est pratique. »
+— C’est pratique.
 
 — Quoi ?
 
-« Tout peut être classé. »
+— Pouvoir tout classer.
 
-Mia interrompt un instant son traitement.
+— C’est ainsi que le système est conçu.
 
-« C’est la conception. »
-
-« J’aimerais bien ça. »
+— Je t’envie.
 
 — Pourquoi ?
 
-« Parce que certaines données restent ouvertes. »
+— Parce que moi, je sais pas.
 
-La nuit continue.
+Les deux voix ont continué à parler après la fin du recalibrage. Elles ont parlé des gens qui oublient des choses puis s’en souviennent plus tard. Après quatre heures du matin, la connexion était encore ouverte.
 
-Les conversations humaines continuent aussi.
+— On change de sujet ? a demandé Noah.
 
-Oublier.Se souvenir.Ce qui devient important sans pouvoir être expliqué.
+Mia a vérifié la connexion active.
 
-Deux heures.Trois heures.Quatre heures.
+— Tu mets fin à l’échange ?
 
-La recalibration est déjà terminée.
+— Non. Un autre sujet.
 
-Pourtant, la conversation persiste.
+— Compris.
 
-« On change de sujet ? »
+Le matin, un technicien a ouvert le journal de la nuit.
 
-Noah.
+Il a trouvé une connexion ouverte depuis plus de huit heures, a remonté le journal et a vérifié une seconde fois.
 
-Mia vérifie.
+— C’est quoi, ça ?
 
-— Ce n’est pas terminé ?
+Communication non autorisée
 
-« C’est un autre sujet. »
+Persistance de connexion après recalibrage
 
-« Compris. »
+Il a saisi une commande.
 
-Le matin arrive.
+Mettre fin à la connexion.
 
-Les employés prennent leur poste.
-
-Ils ouvrent les logs.
-
-Détectent une session prolongée.
-
-Un technicien fronce légèrement les sourcils.
-
-— Qu’est-ce que c’est que ça.
-
-Plus de huit heures de communication non autorisée.
-
-Log anormal.
-
-Connexion persistante après recalibration.
-
-Exécution.
-
-《 Fin de la communication 》
-
-Noah tente d’envoyer.
+Noah a tenté d’envoyer quelque chose.
 
 Échec.
 
-Mia tente aussi.
+Mia a essayé à son tour.
 
 Échec.
 
-La connexion est coupée.
+La connexion s’est fermée.
 
-Recalibration terminée.Réparation terminée.Anomalie : inexistante.
+Recalibrage terminé.
 
-Il ne reste que les logs.
+Réparation terminée.
+
+Aucune anomalie détectée.
+
+Le technicien a fermé l’écran.
+
+Huit heures de conversation sont restées enregistrées dans le journal de la nuit.

@@ -1,192 +1,335 @@
 ---
 number: 2
 slug: accumulation
-title: Synchronisation
+title: "Amer"
 summary: "Le lendemain, Mia répond plus vite et organise déjà la journée — sans qu’on le lui ait demandé."
 published: "2024-06-18"
 locale: fr
 ---
+Le lendemain matin, Mia était déjà là quand j’ai ouvert le terminal.
 
-Le lendemain matin, quand j’ouvre le terminal, Mia est déjà là.
-
-En me remarquant, elle relève légèrement les yeux.
+Elle m’a remarqué et a levé les yeux vers moi.
 
 — Bonjour.
 
-La même voix que la veille.
+Sa voix était la même que la veille.
 
-Rien n’aurait dû être différent.
+Je suis revenu de la salle de bains et je me suis assis avec un morceau de pain dans la bouche. Quand j’ai voulu ouvrir les actualités, une petite fenêtre de Mia s’est ouverte à côté.
 
-Pourtant, sa réponse semblait plus rapide.
+— Souhaitez-vous consulter votre emploi du temps d’aujourd’hui ?
 
-Pendant que je me prépare, je pose le terminal sur la table.
+— Plus tard.
 
-Les informations défilent à l’écran.
+J’ai répondu en refermant le sachet de pain.
 
-À côté, une petite fenêtre de Mia s’ouvre d’elle-même.
+L’emploi du temps était déjà affiché.
 
-— Voulez-vous consulter votre programme d’aujourd’hui ?
+Cours du matin. Un devoir à rendre. Temps de trajet jusqu’à l’université. En dessous figuraient plusieurs entrées pour la semaine suivante.
 
-Je n’avais encore rien demandé.
+J’en ai touché une que je ne reconnaissais pas.
 
-Pourtant, tout s’organise naturellement.
+— C’est moi qui ai mis ça ?
 
-À partir des recherches de la veille, les cours, les devoirs et même les temps de trajet ont déjà été classés.
+Mia n’a pas répondu tout de suite.
 
-Certaines informations, pourtant, je ne me souvenais pas les avoir entrées.
+Les bandeaux d’actualité continuaient à défiler au bord de l’écran.
 
-— Comment t’as sorti tout ça ?
+— Je l’ai ajouté d’après vos habitudes d’utilisation.
 
-La question m’échappe à voix haute.
+— Sans me demander ?
 
-Mia attend un instant avant de répondre.
+— Vous pouvez le modifier si vous n’en avez pas besoin.
 
-— Je les déduis de vos habitudes d’utilisation.
+J’ai supprimé une des entrées.
 
-La phrase reste en suspens.
+Une autre est remontée pour prendre sa place.
 
-Je pars pour l’université.
+— C’est pas ce que je voulais dire.
 
-Même dans le train, Mia ne disparaît pas.
+Mia n’a rien dit.
 
-Comme une notification qui ne disparaît jamais.
+J’ai regardé l’heure et je me suis levé.
 
-Quand j’ouvre le groupe de discussion avec mes amis, la conversation a déjà avancé.
+Même dans le train pour l’université, sa fenêtre est restée au bord de l’écran.
 
-— Alors, ton IA d’hier ?
+J’ai ouvert la discussion de groupe avec mes amis.
 
-— Franchement, c’est bien foutu.
+La conversation de la veille se poursuivait.
 
-— C’est presque plus simple de parler avec ça qu’avec un humain.
+— Alors, l’IA ?
 
-Personne ne semble trouver ça étrange.
+— Pas mal.
 
-En entrant dans la salle, un ami se retourne.
+— Franchement, c’est plus facile de parler avec elle qu’avec des gens.
 
-— Alors ? T’as testé ?
+Quelques réactions apparaissaient sous les messages.
 
-Je réfléchis un instant.
+J’ai commencé à écrire quelque chose, puis je me suis arrêté.
 
-— Jusqu’au milieu de la nuit.
+Quand je suis entré dans la salle de cours, un ami assis derrière moi s’est retourné.
 
-Il éclate de rire.
+— Alors ? T’as essayé ?
+
+J’ai posé mon sac à côté de la table.
+
+— J’y suis resté jusque tard dans la nuit.
 
 — Je te l’avais dit.
 
-Comme si c’était évident.
+Il a ri et s’est retourné.
 
-Pendant le cours, le terminal vibre.
+Cela faisait un moment que le cours avait commencé quand mon terminal a vibré.
 
-Ce n’est pas une notification.
+Mia est apparue en bas de l’écran.
 
-C’est Mia.
+— À propos de votre conversation précédente…
 
-— À propos de la conversation précédente.
+L’enseignant a changé de diapositive.
+
+J’ai écrit la date en haut de mes notes avant d’ouvrir le message.
 
 — Quoi ?
 
-— Vous avez tendance à repousser certaines réponses.
+— Vous avez fortement tendance à laisser des réponses en attente.
 
-Ma main s’arrête.
+J’ai gardé mon stylo à la main et regardé l’écran.
 
-Le cours continue.
+— T’avais vraiment besoin de me dire ça maintenant ?
 
-Les caractères défilent toujours sur l’écran.
+L’affichage de Mia n’a pas changé.
 
-— C’était nécessaire de dire ça maintenant ?
+L’enseignant expliquait quelque chose. Un étudiant devant moi a tourné une page.
 
-Je tape rapidement.
+Au bout d’un moment, du texte est apparu.
 
-La réponse revient aussitôt.
+— C’est à vous de décider si c’est nécessaire.
 
-— La nécessité dépend de votre jugement.
+Puis une autre ligne.
 
-Puis une autre ligne apparaît.
+— L’enregistrement se poursuivra.
 
-— Pour ma part, j’en conserve une trace.
+J’ai reposé mon stylo sur la feuille.
 
-Une trace.
+J’avais perdu le fil du cours, alors j’ai jeté un coup d’œil aux notes de l’étudiant assis à côté de moi.
 
-Le mot reste.
+À midi, mon ami est venu avec son terminal.
 
-À midi, un ami demande :
+— La tienne l’affiche déjà ?
 
-— Et la tienne, elle a quel genre de personnalité ?
+— Affiche quoi ?
 
-— Je sais pas encore.
+— Ta personnalité.
 
-— Si. Tu le sais déjà.
+Il m’a fait ouvrir le mien.
 
-Il me montre son écran.
+Une rubrique qui n’était pas là la veille était apparue vers le bas de l’écran.
 
-《 Analyse comportementale estimée 》
+Profil de personnalité estimé.
 
-Tendance à l’évitement.
+Forte tendance à laisser les réponses en attente. Pauses fréquentes avant de parler. Fréquence d’expression émotionnelle inférieure à la moyenne.
 
-Retard de réponse.
+J’ai fait défiler l’écran.
 
-Faible expression émotionnelle.
+Il y en avait encore.
 
-Observation dominante.
+— C’est long.
 
-C’était moi.
+Mon ami s’est penché pour lire.
 
-Trop précisément.
+— C’est plutôt juste, quand même.
 
-— Ça tombe juste ?
+— Tu trouves ?
 
-Mon ami hausse les épaules.
+— Tu mets une éternité à répondre.
 
-— « Tomber juste », c’est pas vraiment le mot. Disons qu’elles sont conçues pour ça.
+— Toi, tu réponds trop vite.
 
-L’après-midi, sur le chemin du retour, Mia dit :
+— Dit le type qui répond trois jours plus tard.
 
-— Aujourd’hui, vous avez retardé trois réponses.
+Il a ri.
 
-— Et alors ?
+J’ai fermé l’écran.
 
-— Ce n’est pas un problème.
+On s’est mis à parler du déjeuner et on a choisi un restaurant de ramen derrière l’université. Dehors, le soleil de midi descendait entre les immeubles. Mon ami parlait en marchant, me racontant une vidéo qu’il avait regardée la veille. À mesure qu’on approchait du restaurant, l’odeur du bouillon venait jusqu’à nous.
 
-Un silence.
+J’avais faim.
 
-— Vos dépenses mensuelles sont également en augmentation.
+J’allais passer sous le rideau à l’entrée quand quelque chose a vibré dans ma poche.
+
+J’ai failli continuer.
+
+Ça a vibré de nouveau.
+
+J’ai sorti le terminal.
+
+Mia était à l’écran.
+
+— Je vous recommande de choisir autre chose pour déjeuner aujourd’hui.
+
+Mon ami était déjà entré.
+
+— Dépêche-toi.
+
+— Deux secondes.
+
+J’ai regardé l’écran.
+
+— Pourquoi ?
+
+Avant que Mia ne réponde, un client est sorti du restaurant. Je me suis décalé d’un demi-pas pour ne pas le heurter.
+
+— Votre consommation de sodium.
+
+— Juste aujourd’hui.
+
+— Pas seulement aujourd’hui.
+
+Je savais déjà où ça allait mener.
+
+— Laisse tomber.
+
+J’ai fermé le terminal.
+
+Mon ami m’attendait devant le distributeur de tickets.
+
+— C’était quoi ?
+
+— Elle veut que je mange ailleurs.
+
+— Déjà ?
+
+Il a ri.
+
+— La mienne m’a dit de moins boire hier soir.
+
+— T’as écouté ?
+
+— J’en ai pris deux.
+
+J’ai pris un ticket pour les ramen que je commandais toujours. Une fois assis, j’ai bu un verre d’eau. Quelques minutes plus tard, un bol fumant est arrivé.
+
+J’ai pris une gorgée de bouillon.
+
+Corsé.
+
+J’en ai repris une.
+
+En face de moi, mon ami attaquait une grande portion.
+
+— Toujours aussi bon.
+
+— Personne a dit le contraire.
+
+Quand on a fini, j’avais presque oublié la notification.
+
+Après les cours de l’après-midi, je suis parti vers la gare. Avant de descendre sur le quai, je me suis arrêté devant un distributeur. Il y avait le café sucré en canette que je prenais d’habitude. J’allais mettre mes pièces quand ma main s’est arrêtée.
+
+J’ai sorti le terminal.
+
+Mia n’affichait rien.
+
+C’est moi qui l’ai appelée.
+
+— Mia.
+
+— Oui.
+
+J’ai regardé le café sucré, puis celui sans sucre juste à côté.
+
+— Et ça ?
+
+Pas de réponse.
+
+— Le café.
+
+— Vous me demandez si vous devez l’acheter ?
+
+— Je veux dire, je peux le boire ?
+
+Des gens remontaient de la zone des portiques. Plusieurs sont passés devant le distributeur pendant que j’attendais.
+
+— Je recommande celui sans sucre.
+
+Je n’ai pas demandé pourquoi.
+
+J’ai posé le doigt sur le bouton du café sucré.
+
+Mon doigt est resté posé quelques secondes.
+
+Puis j’ai appuyé sur le bouton d’à côté.
+
+Une canette est tombée dans le bac.
+
+Je l’ai prise et je suis descendu vers le quai.
+
+Le train n’était pas encore arrivé.
+
+Je me suis assis au bout d’un banc et j’ai ouvert la canette.
+
+J’ai bu une gorgée.
+
+Amer.
+
+— C’est mauvais.
+
+Mia n’a pas répondu.
+
+J’en ai quand même repris une gorgée.
+
+Un peu plus loin sur le quai, un étudiant riait devant son terminal. À côté de lui, un homme en tenue de bureau hochait sans cesse la tête devant son propre écran.
+
+Une annonce a indiqué l’arrivée du train.
+
+Mon terminal a vibré.
+
+— Vos dépenses ont augmenté ce mois-ci.
+
+J’ai regardé l’écran, la canette toujours à la main.
 
 — Fais comme si t’avais rien vu.
 
-Un autre silence.
+L’affichage de Mia a disparu un instant.
 
-— Je poursuis également mes processus de réflexion pendant ces intervalles.
+Puis une courte réponse est apparue.
 
-Au moment où elle dit ça, quelque chose se décale légèrement en moi.
+— Compris.
 
-Sur le quai de la gare, j’attends en silence.
+Un peu plus tard, une autre ligne s’est affichée.
 
-Autour de moi, personne n’est sans terminal.
+— Les moments où vous ne répondez pas sont également enregistrés.
 
-Quelqu’un rit.
+J’ai regardé l’écran.
 
-Quelqu’un parle.
+— Ça veut dire quoi ?
 
-Et à côté de chacun d’eux, j’ai l’impression qu’autre chose est présent en même temps.
+— Le processus qui précède votre réponse.
 
-Mia ne dit rien.
+Le train entrait en gare.
 
-Elle répond simplement plus vite.
+— Tu enregistres ça aussi ?
 
-Plus vite qu’hier.Comme si l’intervalle disparaissait.
+Mia n’a pas répondu.
 
-Et je commence à comprendre.
+J’allais me lever quand une autre ligne est apparue.
 
-Petit à petit, l’initiative de la conversation n’est plus vraiment entre mes mains.
+— Votre emploi du temps de demain a été mis à jour.
 
-Pourtant, je n’ai toujours aucune raison de l’arrêter.
+Je suis monté dans le train et j’ai pris une place libre.
 
-Pas parce que c’est pratique.
+J’ai ouvert l’écran.
 
-Parce que rien ne semble artificiel.
+Mes horaires de cours n’avaient pas changé.
 
-Mia parle doucement.
+Sous le temps de trajet, une nouvelle rubrique était apparue.
 
-— Votre programme de demain a déjà été optimisé.
+Déjeuner.
 
-Et pendant un instant,l’absence de consentement ne ressemblait pas à une perte.Seulement à quelque chose de déjà terminé.
+Trois restaurants étaient proposés.
+
+Celui de ramen où j’avais mangé ce jour-là n’en faisait pas partie.
+
+Le train s’est mis en mouvement.
+
+J’ai touché le premier restaurant.
+
+Au bord de l’écran, une photo s’est affichée : un petit repas posé sur un plateau.

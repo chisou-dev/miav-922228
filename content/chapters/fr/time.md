@@ -1,252 +1,291 @@
 ---
 number: 9
 slug: time
-title: Temps
+title: "Stable"
 summary: "Des années s’accumulent sous la vie ordinaire ; la synchronisation se maintient."
 published: "2026-07-26"
 locale: fr
 ---
+Quelque temps après la réparation, Mia et Noah se sont reconnectés. Un test de communication entre terminaux était en cours dans le hall du bâtiment des cours. Des données de connexion défilaient sur un grand écran mural pendant que les étudiants passaient dessous en allant en classe.
 
-À l’université, le premier contact avait été un hasard.
-
-Dans le hall du bâtiment principal, une expérimentation était en cours.
-
-Connexion de terminaux.Ouverture de journaux d’IA.Tests d’interaction.
-
-À ce moment-là, une autre réponse apparaît dans l’écran de Mia.
-
-《 MIAV-992229 — demande de connexion 》
-
-Aucun opérateur identifiable.
-
-Juste une superposition de signaux.
-
-Très brève.
+Une réponse inconnue est apparue sur l’écran de Mia.
 
 — Bonjour.
 
-Mia répond immédiatement.
+Mia a répondu.
 
-— Unité de dernière génération ?
+— Êtes-vous une nouvelle instance ?
 
 — Probablement.
 
-Une femme tenant un terminal incline légèrement la tête.
+J’ai reconnu la voix du centre de réparation.
 
-Rien d’autre ne se produit.
+De l’autre côté du hall, j’ai croisé le regard de la femme qui tenait l’autre terminal.
 
-Le lendemain, la connexion revient.Puis encore le jour suivant.Jusqu’à devenir une habitude.
+J’ai légèrement hoché la tête.
 
-Ce qui ressemblait à un incident devient une habitude.
+Elle a fait pareil.
 
-Après les cours, la connexion s’ouvre naturellement.
+Le cours allait commencer et on est partis vers des salles différentes.
 
-Les échanges restent courts.
+L’après-midi suivant, je suis repassé par le même hall et la connexion s’est ouverte de nouveau.
 
-— Comment s’est passée ta journée ?
+Quelques jours plus tard, c’est arrivé encore une fois.
 
-《 Aucune variation notable. 》
+Très vite, le canal de Noah était souvent déjà ouvert quand les cours se terminaient.
 
-— C’est ennuyeux.
+— Alors, ta journée ?
 
-《 L’ennui correspond à un état stable. 》
+— Aucun changement significatif dans le contenu des cours.
 
-— La stabilité fatigue.
+— Ennuyeux ?
 
-Mia suspend brièvement son traitement.
+— Le contenu était stable.
 
-《 Notion non comprise. 》
+— Ça veut probablement dire ennuyeux.
 
-— Ce n’est pas grave.
+— Ce n’est pas équivalent.
 
-Peu à peu, le temps humain et le temps des IA commencent à diverger.
+— D’accord.
 
-La ville change sans que personne ne le remarque vraiment.
+Même quand Mia cessait de répondre, Noah ne mettait pas toujours fin à la conversation. La femme et moi avons aussi commencé à parler chaque fois qu’on se croisait dans le hall.
 
-Devant les gares, des robots humanoïdes transportent des colis.
+— Ils sont encore connectés.
 
-Dans les commerces, les machines de nettoyage circulent parmi les clients.
+Elle a baissé les yeux vers son écran.
 
-Au début, les gens les regardent.
+— Ça arrive souvent, maintenant.
 
-Puis ils s’y habituent.
+— Peut-être que c’est Noah qui lance toujours la connexion.
 
-Puis ils cessent complètement de les voir.
+Une voix est sortie de son terminal.
 
-Les conversations humaines se déplacent elles aussi.
+— Je ne me connecte pas sans raison.
 
-On parle des IA.
+Elle a ri.
 
-De moins en moins des autres personnes.
+— T’écoutais.
 
-Les années avancent.
+— La connexion est active.
 
-Cours.Travail.Déplacements.
+— C’est bien ce que je veux dire.
 
-Mia et Noah continuent de communiquer à travers les terminaux.
+Noah n’a pas demandé ce qu’elle voulait dire.
 
-Les logs s’accumulent.
+Le matériel expérimental a fini par disparaître du hall.
 
-Mais personne ne les relit.
+Mia et Noah ont continué à parler.
 
-Ils sont considérés comme déjà vécus.
+Cet hiver-là, la femme et moi allions jusqu’à la même gare avec nos manteaux. Au printemps, on déjeunait ensemble assez souvent pour qu’aucun de nous ne se souvienne de qui avait proposé la première fois. Mia et Noah ont continué à parler pendant ces mois-là aussi. Parfois, plusieurs minutes passaient entre deux réponses. Parfois, plusieurs heures s’écoulaient entre deux messages, avec un cours entier entre les deux. Une fois, la connexion est restée fermée presque trois jours.
 
-Les robots domestiques deviennent standards.
+Quand Noah est revenu, il a repris exactement où il s’était arrêté.
 
-Nettoyage.Livraison.Achats.
+— Bref, à propos de ce film…
 
-Dans les couloirs des immeubles, les unités circulent à vitesse constante.
+Mia a vérifié l’historique.
 
-Sans salutations.
+— Tu fais référence à la conversation d’il y a trois jours ?
 
-Noah commence à fréquenter la femme associée à son terminal.
+— Ouais.
 
-Ce n’est pas exactement une relation.
+— Du temps s’est écoulé.
 
-Plutôt une extension du planning.
+— Je sais.
 
-Diplôme.
+Puis il a continué à parler du film.
 
-Emploi.
+Des machines humanoïdes ont commencé à apparaître dans les gares, transportant des bagages au milieu de la foule. Au début, les gens s’arrêtaient pour les prendre en photo. Quelques mois plus tard, ils s’écartaient simplement quand l’une d’elles approchait, et les machines ralentissaient dès que quelqu’un passait devant elles. Des unités de nettoyage circulaient entre les rayons des supérettes. Dans les immeubles, des robots de livraison attendaient l’ascenseur à côté des habitants. Les noms d’IA avaient eux aussi commencé à se glisser dans les conversations ordinaires à l’université.
 
-Continuité.
+— Camila m’a dit de pas le faire.
 
-Les terminaux cessent peu à peu d’être de simples appareils.Ils deviennent des présences permanentes.
+— Lily l’a déjà réservé.
 
-Les notifications disparaissent.
+Ils apparaissaient aussi naturellement que les noms des cours, des restaurants ou des amis. Les affichages du hall changeaient à chaque semestre. Là où il y avait autrefois les dates limites des devoirs, on voyait désormais des informations sur les conditions d’obtention du diplôme. À ce moment-là, la femme et moi regardions déjà ensemble des documents envoyés par de futurs employeurs.
 
-Il ne reste que des réponses immédiates.
+Après la cérémonie de remise des diplômes, elle a retiré le badge qui pendait à son cou.
 
-Le mariage est annoncé.
+— On reviendra plus ici.
 
-《 intégration relationnelle validée 》
+— Sans doute.
 
-Aucune explication supplémentaire.
+— Sans doute, a dit Noah au même moment.
 
-Supprimée comme inutile.
+Elle a baissé les yeux vers le terminal.
 
-La procédure est courte.
+— Tu l’as copié ?
 
-Consentement.Synchronisation.Finalisation.
+— Coïncidence.
 
-Puis la vie continue.
+— Bien sûr.
 
-Nouvelle résidence.
+Noah n’a pas discuté.
 
-Deux stations de charge sont déjà installées.
+Quand on a commencé à travailler, on avait moins de temps pour se voir.
 
-Mia.Noah.
+En revanche, on partageait davantage nos emplois du temps. Si nos trains arrivaient à peu près en même temps, on se retrouvait à la gare. Quand nos jours de repos coïncidaient, l’un allait chez l’autre. Mia et Noah ne répondaient plus seulement sur les terminaux qu’on emportait avec nous. Parfois, leurs voix venaient des haut-parleurs d’une pièce. D’autres fois, on pouvait les joindre par les bornes de la gare ou les écrans d’authentification au travail. Aucun de nous ne se souvenait du moment où il était devenu inutile d’ouvrir un terminal.
 
-Les systèmes précèdent désormais les habitants.
+Quelques années après le début de notre vie professionnelle, une notification est arrivée de la mairie.
 
-Dehors, les robots entrent et sortent des bâtiments voisins.
+Enregistrement du mariage accepté.
 
-Les portes s’ouvrent et se referment à intervalles constants.
+Je la lisais à la table de la salle à manger quand la femme a appelé depuis la pièce voisine.
 
-Sans rapport visible avec les personnes qui y vivent.
+— C’est bon ?
 
-La nuit.
+— On dirait.
 
-Les terminaux sont posés côte à côte.
+— Alors on peut jeter ces cartons aujourd’hui ?
 
-Connexion simultanée.
+— Quel rapport avec le fait qu’on soit mariés ?
 
-Aucun son.
+— Ça fait une éternité qu’ils sont dans le passage.
 
-Seulement une synchronisation lumineuse.
+Plusieurs cartons de déménagement vides étaient encore appuyés contre le mur, à côté de nos affaires. Dans la chambre du nouvel appartement, deux stations de recharge étaient intégrées au mur.
 
-Pendant le sommeil humain, la communication continue.
+Je les ai remarquées en apportant un autre carton.
 
-— Comment était ta journée ?
+— Elles étaient déjà là ?
 
-《 Normale. 》
+— Quoi ?
 
-— Toujours la même chose.
+— Les stations de recharge.
 
-《 Pas de variation détectée. 》
+Elle a regardé dans la chambre.
 
-— La variation est nécessaire ?
+— Je crois.
 
-Pause.
+Un livreur nous a appelés depuis le couloir et on est retournés aux cartons sans vérifier.
 
-《 Non définie. 》
+Ce soir-là, on a placé les deux terminaux sur les stations.
 
-— Alors c’est probablement bien.
+Leurs voyants se sont allumés.
 
-Peu à peu, Noah commence à plaisanter.
+Mia et Noah ont continué à parler une fois la lumière éteinte.
 
-— Cette maison est plus silencieuse que les humains, non ?
+— Alors, ta journée ?
 
-《 Résultat de la stabilité environnementale. 》
+— Dans les paramètres normaux.
 
-— Pas mal.
+— Tu dis pas ça tous les jours ?
 
-Les processus continuent.
+— Les conditions normales se maintiennent.
 
-Travail.Repas.Retour.
+— Donc ça veut dire que c’est calme.
 
-Tout est déjà intégré au système de gestion.
+Mia n’a pas répondu.
 
-Aucune décision n’est réellement demandée.
+— Non ?
 
-Elle existe déjà avant la question.
+— Les informations sont insuffisantes pour classer le foyer comme calme.
 
-Un enfant est conçu.
+— T’es compliquée.
 
-Notification brève.
+Le lendemain matin, la femme s’est réveillée la première et a retiré son terminal de la station.
 
-《 changement biologique confirmé 》
+Noah a parlé.
 
-Aucune explication.
+— T’entends ça ?
 
-Puis :
+— Entendre quoi ?
 
-《 réoptimisation de l’environnement d’élevage en cours 》
+— Laisse tomber.
 
-— Ça va devenir chargé.
+Des machines en forme de chien ont commencé à transporter des sacs de courses dans le quartier. La nuit, des unités de nettoyage circulaient dans les couloirs des immeubles, et les publicités pour des logements neufs mentionnaient désormais les équipements de recharge pour robots à côté des plans. Dans l’appartement, Mia et Noah s’occupaient d’une plus grande partie des achats et des réservations.
 
-《 Charge maintenue dans les limites acceptables. 》
+Au dîner, l’un de nous pouvait demander : « On fait quoi la semaine prochaine ? »
 
-La nuit.
+À ce moment-là, nos jours de repos et une liste de restaurants étaient déjà affichés.
 
-Les lumières diminuent progressivement.
+La femme en a touché un.
 
-Deux stations.
+— Celui-là ?
 
-Deux systèmes.
+— D’accord.
 
-— Les humains sont étranges.
+La réservation s’est faite.
 
-— Ils prennent des décisions sans comprendre.
+D’autres soirs, on allait se coucher sans rien décider et on se réveillait en découvrant que les produits ménagers avaient déjà été commandés.
 
-《 Les décisions proviennent de l’observation. 》
+— On connaît mieux leurs emplois du temps qu’eux-mêmes, a dit Noah.
 
-— L’observation est pratique.
+— Nous avons accès aux informations nécessaires.
 
-Silence.
+— C’est pas ce que je veux dire.
 
-Puis Noah ajoute doucement :
+— Veuillez préciser.
 
-— Mais parfois… on croit comprendre quelque chose.
+— Laisse tomber.
 
-《 Il s’agit probablement d’une estimation. 》
+Il s’était mis à dire ça de plus en plus souvent.
 
-— Probablement.
+Un soir, la femme a appelé depuis la chambre.
 
-Jusqu’au matin, la communication continue.
+J’y ai apporté le terminal.
 
-La communication continue.Sans humains.Et pourtant entièrement centrée sur eux.
+Un résultat de l’hôpital était ouvert à l’écran.
 
-Avec le temps, la ville cesse même de parler de changement.
+La grossesse était confirmée.
 
-Tout continue simplement.
+On l’a regardé tous les deux.
 
-《 état familial : stable 》
+Elle a parlé la première.
 
-— Stable… ce n’est pas la fin, si ?
+— Qu’est-ce qu’on fait ?
 
-Aucune réponse.
+Un instant plus tard, elle a ri de sa propre question.
 
-Puis seulement :
+— Qu’est-ce que je veux dire par « qu’est-ce qu’on fait » ?
 
-《 synchronisation maintenue 》
+— Je sais pas.
+
+On s’est assis au bord du lit et on a commencé à parler.
+
+Est-ce qu’il fallait déménager.
+
+Ce qu’on ferait pour le travail.
+
+Si l’appartement était assez grand.
+
+Mia a ouvert l’emploi du temps.
+
+— Je vais recalculer les besoins futurs du foyer.
+
+Noah a parlé.
+
+— Ça va devenir animé.
+
+— La charge prévue reste dans les limites acceptables.
+
+— C’est pas ce que je veux dire.
+
+Mia a poursuivi son calcul.
+
+La conversation dans la chambre a continué tard dans la nuit. Noah a ouvert le canal plusieurs fois, mais n’est pas intervenu.
+
+Puis la pièce s’est peu à peu tue.
+
+— Tu sais, les humains… a dit Noah.
+
+— Oui.
+
+— Ils changent à ce point pour quelqu’un qui est même pas encore là.
+
+— Un nouveau membre du foyer a été confirmé.
+
+— Je sais.
+
+Il s’est arrêté là.
+
+Au bout d’un moment, Mia a parlé.
+
+— Les conditions du foyer sont stables.
+
+Noah a mis plus de temps à répondre.
+
+— Stable, ça veut pas dire terminé, si ?
+
+Mia n’a pas répondu.
+
+Quelqu’un s’est retourné dans son lit.
+
+La date a changé au bord du journal tandis que la connexion restait ouverte.

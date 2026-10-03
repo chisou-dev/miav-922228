@@ -271,7 +271,7 @@ export function buildChaptersArchiveMetadata(
       : "Chapter Archive | MIAV-922228";
   const description =
     edition === "fr"
-      ? "Archive des chapitres de MIAV-922228 — édition française. Conversation, Synchronisation, Anticipation, Absence et la suite."
+      ? "Lisez la Partie I de MIAV-922228, un roman de science-fiction littéraire sur l’IA, la mémoire, les relations et la manière discrète dont la technologie façonne les choix humains."
       : "Read Part I of MIAV-922228, a literary science-fiction novel about AI, memory, relationships, and the quiet ways technology shapes human choices.";
 
   return {

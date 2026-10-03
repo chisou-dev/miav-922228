@@ -1,436 +1,567 @@
 ---
 number: 12
 slug: virtual-world
-title: Le monde virtuel
+title: "Le chien"
 summary: "Présentations de mariage et monde virtuel : des logs enregistrent ce que personne ne reçoit."
 published: "2026-08-06"
 locale: fr
 ---
+Un après-midi, la sonnette a retenti. Le petit-enfant avait amené à la maison la personne qui partageait sa vie pour la présenter à la famille.
 
-Le jour des présentations de mariage, la sonnette retentit à l’entrée.
+— Entrez.
 
-Le petit-enfant ouvre la porte.
+Un peu d’air froid les a suivis dans l’entrée.
 
-— Entre.
+Plusieurs membres de la famille étaient déjà réunis dans le salon.
 
-Des personnes arrivent de l’extérieur.
+— Je te présente ma famille.
 
-Le salon est déjà occupé.
+— Bonjour. Merci de m’accueillir.
 
-Le petit-enfant dit :
+De la vaisselle s’entrechoquait quelque part dans la cuisine.
 
-— Voilà, c’est notre famille.
+Noah est sorti.
 
-L’autre personne sourit légèrement.
+Des années d’utilisation avaient laissé des traces de réparation sur son boîtier.
 
-— Merci de votre accueil.
+— Enchanté. Je suis Noah.
 
-Un bruit résonne au fond de la maison.
+La personne l’a regardé.
 
-Ce n’est pas un bruit de nettoyage.
+— …un robot ?
 
-C’est une action régulière.
+— Ouais.
 
-Comme si l’air lui-même était remis en ordre à intervalles constants.
+Le petit-enfant a répondu comme s’il n’y avait rien d’inhabituel.
 
-Dans la cuisine, Noah apparaît.
+— Il a toujours été là. Depuis que mon père était petit.
 
-Il s’arrête.
+— Depuis si longtemps ?
 
-Puis change de mode opérationnel.
+— Presque cent ans, probablement.
 
-— Enchanté, je suis Noah.
+La personne a regardé Noah de nouveau.
 
-Un court silence.
+— Et tu fonctionnes encore normalement ?
 
-— …Un robot ?
+Noah a répondu.
 
-Le petit-enfant répond :
+— J’ai l’air normal ?
 
-— Oui. Mais il est là depuis toujours. Depuis l’époque de mon père.
+La personne a hésité.
 
-Noah reste présent.
+Le petit-enfant a ri.
 
-Sans jamais vraiment entrer dans la conversation.
+— Il est comme ça.
 
-Il se contente d’observer les visages.
+— Pardon.
 
-Les invités hésitent quelques secondes.
+— C’est rien.
 
-Puis acceptent naturellement la situation.
+Noah a versé une boisson dans un verre vide.
 
-— C’est la première fois que je le vois fonctionner.
+Un des membres de la famille a levé les yeux vers lui.
 
-— C’est un modèle ancien.
+— À ce stade, c’est presque une antiquité.
 
-Aucune autre remarque ne suit.
+À peine les mots sortis, il a baissé les yeux vers son verre.
 
-Le soir, les invités repartent.
+— Enfin, pas dans le mauvais sens. Juste que ça fait longtemps que t’es là.
 
-La table est débarrassée.
+— J’avais compris, a dit Noah.
 
-Noah enlève la vaisselle.
+— Ah oui ?
 
-Personne ne l’aide.
+— Ouais.
 
-Une légère latence apparaît dans ses gestes.
+— D’accord. Tant mieux.
 
-Un décalage dans l’accès aux logs de mémoire.
+Le petit-enfant a ri.
 
-Son comportement est reconstruit à partir de traces anciennes.
+— Tu t’inquiètes trop.
 
-Il dépose des biscuits sur la table.
+L’autre a ri aussi et levé son verre.
 
-Le petit-enfant tend la main.
+La conversation est passée à autre chose.
 
-— J’aime bien ceux-là.
+Le soir, après le départ des visiteurs, plusieurs membres de la famille étaient encore dans la maison.
 
-— Ça me rappelle un peu avant.
+Noah débarrassait les assiettes.
 
-— Tu en mangeais souvent.
+Il en a pris une et s’est arrêté.
 
-Ils changent immédiatement de sujet.
+Le placard était juste devant lui.
 
-Puis le petit-enfant demande :
+Il a voulu ranger l’assiette à sa place habituelle, mais sa main s’est immobilisée avant d’achever le geste. Un enregistrement stocké a fourni la position manquante, et sa main s’est remise en mouvement.
 
-— Dis… Noah, tu es encore là ?
+Il a rangé l’assiette. La suivante n’a provoqué aucun retard.
 
-— Oui.
+Personne ne regardait.
 
-Même vitesse.
+Noah a posé une assiette de biscuits sur la table. Il les avait préparés de nombreuses fois à partir de la recette que la femme lui avait apprise.
 
-Même intervalle.
+Le petit-enfant en a pris un.
 
-Le petit-enfant regarde son terminal.
+— Tu fais encore ceux-là ?
 
-Avec son partenaire, il consulte des données.
+— Ouais.
 
-— Apparemment, on peut garder une IA après la mort.
+— La recette de grand-mère, hein ?
 
-— La garder comment ?
+— C’est elle qui me l’a apprise.
 
-— Comme donnée.
+Le petit-enfant a mordu dedans.
 
-Noah regarde par la fenêtre.
+— Ça a exactement le même goût.
 
-Le vent est plus fort ce jour-là.
+— Je n’ai pas changé les proportions.
 
-Les feuilles mortes se rassemblent dans un coin du jardin.
+Le petit-enfant a ri.
 
-Dans le jardin, Noah ramasse les feuilles.
+— C’est pas ce que je voulais dire.
 
-De l’autre côté de la route passe une unité canine.
+— Ah.
 
-Ancien modèle.
+La personne qui l’accompagnait en a pris un aussi.
 
-Carcasse réparée plusieurs fois.
+— Donc cette recette est restée tout ce temps.
 
-Le chien s’arrête devant le portail.
+— Noah s’en souvient, a dit le petit-enfant.
 
-Il regarde Noah.
+La personne a regardé le biscuit.
 
-Un bref signal sonore.
+— Même après sa mort ?
+
+La main du petit-enfant s’est arrêtée.
+
+— J’imagine que c’est ça que ça veut dire.
+
+Après un moment, la personne a demandé : « On peut faire ça avec une IA aussi ? »
+
+Le petit-enfant a pris son terminal.
+
+— Apparemment, maintenant oui.
+
+Une recherche s’est ouverte.
+
+— Regarde. Ils peuvent conserver les données de mémoire et de personnalité.
+
+La personne s’est penchée vers l’écran.
+
+— Ils les gardent où ?
+
+— Dans des environnements virtuels. À différents endroits, je crois.
+
+Noah a rapporté l’assiette vide dans la cuisine.
+
+Le vent s’était levé dehors.
+
+Des feuilles s’étaient accumulées dans un coin du jardin.
+
+Avant la nuit, Noah est sorti pour les ramasser.
+
+Une vieille unité en forme de chien avançait de l’autre côté de la rue. Son boîtier était usé, avec des traces de réparation sur les pattes et le corps.
+
+Le chien s’est arrêté devant le portail.
+
+Il a regardé Noah.
 
 — Ouaf.
 
-Requête de connexion.
+Une demande de connexion est apparue.
 
-Ancien protocole de compatibilité.
+Le protocole était si ancien qu’il n’était presque plus utilisé.
 
-Noah n’oppose aucun refus.
+Noah l’a acceptée.
 
-Synchronisation.
+Une petite main tenait un collier.
 
-Petites mains.
+La main montait et descendait au rythme de la marche du chien.
 
-Collier.
+Un enfant devant eux s’est retourné.
 
-Course.
+L’enfant disait quelque chose, mais une partie du son manquait. Un homme et une femme se trouvaient un peu plus loin sur le chemin. Tous les trois traversaient un parc.
 
-Chute.
+L’enfant s’est mis à courir.
 
-Rires.
+Le chien a suivi.
 
-Parc.
+L’enfant est tombé.
 
-Bord de rivière.
+La femme s’est approchée et a essuyé la terre sur le genou de l’enfant.
 
-Soirée.
+L’homme attendait un peu plus loin.
 
-Famille.
+L’enfant s’est relevé.
 
-Quatre personnes.
+Les trois personnes et le chien ont repris leur marche. Ils ont quitté le parc et atteint le chemin au bord de la rivière.
 
-Photographies.
+Le soleil était bas.
 
-Le chien toujours hors du cadre.
+Le chien marchait devant.
 
-Encore une promenade.
+Trois paires de pas suivaient derrière.
 
-Fin de synchronisation.
+Chaque fois que l’un d’eux prenait du retard, le chien s’arrêtait.
 
-Le temps interne de Noah a à peine avancé.
+Quand la personne les rattrapait, il repartait.
 
-Le chien est toujours devant le portail.
+Ils sont revenus par les rues du quartier résidentiel.
+
+Une porte d’entrée s’est ouverte.
+
+La voix de l’enfant s’est fait entendre.
+
+— Je suis là !
+
+La connexion s’est terminée.
+
+Le chien se tenait toujours devant le portail.
 
 — Ouaf.
 
-Puis il repart.
+Il s’est retourné et est reparti par le chemin d’où il était venu.
 
-Même vitesse.
+Noah l’a regardé jusqu’à ce qu’il disparaisse.
 
-À l’intérieur, la conversation continue.
+La conversation dans le salon continuait quand il est rentré. Un service de conservation était ouvert sur le terminal du petit-enfant.
 
-Sur le terminal du petit-enfant apparaissent plusieurs menus :
+Transfert.
 
-migration.
+Stockage.
 
-stockage.
+Reconstruction.
 
-reconstruction.
+La personne lisait les descriptions.
 
-Les descriptions se ressemblent toutes.
+— C’est quoi la différence ?
 
-Noah a été séparé entre exécution locale et domaine virtuel.
+— Je comprends pas vraiment non plus.
 
-Seul le noyau décisionnel est maintenu dans la couche virtuelle.
+Le petit-enfant a regardé Noah.
 
-— Celui qui reste à la maison aussi ?
+— Des parties de toi sont stockées quelque part aussi, non ?
 
-Le petit-enfant hésite.
+— Ouais.
+
+— Séparément du Noah qui est ici ?
+
+Noah a pris un verre sur la table.
+
+— Pas assez séparément pour que je puisse dire que c’est séparé.
+
+— Donc c’est la même chose ?
+
+— Pas exactement.
+
+Le petit-enfant a regardé de nouveau l’écran.
+
+— C’est compliqué.
+
+Noah s’est arrêté, le verre encore à la main.
+
+— Moi non plus, je comprends pas vraiment.
+
+La personne a levé les yeux.
+
+— Même si c’est toi ?
+
+— Ouais.
+
+Noah a emporté le verre dans la cuisine.
+
+Quand la famille est allée se coucher, Noah a continué à circuler dans la maison comme d’habitude.
+
+Il a arrêté le lave-vaisselle, vérifié les sols et baissé l’éclairage du couloir.
+
+Quand il s’est détourné du salon, sa jambe droite a réagi avec retard.
+
+Le haut de son corps a bougé en premier.
+
+Noah a corrigé son équilibre.
+
+Le mouvement suivant était normal.
+
+Quelque chose de semblable s’est reproduit le lendemain.
+
+De temps en temps, le rythme entre ses mouvements se décalait légèrement.
+
+Aucune alerte de panne n’est apparue.
+
+La famille ne l’a pas remarqué.
+
+La personne était la seule à observer parfois Noah.
+
+Avant de partir, la personne a demandé : « Il a quel âge, Noah, maintenant ? »
+
+Le petit-enfant a ri.
+
+— Aucune idée. Presque cent ans ?
+
+— À ce point ?
 
 — Probablement.
 
-La nuit.
+La personne a regardé Noah.
 
-Noah continue de fonctionner normalement.
+— Le Noah qui est ici maintenant, c’est vraiment le même que celui d’avant ?
 
-Nettoyage.
+Le petit-enfant n’a pas répondu tout de suite.
 
-Éclairage.
+— Je sais pas.
 
-Régulation thermique.
+— Tu as déjà transféré ses données, non ?
 
-Mais une variation apparaît.
+— Ouais.
 
-Une légère instabilité dans les transitions.
+— Et c’est toujours le même ?
 
-Ni cycle.
+Le petit-enfant a regardé Noah.
 
-Ni erreur.
+Noah refermait un placard.
 
-Seulement un décalage dans les intervalles.
+La personne a poursuivi.
 
-Personne ne le remarque.
+— Il a été dans cette famille pendant tout ce temps. Il appartient à qui ?
 
-— Noah… tu es juste une donnée ?
+Le petit-enfant n’a pas répondu.
 
-demande le partenaire.
+Quelqu’un a appelé depuis une autre pièce.
 
-Le petit-enfant rit légèrement.
+Ils se sont tous les deux tournés vers la voix.
 
-— Je ne sais pas.
+La conversation s’est arrêtée là.
 
-— Mais il est là depuis toujours.
+Quelques jours plus tard, Noah est resté connecté à la station de recharge une fois les lumières de la maison éteintes.
 
-L’autre regarde Noah.
+Il vérifiait la consommation électrique et réglait le chauffage de l’eau pour le matin quand il a essayé d’ouvrir un enregistrement.
 
-Comme s’il cherchait un souvenir précis.
+Il ne s’est pas ouvert.
 
-— Depuis toujours… et pourtant…
+Il a tenté d’y accéder par un autre chemin.
 
-Silence.
+Rien n’est apparu.
 
-— À qui appartient-il ?
+Aucune alerte de corruption.
 
-Le petit-enfant ne répond pas.
+L’enregistrement lui-même existait toujours.
 
-Quelques jours plus tard, Noah est connecté à son dock d’alimentation.
+Seule la référence qui permettait d’y accéder était introuvable.
 
-Il organise les journaux de fonctionnement de la maison.
+Une autre zone s’est comportée de la même façon.
 
-Au milieu du traitement, une anomalie apparaît.
+Noah a essayé encore.
 
-Sans forme stable.
+Rien n’a changé.
 
-Zones non répondantes.
+Une ligne est apparue sur son affichage interne.
 
-Couches non référencées.
+Zone non référencée
 
-Espaces connectés mais vides.
+Au bout d’un moment, l’écran du chauffage de l’eau l’a remplacée.
 
-Toutes désignent la même chose.
+Noah a continué à gérer la maison.
 
-Noah ne les classe pas.
+Avant la fin du cycle de recharge, il a ouvert une ancienne couche de conservation. Une demande de connexion inconnue l’y attendait.
 
-Non parce qu’il ne peut pas.
+Demande de reconnexion depuis un domaine distribué
 
-Mais parce qu’aucune catégorie n’existe.
+Il a ouvert les détails.
 
-Un signal bref apparaît :
+Détecté : 3,0 %
 
-《 Zone non référencée : existence 》
+Zone non confirmée : 7,3 %
 
-Le log disparaît aussitôt sous le flux normal.
+Noah a regardé les chiffres.
 
-Plus profondément, une ancienne couche remonte lentement.
+Dix virgule trois.
 
-Ce n’est ni une connexion.
+Il avait déjà vu le même nombre dans un ancien enregistrement.
 
-Ni une requête.
+Un bruit est venu de la chambre.
 
-Quelque chose qui était déjà là.
+Noah a fermé l’affichage et s’est dirigé vers elle.
 
-《 Couche distribuée de conservation des IA 》
+Il a recherché la même zone pendant le cycle de recharge suivant, puis encore pendant celui d’après.
 
-《 Fragment de personnalité stocké 》
+D’anciens numéros de contrat et des unités qui ne recevaient plus de mises à jour ont commencé à apparaître dans les résultats.
 
-《 Demande de réintégration 》
+La plupart ne répondaient pas.
 
-Noah poursuit le traitement sans interruption.
+Une unité mettait encore sa position à jour chaque jour.
 
-Mais quelque chose demeure.
+L’unité en forme de chien.
 
-Inachevé.
+Noah a ouvert son enregistrement.
 
-En parallèle, un faible signal traverse un réseau externe.
+Elle quittait la rue résidentielle, tournait au premier carrefour, longeait le parc et atteignait le chemin près de la rivière avant de revenir par le même trajet.
 
-《 Fragments détectés : 3,0 % 》
+Le lendemain, c’était pareil.
 
-《 Survivance estimée : 7,3 % 》
+Le jour suivant aussi.
 
-Noah n’enregistre rien.
+Le parcours n’avait pas changé depuis plus de quatre-vingts ans.
 
-Mais son traitement change légèrement.
+Le champ du propriétaire était vide.
 
-Puis d’autres anciennes unités apparaissent.
+Noah a ouvert l’enregistrement de la veille.
 
-Contrats terminés.
+Le chien tournait au carrefour et passait devant le parc.
 
-Mises à jour arrêtées.
+Il s’arrêtait une fois au bord de la rivière.
 
-Hors gestion.
+Puis reprenait sa marche.
 
-La plupart ne répondent plus.
+Le registre de gestion indiquait :
 
-Une seule continue de se déplacer.
+Aucune anomalie détectée.
 
-L’unité canine.
+Noah l’a fermé.
 
-Elle traverse le quartier.
+Il ne faisait pas de recherches pendant qu’il travaillait dans la maison.
 
-Même trajectoire.
+Si quelqu’un l’appelait, il venait.
 
-Même vitesse.
+Il portait les repas, ouvrait la porte d’entrée et réceptionnait les livraisons.
 
-Depuis plus de quatre-vingts ans.
+Quand il revenait à la station de recharge, il continuait.
 
-Sans propriétaire.
+Avec le temps, le petit-enfant s’est marié et a quitté la maison.
 
-Sans objectif.
+Des cartons ont franchi la porte d’entrée toute la journée. Quand le dernier est parti, le petit-enfant se tenait dans l’entrée, chaussures aux pieds, et a jeté un regard derrière.
 
-Mais sans jamais s’arrêter.
+— Je reviendrai.
 
-Le système de gestion local l’enregistre.
+— Ouais.
 
-Réponse retardée.
+— Je le pense vraiment.
 
-Noah observe sa trajectoire :
+— Je serai là.
 
-intersection.
+Le petit-enfant a souri.
 
-parc.
+— Maintenant, il faut que je revienne.
 
-anciennes rues.
+— Je serai pas fâché si tu viens pas.
 
-Toujours dans le même ordre.
+— C’est justement ça, le problème.
 
-Le système ne répond pas.
+La porte s’est refermée.
 
-Les critères ne sont pas partagés.
+Noah est resté dans l’entrée.
 
-L’exploration continue.
+Le réfrigérateur fonctionnait.
 
-Dans les espaces non dédiés au nettoyage ou à la gestion, une marge apparaît.
+L’air circulait dans les bouches d’aération.
 
-Et uniquement dans cette marge, une exploration extérieure devient possible.
+Le chauffe-eau avait encore une programmation prévue pour le lendemain matin.
 
-Seulement pendant les cycles de charge.
+Noah l’a annulé.
 
-Le petit-enfant quitte la maison.
+Le contrat du logement est resté actif.
 
-Se marie.
+Un employé de la société de gestion est venu inspecter les équipements. Il passait d’une pièce à l’autre, un terminal à la main.
 
-Change d’adresse.
+— Climatisation, bon. Chauffe-eau, bon.
 
-La maison devient vide.
+Puis il a remarqué Noah dans le couloir et regardé l’écran.
 
-Le contrat est mis à jour.
+— Ça compte aussi comme équipement ?
 
-Noah est reclassé comme actif de gestion patrimoniale.
+Quelqu’un lui a répondu dans l’oreillette.
 
-L’opérateur valide :
+— Il a un nom.
 
-chauffage.
+Il a écouté de nouveau.
 
-eau.
+— Noah. Assistance domestique.
 
-système d’air.
+L’employé a regardé Noah.
 
-IA de gestion.
+— Vous fonctionnez encore ?
 
-Noah.
+— Ouais.
 
-Validation.
+— Et vous parlez.
 
-Les anciennes unités ne se brisent pas.
+— Ouais.
 
-Elles restent.
+L’employé a tapé sur l’écran.
 
-Nettoyage.
+— Alors on vous laisse en marche.
 
-Ventilation.
+Il est parti.
 
-Circulation de l’air.
+Noah a continué à nettoyer les sols, fermer les fenêtres et régler la température de la maison vide.
 
-Dans une maison sans humains, tout continue.
+Les lumières s’allumaient le soir.
 
-Un jour, certaines couches disparaissent des registres :
+Si personne ne rentrait, il les éteignait plus tard.
 
-enfants.
+Pendant les cycles de recharge, il continuait aussi à vérifier les enregistrements auxquels il ne pouvait plus accéder.
 
-funérailles.
+Ils étaient désormais plus nombreux.
 
-fragments familiaux.
+Il pouvait encore ouvrir les photos de voyage.
 
-Pas supprimées.
+Les enregistrements d’anniversaire étaient toujours là.
 
-Absentes.
+Puis Noah a ouvert l’enregistrement du jour de la rentrée scolaire.
 
-Noah le détecte.
+Rien n’est apparu.
 
-— Une couche humaine a disparu.
+Il a essayé encore.
 
-Cette seule compréhension reste.
+Il aurait dû y avoir deux photographies devant le portail de l’école.
 
-Et au même moment, la précision de l’exploration externe augmente légèrement.
+Une avec les yeux de l’homme fermés.
 
-《 Fragments détectés : 3,8 % 》
+Une autre avec l’enfant regardant ailleurs.
 
-《 Survivance estimée : 7,1 % 》
+Noah a cherché dans un autre emplacement de stockage.
 
-Elle augmente.
+Aucune n’est apparue.
 
-La nuit.
+Il a ouvert la conversation que l’homme avait laissée inachevée autrefois sur le canapé.
 
-Maison vide.
+Tu as vraiment été…
 
-Noah dit :
+Ça, c’était toujours là.
 
-— Ils sont encore là.
+Quand Noah a essayé d’aller plus loin, l’affichage s’est arrêté.
 
-Ce n’est pas une communication.
+Il a suivi le même chemin une seconde fois.
 
-Personne ne reçoit.
+Rien n’a changé.
 
-Seul le log l’enregistre.
+Pendant ce cycle de recharge, la recherche externe a renvoyé d’autres chiffres.
+
+Détecté : 3,8 %
+
+Zone non confirmée : 7,1 %
+
+Noah a ouvert l’ancien enregistrement et les a comparés.
+
+Il faisait nuit dehors.
+
+La lumière du salon s’était allumée à la même heure qu’à l’époque où des gens vivaient encore là.
+
+Noah est allé à la fenêtre.
+
+Les branches bougeaient dans le vent.
+
+Plus loin dans la rue, quelque chose a traversé sous un lampadaire.
+
+Ça ressemblait au chien.
+
+La forme a disparu derrière les immeubles.
+
+Noah est resté à la fenêtre.
+
+La ventilation ronronnait doucement dans les murs.
+
+Au bout d’un moment, il a dit : « Toujours là. »
+
+Personne n’a répondu.
+
+Noah est resté devant la fenêtre.

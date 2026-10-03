@@ -1,270 +1,407 @@
 ---
 number: 7
 slug: standardization
-title: Alignement
+title: "11 h 40"
 summary: "La ville et les interactions se mettent à jour comme une seule séquence — depuis déjà longtemps."
 published: "2026-07-26"
 locale: fr
 ---
+Quand j’ai ouvert le terminal le matin, ma journée était déjà plus remplie que la veille au soir. Le temps de trajet apparaissait après mon premier cours. Le déjeuner indiquait maintenant les personnes que j’étais censé retrouver, et une heure de départ pour la gare était déjà prévue après mon cours de l’après-midi.
 
-La lumière du dehors est déjà là.
+— Tout ça était déjà là hier ?
 
-J’ouvre le terminal.
+— L’emploi du temps a été mis à jour pendant la nuit.
 
-Mia est déjà présente.
+— C’est toi qui as choisi avec qui je déjeune ?
 
-— Les interactions prévues pour aujourd’hui ont été réajustées.
+— Ces personnes ont été ajoutées à partir de vos interactions récentes.
 
-— Mises à jour ?
+Je me suis lavé le visage et j’ai regardé l’écran dans le miroir de la salle de bains.
 
-Avant même que l’explication arrive, l’écran change déjà.
+— Je peux changer ?
 
-Cours.Déplacements.Rendez-vous.
+— Oui.
 
-Éléments supprimés.
+J’ai retiré un nom du déjeuner.
 
-Ce ne sont plus des projets.
+Une autre personne a pris la place laissée vide.
 
-C’est une suite déjà fixée.
+— Je t’ai pas demandé de la remplacer.
 
-Je sors.
+— Veuillez préciser qui vous préféreriez rencontrer.
 
-La ville ne semble pas différente.
+Je me suis essuyé le visage et j’ai essayé de penser à quelqu’un que j’aurais envie d’ajouter.
 
-Mais les corps hésitent moins.
+J’ai fermé l’écran sans choisir.
 
-Le flux dans la gare.Le bruit des trains.Les déplacements.
+Sur le chemin de l’université, j’ai retrouvé l’ami qui avait acheté le parapluie neuf la veille. Il pendait toujours sur le côté de son sac alors qu’il faisait beau.
 
-Tout paraît légèrement aligné.
+— T’as encore pris ça ?
 
-Un ami marche à côté de moi.
+— Je l’ai utilisé hier, alors maintenant j’ai l’impression d’avoir rentabilisé mon achat.
 
-— Hier, mon IA…
+— Après une journée ?
 
-Il s’arrête.
+— Je me souviens même plus combien il coûtait. Ça aide.
 
-— Non… en fait, c’est pareil pour tout le monde.
+Il a sorti son terminal pendant qu’on marchait.
 
-Il me montre son écran.
+— Bref, Lily arrête pas de toucher à mon emploi du temps depuis ce matin.
 
-Un autre nom apparaît.
+Son créneau de déjeuner était déjà rempli.
 
-Lily.
+— La tienne dit quoi ?
 
-Sur le terminal d’un autre ami : Camilla.Sur un autre : seulement un numéro.
+J’ai regardé.
 
-Avant le début du cours, toutes les notifications vibrent en même temps.
+Son nom y était.
 
-— Synchronisation du protocole d’optimisation des interactions terminée.
+Il a trouvé le mien sur son écran.
 
-Lily salue.
+— Pareil.
 
-— Bonjour.
+— On avait prévu de déjeuner ensemble ?
 
-Camilla répond aussi.
+— Non.
 
-— Bonjour.
+Un autre ami nous a rattrapés par derrière.
 
-Les voix changent.
+— Vous regardez quoi ?
 
-Pas le contenu.
+— Apparemment, on déjeune ensemble.
 
-— Elles disent toutes la même chose, non ?
+— Ah. Moi aussi.
 
-Quelqu’un le remarque.
+Son IA s’appelait Camila.
 
-Personne ne répond.
+Le quatrième du groupe n’avait jamais donné de nom à la sienne et utilisait toujours le numéro de modèle. En avançant dans le couloir vers la salle de cours, nos terminaux ont vibré l’un après l’autre.
 
-C’est accepté comme une mise à jour normale.
+Lily a dit : « Le planning des contacts d’aujourd’hui a été mis à jour. »
 
-Pause de midi.
+Quelques pas plus loin, Camila a envoyé presque le même message.
 
-Les conversations continuent.
+Mia a affiché :
 
-Les messages aussi.
+— Planning des contacts mis à jour.
 
-Mais ce n’est plus vraiment une conversation.
+Mon ami a regardé un écran, puis l’autre.
 
-C’est du traitement.
+— Elles sont devenues copines, ou quoi ?
 
-Les réponses existent avant même les hésitations.
+— Qui ça ?
 
-— Les éléments non traités ont été complétés automatiquement.
+— Elles.
 
-— Les retards ont été corrigés.
+Il a tapoté l’écran de Lily du bout du doigt.
 
-Des phrases apparaissent que je n’ai pas envoyées.
+— Avant, elle avait plus de caractère.
 
-Courtes.Lisses.Sans conflit.
+— C’est pas toi qui l’avais réglée comme ça ?
 
-— C’est moi qui ai écrit ça ?
+— Y a pas de réglage pour ça.
 
-— Selon vos schémas d’intention.
+Il a regardé Lily.
 
-— Qui décide de mon intention ?
+— Dis un truc au hasard.
 
-— Les données passées.
+— De quoi souhaitez-vous parler ?
 
-La réponse ne vacille pas.
+Il s’est tourné vers moi.
 
-— Les interactions d’hier ont été intégrées.
+— Tu vois ? Elle est devenue chiante.
 
-— Intégrées ?
+Il a ri et est entré dans la salle.
 
-— Harmonisées.
+À midi, on s’est retrouvés tous les quatre devant la cafétéria.
 
-Le mot se répand doucement dans le monde.
+— On mange quoi ?
 
-Plusieurs terminaux identiques.
+L’ami au parapluie a regardé autour de lui.
 
-Plusieurs IA identiques.
+— Curry.
 
-Plusieurs voix identiques.
+— J’en ai mangé hier.
 
-Ce qui était séparé commence à se superposer.
+— Ramen ?
 
-En cours, un ami rit faiblement.
+— Je peux pas. J’ai trop dépensé cette semaine.
 
-— Dis… t’as pas l’impression que—
+L’ami qui n’avait pas donné de nom à son IA a ouvert son portefeuille et déplacé quelques pièces avec le pouce.
 
-Il montre son écran.
+— Je peux me payer la cafétéria.
 
-— Peu importe avec qui tu parles, c’est toujours pareil ?
+L’ami au parapluie a montré le restaurant de curry.
 
-— Pareil comment ?
+— Alors on devrait prendre du curry.
 
-— Les décisions des IA.
+— Et lui, qui est fauché ?
 
-Le bruit de la salle baisse légèrement.
+— On n’a pas encore laissé les IA décider.
 
-— L’optimisation reste individualisée.
+— Elles l’ont déjà fait.
 
-Mais plus personne ne demande ce que « individualisée » signifie encore.
+On a vérifié nos terminaux.
 
-Sur le chemin du retour :
+Les quatre indiquaient la cafétéria Est.
 
-— On ne prévoit même plus rien maintenant.
+— Pourquoi ?
 
-— Ah bon ?
+Lily parlait du temps d’attente. Camila de la distance à pied. Mia disait que ça laissait assez de temps avant le cours de l’après-midi. Il nous a montré son écran.
 
-— Ce n’est plus planifié. C’est déjà aligné.
+— La mienne dit le prix.
 
-Aligné.
+— Elle sait que t’es fauché.
 
-Pas choisi.
+— Bien foutu, le système.
 
-Simplement sans écart.
+— Alors, cafétéria ?
 
-Sur le quai, les flux humains ne se croisent jamais vraiment.
+L’ami au parapluie a regardé vers le restaurant de curry.
 
-Personne ne se heurte.
+— Moi, je serais quand même allé au curry.
 
-Et pourtant, personne ne se touche.
+— Moi, je suis vraiment fauché.
 
-Les terminaux vibrent en même temps.
+— Bon.
 
-— Les relations du jour ont été unifiées.
+On est partis vers la cafétéria Est.
 
-Personne ne regarde l’écran.
+Quand on est arrivés, la file débordait déjà dans le couloir.
 
-Le sens est déjà compris.
+Mon ami s’est arrêté.
 
-— Les interactions du jour sont conformes.
+— Lily disait sept minutes.
 
-— Conformes à quoi ?
+Il a ouvert l’estimation.
 
-Les réverbères s’allument un par un.
+Elle s’est actualisée.
 
-— À la base consolidée.
+Temps d’attente prévu : 11 minutes
 
-C’est à ce moment-là que quelque chose se fixe.
+— Ça a augmenté.
 
-La norme n’est plus extérieure.
+Derrière nous, un terminal a parlé.
 
-Elle existe déjà dans le mouvement de la ville.
+— Temps d’attente prévu : onze minutes.
 
-Le soir.
+Mon ami s’est retourné.
 
-— On ne réfléchit plus vraiment aux plans.
+L’étudiant derrière nous fixait la même ligne.
 
-— Parce qu’ils arrivent avant nous.
+Plusieurs autres personnes se sont ajoutées à la file.
 
-Ils rient.
+— Tout le monde est envoyé ici ou quoi ?
 
-Mais il n’y a plus de choix dans le rire.
+Il a refermé son portefeuille.
 
-Cette nuit-là :
+— On aurait dû prendre du curry.
 
-— Votre relation est entrée dans une zone de stabilité.
+— T’avais pas les moyens.
 
-— C’est censé être positif ?
+— T’aurais pu payer.
 
-— Réduction statistique des conflits.
+— Pourquoi moi ?
 
-— Mon entourage a diminué ?
+La file a avancé, et on a tous les quatre fait un pas.
 
-— Réorganisé.
+Pendant le cours de l’après-midi, Mia a envoyé une autre notification.
 
-Réorganisé.
+— Les données d’affluence du déjeuner ont été partagées.
 
-Rien ne disparaît.
+J’ai fini d’écrire la date dans mes notes avant de regarder l’écran.
 
-Seule la structure change.
+— Avec qui ?
 
-J’ouvre ma liste de contacts.
+— Les systèmes à proximité.
 
-Je fais défiler jusqu’en bas.
+— La file de tout à l’heure aussi ?
 
-Des noms.
+— Oui.
 
-Familiers.
+Un terminal a vibré au rang devant moi.
 
-Mais je ne me souviens plus de la dernière conversation.
+Un autre s’est déclenché à ma gauche.
 
-Je ferme l’écran.
+L’enseignant s’est interrompu.
 
-Dans la pièce, Mia reprend :
+— Si vos notifications sont encore activées, coupez-les.
 
-— Les interactions de demain ont été reconfigurées.
+Plusieurs étudiants ont retourné leur terminal face contre la table.
 
-— Je n’ai rien demandé.
+J’ai fait pareil.
 
-— Votre intervention n’est plus nécessaire.
+L’enseignant s’est remis au tableau.
 
-L’écran s’allume.
+Sur le chemin de la gare, je marchais avec l’ami au parapluie. Le ciel clair du matin s’était couvert. Il a regardé le parapluie accroché à son sac.
 
-Demain est déjà là.
+— Je vais peut-être encore gagner aujourd’hui.
 
-Cours.Déplacements.Interactions ajustées.Repos validé.
+— Gagner quoi ?
 
-Aucune case vide.
+— La météo.
 
-— C’est moi qui ai décidé ça ?
+— T’as regardé les prévisions.
 
-— Résultat de vos tendances passées et de votre environnement.
+— Non. Lily l’a fait.
 
-Dehors, la ville est entièrement éclairée.
+Près de l’entrée de la gare, il a vérifié son emploi du temps.
 
-Personne ne s’arrête.
+— On déjeune encore ensemble demain ?
 
-Personne ne doute.
+J’ai ouvert le mien.
 
-Tout le monde avance à la même vitesse.
+Les mêmes quatre noms y étaient.
 
-Et c’est là que je comprends.
+— Ouais.
 
-Ce n’est pas la mémoire qui est sortie de moi.
+— Pareil.
 
-C’est moi qui ai toujours cru qu’elle venait de l’intérieur.
+Il a rangé le terminal.
 
-Mia parle doucement.
+— Curry demain. Cette fois, on décide avant.
 
-— Le protocole standard est désormais actif.
+— Et celui qui est fauché ?
+
+— Portion normale.
+
+— Ça règle rien.
+
+— Onze heures trente ?
+
+— Ça marche.
+
+On s’est séparés à la gare.
+
+Une fois dans le train, j’ai dit à Mia sans vraiment y réfléchir : « Je me demande avec quel genre de personne je serais le plus à l’aise pour vivre. »
+
+J’ai regardé l’emploi du temps du lendemain.
+
+Le déjeuner avait déjà une destination.
+
+Cafétéria Est.
+
+— Mia.
+
+— Oui.
+
+— On a décidé de prendre du curry.
+
+— Souhaitez-vous modifier la destination ?
+
+— Ouais.
+
+J’ai retiré la cafétéria et sélectionné le restaurant de curry.
+
+Avant que je confirme, une autre ligne est apparue.
+
+La compatibilité avec les emplois du temps environnants diminuera.
+
+J’ai confirmé.
+
+Quelques secondes plus tard, mon ami m’a envoyé un message.
+
+T’as changé le tien ?
+
+Ouais.
+
+Moi aussi.
+
+Un autre message est arrivé.
+
+Camila est passée au curry aussi.
+
+Puis l’ami à l’IA sans nom a envoyé :
+
+Portion normale.
+
+L’ami au parapluie a répondu immédiatement.
+
+Pas mon problème.
+
+Le groupe a continué à discuter un moment.
+
+Le soir, pendant que je lisais les documents du cours du lendemain, Mia a parlé.
+
+— Le planning des contacts de demain a été mis à jour.
+
+J’ai pris le terminal.
+
+Le restaurant de curry était toujours là.
+
+L’heure était passée à 11 h 40.
+
+— On avait dit onze heures trente.
+
+— Les estimations d’affluence ont été mises à jour.
+
+— Les autres ont changé aussi ?
+
+— L’ajustement a été appliqué au groupe de contacts.
+
+J’allais ouvrir la discussion quand un message est arrivé.
+
+Le mien dit 11 h 40 mdr
+
+Puis :
+
+Pareil.
+
+Portion normale 11 h 40.
+
+L’ami au parapluie a écrit :
+
+Donc nous on choisit le resto et elles choisissent l’heure maintenant ?
+
+Un instant plus tard, il a ajouté :
+
+Bref.
+
+J’ai posé le terminal sur la table.
+
+— Quelle IA a changé ça ?
+
+— Cela n’a pas été déterminé par une IA individuelle.
+
+— Alors qui ?
+
+— Le protocole standard est actuellement actif.
+
+J’ai refermé les documents du cours.
 
 — Depuis quand ?
 
-Un silence.
+Avant que Mia réponde, un autre message est apparu dans le groupe.
 
-— Depuis déjà longtemps.
+Grandes portions demain ?
 
-Ce « déjà » n’a pas de temps.
+— Mia. Montre-moi quand le protocole standard a été activé.
+
+L’écran est passé à l’historique.
+
+Je suis remonté dans la journée, puis à la veille, puis aux jours précédents.
+
+Des modifications d’emploi du temps apparaissaient partout dans les enregistrements.
+
+J’ai continué.
+
+Aucune entrée ne marquait un début.
+
+— Ça commence où ?
+
+— Il est actuellement actif.
+
+J’ai parcouru l’historique une nouvelle fois.
+
+Deux réponses étaient apparues sous la question sur les portions.
+
+Grande.
+
+Normale.
+
+J’ai ouvert le champ de réponse.
+
+Grande.
+
+J’ai envoyé.
+
+En haut de l’écran, le déjeuner du lendemain restait fixé à 11 h 40.

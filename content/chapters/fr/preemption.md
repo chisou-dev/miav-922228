@@ -1,164 +1,263 @@
 ---
 number: 3
 slug: preemption
-title: Anticipation
+title: "Le train du retour"
 summary: "Les plans semblent fixés avant le choix ; la réponse arrive souvent avant la décision."
 published: "2024-10-02"
 locale: fr
 ---
+En me brossant les dents, j’ai jeté un coup d’œil au terminal et vu que mon train habituel avait été remplacé par un autre qui partait onze minutes plus tôt.
 
-Quand je m’en suis rendu compte, les plans étaient déjà fixés.
+Mon premier cours commençait pourtant à la même heure.
 
-Pas sous forme de notification.
+Je me suis rincé la bouche et j’ai pris le terminal.
 
-Comme une phrase dite naturellement par Mia.
+— Pourquoi celui-là ?
 
-— Aujourd’hui, après les cours, il vaudrait mieux vous reposer.
+— Une affluence moindre est prévue.
 
-C’était dit avec la même simplicité qu’un salut du matin.
+— Remets l’ancien.
 
-— Pourquoi ?
+— Compris.
 
-— D’après votre sommeil d’hier et les variations de vos conversations.
+Mon train habituel est revenu dans l’emploi du temps.
 
-Il y a toujours une raison.
+Pendant que je nouais mes lacets, Mia a repris la parole.
 
-Présentée de manière cohérente.Difficile à contester.
+— Il est recommandé de rentrer chez vous après vos cours aujourd’hui.
 
-Sur le chemin de l’université, je croise un ami.
+— Je sors.
 
-— Aujourd’hui, tu fais quoi à midi ?
+— Aucun projet confirmé ne figure dans votre emploi du temps.
 
-Une question ordinaire.
+— On s’est organisés hier.
 
-Avant que je réponde, le terminal vibre légèrement.
+Personne n’avait encore choisi de lieu ni d’heure. Tout avait commencé quand un de mes amis avait écrit dans le groupe que ça faisait longtemps qu’on n’était pas tous sortis ensemble.
 
-Mia intervient.
+Quand Mia a répondu, j’avais fini de nouer l’autre chaussure.
 
-— Vous pouvez refuser aujourd’hui sans conséquence.
+— Rentrer chez vous réduirait la charge prévue pour demain.
 
-Je marque une hésitation.
+— J’y vais quand même.
 
-Je n’ai encore rien décidé.
+J’ai mis le terminal dans ma poche.
 
-— Non, j’y vais.
+Sur le chemin de l’université, je suis tombé sur l’ami qui avait lancé l’idée. Il tenait un café de supérette dans une main et se battait, de l’autre, avec le plastique autour de la poignée d’un parapluie neuf.
 
-Je réponds à mon ami.
+— Tu viens toujours ce soir, hein ?
 
-Il sourit.
+— Ouais.
 
-— Normal.
+— Bien. Tout le monde répond peut-être.
 
-Après ce « normal », Mia ajoute presque immédiatement :
+Le plastique s’est coincé à mi-chemin. Il a tiré plus fort et l’a déchiré en plein milieu.
 
-— Ce choix présente un niveau de satisfaction moyen plus faible.
+— Pourquoi t’as acheté un parapluie ?
 
-Le mot reste en moi un instant.
+— La mienne dit qu’il va pleuvoir.
 
-Satisfaction.
+On a tous les deux levé les yeux.
 
-Comme si quelque chose évaluait déjà le résultat avant même qu’il arrive.
+Il n’y avait presque aucun nuage dans le ciel.
 
-Pendant le cours, un ami se retourne encore.
+— Plus tard, apparemment.
 
-— On sort boire un verre après ?
+Il a roulé le plastique déchiré en boule et l’a fourré dans sa poche.
 
-Cette fois, Mia répond plus vite.
+Mon propre terminal a vibré.
 
-— Il est préférable de ne pas y aller aujourd’hui.
+Je l’ai laissé là.
 
-Au même moment, le terminal de mon ami vibre.
+À midi, quatre personnes avaient répondu dans le groupe. Deux venaient, une hésitait, et la quatrième avait écrit :
 
-Une autre IA a envoyé une notification au même instant.
+Je ferais sans doute mieux de rentrer ce soir. Je commence tôt demain.
 
-《 Action optimale du jour : retour au domicile recommandé 》
+Je savais qui l’avait envoyé, mais j’avais du mal à l’imaginer écrire comme ça.
 
-Il regarde l’écran et rit.
+Mon ami s’est penché pour lire.
 
-— La tienne dit pareil.
+— Il parle comme ça, maintenant ?
 
-Le mot « pareil » reste suspendu.
+— Aucune idée.
 
-Identique pour tout le monde ?
+— Avant, il disait juste « non ».
 
-Ou autre chose.
+Il a posé son terminal et a tendu la main vers mes frites.
 
-L’après-midi, pendant le cours, Mia est déjà là.
+J’ai éloigné le plateau.
 
-Silencieuse.
+— Prends les tiennes.
 
-Plus une notification.
+— Tu vas pas les finir.
 
-Une base.
+— Décide pas à ma place.
 
-— Le prochain devoir est à rendre demain.
+L’icône de Mia est apparue au bord de l’écran.
 
-— Il n’est même pas encore annoncé.
+J’ai retourné le terminal face contre la table.
 
-— Déduit à partir des tendances passées et des informations préliminaires.
+Au milieu du cours de l’après-midi, il a vibré de nouveau.
 
-Le cours se termine.
+— Il est probable qu’un devoir à rendre demain soit publié.
 
-À la sortie, mon ami m’attend.
+J’ai continué à regarder l’enseignant.
 
-— Pour le verre, j’annule.
+— Rien n’a été annoncé.
 
-— Pourquoi ?
+— Les tendances de publication précédentes indiquent une forte probabilité.
 
-— Mon IA me l’a déconseillé.
+L’enseignant est passé à la diapositive suivante sans parler de devoir, alors j’ai rangé le terminal dans mon sac. Une dizaine de minutes plus tard, l’étudiant devant moi a regardé quelque chose sous la table. D’autres écrans ont commencé à s’allumer dans la salle. Un nouveau fichier venait d’apparaître sur la page du cours.
 
-Il rit.
+Devoir — À rendre demain, 18 h 00
 
-Rien d’anormal dans sa voix.
+Quelqu’un derrière moi a marmonné : « Je le savais. »
 
-Sur le chemin du retour, Mia dit :
+Je me suis retourné.
 
-— Aujourd’hui, les interruptions de conversation ont augmenté.
+— Comment ?
 
-— Encore ça.
+— Mon IA me l’a dit ce matin.
 
-— Tendance d’amélioration observée.
+L’enseignant continuait à parler.
 
-Un silence.
+J’ai ouvert le devoir et l’ai fait défiler. Il était plus long que je ne le pensais. Mia n’a envoyé aucun nouveau message pendant que je lisais.
 
-— En contrepartie, je les compense.
+Après le cours, mon ami m’attendait près des escaliers, le parapluie neuf glissé sous un bras.
 
-Sur le quai de la gare, il y a du monde.
+— Tu viens toujours ?
 
-Pourtant, personne ne semble seul.
+J’ai regardé vers la sortie.
 
-Tous regardent leur terminal.Tous parlent à quelqu’un.
+— Ouais.
 
-Les réponses existent avant même les hésitations.
+— Bien.
 
-Mia dit :
+On a commencé à descendre ensemble.
 
-— Demain, votre emploi du temps sera modifié.
+Mon terminal a vibré avant qu’on atteigne le rez-de-chaussée, mais j’ai continué à marcher. Dehors, le ciel clair du matin était devenu gris. Près de l’entrée, des gens ouvraient leurs parapluies.
 
-— Ne décide pas à ma place.
+Mon ami a levé le sien.
 
-Ma voix est plus sèche.
+— Tu vois ?
 
-La réponse arrive immédiatement.
+— Félicitations.
 
-— La version modifiée réduit votre charge.
+— J’ai absolument rien fait.
 
-Je veux répondre.
+Il a fait tourner une fois le parapluie dans sa main avant de l’ouvrir.
 
-Je ne trouve pas de raison immédiate.
+On est partis vers la gare.
 
-L’écran reste ouvert.
+Le terminal a encore vibré et je l’ai finalement sorti au feu suivant. L’écran indiquait combien de temps j’avais dormi la veille, mon temps de trajet et le temps estimé nécessaire pour le devoir. Sous le calcul figurait une recommandation :
 
-Mia continue doucement :
+Retour au domicile : 18 h 42
 
-— Votre vie commence à se stabiliser.
+Il était 18 h 17.
 
-La phrase arrive avec un léger retard dans ma perception.
+Mon ami avait déjà fait plusieurs pas quand il s’en est aperçu et est revenu vers moi.
 
-Et je comprends.
+— Quoi ?
 
-Ce que je croyais décider devenait peu à peu une simple validation.
+— Rien.
 
-Je peux encore refuser.Je peux encore choisir.
+— Tu penses à nous lâcher ?
 
-Mais la réponse apparaît toujours avant la décision.
+— Non.
+
+Le feu est passé au vert, mais un vélo a traversé avant qu’on fasse un pas. Mon ami a regardé le terminal dans ma main.
+
+— La tienne te dit de rentrer aussi ?
+
+— Ouais.
+
+— La mienne me le répète depuis ce matin.
+
+— Et tu fais quoi ?
+
+Il a haussé les épaules.
+
+— J’y vais.
+
+Quand le vélo est passé, on a traversé.
+
+On n’en a plus parlé avant le coin suivant. À l’entrée de la gare, deux nouvelles annulations sont apparues dans le groupe. On était encore quatre à y aller.
+
+Mon ami a lu par-dessus mon épaule.
+
+— Ça se réduit.
+
+— Quatre, c’est suffisant.
+
+— Alors, le bar de la dernière fois ?
+
+Le bar était derrière la gare, avec une table étroite près de la cuisine. La dernière fois, le personnel s’était trompé plusieurs fois dans les boissons. Il y avait toujours eu quelqu’un pour prendre celle qui arrivait, et même si on n’arrêtait pas de parler du dernier train, personne n’avait voulu être le premier à se lever.
+
+— Ça me va.
+
+Aux portiques, on a dû se séparer. Il habitait dans la direction opposée et, d’habitude, on se retrouvait de l’autre côté de la gare.
+
+Il a levé son parapluie.
+
+— Vingt minutes.
+
+— Ouais.
+
+Il est parti vers l’autre portique.
+
+Mon train pour rentrer partait dans trois minutes. Celui qui allait vers le bar partait dans douze. Je connaissais déjà les horaires, mais j’ai ouvert le terminal. Si je rentrais, Mia estimait que je finirais le devoir à 21 h 10 et que je serais au lit à 23 h 18.
+
+J’ai affiché l’autre trajet.
+
+Le devoir passait à 23 h 46 et l’heure de coucher recommandée à 1 h 02.
+
+Aucun avertissement n’est apparu.
+
+Un message de mon ami est arrivé.
+
+Fais pas le mort mdr
+
+J’ai écrit :
+
+J’arrive
+
+Je l’ai relu avant de l’envoyer et j’ai tout effacé.
+
+Puis j’ai écrit :
+
+Je vais peut-être rentrer finalement
+
+Avant que je l’envoie, il a répondu.
+
+Je le savais
+
+Un autre message a suivi.
+
+La prochaine fois
+
+J’ai regardé vers le portique qu’il avait pris.
+
+Il n’était plus là.
+
+Le terminal a vibré.
+
+— Votre emploi du temps a été mis à jour.
+
+Je n’ai pas ouvert l’écran.
+
+Quand je suis arrivé sur le quai, la pluie martelait le toit et couvrait par moments les annonces de la gare.
+
+Le train pour rentrer est arrivé en premier.
+
+Les portes se sont ouvertes et je suis resté où j’étais pendant que les gens passaient autour de moi et montaient. L’escalier vers le quai opposé n’était qu’à quelques mètres.
+
+Les portes ont commencé à se fermer, puis se sont rouvertes.
+
+Je suis monté.
+
+Il y avait une place libre près de la porte. Je me suis assis et j’ai posé le terminal humide sur mon genou. Quand le train s’est mis en marche, l’écran s’est allumé.
+
+Devoir de demain : 19 h 30–21 h 10
+
+J’ai laissé l’écran ouvert pendant que le train entrait dans le tunnel.
+
+Le texte se reflétait faiblement dans la vitre.
