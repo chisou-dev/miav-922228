@@ -85,7 +85,12 @@ export function SeriesCategoryPage({
                 key={series.id}
                 href={series.comingSoon ? undefined : seriesHref(series.id)}
                 title={series.title}
-                description={series.summary}
+                meta={
+                  series.categoryId === "entertainment-sf"
+                    ? series.genre
+                    : undefined
+                }
+                description={series.summary || undefined}
                 actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
               />
             ))}

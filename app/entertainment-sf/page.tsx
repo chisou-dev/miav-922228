@@ -6,7 +6,7 @@ import { libraryPageMetadata } from "@/features/library/pageMetadata";
 const category = getCategory("entertainment-sf");
 
 export const metadata: Metadata = libraryPageMetadata({
-  title: category?.seo.title ?? "Entertainment SF | Takashi Yabe",
+  title: category?.seo.title ?? "Entertainment | Takashi Yabe",
   description:
     category?.seo.description ??
     "Entertainment science fiction from MIAV-922228.",

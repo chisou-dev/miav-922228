@@ -30,6 +30,10 @@ import { MiavChapterReader } from "@/features/stories/miav/MiavChapterReader";
 import { MiavSeriesChapterList } from "@/features/stories/miav/MiavChapterList";
 import { chapterCanonicalPath } from "@/features/stories/miav/chapterSeo";
 import { miavWorkId } from "@/features/stories/miav/work";
+import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
+import { SeriesChapterList } from "@/features/library/SeriesChapterList";
+import { SeriesChapterReader } from "@/features/library/SeriesChapterReader";
+import { seriesChapterNumberLabel } from "@/features/library/seriesChapterLabel";
 
 function Prose({ text }: { text: string }) {
   const blocks = text.split(/\n\n+/).filter(Boolean);
@@ -110,6 +114,24 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               : [],
           )}
         />
+      ) : series.id === nextTimeISeeYouWorkId ? (
+        <BookJsonLd
+          title={series.title}
+          description={series.seo.description}
+          genre={series.genre}
+          url={seriesHref(series.id)}
+          hasPart={series.chapters.flatMap((chapter) =>
+            chapter.contentSlug && !chapter.continueReading
+              ? [
+                  {
+                    name: `${seriesChapterNumberLabel(chapter)} — ${chapter.title}`,
+                    position: chapter.number,
+                    url: chapterHref(series.id, chapter.pathSlug),
+                  },
+                ]
+              : [],
+          )}
+        />
       ) : (
         <CreativeWorkSeriesJsonLd
           title={series.title}
@@ -135,6 +157,21 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               </a>
             </p>
           ) : null}
+          {series.id === nextTimeISeeYouWorkId && series.genre ? (
+            <p className="mt-10 text-center text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)]">
+              {series.genre}
+            </p>
+          ) : null}
+          {series.id === nextTimeISeeYouWorkId && series.chapters[0] ? (
+            <p className="mt-10 text-center sm:mt-12">
+              <a
+                href={chapterHref(series.id, series.chapters[0].pathSlug)}
+                className="text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]"
+              >
+                Start with Chapter 1 →
+              </a>
+            </p>
+          ) : null}
           {series.comingSoon || series.chapters.length === 0 ? (
             <p className="mt-10 text-[0.95rem] tracking-[0.04em] text-[var(--foreground-muted)]">
               Coming Soon.
@@ -149,6 +186,8 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
                 title: chapter.title,
               }))}
             />
+          ) : series.id === nextTimeISeeYouWorkId ? (
+            <SeriesChapterList seriesId={series.id} chapters={series.chapters} />
           ) : (
             <ul className="mt-6">
               {series.chapters.map((chapter) => {
@@ -201,6 +240,8 @@ export async function SeriesChapterPage({
   const category = getCategory(series.categoryId);
   const continueReading = chapter.continueReading;
   const isMiavChapter = series.id === miavWorkId && !continueReading;
+  const isNtsiyChapter =
+    series.id === nextTimeISeeYouWorkId && !continueReading;
 
   let bodyHtml: string | undefined;
   let bodyText: string | null = !isMiavChapter ? (chapter.body ?? null) : null;
@@ -268,7 +309,7 @@ export async function SeriesChapterPage({
     {
       label: continueReading
         ? (continueReading.eyebrow ?? "Continue Reading")
-        : `Chapter ${chapter.number}`,
+        : seriesChapterNumberLabel(chapter),
       href: chapterHref(series.id, chapter.pathSlug),
     },
   );
@@ -278,7 +319,7 @@ export async function SeriesChapterPage({
 
   const pageEyebrow = continueReading
     ? (continueReading.eyebrow ?? "Continue Reading")
-    : `Chapter ${chapter.number}`;
+    : seriesChapterNumberLabel(chapter);
   const pageTitle = continueReading
     ? (continueReading.title ?? series.title)
     : chapter.title;
@@ -294,6 +335,15 @@ export async function SeriesChapterPage({
           url={chapterCanonicalPath(chapter.contentSlug)}
           workName={series.title}
           workUrl="/chapters"
+        />
+      ) : isNtsiyChapter ? (
+        <ChapterJsonLd
+          name={`${seriesChapterNumberLabel(chapter)} — ${chapter.title}`}
+          description={series.seo.description}
+          position={chapter.number}
+          url={chapterHref(series.id, chapter.pathSlug)}
+          workName={series.title}
+          workUrl={seriesHref(series.id)}
         />
       ) : (
         <BookJsonLd
@@ -334,6 +384,15 @@ export async function SeriesChapterPage({
               listLabel="All chapters"
               hideNextOnThreshold
             />
+          ) : isNtsiyChapter && bodyHtml ? (
+            <SeriesChapterReader
+              bodyHtml={bodyHtml}
+              previous={previous}
+              next={next}
+              seriesId={series.id}
+              listHref={seriesHref(series.id)}
+              listLabel="All chapters"
+            />
           ) : bodyHtml ? (
             <ReadingLayout label="Chapter text">
               <article
@@ -351,7 +410,7 @@ export async function SeriesChapterPage({
             </p>
           )}
 
-          {!continueReading && !isMiavChapter ? (
+          {!continueReading && !isMiavChapter && !isNtsiyChapter ? (
             <nav
               aria-label="Chapter navigation"
               className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"

@@ -6,6 +6,11 @@
 import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
 import { fourthPeriodKindle } from "@/features/stories/fourth-period/store";
 import {
+  nextTimeISeeYouChapters,
+  nextTimeISeeYouGenre,
+  nextTimeISeeYouWorkId,
+} from "@/features/stories/next-time-i-see-you/work";
+import {
   chapterDocumentTitle,
   chapterMetaDescription,
 } from "@/features/stories/miav/chapterSeo";
@@ -59,6 +64,8 @@ export type SeriesChapter = {
    * Series lists show this entry as "Continue Reading →" (no chapter number).
    */
   continueReading?: ContinueReadingLanding;
+  /** When set, UI shows "Final Chapter" instead of "Chapter {number}". */
+  finalChapter?: boolean;
 };
 
 export type Series = {
@@ -128,12 +135,12 @@ export const categories: readonly Category[] = [
   {
     id: "entertainment-sf",
     path: "/entertainment-sf",
-    title: "Entertainment SF",
-    summary: "Speculative fiction focused on story and adventure.",
+    title: "Entertainment",
+    summary: "Story-driven fiction across genres.",
     seo: {
-      title: "Entertainment SF | MIAV-922228",
+      title: "Entertainment | MIAV-922228",
       description:
-        "Entertainment science fiction and speculative adventure stories from MIAV-922228.",
+        "Story-driven fiction across genres from MIAV-922228.",
     },
   },
   {
@@ -318,6 +325,19 @@ export const seriesList: readonly Series[] = [
         },
       },
     ],
+  },
+  {
+    id: nextTimeISeeYouWorkId,
+    categoryId: "entertainment-sf",
+    title: "Next Time I See You",
+    summary: "",
+    genre: nextTimeISeeYouGenre,
+    seo: {
+      title: "Next Time I See You | Entertainment",
+      description:
+        "Next Time I See You — a contemporary coming-of-age romance in eighteen chapters.",
+    },
+    chapters: nextTimeISeeYouChapters,
   },
   {
     id: "cradle-of-the-stars",
@@ -810,8 +830,12 @@ export function chapterSeo(
     };
   }
 
+  const chapterLabel = chapter.finalChapter
+    ? "Final Chapter"
+    : `Chapter ${chapter.number}`;
+
   return {
-    title: `Chapter ${chapter.number}｜${chapter.title} | ${series.title}`,
+    title: `${chapterLabel}｜${chapter.title} | ${series.title}`,
     description: series.seo.description,
   };
 }

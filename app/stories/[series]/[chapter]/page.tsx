@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import { SeriesChapterPage } from "@/features/library/LibraryPages";
-import { chapterSeo, getSeriesChapter } from "@/features/library/catalog";
+import {
+  chapterHref,
+  chapterSeo,
+  getSeriesChapter,
+} from "@/features/library/catalog";
+import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { buildChapterMetadata } from "@/features/stories/miav/chapterSeo";
 import { miavWorkId } from "@/features/stories/miav/work";
 import { getChapterMetaBySlug } from "@/features/stories/miav/chapters";
+import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
 
 type Props = {
   params: Promise<{ series: string; chapter: string }>;
@@ -27,7 +33,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (meta) return buildChapterMetadata(meta);
   }
 
-  return chapterSeo(found.series, found.chapter);
+  const seo = chapterSeo(found.series, found.chapter);
+
+  if (found.series.id === nextTimeISeeYouWorkId) {
+    return libraryPageMetadata({
+      title: seo.title,
+      description: seo.description,
+      path: chapterHref(found.series.id, found.chapter.pathSlug),
+      ogType: "article",
+    });
+  }
+
+  return seo;
 }
 
 export default async function SeriesChapterRoutePage({ params }: Props) {

@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 import {
   categories,
+  chapterHref,
   flashHref,
   flashPieces,
   seriesHref,
   seriesList,
 } from "@/features/library/catalog";
 import { getAllChapters } from "@/features/stories/miav/chapters";
+import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
 import {
   chapterArchivePath,
   chapterPath,
@@ -173,5 +175,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  return [...staticRoutes, ...libraryRoutes, ...chapterRoutes];
+  const ntsiySeries = seriesList.find((s) => s.id === nextTimeISeeYouWorkId);
+  const ntsiyChapterRoutes: MetadataRoute.Sitemap = ntsiySeries
+    ? ntsiySeries.chapters
+        .filter((chapter) => chapter.contentSlug && !chapter.continueReading)
+        .map((chapter) => ({
+          url: `${baseUrl}${chapterHref(ntsiySeries.id, chapter.pathSlug)}`,
+          lastModified,
+          changeFrequency: "monthly" as const,
+          priority: 0.72,
+        }))
+    : [];
+
+  return [
+    ...staticRoutes,
+    ...libraryRoutes,
+    ...chapterRoutes,
+    ...ntsiyChapterRoutes,
+  ];
 }
