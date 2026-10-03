@@ -221,12 +221,13 @@ export const seriesList: readonly Series[] = [
     categoryId: "literary-sf",
     title: "MIAV-922228",
     summary:
-      "A quiet literary series exploring memory, artificial intelligence, relationships, and the passage of time.",
+      "A quiet literary series about artificial intelligence, memory, family, relationships, and the passage of time.",
     genre: "Literary Fiction",
     seo: {
-      title: "MIAV-922228 | Literary Fiction",
+      title:
+        "MIAV-922228 — Literary Fiction About AI, Memory and Family | Takashi Yabe",
       description:
-        "A quiet literary series exploring memory, AI, relationships, and the passage of time.",
+        "A quiet literary series about artificial intelligence, memory, family, relationships, and the passage of time.",
     },
     featured: true,
     worksFeaturedNote: "The latest chapter is available.",
@@ -331,12 +332,14 @@ export const seriesList: readonly Series[] = [
     id: nextTimeISeeYouWorkId,
     categoryId: "entertainment-sf",
     title: "Next Time I See You",
-    summary: "",
+    summary:
+      "A coming-of-age short story about first love, a lost letter, and the words we wait too long to say.",
     genre: nextTimeISeeYouGenre,
     seo: {
-      title: "Next Time I See You | Entertainment",
+      title:
+        "Next Time I See You — A Coming-of-Age Short Story About First Love | Takashi Yabe",
       description:
-        "Next Time I See You — a contemporary coming-of-age romance in eighteen chapters.",
+        "A quiet coming-of-age short story about first love, a lost letter, piano lessons, and the words we wait too long to say.",
     },
     chapters: nextTimeISeeYouChapters,
   },
@@ -690,9 +693,10 @@ export const flashPieces: readonly FlashPiece[] = [
       "A stranger beneath a bookshop awning remembers the hill differently.",
     genre: "Flash Fiction",
     seo: {
-      title: "After the Rain | Flash Fiction",
+      title:
+        "After the Rain — Flash Fiction About Memory and Perception | Takashi Yabe",
       description:
-        "A stranger beneath a bookshop awning remembers the hill differently.",
+        "A flash fiction story about memory and perception—a stranger beneath a bookshop awning remembers the hill differently.",
     },
     body: [
       "Halfway up the hill, I took shelter from the rain beneath the awning of a secondhand bookshop.",
