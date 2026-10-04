@@ -14,7 +14,7 @@ import {
   SfSection,
   type SfSectionVariant,
 } from "@/features/shared/SfSection";
-import { chapterArchivePath } from "@/features/stories/miav/edition";
+import { MiavEditionLinks } from "@/features/stories/miav/MiavEditionLinks";
 
 export const metadata: Metadata = libraryPageMetadata({
   title: worksLibrary.seo.title,
@@ -55,45 +55,7 @@ export default function WorksPage() {
               }
               actionLabel="Explore →"
             />
-            {featured.id === "miav-922228" ? (
-              <div className="space-y-3 border-b border-[var(--line)] pb-8 text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)]">
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <span className="uppercase tracking-[0.18em]">Part I</span>
-                  <a
-                    href={chapterArchivePath("en")}
-                    className="underline decoration-[var(--line)] underline-offset-[0.35em] transition-colors duration-300 hover:text-[var(--foreground)]"
-                    hrefLang="en"
-                  >
-                    English
-                  </a>
-                  <span aria-hidden="true" className="opacity-40">
-                    ·
-                  </span>
-                  <a
-                    href={chapterArchivePath("fr")}
-                    className="underline decoration-[var(--line)] underline-offset-[0.35em] transition-colors duration-300 hover:text-[var(--foreground)]"
-                    hrefLang="fr"
-                  >
-                    Français
-                  </a>
-                </p>
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <span className="uppercase tracking-[0.18em]">
-                    Part II · Homeward
-                  </span>
-                  <a
-                    href="/books"
-                    className="underline decoration-[var(--line)] underline-offset-[0.35em] transition-colors duration-300 hover:text-[var(--foreground)]"
-                  >
-                    English
-                  </a>
-                  <span aria-hidden="true" className="opacity-40">
-                    ·
-                  </span>
-                  <span>Français bientôt disponible</span>
-                </p>
-              </div>
-            ) : null}
+            {featured.id === "miav-922228" ? <MiavEditionLinks /> : null}
           </div>
         ) : null}
 

@@ -99,7 +99,7 @@ export const fr: MessageCatalog = {
 
   // about / contact (home sections)
   "home.booksBody":
-    "Partie I et Partie II — Kindle et archive des chapitres, en anglais et en français.",
+    "Parties I, II et III — éditions Kindle. La Partie I reste dans l’archive des chapitres.",
   "home.aboutTitle": "À propos de MIAV",
   "home.aboutBody":
     "MIAV est un projet créatif indépendant qui réunit des histoires discrètes et centrées sur les personnages, des jeux de navigateur, des applications et des expériences numériques.",

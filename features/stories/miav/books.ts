@@ -38,6 +38,12 @@ export const MIAV_PART_TWO_KINDLE_URL =
 
 export const MIAV_PART_TWO_ASIN = "B0H8JNRHZJ" as const;
 
+/** Confirmed English Part III Kindle listing. */
+export const MIAV_PART_THREE_KINDLE_URL =
+  "https://www.amazon.com/dp/B0HLVT9G8X" as const;
+
+export const MIAV_PART_THREE_ASIN = "B0HLVT9G8X" as const;
+
 /**
  * MIAV-922228 published / forthcoming volumes.
  * French Part II has no confirmed Amazon listing — coming soon only.
@@ -99,6 +105,35 @@ export const miavBooks: Book[] = [
         detailLabel: "124 pages",
         status: "available",
         href: MIAV_PART_TWO_KINDLE_URL,
+        linkLabel: "Available on Amazon Kindle",
+      },
+      {
+        id: "french-coming-soon",
+        languageLabel: "Édition française",
+        label: "Édition française",
+        status: "coming_soon",
+        href: null,
+        statusLabel: "Bientôt disponible",
+      },
+    ],
+  },
+  {
+    id: "miav-922228-part-iii-edge",
+    volume: 3,
+    partLabel: "PART III",
+    title: "MIAV-922228 Part III",
+    subtitle: "The Edge of the World",
+    description:
+      "MIAV-922228 Part III: The Edge of the World — Kindle Edition by Takashi Yabe.",
+    editions: [
+      {
+        id: "english-kindle",
+        languageLabel: "English Edition",
+        label: "Kindle Edition",
+        formatLabel: "Kindle",
+        detailLabel: "Published October 3, 2026",
+        status: "available",
+        href: MIAV_PART_THREE_KINDLE_URL,
         linkLabel: "Available on Amazon Kindle",
       },
       {

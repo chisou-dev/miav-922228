@@ -29,6 +29,7 @@ import {
 import { MiavChapterReader } from "@/features/stories/miav/MiavChapterReader";
 import { MiavSeriesChapterList } from "@/features/stories/miav/MiavChapterList";
 import { chapterCanonicalPath } from "@/features/stories/miav/chapterSeo";
+import { MiavEditionLinks } from "@/features/stories/miav/MiavEditionLinks";
 import { miavWorkId } from "@/features/stories/miav/work";
 import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
 import {
@@ -181,7 +182,11 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               Coming Soon.
             </p>
           ) : series.id === miavWorkId ? (
-            <MiavSeriesChapterList
+            <>
+              <div className="mt-10">
+                <MiavEditionLinks />
+              </div>
+              <MiavSeriesChapterList
               seriesId={series.id}
               chapters={series.chapters.map((chapter) => ({
                 number: chapter.number,
@@ -190,6 +195,7 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
                 title: chapter.title,
               }))}
             />
+            </>
           ) : series.id === nextTimeISeeYouWorkId ? (
             <SeriesChapterList seriesId={series.id} chapters={series.chapters} />
           ) : (

@@ -97,7 +97,7 @@ export const en = {
 
   // about / contact (home sections)
   "home.booksBody":
-    "Part I and Part II — Kindle editions and online chapter archives.",
+    "Part I, Part II, and Part III — Kindle editions. Part I is also available in the online chapter archive.",
   "home.aboutTitle": "About MIAV",
   "home.aboutBody":
     "MIAV is an independent creative project bringing together quiet, character-driven stories, browser games, apps, and digital experiments.",

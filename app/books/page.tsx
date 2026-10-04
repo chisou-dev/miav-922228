@@ -5,7 +5,7 @@ import { BooksPage } from "@/features/novels/BooksPage";
 export const metadata: Metadata = libraryPageMetadata({
   title: "Books | MIAV-922228",
   description:
-    "MIAV-922228 Part I and Part II : Homeward — literary editions exploring AI, memory, emotion, relationships, and human existence.",
+    "MIAV-922228 Part I, Part II, and Part III — literary editions exploring AI, memory, emotion, relationships, and human existence.",
   path: "/books",
 });
 

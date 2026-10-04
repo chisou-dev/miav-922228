@@ -27,7 +27,7 @@ export function BooksPage() {
 
           <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.1]">
             A quiet literary series exploring AI, memory, emotion,
-            relationships, and human existence — Part I and Part II.
+            relationships, and human existence — Part I, Part II, and Part III.
           </p>
         </header>
 
