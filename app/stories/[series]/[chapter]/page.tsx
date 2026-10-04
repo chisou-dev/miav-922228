@@ -10,6 +10,7 @@ import { buildChapterMetadata } from "@/features/stories/miav/chapterSeo";
 import { miavWorkId } from "@/features/stories/miav/work";
 import { getChapterMetaBySlug } from "@/features/stories/miav/chapters";
 import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
+import { fourthPeriodWorkId } from "@/features/stories/fourth-period/store";
 
 type Props = {
   params: Promise<{ series: string; chapter: string }>;
@@ -42,6 +43,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       path: chapterHref(found.series.id, found.chapter.pathSlug),
       ogType: "article",
     });
+  }
+
+  if (
+    found.series.id === fourthPeriodWorkId &&
+    found.chapter.pathSlug === "chapter-5"
+  ) {
+    return {
+      ...libraryPageMetadata({
+        title: seo.title,
+        description: seo.description,
+        path: chapterHref(found.series.id, found.chapter.pathSlug),
+        ogType: "article",
+      }),
+      robots: {
+        index: false,
+        follow: true,
+      },
+    };
   }
 
   return seo;

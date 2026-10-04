@@ -31,6 +31,10 @@ import { MiavSeriesChapterList } from "@/features/stories/miav/MiavChapterList";
 import { chapterCanonicalPath } from "@/features/stories/miav/chapterSeo";
 import { miavWorkId } from "@/features/stories/miav/work";
 import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
+import {
+  fourthPeriodKindle,
+  fourthPeriodWorkId,
+} from "@/features/stories/fourth-period/store";
 import { SeriesChapterList } from "@/features/library/SeriesChapterList";
 import { SeriesChapterReader } from "@/features/library/SeriesChapterReader";
 import { seriesChapterNumberLabel } from "@/features/library/seriesChapterLabel";
@@ -190,7 +194,10 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
             <SeriesChapterList seriesId={series.id} chapters={series.chapters} />
           ) : (
             <ul className="mt-6">
-              {series.chapters.map((chapter) => {
+              {(series.id === fourthPeriodWorkId
+                ? series.chapters.filter((c) => !c.continueReading)
+                : series.chapters
+              ).map((chapter) => {
                 const isContinue = Boolean(chapter.continueReading);
                 return (
                   <li key={chapter.pathSlug}>
@@ -219,6 +226,11 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               })}
             </ul>
           )}
+          {series.id === fourthPeriodWorkId ? (
+            <p className="mt-8 text-center text-[0.72rem] leading-relaxed tracking-[0.06em] text-[var(--foreground-muted)]">
+              Read Chapters 1–4 online. Continue the complete story on Kindle.
+            </p>
+          ) : null}
         </div>
       </LibraryShell>
     </>
@@ -293,6 +305,11 @@ export async function SeriesChapterPage({
     index >= 0 && index < series.chapters.length - 1
       ? series.chapters[index + 1]
       : null;
+  const isFourthPeriodWebFinale =
+    series.id === fourthPeriodWorkId &&
+    chapter.number === 4 &&
+    !continueReading;
+  const navNext = isFourthPeriodWebFinale ? null : next;
 
   const toMiavNav = (item: (typeof series.chapters)[number]) => ({
     number: item.number,
@@ -410,6 +427,16 @@ export async function SeriesChapterPage({
             </p>
           )}
 
+          {isFourthPeriodWebFinale ? (
+            <div className="mt-16 sm:mt-20">
+              <BookContinueCard
+                description={fourthPeriodKindle.continueBlurb}
+                amazonUrl={fourthPeriodKindle.href}
+                buttonLabel={fourthPeriodKindle.linkLabel}
+              />
+            </div>
+          ) : null}
+
           {!continueReading && !isMiavChapter && !isNtsiyChapter ? (
             <nav
               aria-label="Chapter navigation"
@@ -428,12 +455,12 @@ export async function SeriesChapterPage({
                 ) : null}
               </div>
               <div className="sm:text-right">
-                {next ? (
+                {navNext ? (
                   <a
-                    href={chapterHref(series.id, next.pathSlug)}
+                    href={chapterHref(series.id, navNext.pathSlug)}
                     className="block text-[0.85rem] tracking-[0.08em] text-[var(--foreground-muted)] transition-colors duration-300 hover:text-[var(--foreground)]"
                   >
-                    {next.continueReading
+                    {navNext.continueReading
                       ? "Continue Reading →"
                       : "Next Chapter →"}
                   </a>

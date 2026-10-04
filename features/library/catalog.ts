@@ -312,16 +312,7 @@ export const seriesList: readonly Series[] = [
         continueReading: {
           eyebrow: "Chapter 5",
           title: "Why I Wrote Fourth Period",
-          description: [
-            "As children, we are often told that every story has a lesson.",
-            "But life rarely offers only one answer.",
-            "Two people can make different choices for the same reason.",
-            "Both may be sincere.",
-            "Both may leave behind regret.",
-            "Fourth Period was written from that uncertainty.",
-            "Not to decide what is right—",
-            "but to ask why we believe it is.",
-          ].join("\n\n"),
+          description: fourthPeriodKindle.continueBlurb,
           amazonUrl: fourthPeriodKindle.href,
           buttonLabel: fourthPeriodKindle.linkLabel,
         },
