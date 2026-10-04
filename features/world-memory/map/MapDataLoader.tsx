@@ -45,7 +45,9 @@ export function useMapDataLoader() {
   const loadMap = useCallback(async () => {
     setMapLoading(true);
     try {
-      const response = await fetch("/api/trace?view=map");
+      const response = await fetch("/api/trace?view=map", {
+        signal: AbortSignal.timeout(20000),
+      });
       const data = (await response.json().catch(() => null)) as {
         stars?: MemoryStar[];
         stats?: TraceStats;
@@ -60,6 +62,10 @@ export function useMapDataLoader() {
       setStars(data?.stars || []);
       setStats(data?.stats || emptyStats());
       setRecent(Array.isArray(data?.recent) ? data.recent.slice(0, 20) : []);
+    } catch {
+      setStars([]);
+      setStats(emptyStats());
+      setRecent([]);
     } finally {
       setMapLoading(false);
     }

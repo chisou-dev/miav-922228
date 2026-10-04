@@ -487,17 +487,15 @@ header .lang-switcher__list {
   }
 }
 
-/* Trace Map — quiet literary surface */
+/* Trace Map — page canvas is .site-canvas; panels stay on --map-panel */
 .trace-map-shell {
   --map-ink: #243447;
   --map-muted: #6b7c8d;
   --map-line: #d5dee7;
   --map-panel: #ffffff;
   --map-accent: #5b7c99;
-  min-height: 100vh;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f4f7fa 48%, #eef3f7 100%);
-  color: var(--map-ink);
+  min-height: 100%;
+  background: transparent;
 }
 
 .trace-map-shell button:not(:disabled),
@@ -510,8 +508,18 @@ header .lang-switcher__list {
 }
 
 .trace-map-shell .leaflet-container {
+  height: 100%;
+  width: 100%;
+  min-height: min(72vh, 720px);
   background: #f7f9fb;
   font-family: var(--font-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+
+/* Tailwind preflight sets img { max-width: 100%; height: auto }, which collapses Leaflet tiles. */
+.trace-map-shell .leaflet-container img,
+.trace-map-shell .leaflet-container .leaflet-tile {
+  max-width: none !important;
+  max-height: none !important;
 }
 
 .trace-map-shell .leaflet-popup-content-wrapper,

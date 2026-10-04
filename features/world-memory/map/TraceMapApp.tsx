@@ -10,6 +10,7 @@ import { TraceViewer } from "@/features/world-memory/viewer/TraceViewer";
 import { useMapDataLoader } from "@/features/world-memory/map/MapDataLoader";
 import { WelcomeDialog } from "@/features/world-memory/trace/ui/WelcomeDialog";
 import type { TracePin } from "@/features/world-memory/trace/types";
+import { t as translate, useT } from "@/features/shared/i18n";
 import {
   completeTraceRedirectSignIn,
   getTraceAuthType,
@@ -17,14 +18,13 @@ import {
   watchAuth,
 } from "@/features/world-memory/trace/auth";
 import { WELCOME_STORAGE_KEY, getWelcomeDialogBody } from "@/features/world-memory/trace/policyCopy";
-import { t as translate, useT } from "@/features/shared/i18n";
 
 const Map = dynamic(
   () => import("@/features/world-memory/map/Map").then((mod) => mod.Map),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[min(72vh,720px)] items-center justify-center border border-[var(--map-line)] bg-[#f7f9fb] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)]">
+      <div className="flex h-[min(72vh,720px)] w-full items-center justify-center border border-[var(--map-line)] bg-[#f7f9fb] text-[0.85rem] tracking-[0.12em] text-[var(--map-muted)]">
         {translate("world.loadingMap")}
       </div>
     ),
@@ -154,12 +154,12 @@ export function TraceMapApp() {
         <div className="mx-auto w-full max-w-6xl">
           {/* Row 1: title + nav */}
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-            <h1 className="text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--map-ink)]">
+            <h1 className="text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[0.06em] text-[var(--foreground)]">
               {t("world.title")}
             </h1>
             <nav
               aria-label={t("world.navAria")}
-              className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--map-muted)]"
+              className="flex flex-wrap items-center gap-5 text-[0.75rem] tracking-[0.12em] text-[var(--foreground-muted)]"
             >
               <a href="/privacy" className="underline decoration-[var(--map-line)] underline-offset-[0.4em]">
                 {t("world.privacy")}
@@ -169,7 +169,7 @@ export function TraceMapApp() {
               </a>
               {user && getTraceAuthType(user) === "google" ? (
                 <>
-                  <span className="inline-flex max-w-[14rem] flex-col items-end gap-0.5 text-right text-[var(--map-ink)] sm:max-w-[18rem]">
+                  <span className="inline-flex max-w-[14rem] flex-col items-end gap-0.5 text-right text-[var(--foreground)] sm:max-w-[18rem]">
                     {data.mine?.authType === "google" && data.mine.miavId ? (
                       <>
                         <span className="inline-flex items-center gap-1.5">
@@ -178,14 +178,14 @@ export function TraceMapApp() {
                           </span>
                           {t("world.permanentMemory")}
                         </span>
-                        <span className="truncate font-mono text-[0.7rem] tracking-[0.04em] text-[var(--map-ink)]">
+                        <span className="truncate font-mono text-[0.7rem] tracking-[0.04em] text-[var(--foreground)]">
                           {data.mine.miavId}
                         </span>
                       </>
                     ) : (
                       <>
                         <span>{t("world.permanentMemory")}</span>
-                        <span className="text-[0.7rem] tracking-[0.04em] text-[var(--map-muted)]">
+                        <span className="text-[0.7rem] tracking-[0.04em] text-[var(--foreground-muted)]">
                           ✓ {t("world.verifiedGoogle")}
                         </span>
                       </>
@@ -205,7 +205,7 @@ export function TraceMapApp() {
 
           {/* Row 2: subtitle + Leave a Memory */}
           <div className="mt-2 max-w-xl sm:mt-2.5">
-            <p className="text-[0.95rem] leading-[1.65] tracking-[0.02em] text-[var(--map-muted)]">
+            <p className="text-[0.95rem] leading-[1.65] tracking-[0.02em] text-[var(--foreground-muted)]">
               {t("world.subtitle")}
             </p>
             <button
@@ -253,7 +253,7 @@ export function TraceMapApp() {
                 interactionsEnabled={!welcomeOpen}
                 onOpenMemories={onOpenMemories}
               />
-              <p className="text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
+              <p className="text-[0.78rem] leading-[1.8] text-[var(--foreground-muted)]">
                 {t("world.mapHelp")}
               </p>
             </div>

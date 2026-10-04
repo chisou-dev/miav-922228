@@ -34,6 +34,25 @@ function FocusController({ focus }: { focus: Focus }) {
   return null;
 }
 
+function MapSizeFix() {
+  const map = useMap();
+  useEffect(() => {
+    const fix = () => {
+      map.invalidateSize();
+    };
+    fix();
+    const frame = window.requestAnimationFrame(fix);
+    const timer = window.setTimeout(fix, 200);
+    window.addEventListener("resize", fix);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.removeEventListener("resize", fix);
+    };
+  }, [map]);
+  return null;
+}
+
 function MapInteractionGate({ enabled }: { enabled: boolean }) {
   const map = useMap();
   useEffect(() => {
@@ -110,6 +129,7 @@ export function Map({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <FocusController focus={focus} />
+        <MapSizeFix />
         <MapInteractionGate enabled={interactionsEnabled} />
 
         {stars.map((star) => {
