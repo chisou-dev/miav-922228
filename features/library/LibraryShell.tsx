@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import type { BreadcrumbItem } from "@/features/library/catalog";
 import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
 import { WorksCategoryNav } from "@/features/library/WorksCategoryNav";
@@ -12,6 +13,7 @@ export function LibraryShell({
   summary,
   breadcrumbs,
   categoryNavHref,
+  hero,
 }: {
   children: ReactNode;
   eyebrow?: string;
@@ -20,6 +22,8 @@ export function LibraryShell({
   breadcrumbs?: BreadcrumbItem[];
   /** When set, shows Works / Literary Fiction / Entertainment / Flash Fiction hops. */
   categoryNavHref?: string;
+  /** Optional image between the site link and the title. */
+  hero?: ReactNode;
 }) {
   return (
     <div className="relative z-10 mx-auto w-full max-w-[760px] px-5 sm:px-8">
@@ -40,6 +44,7 @@ export function LibraryShell({
               MIAV-922228
             </a>
           </p>
+          {hero ? <div className="mt-12 sm:mt-14">{hero}</div> : null}
           {eyebrow ? (
             <p className="mt-14 text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase sm:mt-16">
               {eyebrow}
@@ -73,6 +78,7 @@ export function LibraryListItem({
   actionLabel = "Read →",
   /** Row separator under the item. Use false when an SfDivider follows instead. */
   showBorder = true,
+  image,
 }: {
   href?: string;
   title: string;
@@ -80,9 +86,27 @@ export function LibraryListItem({
   description?: string;
   actionLabel?: string;
   showBorder?: boolean;
+  image?: {
+    src: string;
+    width: number;
+    height: number;
+    alt: string;
+  };
 }) {
   const body = (
     <>
+      {image ? (
+        <span className="mb-6 block overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--background)]">
+          <Image
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            className="h-auto w-full"
+            sizes="(max-width: 768px) 100vw, 720px"
+          />
+        </span>
+      ) : null}
       <div className="flex items-baseline justify-between gap-6">
         <h2 className="text-[1.05rem] font-medium tracking-[0.06em] text-[var(--foreground)]">
           {title}

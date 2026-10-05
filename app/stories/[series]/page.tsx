@@ -5,6 +5,8 @@ import {
 } from "@/features/library/LibraryPages";
 import { getSeries, seriesHref } from "@/features/library/catalog";
 import { libraryPageMetadata } from "@/features/library/pageMetadata";
+import { after50MillionWorkId } from "@/features/stories/after-50-million/work";
+import { after50MillionOgMetadataImages } from "@/features/stories/after-50-million/visual";
 
 type Props = {
   params: Promise<{ series: string }>;
@@ -26,6 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: series.seo.title,
     description: series.seo.description,
     path: seriesHref(series.id),
+    images:
+      series.id === after50MillionWorkId
+        ? after50MillionOgMetadataImages()
+        : undefined,
   });
 }
 

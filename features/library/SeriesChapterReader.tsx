@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
 import { chapterHref } from "@/features/library/catalog";
 import { seriesChapterNumberLabel } from "@/features/library/seriesChapterLabel";
@@ -15,6 +16,8 @@ type Props = {
   seriesId: string;
   listHref: string;
   listLabel: string;
+  /** Rendered after the chapter text and before previous/next. */
+  afterBody?: ReactNode;
 };
 
 function navLabel(chapter: SeriesChapterNavItem): string {
@@ -28,6 +31,7 @@ export function SeriesChapterReader({
   seriesId,
   listHref,
   listLabel,
+  afterBody,
 }: Props) {
   return (
     <>
@@ -39,6 +43,12 @@ export function SeriesChapterReader({
           />
         </ReadingLayout>
       </div>
+
+      {afterBody ? (
+        <div className="mx-auto mt-16 max-w-[720px] border-t border-[var(--line)] pt-10 text-center sm:mt-20">
+          {afterBody}
+        </div>
+      ) : null}
 
       <nav
         aria-label="Chapter navigation"

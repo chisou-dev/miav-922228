@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="Reentry vehicle placeholder">
+  <defs>
+    <linearGradient id="hull" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9aa3ad"/>
+      <stop offset="100%" stop-color="#5c6670"/>
+    </linearGradient>
+  </defs>
+  <path d="M100 12 L138 92 L128 280 L72 280 L62 92 Z" fill="url(#hull)"/>
+  <path d="M100 28 L118 88 L112 120 L88 120 L82 88 Z" fill="#b8c2cc" opacity="0.85"/>
+  <path d="M76 200 L124 200 L118 268 L82 268 Z" fill="#4a545c" opacity="0.9"/>
+</svg>

@@ -45,8 +45,27 @@ export const es: MessageCatalog = {
   "home.startTitle": "EMPEZAR AQUÍ",
   "home.readTitle": "LEER",
   "home.readBody":
-    "Ficción tranquila y centrada en los personajes—sobre las personas, la memoria, las relaciones, la tecnología y el tiempo.",
+    "El archivo en línea de capítulos de MIAV-922228 — lee en orden desde el capítulo 1 o explora por tema.",
   "home.readEnter": "Entrar a las obras",
+
+  "startHere.pageTitle": "Empezar aquí",
+  "startHere.lead": "¿Primera visita? Elige por dónde empezar.",
+  "startHere.readHeading": "LEER",
+  "startHere.readBody": "Relatos que puedes leer enseguida.",
+  "startHere.readCta": "Empezar a leer",
+  "startHere.playHeading": "JUGAR",
+  "startHere.playBody": "Pequeños juegos de navegador y experimentos.",
+  "startHere.playCta": "Jugar",
+  "startHere.traceHeading": "DEJAR UN RASTRO",
+  "startHere.traceBody": "Añade un pequeño recuerdo a MIAV World.",
+  "startHere.traceCta": "Entrar a MIAV World",
+  "startHere.seoTitle": "Empezar aquí | MIAV-922228",
+  "startHere.seoDescription":
+    "¿Primera visita a MIAV-922228? Lee relatos, juega en el navegador o deja un rastro en el mapa.",
+
+  "works.newHereEyebrow": "¿Primera visita?",
+  "works.newHereLead": "Empieza con un relato breve.",
+  "works.minutesRead": "{minutes} min de lectura",
   "home.readChapters": "Capítulos",
   "home.readBooks": "Libros",
   "home.playTitle": "JUGAR",

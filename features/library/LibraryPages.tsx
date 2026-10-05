@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   getChapterBySlug,
@@ -15,6 +16,7 @@ import {
   seriesHref,
   seriesList,
   worksBreadcrumbs,
+  type Series,
 } from "@/features/library/catalog";
 import { getSeriesStoryChapter } from "@/features/library/seriesContent";
 import { BookContinueCard } from "@/features/library/BookContinueCard";
@@ -33,12 +35,36 @@ import { MiavEditionLinks } from "@/features/stories/miav/MiavEditionLinks";
 import { miavWorkId } from "@/features/stories/miav/work";
 import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
 import {
+  after50MillionChapterDescriptions,
+  after50MillionWorkId,
+} from "@/features/stories/after-50-million/work";
+import { after50MillionHeroAbsoluteUrl } from "@/features/stories/after-50-million/visual";
+import { After50MillionClosing } from "@/features/stories/after-50-million/ClosingNote";
+import {
   fourthPeriodKindle,
   fourthPeriodWorkId,
 } from "@/features/stories/fourth-period/store";
 import { SeriesChapterList } from "@/features/library/SeriesChapterList";
 import { SeriesChapterReader } from "@/features/library/SeriesChapterReader";
 import { seriesChapterNumberLabel } from "@/features/library/seriesChapterLabel";
+
+function SeriesCover({ cover }: { cover: NonNullable<Series["cover"]> }) {
+  return (
+    <figure>
+      <div className="overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--background)]">
+        <Image
+          src={cover.src}
+          alt={cover.alt}
+          width={cover.width}
+          height={cover.height}
+          className="h-auto w-full"
+          sizes="(max-width: 768px) 100vw, 760px"
+          priority
+        />
+      </div>
+    </figure>
+  );
+}
 
 function Prose({ text }: { text: string }) {
   const blocks = text.split(/\n\n+/).filter(Boolean);
@@ -119,12 +145,18 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               : [],
           )}
         />
-      ) : series.id === nextTimeISeeYouWorkId ? (
+      ) : series.id === nextTimeISeeYouWorkId ||
+        series.id === after50MillionWorkId ? (
         <BookJsonLd
           title={series.title}
           description={series.seo.description}
           genre={series.genre}
           url={seriesHref(series.id)}
+          image={
+            series.id === after50MillionWorkId
+              ? after50MillionHeroAbsoluteUrl()
+              : undefined
+          }
           hasPart={series.chapters.flatMap((chapter) =>
             chapter.contentSlug && !chapter.continueReading
               ? [
@@ -150,6 +182,7 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
         title={series.title}
         summary={series.summary}
         breadcrumbs={breadcrumbs}
+        hero={series.cover ? <SeriesCover cover={series.cover} /> : undefined}
       >
         <div className="pt-2">
           {category ? (
@@ -160,6 +193,16 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               >
                 ← {category.title}
               </a>
+            </p>
+          ) : null}
+          {series.language ? (
+            <p className="mt-10 text-center text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)]">
+              {series.genre} · {series.language}
+            </p>
+          ) : null}
+          {series.previewNote ? (
+            <p className="mt-6 text-center text-[0.95rem] leading-[1.9] tracking-[0.02em] text-[var(--foreground)]">
+              {series.previewNote}
             </p>
           ) : null}
           {series.id === nextTimeISeeYouWorkId && series.genre ? (
@@ -196,7 +239,8 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               }))}
             />
             </>
-          ) : series.id === nextTimeISeeYouWorkId ? (
+          ) : series.id === nextTimeISeeYouWorkId ||
+            series.id === after50MillionWorkId ? (
             <SeriesChapterList seriesId={series.id} chapters={series.chapters} />
           ) : (
             <ul className="mt-6">
@@ -260,6 +304,8 @@ export async function SeriesChapterPage({
   const isMiavChapter = series.id === miavWorkId && !continueReading;
   const isNtsiyChapter =
     series.id === nextTimeISeeYouWorkId && !continueReading;
+  const isAfter50Chapter =
+    series.id === after50MillionWorkId && !continueReading;
 
   let bodyHtml: string | undefined;
   let bodyText: string | null = !isMiavChapter ? (chapter.body ?? null) : null;
@@ -359,14 +405,22 @@ export async function SeriesChapterPage({
           workName={series.title}
           workUrl="/chapters"
         />
-      ) : isNtsiyChapter ? (
+      ) : isNtsiyChapter || isAfter50Chapter ? (
         <ChapterJsonLd
           name={`${seriesChapterNumberLabel(chapter)} — ${chapter.title}`}
-          description={series.seo.description}
+          description={
+            isAfter50Chapter
+              ? (after50MillionChapterDescriptions[chapter.number] ??
+                series.seo.description)
+              : series.seo.description
+          }
           position={chapter.number}
           url={chapterHref(series.id, chapter.pathSlug)}
           workName={series.title}
           workUrl={seriesHref(series.id)}
+          image={
+            isAfter50Chapter ? after50MillionHeroAbsoluteUrl() : undefined
+          }
         />
       ) : (
         <BookJsonLd
@@ -407,14 +461,19 @@ export async function SeriesChapterPage({
               listLabel="All chapters"
               hideNextOnThreshold
             />
-          ) : isNtsiyChapter && bodyHtml ? (
+          ) : (isNtsiyChapter || isAfter50Chapter) && bodyHtml ? (
             <SeriesChapterReader
               bodyHtml={bodyHtml}
               previous={previous}
-              next={next}
+              next={isAfter50Chapter && chapter.pathSlug === "chapter-3" ? null : next}
               seriesId={series.id}
               listHref={seriesHref(series.id)}
               listLabel="All chapters"
+              afterBody={
+                isAfter50Chapter && chapter.pathSlug === "chapter-3" ? (
+                  <After50MillionClosing />
+                ) : undefined
+              }
             />
           ) : bodyHtml ? (
             <ReadingLayout label="Chapter text">
@@ -443,7 +502,7 @@ export async function SeriesChapterPage({
             </div>
           ) : null}
 
-          {!continueReading && !isMiavChapter && !isNtsiyChapter ? (
+          {!continueReading && !isMiavChapter && !isNtsiyChapter && !isAfter50Chapter ? (
             <nav
               aria-label="Chapter navigation"
               className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"

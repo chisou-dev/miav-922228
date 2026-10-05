@@ -6,6 +6,15 @@
 import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
 import { fourthPeriodKindle } from "@/features/stories/fourth-period/store";
 import {
+  after50MillionChapterDescriptions,
+  after50MillionChapterDocumentTitle,
+  after50MillionChapters,
+  after50MillionPreviewNote,
+  after50MillionSummary,
+  after50MillionWorkId,
+} from "@/features/stories/after-50-million/work";
+import { AFTER_50_MILLION_HERO } from "@/features/stories/after-50-million/visual";
+import {
   nextTimeISeeYouChapters,
   nextTimeISeeYouGenre,
   nextTimeISeeYouWorkId,
@@ -54,6 +63,8 @@ export type SeriesChapter = {
   /** URL segment, e.g. chapter-1 */
   pathSlug: string;
   title: string;
+  /** Overrides the default "Chapter {number}" label in lists and chapter chrome. */
+  label?: string;
   /** Optional link into existing MIAV markdown archive by content slug */
   contentSlug?: string;
   /** Placeholder body when no markdown is wired yet */
@@ -82,6 +93,17 @@ export type Series = {
   comingSoon?: boolean;
   /** Optional note for the /works Featured slot */
   worksFeaturedNote?: string;
+  /** Cover for the work page and library card. */
+  cover?: {
+    src: string;
+    width: number;
+    height: number;
+    alt: string;
+  };
+  /** Display language on library cards, e.g. "English". */
+  language?: string;
+  /** Shown with the chapter list when only part of the work is on the site. */
+  previewNote?: string;
   chapters: readonly SeriesChapter[];
 };
 
@@ -318,6 +340,26 @@ export const seriesList: readonly Series[] = [
         },
       },
     ],
+  },
+  {
+    id: after50MillionWorkId,
+    categoryId: "literary-sf",
+    title: "After ¥50 Million",
+    summary: after50MillionSummary,
+    genre: "Literary Fiction",
+    language: "English",
+    previewNote: after50MillionPreviewNote,
+    cover: {
+      src: AFTER_50_MILLION_HERO.path,
+      width: AFTER_50_MILLION_HERO.width,
+      height: AFTER_50_MILLION_HERO.height,
+      alt: AFTER_50_MILLION_HERO.alt,
+    },
+    seo: {
+      title: `After ¥50 Million | ${AUTHOR_NAME}`,
+      description: after50MillionSummary,
+    },
+    chapters: after50MillionChapters,
   },
   {
     id: nextTimeISeeYouWorkId,
@@ -788,6 +830,16 @@ export function getFlashPiece(slug: string): FlashPiece | null {
   return flashPieces.find((p) => p.slug === slug) ?? null;
 }
 
+/** Short flash piece suggested for first-time readers on /works and Start Here. */
+export function getWorksStarterFlash(): FlashPiece | null {
+  const preferred = flashPieces.find((p) => p.slug === "after-the-rain");
+  if (preferred) return preferred;
+  if (flashPieces.length === 0) return null;
+  return flashPieces.reduce((shortest, piece) =>
+    piece.minutes < shortest.minutes ? piece : shortest,
+  );
+}
+
 export function seriesHref(seriesId: string) {
   return `/stories/${seriesId}`;
 }
@@ -823,6 +875,19 @@ export function chapterSeo(
         chapter.number,
         series.seo.description,
       ),
+    };
+  }
+
+  if (series.id === after50MillionWorkId) {
+    return {
+      title: after50MillionChapterDocumentTitle(
+        chapter.number,
+        chapter.title,
+        AUTHOR_NAME,
+      ),
+      description:
+        after50MillionChapterDescriptions[chapter.number] ??
+        series.seo.description,
     };
   }
 

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import {
   categories,
+  flashHref,
   getWorksFeatured,
+  getWorksStarterFlash,
   seriesHref,
   worksBreadcrumbs,
   worksLibrary,
@@ -15,6 +17,7 @@ import {
   type SfSectionVariant,
 } from "@/features/shared/SfSection";
 import { MiavEditionLinks } from "@/features/stories/miav/MiavEditionLinks";
+import { t } from "@/features/shared/i18n";
 
 export const metadata: Metadata = libraryPageMetadata({
   title: worksLibrary.seo.title,
@@ -27,6 +30,7 @@ const CATEGORY_DIVIDERS: readonly SfSectionVariant[] = ["split", "trace"];
 
 export default function WorksPage() {
   const featured = getWorksFeatured();
+  const starterFlash = getWorksStarterFlash();
   const breadcrumbs = worksBreadcrumbs({
     label: worksLibrary.title,
     href: "/works",
@@ -41,9 +45,30 @@ export default function WorksPage() {
         breadcrumbs={breadcrumbs}
         categoryNavHref="/works"
       >
-        {featured ? (
+        {starterFlash ? (
           <div className="pt-2">
             <p className="pt-8 text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase">
+              {t("works.newHereEyebrow")}
+            </p>
+            <p className="mt-3 text-[0.88rem] leading-[1.85] text-[var(--foreground-muted)]">
+              {t("works.newHereLead")}
+            </p>
+            <LibraryListItem
+              href={flashHref(starterFlash.slug)}
+              title={starterFlash.title}
+              meta={t("works.minutesRead", { minutes: starterFlash.minutes })}
+              actionLabel={t("home.featured.readCta")}
+            />
+          </div>
+        ) : null}
+
+        {featured ? (
+          <div className={starterFlash ? undefined : "pt-2"}>
+            <p
+              className={`text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase ${
+                starterFlash ? "pt-10" : "pt-8"
+              }`}
+            >
               Featured
             </p>
             <LibraryListItem

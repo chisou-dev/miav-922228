@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Cockpit placeholder">
+  <rect width="1200" height="900" fill="#050608"/>
+  <path d="M0 0 H1200 V160 H0 Z" fill="#0c0e12"/>
+  <path d="M0 740 H1200 V900 H0 Z" fill="#0c0e12"/>
+  <path d="M0 0 L90 900 H180 L120 0 Z" fill="#101318"/>
+  <path d="M1200 0 L1110 900 H1020 L1080 0 Z" fill="#101318"/>
+  <path d="M520 0 L600 900 L680 0 Z" fill="#0a0c10" opacity="0.65"/>
+  <rect x="200" y="140" width="800" height="560" fill="#030405" opacity="0.15"/>
+</svg>

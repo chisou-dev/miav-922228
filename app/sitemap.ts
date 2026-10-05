@@ -9,6 +9,7 @@ import {
 } from "@/features/library/catalog";
 import { getAllChapters } from "@/features/stories/miav/chapters";
 import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
+import { after50MillionWorkId } from "@/features/stories/after-50-million/work";
 import {
   chapterArchivePath,
   chapterPath,
@@ -175,22 +176,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  const ntsiySeries = seriesList.find((s) => s.id === nextTimeISeeYouWorkId);
-  const ntsiyChapterRoutes: MetadataRoute.Sitemap = ntsiySeries
-    ? ntsiySeries.chapters
+  const indexedStoryIds = new Set([
+    nextTimeISeeYouWorkId,
+    after50MillionWorkId,
+  ]);
+  const storyChapterRoutes: MetadataRoute.Sitemap = seriesList.flatMap(
+    (series) => {
+      if (!indexedStoryIds.has(series.id)) return [];
+      return series.chapters
         .filter((chapter) => chapter.contentSlug && !chapter.continueReading)
         .map((chapter) => ({
-          url: `${baseUrl}${chapterHref(ntsiySeries.id, chapter.pathSlug)}`,
+          url: `${baseUrl}${chapterHref(series.id, chapter.pathSlug)}`,
           lastModified,
           changeFrequency: "monthly" as const,
           priority: 0.72,
-        }))
-    : [];
+        }));
+    },
+  );
 
   return [
     ...staticRoutes,
     ...libraryRoutes,
     ...chapterRoutes,
-    ...ntsiyChapterRoutes,
+    ...storyChapterRoutes,
   ];
 }

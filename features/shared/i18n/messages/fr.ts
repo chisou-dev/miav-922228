@@ -45,8 +45,27 @@ export const fr: MessageCatalog = {
   "home.startTitle": "COMMENCER ICI",
   "home.readTitle": "LIRE",
   "home.readBody":
-    "Des fictions discrètes et centrées sur les personnages—autour des personnes, de la mémoire, des relations, de la technologie et du temps.",
+    "L’archive en ligne des chapitres de MIAV-922228 — lisez dans l’ordre dès le chapitre I, ou parcourez par thème.",
   "home.readEnter": "Entrer dans les œuvres",
+
+  "startHere.pageTitle": "Commencer ici",
+  "startHere.lead": "Première visite ? Choisissez par où commencer.",
+  "startHere.readHeading": "LIRE",
+  "startHere.readBody": "Des histoires que vous pouvez lire tout de suite.",
+  "startHere.readCta": "Commencer à lire",
+  "startHere.playHeading": "JOUER",
+  "startHere.playBody": "Petits jeux de navigateur et expériences.",
+  "startHere.playCta": "Jouer",
+  "startHere.traceHeading": "LAISSER UNE TRACE",
+  "startHere.traceBody": "Ajoutez un petit souvenir à MIAV World.",
+  "startHere.traceCta": "Entrer dans MIAV World",
+  "startHere.seoTitle": "Commencer ici | MIAV-922228",
+  "startHere.seoDescription":
+    "Première visite sur MIAV-922228 ? Lisez, jouez ou laissez une trace sur la carte.",
+
+  "works.newHereEyebrow": "Première visite ?",
+  "works.newHereLead": "Commencez par une nouvelle courte.",
+  "works.minutesRead": "{minutes} min de lecture",
   "home.readChapters": "Chapitres",
   "home.readBooks": "Livres",
   "home.playTitle": "JOUER",

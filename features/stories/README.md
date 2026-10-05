@@ -7,6 +7,7 @@ Growth goes here (`stories/<work>/`), not as new top-level `features/` folders.
 | Work | Status |
 |------|--------|
 | `miav/` | Exists in app today (chapters, book volume, author) |
+| `after-50-million/` | Chapters 1–3 preview |
 | `fourth-period/` | Scaffold until content is added |
 | `japan-8000hz/` | Scaffold until content is added |
 | `monster/` | Scaffold until content is added |

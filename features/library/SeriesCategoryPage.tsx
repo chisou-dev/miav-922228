@@ -53,8 +53,14 @@ export function SeriesCategoryPage({
               <LibraryListItem
                 href={featured.comingSoon ? undefined : seriesHref(featured.id)}
                 title={featured.title}
+                meta={
+                  featured.language
+                    ? `${featured.genre} · ${featured.language}`
+                    : undefined
+                }
                 description={featured.summary}
                 actionLabel={featured.comingSoon ? "Coming Soon." : "Read →"}
+                image={featured.cover}
               />
             </div>
             <SfSection variant="split" aria-label="Other Series">
@@ -71,8 +77,14 @@ export function SeriesCategoryPage({
                     key={series.id}
                     href={series.comingSoon ? undefined : seriesHref(series.id)}
                     title={series.title}
+                    meta={
+                      series.language
+                        ? `${series.genre} · ${series.language}`
+                        : undefined
+                    }
                     description={series.summary}
                     actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
+                    image={series.cover}
                   />
                 ))
               )}
@@ -86,10 +98,13 @@ export function SeriesCategoryPage({
                 href={series.comingSoon ? undefined : seriesHref(series.id)}
                 title={series.title}
                 meta={
-                  series.categoryId === "entertainment-sf"
-                    ? series.genre
-                    : undefined
+                  series.language
+                    ? `${series.genre} · ${series.language}`
+                    : series.categoryId === "entertainment-sf"
+                      ? series.genre
+                      : undefined
                 }
+                image={series.cover}
                 description={series.summary || undefined}
                 actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
               />

@@ -30,6 +30,7 @@ type WorkFields = {
   genre: string;
   url: string;
   inLanguage?: string;
+  image?: string;
   hasPart?: readonly { name: string; position: number; url: string }[];
 };
 
@@ -40,6 +41,7 @@ export function BookJsonLd({
   genre,
   url,
   inLanguage = "en",
+  image,
   hasPart,
 }: WorkFields) {
   return (
@@ -53,6 +55,7 @@ export function BookJsonLd({
         genre,
         inLanguage,
         url: absoluteUrl(url),
+        ...(image ? { image } : {}),
         ...(hasPart && hasPart.length > 0
           ? {
               hasPart: hasPart.map((part) => ({
@@ -100,6 +103,7 @@ type ChapterFields = {
   workName: string;
   workUrl: string;
   inLanguage?: string;
+  image?: string;
 };
 
 /** Schema.org Chapter belonging to MIAV-922228 (or another Book work). */
@@ -111,6 +115,7 @@ export function ChapterJsonLd({
   workName,
   workUrl,
   inLanguage = "en",
+  image,
 }: ChapterFields) {
   return (
     <JsonLdScript
@@ -122,6 +127,7 @@ export function ChapterJsonLd({
         position,
         inLanguage,
         url: absoluteUrl(url),
+        ...(image ? { image } : {}),
         author: authorPerson(),
         isPartOf: {
           "@type": "Book",

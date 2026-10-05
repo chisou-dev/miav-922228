@@ -832,6 +832,47 @@ header .lang-switcher__list {
   }
 }
 
+@keyframes reentry-teaser-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-4deg);
+  }
+}
+
+.reentry-teaser-float {
+  animation: reentry-teaser-float 7s ease-in-out infinite;
+}
+
+@keyframes reentry-intro-guide {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.reentry-intro-guide {
+  animation: reentry-intro-guide 2.8s ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reentry-intro-guide {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reentry-teaser-float {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sf-section:target::before,
   .sf-section:target::after {

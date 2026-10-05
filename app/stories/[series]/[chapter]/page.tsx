@@ -11,6 +11,8 @@ import { miavWorkId } from "@/features/stories/miav/work";
 import { getChapterMetaBySlug } from "@/features/stories/miav/chapters";
 import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/work";
 import { fourthPeriodWorkId } from "@/features/stories/fourth-period/store";
+import { after50MillionWorkId } from "@/features/stories/after-50-million/work";
+import { after50MillionOgMetadataImages } from "@/features/stories/after-50-million/visual";
 
 type Props = {
   params: Promise<{ series: string; chapter: string }>;
@@ -36,12 +38,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const seo = chapterSeo(found.series, found.chapter);
 
-  if (found.series.id === nextTimeISeeYouWorkId) {
+  if (
+    found.series.id === nextTimeISeeYouWorkId ||
+    found.series.id === after50MillionWorkId
+  ) {
     return libraryPageMetadata({
       title: seo.title,
       description: seo.description,
       path: chapterHref(found.series.id, found.chapter.pathSlug),
       ogType: "article",
+      images:
+        found.series.id === after50MillionWorkId
+          ? after50MillionOgMetadataImages()
+          : undefined,
     });
   }
 

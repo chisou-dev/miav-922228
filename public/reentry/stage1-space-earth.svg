@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Earth and space placeholder">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="78%" r="55%">
+      <stop offset="0%" stop-color="#1a2838"/>
+      <stop offset="55%" stop-color="#060a10"/>
+      <stop offset="100%" stop-color="#020306"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6a8aa0" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#2a4050" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#glow)"/>
+  <circle cx="600" cy="980" r="720" fill="#0a1218"/>
+  <circle cx="600" cy="980" r="718" fill="none" stroke="url(#rim)" stroke-width="28"/>
+  <circle cx="420" cy="820" r="3" fill="#c8d4e0" opacity="0.35"/>
+  <circle cx="880" cy="240" r="2" fill="#c8d4e0" opacity="0.25"/>
+  <circle cx="150" cy="180" r="2" fill="#c8d4e0" opacity="0.2"/>
+</svg>

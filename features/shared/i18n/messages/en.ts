@@ -44,8 +44,30 @@ export const en = {
   "home.startTitle": "START HERE",
   "home.readTitle": "READ",
   "home.readBody":
-    "Quiet, character-driven fiction about people, memory, relationships, technology, and time.",
+    "The online chapter archive for MIAV-922228 — read in order from Chapter 1, or browse by theme.",
   "home.readEnter": "Enter Works",
+
+  // start here page (/start-here)
+  "startHere.pageTitle": "Start Here",
+  "startHere.lead": "New here? Choose where you want to begin.",
+  "startHere.readHeading": "READ",
+  "startHere.readBody":
+    "Stories you can start reading right away.",
+  "startHere.readCta": "Start Reading",
+  "startHere.playHeading": "PLAY",
+  "startHere.playBody": "Small browser games and experiments.",
+  "startHere.playCta": "Play a Game",
+  "startHere.traceHeading": "LEAVE A TRACE",
+  "startHere.traceBody": "Add one small memory to MIAV World.",
+  "startHere.traceCta": "Enter MIAV World",
+  "startHere.seoTitle": "Start Here | MIAV-922228",
+  "startHere.seoDescription":
+    "New to MIAV-922228? Choose to read stories, play browser games, or leave a trace on the world map.",
+
+  // works — first-time reader entry
+  "works.newHereEyebrow": "New here?",
+  "works.newHereLead": "Start with a short story.",
+  "works.minutesRead": "{minutes} min read",
   "home.readChapters": "Chapters",
   "home.readBooks": "Books",
   "home.playTitle": "PLAY",
