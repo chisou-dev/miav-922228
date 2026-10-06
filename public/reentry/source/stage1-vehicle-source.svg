@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 520" role="img" aria-label="MIAV lifting-body reentry vehicle">
+  <defs>
+    <linearGradient id="upper" x1="0.2" y1="0" x2="0.85" y2="1">
+      <stop offset="0%" stop-color="#f4f7fa"/>
+      <stop offset="45%" stop-color="#d8e0e8"/>
+      <stop offset="100%" stop-color="#9aa8b5"/>
+    </linearGradient>
+    <linearGradient id="belly" x1="0.5" y1="0.35" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#5a6570"/>
+      <stop offset="55%" stop-color="#2a3238"/>
+      <stop offset="100%" stop-color="#12161a"/>
+    </linearGradient>
+    <linearGradient id="window" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8ec8e8"/>
+      <stop offset="100%" stop-color="#2a4a62"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#soft)">
+    <path d="M160 18 C198 72 214 128 208 188 L196 420 C192 468 176 498 160 504 C144 498 128 468 124 420 L112 188 C106 128 122 72 160 18 Z" fill="url(#upper)"/>
+    <path d="M160 42 C182 88 192 132 188 176 L178 400 C176 440 168 468 160 472 C152 468 144 440 142 400 L132 176 C128 132 138 88 160 42 Z" fill="url(#belly)"/>
+    <path d="M160 56 C172 78 178 98 176 118 L168 148 C166 158 154 158 152 148 L144 118 C142 98 148 78 160 56 Z" fill="url(#window)" opacity="0.95"/>
+    <path d="M128 200 L104 248 L112 256 L136 212 Z" fill="#c8d2dc" opacity="0.85"/>
+    <path d="M192 200 L216 248 L208 256 L184 212 Z" fill="#c8d2dc" opacity="0.85"/>
+    <path d="M118 280 L96 340 L108 348 L128 292 Z" fill="#7a868f" opacity="0.7"/>
+    <path d="M202 280 L224 340 L212 348 L192 292 Z" fill="#7a868f" opacity="0.7"/>
+    <ellipse cx="160" cy="430" rx="28" ry="10" fill="#1a2026" opacity="0.55"/>
+    <path d="M148 438 L160 452 L172 438" fill="none" stroke="#ff9040" stroke-width="3" opacity="0.35" stroke-linecap="round"/>
+  </g>
+</svg>

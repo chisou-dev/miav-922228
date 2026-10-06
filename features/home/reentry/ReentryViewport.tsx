@@ -51,7 +51,7 @@ export function ReentryViewport(state: ReentryDrawState) {
       return (
         <ReentryScene
           phase={state.phase}
-          aimingPull={state.aimingPull}
+          aimingPull={state.aimingPull ?? null}
           result={state.result}
           flightProgress={state.flightProgress}
         />
@@ -65,7 +65,7 @@ export function ReentryViewport(state: ReentryDrawState) {
       fallback={
         <ReentryScene
           phase={state.phase}
-          aimingPull={state.aimingPull}
+          aimingPull={state.aimingPull ?? null}
           result={state.result}
           flightProgress={state.flightProgress}
         />

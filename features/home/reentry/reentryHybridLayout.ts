@@ -17,6 +17,7 @@ import {
   craftEarthTravelT,
   craftPositionPercent,
 } from "./reentrySceneLayout";
+import { vehicleStageRotationDeg } from "./reentryVehiclePresentation";
 
 export interface HybridLayerStyle {
   background: {
@@ -51,6 +52,7 @@ export function computeHybridLayers(input: {
   result: ReentryResult | null;
   flightProgress: number;
   variant: "preview" | "stage";
+  angleNorm?: number;
 }): HybridLayerStyle {
   const playback =
     input.phase === "result"
@@ -86,7 +88,8 @@ export function computeHybridLayers(input: {
   const mix = cameraMix(playback, outcome ?? "BURN");
   const interior = mix.interior;
 
-  const idle = input.phase === "ready" || input.phase === "aiming";
+  const idle = input.phase === "power" || input.phase === "angle";
+  const angleNorm = input.angleNorm ?? 0.5;
   const isPreview = input.variant === "preview";
   const earthScale = earthBackgroundScale({
     phase: input.phase,
@@ -128,9 +131,12 @@ export function computeHybridLayers(input: {
   const vehicleY = pos.y + wobble * 0.12;
   const vehicleScale =
     vehArt.baseScale * (idle ? 1 : 1 + tint.glow * 0.04 * mix.exterior);
-  const vehicleRot =
-    REENTRY_SCENE.craftRotateTowardEarthDeg +
-    (idle ? 0 : playback * 1.5 + wobble * 0.4);
+  const flightWobble = idle ? 0 : playback * 1.5 + wobble * 0.4;
+  const vehicleRot = vehicleStageRotationDeg(
+    input.variant,
+    angleNorm,
+    flightWobble,
+  );
 
   const breaking =
     outcome === "BREAK" &&
@@ -181,7 +187,9 @@ export function computeHybridLayers(input: {
             }px rgba(${tint.r},${tint.g},${tint.b},${
               0.35 + tint.glow * 0.45
             }))`
-          : "none",
+          : idle
+            ? REENTRY_ART.vehicle.idleRimShadow
+            : "none",
     },
     cockpit: { opacity: cockpitOpacity },
     heatWindow: { opacity: heatAlpha, background: heatBg },

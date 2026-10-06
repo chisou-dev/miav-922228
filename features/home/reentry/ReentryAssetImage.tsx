@@ -22,6 +22,8 @@ export function ReentryAssetImage({
   loading?: "lazy" | "eager";
 }) {
   const [src, setSrc] = useState<string>(REENTRY_ASSET_PATHS[asset]);
+  const resolved =
+    src === REENTRY_ASSET_PATHS[asset] ? "webp" : "svg-fallback";
 
   return (
     // eslint-disable-next-line @next/next/no-img-element -- replaceable static art under /public/reentry
@@ -33,6 +35,8 @@ export function ReentryAssetImage({
       loading={loading}
       decoding="async"
       draggable={false}
+      data-reentry-asset={asset}
+      data-reentry-resolved={resolved}
       onError={() => {
         if (src !== REENTRY_ASSET_FALLBACK[asset]) {
           setSrc(REENTRY_ASSET_FALLBACK[asset]);

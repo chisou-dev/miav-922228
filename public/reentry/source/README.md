@@ -18,3 +18,23 @@ node scripts/prepare-reentry-earth.mjs
 ```
 
 Output: `../stage1-space-earth.webp` (served path `/reentry/stage1-space-earth.webp`).
+
+## `stage1-vehicle.webp`
+
+| Field | Value |
+|--------|--------|
+| **Source** | `stage1-vehicle-source.jpg` (or `.png` / legacy `.svg`) — fictional reentry craft, not a NASA vehicle copy |
+| **Prepared** | 2026-10-06 (final art pass) |
+| **Processing** | Resize to ~768×1280, dark-background key-out → WebP q≈90 with alpha |
+
+Drop a new painted source file in this folder, then:
+
+```bash
+node scripts/prepare-reentry-vehicle.mjs
+```
+
+Output: `../stage1-vehicle.webp` (`/reentry/stage1-vehicle.webp`). **Image up = nose.** Tune `craftNoseRotationOffsetDeg` in `reentrySceneLayout.ts` if the asset changes.
+
+## `stage1-space-earth.webp` (2026-10-06)
+
+Earth is **composited** on stage-black `#020304` (~18% frame width at lower-left) with a soft limb mask so the texture has no visible rectangular panel edge in the stage.

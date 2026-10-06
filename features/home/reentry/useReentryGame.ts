@@ -3,26 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { simulateReentry } from "./reentryPhysics";
 import { flightDurationMs } from "./reentryPlayback";
-import {
-  mapPullToInput,
-  pullTowardEarthPx,
-  type AimingPull,
-} from "./reentryAimInput";
+import { mapLaunchToInput } from "./reentryLaunchInput";
 import { useReentryDevPreset } from "./useReentryDevPreset";
 import type {
   ReentryPhase,
   ReentryPlayRecord,
   ReentryResult,
 } from "./reentryTypes";
-import {
-  craftAnchorClient,
-  isPointerOnCraft,
-} from "./reentrySceneLayout";
 
-export type { AimingPull } from "./reentryAimInput";
+const POWER_CYCLE_MS = 4400;
+const POWER_STEPS = 52;
 
-const MIN_PULL_PX = 24;
-const MIN_TOWARD_EARTH_PX = 14;
+export function powerOscillatorNorm(now: number, cycleStartMs: number): number {
+  const t = ((now - cycleStartMs) % POWER_CYCLE_MS) / POWER_CYCLE_MS;
+  const tri = t < 0.5 ? t * 2 : 2 - t * 2;
+  const stepped = Math.round(tri * (POWER_STEPS - 1)) / (POWER_STEPS - 1);
+  return stepped;
+}
 
 export function createReentrySeed(): number {
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
@@ -34,9 +31,11 @@ export function createReentrySeed(): number {
 }
 
 export function useReentryGame(options?: { onFlightStart?: () => void }) {
-  const [phase, setPhase] = useState<ReentryPhase>("ready");
+  const [phase, setPhase] = useState<ReentryPhase>("power");
   const [seed, setSeed] = useState(() => createReentrySeed());
-  const [aimingPull, setAimingPull] = useState<AimingPull | null>(null);
+  const [powerOscillator, setPowerOscillator] = useState(0);
+  const [lockedPowerNorm, setLockedPowerNorm] = useState<number | null>(null);
+  const [angleNorm, setAngleNorm] = useState(0.5);
   const [result, setResult] = useState<ReentryResult | null>(null);
   const [playRecord, setPlayRecord] = useState<ReentryPlayRecord | null>(
     null,
@@ -44,10 +43,14 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
   const [flightProgress, setFlightProgress] = useState(0);
 
   const surfaceRef = useRef<HTMLDivElement | null>(null);
+  const powerCycleStartRef = useRef(0);
+  const angleDragRef = useRef<{ startY: number; startNorm: number } | null>(
+    null,
+  );
   const activePointerId = useRef<number | null>(null);
-  const aimingPullRef = useRef<AimingPull | null>(null);
   const flightStartRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
+  const powerRafRef = useRef<number | null>(null);
 
   const stopFlightLoop = useCallback(() => {
     if (rafRef.current !== null) {
@@ -57,7 +60,37 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
     flightStartRef.current = null;
   }, []);
 
-  useEffect(() => () => stopFlightLoop(), [stopFlightLoop]);
+  const stopPowerLoop = useCallback(() => {
+    if (powerRafRef.current !== null) {
+      cancelAnimationFrame(powerRafRef.current);
+      powerRafRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    powerCycleStartRef.current = performance.now();
+  }, []);
+
+  useEffect(
+    () => () => {
+      stopFlightLoop();
+      stopPowerLoop();
+    },
+    [stopFlightLoop, stopPowerLoop],
+  );
+
+  useEffect(() => {
+    if (phase !== "power") {
+      stopPowerLoop();
+      return;
+    }
+    const tick = (now: number) => {
+      setPowerOscillator(powerOscillatorNorm(now, powerCycleStartRef.current));
+      powerRafRef.current = requestAnimationFrame(tick);
+    };
+    powerRafRef.current = requestAnimationFrame(tick);
+    return () => stopPowerLoop();
+  }, [phase, stopPowerLoop]);
 
   const setSeedState = useCallback((next: number) => setSeed(next), []);
 
@@ -105,141 +138,117 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
     stopFlightLoop();
     setResult(null);
     setPlayRecord(null);
-    setAimingPull(null);
+    setLockedPowerNorm(null);
+    setAngleNorm(0.5);
     setFlightProgress(0);
     setSeed(createReentrySeed());
-    setPhase("ready");
+    powerCycleStartRef.current = performance.now();
+    setPowerOscillator(0);
+    setPhase("power");
   }, [stopFlightLoop]);
 
-  const getSurfaceSize = useCallback(() => {
-    const el = surfaceRef.current;
-    if (!el) return { width: 1, height: 1 };
-    const rect = el.getBoundingClientRect();
-    return {
-      width: Math.max(1, rect.width),
-      height: Math.max(1, rect.height),
+  const lockPower = useCallback(() => {
+    if (phase !== "power") return;
+    const locked = powerOscillatorNorm(
+      performance.now(),
+      powerCycleStartRef.current,
+    );
+    setLockedPowerNorm(locked);
+    setPhase("angle");
+  }, [phase]);
+
+  const launch = useCallback(() => {
+    if (phase !== "angle" || lockedPowerNorm === null) return;
+    const input = mapLaunchToInput(lockedPowerNorm, angleNorm, seed);
+    const simStarted = performance.now();
+    const simResult = simulateReentry(input);
+    if (surfaceRef.current) {
+      surfaceRef.current.dataset.simMs = (
+        performance.now() - simStarted
+      ).toFixed(1);
+    }
+    const record: ReentryPlayRecord = {
+      input,
+      seed,
+      version: simResult.version,
     };
-  }, []);
+    beginFlight(simResult, record);
+  }, [angleNorm, beginFlight, lockedPowerNorm, phase, seed]);
+
+  const nudgeAngle = useCallback((delta: number) => {
+    if (phase !== "angle") return;
+    setAngleNorm((n) => Math.min(1, Math.max(0, n + delta)));
+  }, [phase]);
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (phase !== "ready" && phase !== "aiming") return;
+      if (phase !== "angle") return;
       if (activePointerId.current !== null) return;
-
-      const el = surfaceRef.current;
-      const rect = el?.getBoundingClientRect();
-      if (!rect || !isPointerOnCraft(event.clientX, event.clientY, rect)) {
-        return;
-      }
-
       activePointerId.current = event.pointerId;
       event.currentTarget.setPointerCapture(event.pointerId);
-      const anchor = craftAnchorClient(rect);
-      const pull = {
-        startX: anchor.x,
-        startY: anchor.y,
-        currentX: anchor.x,
-        currentY: anchor.y,
+      angleDragRef.current = {
+        startY: event.clientY,
+        startNorm: angleNorm,
       };
-      aimingPullRef.current = pull;
-      setAimingPull(pull);
-      setPhase("aiming");
     },
-    [phase],
+    [angleNorm, phase],
   );
 
   const onPointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (activePointerId.current !== event.pointerId) return;
-      const prev = aimingPullRef.current;
-      if (phase !== "aiming" || !prev) return;
-      const next = {
-        ...prev,
-        currentX: event.clientX,
-        currentY: event.clientY,
-      };
-      aimingPullRef.current = next;
-      setAimingPull(next);
+      const drag = angleDragRef.current;
+      if (!drag || phase !== "angle") return;
+      const dy = event.clientY - drag.startY;
+      const span = Math.max(120, window.innerHeight * 0.22);
+      setAngleNorm(
+        Math.min(1, Math.max(0, drag.startNorm + dy / span)),
+      );
     },
     [phase],
   );
 
-  const finishAiming = useCallback(
+  const releasePointer = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (activePointerId.current !== event.pointerId) return;
-      event.currentTarget.releasePointerCapture(event.pointerId);
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        /* already released */
+      }
       activePointerId.current = null;
-
-      const pull = aimingPullRef.current;
-      aimingPullRef.current = null;
-      setAimingPull(null);
-
-      if (!pull || phase !== "aiming") {
-        setPhase("ready");
-        return;
-      }
-
-      const length = Math.hypot(
-        pull.currentX - pull.startX,
-        pull.currentY - pull.startY,
-      );
-      const toward = pullTowardEarthPx(pull);
-      if (length < MIN_PULL_PX || toward < MIN_TOWARD_EARTH_PX) {
-        setPhase("ready");
-        return;
-      }
-
-      const { width, height } = getSurfaceSize();
-      const input = mapPullToInput(pull, seed, width, height);
-      const simStarted = performance.now();
-      const simResult = simulateReentry(input);
-      if (surfaceRef.current) {
-        surfaceRef.current.dataset.simMs = (
-          performance.now() - simStarted
-        ).toFixed(1);
-      }
-      const record: ReentryPlayRecord = {
-        input,
-        seed,
-        version: simResult.version,
-      };
-      beginFlight(simResult, record);
+      angleDragRef.current = null;
     },
-    [beginFlight, getSurfaceSize, phase, seed],
+    [],
   );
 
   const onPointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      finishAiming(event);
+      releasePointer(event);
     },
-    [finishAiming],
+    [releasePointer],
   );
 
   const onPointerCancel = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (activePointerId.current === event.pointerId) {
-        try {
-          event.currentTarget.releasePointerCapture(event.pointerId);
-        } catch {
-          /* already released */
-        }
-        activePointerId.current = null;
-      }
-      aimingPullRef.current = null;
-      setAimingPull(null);
-      if (phase === "aiming") setPhase("ready");
+      releasePointer(event);
     },
-    [phase],
+    [releasePointer],
   );
 
   return {
     phase,
     seed,
-    aimingPull,
+    powerOscillator,
+    lockedPowerNorm,
+    angleNorm,
     result,
     playRecord,
     flightProgress,
     surfaceRef,
+    lockPower,
+    launch,
+    nudgeAngle,
     onPointerDown,
     onPointerMove,
     onPointerUp,

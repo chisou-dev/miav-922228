@@ -1,3 +1,4 @@
+import { REENTRY_PRESENTATION } from "./reentryArtPresentation";
 import type { ReentryOutcome } from "./reentryTypes";
 
 /** Wall-clock flight playback — physics is unchanged. */
@@ -6,17 +7,17 @@ export function flightDurationMs(outcome: ReentryOutcome): number {
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) {
-    if (outcome === "EARTH_REACHED") return 4200;
-    return 3600;
+    if (outcome === "EARTH_REACHED") return 7000;
+    return 6000;
   }
   switch (outcome) {
     case "EARTH_REACHED":
-      return 9000;
+      return 14000;
     case "SKIP":
     case "BURN":
     case "BREAK":
     default:
-      return 8000;
+      return 12000;
   }
 }
 
@@ -61,6 +62,9 @@ export function cameraMix(
   playback: number,
   outcome: ReentryOutcome,
 ): CameraMix {
+  if (REENTRY_PRESENTATION.exteriorOnly) {
+    return { interior: 0, exterior: 1 };
+  }
   const t = clamp01(playback);
   /** Exterior until Earth reads ~⅓–½ frame, then cockpit. */
   const cockpitIn = 0.45;

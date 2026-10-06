@@ -2,16 +2,14 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ReentryHybridStage } from "./ReentryHybridStage";
+import { ReentryLaunchControls } from "./ReentryLaunchControls";
 import { ReentryShellProvider } from "./reentryShellContext";
 import { useBodyScrollLock } from "./useBodyScrollLock";
 import { useReentryGame } from "./useReentryGame";
 import type { ReentryOutcome } from "./reentryTypes";
 import { REENTRY_ART } from "./reentryArtPresentation";
 import { REENTRY_SCENE } from "./reentrySceneLayout";
-import {
-  preloadReentryCockpitAsset,
-  preloadReentryPreviewAssets,
-} from "./reentryAssets";
+import { preloadReentryPreviewAssets } from "./reentryAssets";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)]";
@@ -28,14 +26,14 @@ function devPresetRequiresExpand(): boolean {
 }
 
 const previewDrawState = {
-  phase: "ready" as const,
+  phase: "power" as const,
   result: null,
   flightProgress: 0,
-  aimingPull: null,
+  angleNorm: 0.5,
   seed: 0,
 };
 
-const FS_HINT_KEY = "miav_reentry_fs_hint_v1";
+const FS_HINT_KEY = "miav_reentry_fs_hint_v2";
 
 export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const [expanded, setExpanded] = useState(() =>
@@ -68,16 +66,20 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
   const onFlightStart = useCallback(() => {
     setExpanded(true);
-    void preloadReentryCockpitAsset();
   }, []);
 
   const {
     phase,
     seed,
-    aimingPull,
+    powerOscillator,
+    lockedPowerNorm,
+    angleNorm,
     result,
     flightProgress,
     surfaceRef,
+    lockPower,
+    launch,
+    nudgeAngle,
     onPointerDown,
     onPointerMove,
     onPointerUp,
@@ -91,24 +93,17 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     phase,
     result,
     flightProgress,
-    aimingPull,
+    angleNorm,
     seed,
   };
 
-  const pulling = expanded && (phase === "ready" || phase === "aiming");
+  const angleAdjusting = expanded && phase === "angle";
   const showEffects =
     expanded && (phase === "flight" || phase === "result");
-  const showCockpitAssets =
-    expanded &&
-    (phase === "ready" ||
-      phase === "aiming" ||
-      phase === "flight" ||
-      phase === "result");
 
   const openExpanded = useCallback(() => {
     setExpanded(true);
     void preloadReentryPreviewAssets();
-    void preloadReentryCockpitAsset();
     try {
       if (!sessionStorage.getItem(FS_HINT_KEY)) {
         setShowFsHint(true);
@@ -205,7 +200,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
           <div
             ref={surfaceRef}
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
-            style={{ touchAction: pulling ? "none" : "auto" }}
+            style={{ touchAction: angleAdjusting ? "none" : "auto" }}
             {...surfaceHandlers}
             role="application"
           >
@@ -213,15 +208,27 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               state={fullscreenState}
               variant="stage"
               showEffects={showEffects}
-              showCockpitAssets={showCockpitAssets}
+              showCockpitAssets={false}
               showGuides
               showStars
-              showIntroPulse={showIntroPulse && phase === "ready"}
+              showIntroPulse={showIntroPulse && phase === "power"}
             />
 
-            {showFsHint && phase === "ready" && (
+            <ReentryLaunchControls
+              phase={phase}
+              powerOscillator={powerOscillator}
+              lockedPowerNorm={lockedPowerNorm}
+              onLockPower={() => {
+                dismissFsHints();
+                lockPower();
+              }}
+              onLaunch={launch}
+              onNudgeAngle={nudgeAngle}
+            />
+
+            {showFsHint && phase === "power" && (
               <p
-                className="pointer-events-none absolute inset-x-0 bottom-[10%] z-[3] text-center text-[0.62rem] tracking-[0.14em] text-[var(--foreground-muted)] transition-opacity duration-700 sm:text-[0.68rem] opacity-80"
+                className="pointer-events-none absolute inset-x-0 bottom-[26%] z-[3] text-center text-[0.62rem] tracking-[0.14em] text-[var(--foreground-muted)] transition-opacity duration-700 sm:text-[0.68rem] opacity-80"
               >
                 {REENTRY_SCENE.hintText}
               </p>

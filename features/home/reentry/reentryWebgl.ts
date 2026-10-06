@@ -1,4 +1,4 @@
-import type { AimingPull } from "./useReentryGame";
+import type { AimingPull } from "./reentryAimInput";
 import type { ReentryPhase, ReentryResult } from "./reentryTypes";
 import {
   cameraMix,
@@ -24,8 +24,10 @@ export interface ReentryDrawState {
   phase: ReentryPhase;
   result: ReentryResult | null;
   flightProgress: number;
-  aimingPull: AimingPull | null;
+  /** Legacy drag aim — unused in power/angle launch UI. */
+  aimingPull?: AimingPull | null;
   seed: number;
+  angleNorm?: number;
   /** Static image layers behind canvas; WebGL draws effects only. */
   hybridMode?: boolean;
 }
@@ -542,7 +544,7 @@ export class ReentryGL {
     gl.enable(gl.DEPTH_TEST);
     gl.depthMask(true);
 
-    const idle = state.phase === "ready" || state.phase === "aiming";
+    const idle = state.phase === "power" || state.phase === "angle";
     if (!hybrid) {
       const earthM = idle
         ? multiply(
@@ -597,9 +599,6 @@ export class ReentryGL {
       mix,
       reduced,
     );
-    if (state.phase === "aiming" && state.aimingPull) {
-      this.drawGuide(state.aimingPull, world, viewProj);
-    }
     this.drawCockpitOverlay(
       mix.interior,
       tint,
@@ -635,7 +634,7 @@ export class ReentryGL {
     stress: number,
     reduced: boolean,
   ): Vec3 {
-    if (state.phase === "ready" || state.phase === "aiming" || reduced) {
+    if (state.phase === "power" || state.phase === "angle" || reduced) {
       return {
         x: VISUAL.readyCamera.x,
         y: VISUAL.readyCamera.y,

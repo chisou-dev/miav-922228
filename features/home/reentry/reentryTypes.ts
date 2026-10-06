@@ -1,4 +1,4 @@
-export type ReentryPhase = "ready" | "aiming" | "flight" | "result";
+export type ReentryPhase = "power" | "angle" | "flight" | "result";
 
 export type ReentryOutcome =
   | "SKIP"

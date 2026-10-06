@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { ReentryAssetImage } from "./ReentryAssetImage";
 import { REENTRY_ART } from "./reentryArtPresentation";
+import { vehicleTeaserRotationDeg } from "./reentryVehiclePresentation";
 import { preloadReentryVehicleAsset } from "./reentryAssets";
 
 export function ReentryMobileTeaser({
@@ -26,6 +27,7 @@ export function ReentryMobileTeaser({
           asset="vehicle"
           alt=""
           className={`${REENTRY_ART.mobileTeaser.vehicleClass} object-contain opacity-90 transition-opacity group-hover:opacity-100`}
+          style={{ transform: `rotate(${vehicleTeaserRotationDeg()}deg)` }}
           loading="eager"
         />
       </span>

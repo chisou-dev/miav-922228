@@ -3,6 +3,11 @@
  * Swap files under `public/reentry/*.webp` — do not change physics for art.
  */
 
+/** Presentation flags — cockpit code remains but is not shown when exterior-only. */
+export const REENTRY_PRESENTATION = {
+  exteriorOnly: true,
+} as const;
+
 export const REENTRY_ART = {
   /** Tailwind classes for the desktop right-column preview frame (aspect / max height). */
   desktopPreviewFrameClass:
@@ -16,13 +21,14 @@ export const REENTRY_ART = {
 
   background: {
     /** Distant limb ~20–30% frame width; zoom grows via transform scale. */
-    objectPosition: "24% 92%",
+    /** Earth limb is composed into the WebP at lower-left; center the stage texture. */
+    objectPosition: "50% 50%",
     earthScale: {
-      distant: 0.5,
-      near: 1.34,
+      distant: 1,
+      near: 1.42,
     },
     objectFit: "cover" as const,
-    bleedPercent: 8,
+    bleedPercent: 36,
     preview: {
       scale: 0.86,
       offsetXPercent: 5,
@@ -30,10 +36,10 @@ export const REENTRY_ART = {
       brightness: 0.96,
     },
     stage: {
-      scale: 0.5,
-      offsetXPercent: 2,
-      offsetYPercent: 6,
-      brightness: 0.94,
+      scale: 1,
+      offsetXPercent: 0,
+      offsetYPercent: 0,
+      brightness: 0.92,
     },
     flight: {
       scaleGain: 0,
@@ -45,19 +51,26 @@ export const REENTRY_ART = {
 
   vehicle: {
     preview: {
-      baseScale: 0.48,
-      widthClamp: "min(40%, 5.5rem)",
+      baseScale: 0.56,
+      widthClamp: "min(46%, 6.5rem)",
+      rotationOffsetDeg: 0,
     },
     stage: {
-      baseScale: 0.66,
-      widthClamp: "min(36%, 9rem)",
+      baseScale: 0.88,
+      widthClamp: "min(46%, 12.5rem)",
+      rotationOffsetDeg: 0,
     },
-    heatGlowDropShadowMaxPx: 22,
+    teaser: {
+      rotationOffsetDeg: 0,
+    },
+    heatGlowDropShadowMaxPx: 32,
+    idleRimShadow:
+      "drop-shadow(-3px 6px 10px rgba(0,0,0,0.65)) drop-shadow(0 0 18px rgba(130,175,225,0.28))",
   },
 
   mobileTeaser: {
     buttonClass: "h-14 w-14",
-    vehicleClass: "h-9 w-9",
+    vehicleClass: "h-11 w-11",
   },
 } as const;
 

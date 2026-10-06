@@ -1,15 +1,32 @@
 import type { ReentryArtVariant } from "./reentryArtPresentation";
+import { anglePresentationOffsetDeg } from "./reentryLaunchInput";
 
 /** Percent coordinates within the stage (0–100). Earth = destination, craft = start. */
 export const REENTRY_SCENE = {
   earth: { x: 24, y: 74 },
-  craft: { x: 76, y: 24 },
-  /** Sprite nose points up at 0°; rotate to aim at Earth. */
-  craftRotateTowardEarthDeg: 44,
-  hintText: "Drag toward Earth",
+  craft: { x: 73, y: 22 },
+  hintText: "Lock power, set angle, launch",
   /** Pointer hit radius around craft anchor (fraction of min stage dimension). */
   craftHitRadiusFactor: 0.14,
+  /** Tune when swapping vehicle art (nose is up in `stage1-vehicle.webp`). */
+  /** Global nose trim after swapping `stage1-vehicle.webp` (visual, not physics). */
+  craftNoseRotationOffsetDeg: -6,
 } as const;
+
+/** Sprite nose points up at 0° in asset space; rotate to fly toward Earth. */
+export function craftBaseNoseRotationDeg(): number {
+  const { earth, craft } = REENTRY_SCENE;
+  const rad = Math.atan2(earth.y - craft.y, earth.x - craft.x);
+  return (rad * 180) / Math.PI + 90 + REENTRY_SCENE.craftNoseRotationOffsetDeg;
+}
+
+export function craftNoseRotationDeg(angleNorm: number, flightWobbleDeg = 0): number {
+  return (
+    craftBaseNoseRotationDeg() +
+    anglePresentationOffsetDeg(angleNorm) +
+    flightWobbleDeg
+  );
+}
 
 export function craftHitRadiusPx(rect: DOMRect): number {
   return Math.min(rect.width, rect.height) * REENTRY_SCENE.craftHitRadiusFactor;

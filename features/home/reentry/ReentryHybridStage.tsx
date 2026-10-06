@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { ReentryAssetImage } from "./ReentryAssetImage";
+import { ReentryEarthLayer } from "./ReentryEarthLayer";
 import { REENTRY_ART } from "./reentryArtPresentation";
 import { computeHybridLayers } from "./reentryHybridLayout";
 import {
@@ -54,6 +55,7 @@ export function ReentryHybridStage({
     result: state.result,
     flightProgress: state.flightProgress,
     variant,
+    angleNorm: state.angleNorm ?? 0.5,
   });
   void motionTick;
 
@@ -72,7 +74,6 @@ export function ReentryHybridStage({
       ? REENTRY_ART.vehicle.preview.widthClamp
       : REENTRY_ART.vehicle.stage.widthClamp;
 
-  const bleed = REENTRY_ART.background.bleedPercent;
   const drawState: ReentryDrawState = {
     ...state,
     hybridMode: showEffects,
@@ -88,25 +89,11 @@ export function ReentryHybridStage({
         } as CSSProperties
       }
     >
-      <div
-        className="absolute transition-transform duration-300 will-change-transform"
-        style={{
-          inset: `-${bleed}%`,
-          transform: layers.background.transform,
-          filter: layers.background.filter,
-        }}
-      >
-        <ReentryAssetImage
-          asset="spaceEarth"
-          alt=""
-          className="h-full w-full"
-          style={{
-            objectFit: REENTRY_ART.background.objectFit,
-            objectPosition: REENTRY_ART.background.objectPosition,
-          }}
-          loading={variant === "preview" ? "eager" : "lazy"}
-        />
-      </div>
+      <ReentryEarthLayer
+        transform={layers.background.transform}
+        filter={layers.background.filter}
+        loading={variant === "preview" ? "eager" : "lazy"}
+      />
 
       {showStars && (
         <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
@@ -122,7 +109,7 @@ export function ReentryHybridStage({
 
       <ReentrySceneOverlay
         phase={state.phase}
-        aimingPull={state.aimingPull}
+        angleNorm={state.angleNorm ?? 0.5}
         flightProgress={state.flightProgress}
         interior={layers.interior}
         variant={variant}

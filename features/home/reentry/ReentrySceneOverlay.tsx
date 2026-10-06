@@ -1,21 +1,25 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
-import type { AimingPull } from "./reentryAimInput";
 import type { ReentryPhase } from "./reentryTypes";
 import {
   REENTRY_SCENE,
-  anchorToPercent,
   craftEarthTravelT,
+  craftNoseRotationDeg,
   craftPositionPercent,
 } from "./reentrySceneLayout";
 import type { ReentryArtVariant } from "./reentryArtPresentation";
 
-type StageLayout = { w: number; h: number; left: number; top: number };
+function noseGuideEnd(angleNorm: number, length = 20): { x: number; y: number } {
+  const craft = REENTRY_SCENE.craft;
+  const rad = (craftNoseRotationDeg(angleNorm, 0) * Math.PI) / 180;
+  const dx = Math.sin(rad) * length;
+  const dy = -Math.cos(rad) * length;
+  return { x: craft.x + dx, y: craft.y + dy };
+}
 
 export function ReentrySceneOverlay({
   phase,
-  aimingPull,
+  angleNorm,
   flightProgress,
   interior,
   variant,
@@ -23,34 +27,13 @@ export function ReentrySceneOverlay({
   showIntroPulse,
 }: {
   phase: ReentryPhase;
-  aimingPull: AimingPull | null;
+  angleNorm: number;
   flightProgress: number;
   interior: number;
   variant: ReentryArtVariant;
   showGuides: boolean;
   showIntroPulse?: boolean;
 }) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState<StageLayout>({
-    w: 1,
-    h: 1,
-    left: 0,
-    top: 0,
-  });
-
-  useLayoutEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const update = () => {
-      const r = el.getBoundingClientRect();
-      setLayout({ w: r.width, h: r.height, left: r.left, top: r.top });
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   if (!showGuides) return null;
 
   const showTrajectory = phase === "flight" || phase === "result";
@@ -58,35 +41,14 @@ export function ReentrySceneOverlay({
   const craftPos = craftPositionPercent(travelT, variant);
   const earth = REENTRY_SCENE.earth;
   const craft = REENTRY_SCENE.craft;
-
-  const aimLine =
-    phase === "aiming" && aimingPull && layout.w > 1
-      ? (() => {
-          const rect = {
-            left: layout.left,
-            top: layout.top,
-            width: layout.w,
-            height: layout.h,
-          } as DOMRect;
-          const end = anchorToPercent(
-            rect,
-            aimingPull.currentX,
-            aimingPull.currentY,
-          );
-          return {
-            x1: craft.x,
-            y1: craft.y,
-            x2: end.x,
-            y2: end.y,
-          };
-        })()
-      : null;
+  const guideEnd = noseGuideEnd(angleNorm);
+  const showAngleGuide = phase === "angle";
 
   const rimX = earth.x;
   const rimY = earth.y - 5;
 
   return (
-    <div ref={rootRef} className="pointer-events-none absolute inset-0 z-[2]">
+    <div className="pointer-events-none absolute inset-0 z-[2]">
       <svg
         className="h-full w-full"
         viewBox="0 0 100 100"
@@ -112,7 +74,7 @@ export function ReentrySceneOverlay({
           strokeWidth="0.2"
         />
 
-        {showIntroPulse && phase === "ready" && (
+        {showIntroPulse && phase === "power" && (
           <line
             x1={craft.x}
             y1={craft.y}
@@ -122,6 +84,18 @@ export function ReentrySceneOverlay({
             stroke="rgba(190,205,220,0.28)"
             strokeWidth="0.3"
             strokeDasharray="1.5 2"
+          />
+        )}
+
+        {showAngleGuide && (
+          <line
+            x1={craft.x}
+            y1={craft.y}
+            x2={guideEnd.x}
+            y2={guideEnd.y}
+            stroke="rgba(200,215,230,0.38)"
+            strokeWidth="0.28"
+            strokeDasharray="1.2 1.8"
           />
         )}
 
@@ -141,24 +115,6 @@ export function ReentrySceneOverlay({
               cy={craftPos.y}
               r="0.55"
               fill="rgba(210,218,228,0.35)"
-            />
-          </>
-        )}
-        {aimLine && (
-          <>
-            <line
-              x1={aimLine.x1}
-              y1={aimLine.y1}
-              x2={aimLine.x2}
-              y2={aimLine.y2}
-              stroke="rgba(210,220,230,0.42)"
-              strokeWidth="0.28"
-            />
-            <circle
-              cx={aimLine.x2}
-              cy={aimLine.y2}
-              r="0.55"
-              fill="rgba(220,228,235,0.5)"
             />
           </>
         )}

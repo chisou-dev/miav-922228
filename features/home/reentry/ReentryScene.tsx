@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { AimingPull } from "./useReentryGame";
+import type { AimingPull } from "./reentryAimInput";
 import type { ReentryFrame, ReentryPhase, ReentryResult } from "./reentryTypes";
 
 const HEAT_FLUX_VIS_MAX = 2.5e6;
@@ -171,20 +171,6 @@ function drawScene(
     integrity = frame.integrity;
   }
 
-  if (phase === "aiming" && aimingPull) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(244, 239, 228, 0.28)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 6]);
-    ctx.beginPath();
-    ctx.moveTo(craftBaseX, craftBaseY);
-    const pullDx = aimingPull.currentX - aimingPull.startX;
-    const pullDy = aimingPull.currentY - aimingPull.startY;
-    ctx.lineTo(craftBaseX + pullDx, craftBaseY + pullDy);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-  }
 
   const drawCraft = (x: number, y: number, alpha: number, glow: number) => {
     ctx.save();
