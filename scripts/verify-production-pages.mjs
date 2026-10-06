@@ -8,9 +8,25 @@
  */
 
 const APEX_BASE = "https://miav-922228.com";
-const PATHS = ["/", "/start-here", "/works", "/flash/after-the-rain"];
+const PATHS = [
+  "/",
+  "/start-here",
+  "/works",
+  "/flash/after-the-rain",
+  "/world-map",
+];
 const REDIRECT_STATUSES = new Set([301, 302, 307, 308]);
 const MAX_REDIRECTS = 12;
+
+/** English UI markers for hidden world activity stats (SHOW_WORLD_ACTIVITY_STATS = false). */
+const HIDDEN_WORLD_ACTIVITY_MARKERS = [
+  "Latest Memory",
+  "Places with Memories",
+  "Total Memories",
+  "Permanent Memories",
+  "Guest Memories",
+  "Gathering…",
+];
 
 function parseArgs(argv) {
   const opts = { poll: false, attempts: 24, intervalMs: 15_000 };
@@ -42,18 +58,42 @@ async function fetchFinal(url) {
   throw new Error(`Too many redirects from ${url}`);
 }
 
+function checkWorldMapUi(html) {
+  const activityHidden = HIDDEN_WORLD_ACTIVITY_MARKERS.every(
+    (marker) => !html.includes(marker),
+  );
+  const minigameSlot = html.includes('data-world-sidebar-slot="minigame"');
+  return {
+    activityHidden,
+    minigameSlot,
+    ok: activityHidden && minigameSlot,
+  };
+}
+
 async function checkOnce() {
   const results = [];
+  let startHereLink = false;
+  let worldMap = null;
+
   for (const path of PATHS) {
-    const { status, url } = await fetchFinal(`${APEX_BASE}${path}`);
-    results.push({ path, status, url });
+    const final = await fetchFinal(`${APEX_BASE}${path}`);
+    results.push({ path, status: final.status, url: final.url });
+
+    if (final.status !== 200) continue;
+
+    const html = await final.response.text();
+    if (path === "/") {
+      startHereLink = html.includes('href="/start-here"');
+    }
+    if (path === "/world-map") {
+      worldMap = checkWorldMapUi(html);
+    }
   }
 
-  const homeFinal = await fetchFinal(`${APEX_BASE}/`);
-  const homeHtml = await homeFinal.response.text();
-  const startHereLink = homeHtml.includes('href="/start-here"');
+  const httpOk = results.every((r) => r.status === 200);
+  const ok = httpOk && startHereLink && (worldMap?.ok ?? false);
 
-  return { results, startHereLink, ok: results.every((r) => r.status === 200) && startHereLink };
+  return { results, startHereLink, worldMap, ok };
 }
 
 function printReport(report) {
@@ -61,6 +101,10 @@ function printReport(report) {
     console.log(`HTTP ${path} ${status} ${url}`);
   }
   console.log("home_has_start_here", report.startHereLink);
+  if (report.worldMap) {
+    console.log("world_map_activity_hidden", report.worldMap.activityHidden);
+    console.log("world_map_minigame_slot", report.worldMap.minigameSlot);
+  }
 }
 
 function sleep(ms) {
@@ -69,20 +113,17 @@ function sleep(ms) {
 
 const opts = parseArgs(process.argv);
 
-let lastReport = null;
 const attempts = opts.poll ? opts.attempts : 1;
 
 for (let attempt = 0; attempt < attempts; attempt++) {
-  lastReport = await checkOnce();
-  printReport(lastReport);
-  if (lastReport.ok) {
+  const report = await checkOnce();
+  printReport(report);
+  if (report.ok) {
     console.log("OK production pages verified");
     process.exit(0);
   }
   if (attempt < attempts - 1) {
-    console.log(
-      `Waiting deploy (attempt ${attempt + 1}/${attempts})…`,
-    );
+    console.log(`Waiting deploy (attempt ${attempt + 1}/${attempts})…`);
     await sleep(opts.intervalMs);
   }
 }
