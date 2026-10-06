@@ -30,6 +30,9 @@ export function ReentryLaunchControls({
         role="group"
         aria-label="Power selection"
       >
+        <p className="text-[0.62rem] tracking-[0.16em] text-[var(--foreground-muted)]">
+          1 · Power
+        </p>
         <div className="w-full max-w-xs">
           <div className="mb-1 flex justify-between text-[0.55rem] tracking-[0.12em] text-[var(--foreground-muted)]">
             <span>LOW</span>
@@ -64,6 +67,9 @@ export function ReentryLaunchControls({
       role="group"
       aria-label="Angle and launch"
     >
+      <p className="text-[0.62rem] tracking-[0.16em] text-[var(--foreground-muted)]">
+        2 · Angle
+      </p>
       {lockedPowerNorm !== null && (
         <p className="text-[0.55rem] tracking-[0.1em] text-[var(--foreground-muted)]">
           Power locked
@@ -87,16 +93,13 @@ export function ReentryLaunchControls({
           Steeper
         </button>
       </div>
-      <p className="max-w-xs text-center text-[0.55rem] tracking-[0.08em] text-[var(--foreground-muted)]">
-        Drag vertically on the scene to fine-tune
-      </p>
       <button
         type="button"
         className={`${btnClass} border-[var(--foreground-muted)]/50`}
         onClick={onLaunch}
         disabled={lockedPowerNorm === null}
       >
-        Launch
+        3 · Launch
       </button>
     </div>
   );

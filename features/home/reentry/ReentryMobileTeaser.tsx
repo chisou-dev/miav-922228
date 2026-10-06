@@ -26,7 +26,7 @@ export function ReentryMobileTeaser({
         <ReentryAssetImage
           asset="vehicle"
           alt=""
-          className={`${REENTRY_ART.mobileTeaser.vehicleClass} object-contain opacity-90 transition-opacity group-hover:opacity-100`}
+          className={`${REENTRY_ART.mobileTeaser.vehicleClass} object-contain opacity-90 transition-opacity group-hover:opacity-100 [mask-image:radial-gradient(ellipse_46%_72%_at_50%_46%,#000_60%,transparent_82%)]`}
           style={{ transform: `rotate(${vehicleTeaserRotationDeg()}deg)` }}
           loading="eager"
         />
