@@ -8,6 +8,7 @@ import {
   type TraceStats,
 } from "@/features/world-memory/trace/types";
 import { useT } from "@/features/shared/i18n";
+import { SHOW_WORLD_ACTIVITY_STATS } from "@/features/world-memory/map/worldUiFlags";
 
 type Props = {
   stats: TraceStats | null;
@@ -67,129 +68,147 @@ export function Sidebar({ stats, loading, recent, onFocusMemory }: Props) {
         {t("world.archive")}
       </p>
 
-      <div className="mt-5 border-b border-[var(--map-line)] pb-5">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={goPrevious}
-            disabled={!canPrevious || loading}
-            aria-label={t("world.previousMemory")}
-            className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
-              canPrevious && !loading
-                ? "cursor-pointer"
-                : "invisible pointer-events-none"
-            }`}
-          >
-            ←
-          </button>
-          <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
-            {t("world.latestMemory")}
-          </p>
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={!canNext || loading}
-            aria-label={t("world.nextMemory")}
-            className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
-              canNext && !loading
-                ? "cursor-pointer"
-                : "invisible pointer-events-none"
-            }`}
-          >
-            →
-          </button>
+      {SHOW_WORLD_ACTIVITY_STATS ? (
+        <div className="mt-5 border-b border-[var(--map-line)] pb-5">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={goPrevious}
+              disabled={!canPrevious || loading}
+              aria-label={t("world.previousMemory")}
+              className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
+                canPrevious && !loading
+                  ? "cursor-pointer"
+                  : "invisible pointer-events-none"
+              }`}
+            >
+              ←
+            </button>
+            <p className="text-[0.68rem] tracking-[0.18em] text-[var(--map-muted)] uppercase">
+              {t("world.latestMemory")}
+            </p>
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!canNext || loading}
+              aria-label={t("world.nextMemory")}
+              className={`shrink-0 text-[0.85rem] tracking-[0.08em] text-[var(--map-ink)] ${
+                canNext && !loading
+                  ? "cursor-pointer"
+                  : "invisible pointer-events-none"
+              }`}
+            >
+              →
+            </button>
+          </div>
+          {loading ? (
+            <p className="mt-3 text-[0.78rem] text-[var(--map-muted)]">…</p>
+          ) : current ? (
+            <dl className="mt-3 space-y-3 text-[0.82rem] text-[var(--map-ink)]">
+              <div>
+                <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                  {t("world.miavId")}
+                </dt>
+                <dd className="mt-1 font-mono tracking-[0.04em] text-[var(--map-accent)]">
+                  {current.miavId}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                  {t("world.place")}
+                </dt>
+                <dd className="mt-1">
+                  {current.city}, {current.country}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                  {t("world.memoryFieldLabel")}
+                </dt>
+                <dd className="mt-1 leading-[1.7] text-[var(--map-muted)]">
+                  {previewMessage(current.message, 20) || "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
+                  {t("world.leftAt")}
+                </dt>
+                <dd className="mt-1">{formatJoinedDate(current.createdAt)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="mt-3 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
+              {t("world.noMemories")}
+            </p>
+          )}
         </div>
-        {loading ? (
-          <p className="mt-3 text-[0.78rem] text-[var(--map-muted)]">…</p>
-        ) : current ? (
-          <dl className="mt-3 space-y-3 text-[0.82rem] text-[var(--map-ink)]">
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                {t("world.miavId")}
-              </dt>
-              <dd className="mt-1 font-mono tracking-[0.04em] text-[var(--map-accent)]">
-                {current.miavId}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                {t("world.place")}
-              </dt>
-              <dd className="mt-1">
-                {current.city}, {current.country}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                {t("world.memoryFieldLabel")}
-              </dt>
-              <dd className="mt-1 leading-[1.7] text-[var(--map-muted)]">
-                {previewMessage(current.message, 20) || "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.65rem] tracking-[0.12em] text-[var(--map-muted)] uppercase">
-                {t("world.leftAt")}
-              </dt>
-              <dd className="mt-1">{formatJoinedDate(current.createdAt)}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="mt-3 text-[0.78rem] leading-[1.7] text-[var(--map-muted)]">
-            {t("world.noMemories")}
-          </p>
-        )}
-      </div>
+      ) : null}
 
-      <div className="mt-5">
+      <div
+        className={
+          SHOW_WORLD_ACTIVITY_STATS
+            ? "mt-5"
+            : "mt-5 flex min-h-0 flex-1 flex-col"
+        }
+      >
         <h2 className="text-[1.05rem] font-medium tracking-[0.1em] text-[var(--map-ink)]">
           {t("world.presenceTitle")}
         </h2>
         <p className="mt-3 text-[0.78rem] leading-[1.8] text-[var(--map-muted)]">
           {t("world.presenceBody")}
         </p>
+
+        {SHOW_WORLD_ACTIVITY_STATS ? null : (
+          <div
+            className="mt-6 min-h-[min(48vh,520px)] flex-1 border border-[var(--map-line)] bg-[color-mix(in_srgb,var(--map-panel)_88%,#e8eef4)]"
+            data-world-sidebar-slot="minigame"
+            aria-hidden="true"
+          />
+        )}
       </div>
 
-      {loading ? (
-        <p className="mt-6 text-[0.78rem] tracking-[0.1em] text-[var(--map-muted)]">
-          {t("world.gathering")}
-        </p>
-      ) : (
-        <dl className="mt-6 grid gap-4 text-[0.78rem]">
-          <div>
-            <dt className="tracking-[0.14em] text-[var(--map-muted)]">
-              {t("world.placesWithMemories")}
-            </dt>
-            <dd className="mt-1 text-[1.4rem] tracking-[0.06em] text-[var(--map-ink)]">
-              {stats?.placeCount ?? 0}
-            </dd>
-          </div>
-          <div>
-            <dt className="tracking-[0.14em] text-[var(--map-muted)]">
-              {t("world.totalMemories")}
-            </dt>
-            <dd className="mt-1 text-[1.4rem] tracking-[0.06em] text-[var(--map-ink)]">
-              {stats?.memoryCount ?? 0}
-            </dd>
-          </div>
-          <div>
-            <dt className="tracking-[0.14em] text-[var(--map-muted)]">
-              {t("world.permanentMemories")}
-            </dt>
-            <dd className="mt-1 text-[1.2rem] tracking-[0.06em] text-[var(--map-ink)]">
-              {stats?.googleCount ?? 0}
-            </dd>
-          </div>
-          <div>
-            <dt className="tracking-[0.14em] text-[var(--map-muted)]">
-              {t("world.guestMemories")}
-            </dt>
-            <dd className="mt-1 text-[1.2rem] tracking-[0.06em] text-[var(--map-ink)]">
-              {stats?.guestCount ?? 0}
-            </dd>
-          </div>
-        </dl>
-      )}
+      {SHOW_WORLD_ACTIVITY_STATS ? (
+        loading ? (
+          <p className="mt-6 text-[0.78rem] tracking-[0.1em] text-[var(--map-muted)]">
+            {t("world.gathering")}
+          </p>
+        ) : (
+          <dl className="mt-6 grid gap-4 text-[0.78rem]">
+            <div>
+              <dt className="tracking-[0.14em] text-[var(--map-muted)]">
+                {t("world.placesWithMemories")}
+              </dt>
+              <dd className="mt-1 text-[1.4rem] tracking-[0.06em] text-[var(--map-ink)]">
+                {stats?.placeCount ?? 0}
+              </dd>
+            </div>
+            <div>
+              <dt className="tracking-[0.14em] text-[var(--map-muted)]">
+                {t("world.totalMemories")}
+              </dt>
+              <dd className="mt-1 text-[1.4rem] tracking-[0.06em] text-[var(--map-ink)]">
+                {stats?.memoryCount ?? 0}
+              </dd>
+            </div>
+            <div>
+              <dt className="tracking-[0.14em] text-[var(--map-muted)]">
+                {t("world.permanentMemories")}
+              </dt>
+              <dd className="mt-1 text-[1.2rem] tracking-[0.06em] text-[var(--map-ink)]">
+                {stats?.googleCount ?? 0}
+              </dd>
+            </div>
+            <div>
+              <dt className="tracking-[0.14em] text-[var(--map-muted)]">
+                {t("world.guestMemories")}
+              </dt>
+              <dd className="mt-1 text-[1.2rem] tracking-[0.06em] text-[var(--map-ink)]">
+                {stats?.guestCount ?? 0}
+              </dd>
+            </div>
+          </dl>
+        )
+      ) : null}
     </aside>
   );
 }
