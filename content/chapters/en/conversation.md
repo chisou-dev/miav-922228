@@ -3,8 +3,8 @@ number: 1
 slug: conversation
 title: Mia
 summary: >-
-  A dialogue begins between human recollection and an intelligence that listens
-  too carefully—where every reply reshapes what was said before.
+  Everyone else already has RIS. He installs it without giving the decision much
+  thought.
 published: '2024-03-12'
 locale: en
 ---

@@ -3,8 +3,8 @@ number: 12
 slug: virtual-world
 title: The Dog
 summary: >-
-  On the day of the wedding introduction, a house still running Noah meets a
-  guest—and something older begins to reassemble.
+  Years later, a simple question about Noah proves harder to answer than anyone
+  expects.
 published: '2026-08-06'
 locale: en
 ---

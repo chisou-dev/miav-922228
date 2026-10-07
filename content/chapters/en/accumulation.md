@@ -3,8 +3,8 @@ number: 2
 slug: accumulation
 title: Bitter
 summary: >-
-  Memories gather not as archives but as sediment. What is kept, what is
-  overwritten, and what quietly outweighs the self.
+  Mia starts learning his routines. Before long, even small choices begin to
+  include her.
 published: '2024-06-18'
 locale: en
 ---

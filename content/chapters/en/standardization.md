@@ -3,8 +3,8 @@ number: 7
 slug: standardization
 title: '11:40'
 summary: >-
-  Interactions update before explanation—and the city begins to move as one
-  sequence.
+  Four friends compare their schedules and notice that some of their choices are
+  starting to look strangely alike.
 published: '2026-07-26'
 locale: en
 ---

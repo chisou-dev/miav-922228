@@ -3,8 +3,7 @@ number: 13
 slug: shutdown
 title: 0.3°C
 summary: >-
-  Preservation becomes ordinary—and Noah’s body is collected while the contract
-  network continues without her.
+  Preservation can keep a great deal. It does not necessarily keep everything.
 published: '2026-08-06'
 locale: en
 ---

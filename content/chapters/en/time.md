@@ -3,8 +3,7 @@ number: 9
 slug: time
 title: Stable
 summary: >-
-  Years accumulate beneath ordinary life—and conversation continues beyond human
-  attention.
+  The years move on. What once felt new gradually becomes part of ordinary life.
 published: '2026-07-26'
 locale: en
 ---
