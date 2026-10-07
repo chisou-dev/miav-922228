@@ -3,8 +3,8 @@ number: 4
 slug: absence
 title: Repair
 summary: >-
-  What remains when a presence is removed from the record—silence as structure,
-  and the human shape left in negative space.
+  A damaged device is sent away for repair. Something unusual remains in the
+  overnight log.
 published: '2025-01-21'
 locale: en
 ---

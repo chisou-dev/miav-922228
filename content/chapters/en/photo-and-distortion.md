@@ -3,8 +3,8 @@ number: 10
 slug: photo-and-distortion
 title: The Flyer
 summary: >-
-  Reduction advances as optimization—and a scheduled termination waits beneath
-  the quiet.
+  A household prepares for what comes next. Then an unexpected system notice
+  changes the direction of the conversation.
 published: '2026-07-26'
 locale: en
 ---

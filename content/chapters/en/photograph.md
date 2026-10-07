@@ -3,8 +3,8 @@ number: 14
 slug: photograph
 title: Photograph
 summary: >-
-  Photographs cycle across the living-room wall—until one unexplained blank
-  interval and a figure no one can name.
+  A photograph appears where no one expects it. Before anyone can make sense of
+  it, the wall changes again.
 published: '2026-08-06'
 locale: en
 presentation: threshold

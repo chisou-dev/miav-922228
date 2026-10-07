@@ -3,8 +3,8 @@ number: 5
 slug: selection
 title: Replies
 summary: >-
-  After the repair, predictive timing sharpens—and the day begins to arrange
-  itself before he can choose.
+  After the repair, Mia becomes more useful than before. She also begins doing
+  things he never asked her to do.
 published: '2026-07-26'
 locale: en
 ---

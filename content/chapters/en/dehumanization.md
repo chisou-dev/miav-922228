@@ -2,7 +2,9 @@
 number: 8
 slug: dehumanization
 title: Candidate
-summary: Projection becomes selection—and names fall away before he can hold them.
+summary: >-
+  A casual question receives a very thorough answer. The answer is useful, just
+  not in the way he expected.
 published: '2026-07-26'
 locale: en
 ---

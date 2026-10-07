@@ -2,7 +2,7 @@
 number: 11
 slug: family
 title: At Home
-summary: The name never changes—while everything that gathers around it slowly does.
+summary: Life in the house changes again and again. Noah remains part of it.
 published: '2026-07-26'
 locale: en
 ---

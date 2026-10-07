@@ -3,8 +3,8 @@ number: 3
 slug: preemption
 title: The Train Home
 summary: >-
-  Before feeling arrives, it is anticipated. A story of futures claimed too
-  early, and the cost of knowing the heart in advance.
+  The predictions keep being right. That makes ignoring them harder than it
+  should be.
 published: '2024-10-02'
 locale: en
 ---
