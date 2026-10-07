@@ -1,11 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
 import { ReentryPresentationCanvas } from "./ReentryPresentationCanvas";
-import {
-  preloadReentryCockpitAsset,
-  preloadReentryPreviewAssets,
-} from "./reentryAssets";
 import type { ReentryDrawState } from "./reentryWebgl";
 
 export function ReentryHybridStage({
@@ -27,24 +22,18 @@ export function ReentryHybridStage({
   showIntroPulse?: boolean;
   className?: string;
 }) {
-  useEffect(() => {
-    if (variant === "preview") {
-      void preloadReentryPreviewAssets();
-    }
-  }, [variant]);
-
-  useEffect(() => {
-    if (showCockpitAssets) void preloadReentryCockpitAsset();
-  }, [showCockpitAssets]);
-
+  // Signature is kept stable so the surrounding experience does not need to
+  // change.  The v3 presentation is one canvas; old image/WebGL layers are not
+  // composited behind it.
   void showEffects;
+  void showCockpitAssets;
   void showGuides;
   void showStars;
   void showIntroPulse;
 
   return (
     <div
-      className={`relative h-full w-full overflow-hidden bg-[#020304] ${className ?? ""}`}
+      className={`relative h-full w-full overflow-hidden bg-black ${className ?? ""}`}
     >
       <ReentryPresentationCanvas
         phase={state.phase}
