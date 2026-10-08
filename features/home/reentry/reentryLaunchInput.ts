@@ -6,7 +6,7 @@ function smoothstep(t: number): number {
   return x * x * (3 - 2 * x);
 }
 
-function wrap01(value: number): number {
+export function wrap01(value: number): number {
   const wrapped = value % 1;
   return wrapped < 0 ? wrapped + 1 : wrapped;
 }

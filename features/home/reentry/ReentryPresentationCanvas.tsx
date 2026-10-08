@@ -6,9 +6,9 @@ import {
   presentationHeatGlow,
 } from "./reentryPlayback";
 import type { ReentryArtVariant } from "./reentryArtPresentation";
-import type { ReentryFrame, ReentryOutcome, ReentryPhase, ReentryResult } from "./reentryTypes";
+import type { ReentryOutcome, ReentryPhase, ReentryResult } from "./reentryTypes";
 import { restFrame, sampleFrame } from "./reentryVisual";
-import { directionNormToEntryAngleDeg } from "./reentryLaunchInput";
+import { craftPose } from "./reentryCraftProjection";
 import {
   finishReentryAudio,
   setReentryAudioFlight,
@@ -50,11 +50,6 @@ function hash01(seed: number, n: number): number {
   x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
   x ^= x >>> 16;
   return (x >>> 0) / 0xffffffff;
-}
-
-interface Point {
-  x: number;
-  y: number;
 }
 
 interface EarthView {
@@ -932,189 +927,6 @@ function readableHeat(
   return clamp01(heat * mix(0.18, 1, upperAtmosphereFade));
 }
 
-function projectPhysicsFrame(
-  frame: ReentryFrame,
-  initialAltitudeM: number,
-  w: number,
-  h: number,
-): Point {
-  const minSide = Math.min(w, h);
-  const start = { x: w * 0.80, y: h * 0.15 };
-
-  // Local tangent / Earthward screen basis. The position comes from the
-  // simulated downrange and altitude, so a bad direction is not corrected
-  // toward Earth by the renderer.
-  const tangent = { x: -0.86, y: 0.22 };
-  const earthward = { x: -0.28, y: 0.96 };
-
-  const downrangePx =
-    (frame.x / 4_200_000) * minSide * 0.95;
-  const descentPx =
-    ((initialAltitudeM - frame.altitudeM) / 180_000) *
-    minSide *
-    0.48;
-
-  return {
-    x:
-      start.x +
-      tangent.x * downrangePx +
-      earthward.x * descentPx,
-    y:
-      start.y +
-      tangent.y * downrangePx +
-      earthward.y * descentPx,
-  };
-}
-
-function craftPose(
-  playback: number,
-  outcome: ReentryOutcome | undefined,
-  angleNorm: number,
-  idle: boolean,
-  heat: number,
-  seed: number,
-  result: ReentryResult | null,
-  currentFrame: ReentryFrame,
-  w: number,
-  h: number,
-): { x: number; y: number; angle: number } {
-  const initialAltitudeM =
-    result?.frames[0]?.altitudeM ??
-    currentFrame.altitudeM ??
-    160_000;
-
-  if (idle || !result || result.frames.length < 2) {
-    const start = { x: w * 0.80, y: h * 0.15 };
-    const entryAngleDeg =
-      directionNormToEntryAngleDeg(angleNorm);
-    const gamma = (-entryAngleDeg * Math.PI) / 180;
-
-    const tangent = { x: -0.86, y: 0.22 };
-    const earthward = { x: -0.28, y: 0.96 };
-
-    const vx =
-      Math.cos(gamma) * tangent.x +
-      (-Math.sin(gamma)) * earthward.x;
-    const vy =
-      Math.cos(gamma) * tangent.y +
-      (-Math.sin(gamma)) * earthward.y;
-
-    return {
-      ...start,
-      angle: Math.atan2(vy, vx),
-    };
-  }
-
-  const p = projectPhysicsFrame(
-    currentFrame,
-    initialAltitudeM,
-    w,
-    h,
-  );
-
-  /*
-   * Use a forward tangent during normal flight.
-   *
-   * At playback === 1 the "next" sampled frame is often identical to the
-   * terminal frame. Previously this produced atan2(0, 0) === 0, so the craft,
-   * plasma and breakup suddenly snapped horizontal on the result frame.
-   *
-   * If the forward tangent collapses, fall back to the previous simulated
-   * frame. That preserves the actual terminal flight direction.
-   */
-  const nextPlayback = Math.min(1, playback + 0.012);
-  const nextFrame = sampleFrame(
-    result.frames,
-    playbackToFrameProgress(
-      nextPlayback,
-      outcome ?? result.outcome,
-    ),
-  );
-  const q = projectPhysicsFrame(
-    nextFrame,
-    initialAltitudeM,
-    w,
-    h,
-  );
-
-  let dx = q.x - p.x;
-  let dy = q.y - p.y;
-
-  if (Math.hypot(dx, dy) < 0.25) {
-    const previousPlayback = Math.max(0, playback - 0.024);
-    const previousFrame = sampleFrame(
-      result.frames,
-      playbackToFrameProgress(
-        previousPlayback,
-        outcome ?? result.outcome,
-      ),
-    );
-    const previousPoint = projectPhysicsFrame(
-      previousFrame,
-      initialAltitudeM,
-      w,
-      h,
-    );
-
-    dx = p.x - previousPoint.x;
-    dy = p.y - previousPoint.y;
-  }
-
-  // Absolute fallback only for a pathological zero-motion frame. Prefer the
-  // user's selected initial direction instead of snapping horizontally.
-  if (Math.hypot(dx, dy) < 0.25) {
-    const entryAngleDeg =
-      directionNormToEntryAngleDeg(angleNorm);
-    const gamma = (-entryAngleDeg * Math.PI) / 180;
-
-    const tangent = { x: -0.86, y: 0.22 };
-    const earthward = { x: -0.28, y: 0.96 };
-
-    dx =
-      Math.cos(gamma) * tangent.x +
-      (-Math.sin(gamma)) * earthward.x;
-    dy =
-      Math.cos(gamma) * tangent.y +
-      (-Math.sin(gamma)) * earthward.y;
-  }
-
-  let angle = Math.atan2(dy, dx);
-
-  // External camera: only restrained airframe motion. Do not shake the whole
-  // craft like an interior cockpit camera.
-  const highStress = smoothstep((heat - 0.62) / 0.38);
-  const finalFailure =
-    outcome === "BURN"
-      ? smoothstep((playback - 0.79) / 0.13)
-      : outcome === "BREAK"
-        ? smoothstep((playback - 0.76) / 0.15)
-        : 0;
-
-  const micro =
-    highStress * (0.25 + finalFailure * 0.75);
-
-  const jitterX =
-    Math.sin(playback * 97 + seed * 0.00001) *
-    Math.min(w, h) *
-    0.00075 *
-    micro;
-  const jitterY =
-    Math.sin(playback * 131 + seed * 0.000013 + 1.7) *
-    Math.min(w, h) *
-    0.0009 *
-    micro;
-  angle +=
-    Math.sin(playback * 109 + seed * 0.000009 + 0.4) *
-    0.012 *
-    micro;
-
-  return {
-    x: p.x + jitterX,
-    y: p.y + jitterY,
-    angle,
-  };
-}
-
 function drawResultLabel(
   ctx: CanvasRenderingContext2D,
   outcome: ReentryOutcome,
@@ -1401,7 +1213,7 @@ export function ReentryPresentationCanvas({
       if (
         phase === "result" &&
         outcome &&
-        variant === "stage"
+        variant !== "stage"
       ) {
         drawResultLabel(ctx, outcome, w, h);
       }

@@ -6,13 +6,20 @@ import { ReentryHybridStage } from "./ReentryHybridStage";
 import { ReentryLaunchControls } from "./ReentryLaunchControls";
 import { ReentryShellProvider } from "./reentryShellContext";
 import { useBodyScrollLock } from "./useBodyScrollLock";
+import { useNearbySuccess } from "./useNearbySuccess";
 import { useReentryGame } from "./useReentryGame";
 import { REENTRY_ART } from "./reentryArtPresentation";
 import { REENTRY_SCENE } from "./reentrySceneLayout";
 import { preloadReentryPreviewAssets } from "./reentryAssets";
+import { shouldShowNearbySuccess } from "./reentryNearbySuccess";
+import type { ReentryOutcome } from "./reentryTypes";
 
 const actionClass =
-  "text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)]";
+  "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
+
+function resultTitle(outcome: ReentryOutcome): string {
+  return outcome === "EARTH_REACHED" ? "EARTH REACHED" : outcome;
+}
 
 function devPresetRequiresExpand(): boolean {
   if (process.env.NODE_ENV === "production") return false;
@@ -77,6 +84,16 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     nudgeAngle,
     retry,
   } = useReentryGame({ onFlightStart });
+
+  const nearbySuccess = useNearbySuccess({
+    enabled:
+      expanded &&
+      phase === "result" &&
+      shouldShowNearbySuccess(result?.outcome),
+    outcome: result?.outcome,
+    powerNorm: lockedPowerNorm,
+    angleNorm,
+  });
 
   useBodyScrollLock(expanded);
 
@@ -214,8 +231,29 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               </p>
             )}
 
-            {phase === "result" && (
-              <div className="absolute inset-x-0 bottom-6 z-20 flex justify-center gap-8">
+          </div>
+          {phase === "result" && result && (
+            <div
+              className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#05070a]/95 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] text-center"
+              role="region"
+              aria-label="Reentry result"
+            >
+              <p className="text-[0.82rem] font-semibold tracking-[0.18em] text-white sm:text-[0.95rem]">
+                {resultTitle(result.outcome)}
+              </p>
+              {shouldShowNearbySuccess(result.outcome) && (
+                <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
+                  {nearbySuccess
+                    ? `NEARBY SUCCESS ${nearbySuccess.percent}%`
+                    : "NEARBY SUCCESS …"}
+                  <span className="mt-0.5 block text-[0.58rem] tracking-[0.08em] text-white/55">
+                    {nearbySuccess
+                      ? `近い操作での成功割合（${nearbySuccess.total}回の試行）`
+                      : "近い操作での成功割合"}
+                  </span>
+                </p>
+              )}
+              <div className="mt-3 flex justify-center gap-8">
                 <button type="button" onClick={retry} className={actionClass}>
                   Retry
                 </button>
@@ -223,8 +261,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                   Close
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         </ReentryFullscreenPortal>
       )}
