@@ -6,8 +6,9 @@ import {
   presentationHeatGlow,
 } from "./reentryPlayback";
 import type { ReentryArtVariant } from "./reentryArtPresentation";
-import type { ReentryOutcome, ReentryPhase, ReentryResult } from "./reentryTypes";
+import type { ReentryFrame, ReentryOutcome, ReentryPhase, ReentryResult } from "./reentryTypes";
 import { restFrame, sampleFrame } from "./reentryVisual";
+import { directionNormToEntryAngleDeg } from "./reentryLaunchInput";
 import {
   finishReentryAudio,
   setReentryAudioFlight,
@@ -83,7 +84,7 @@ function orbitalEarth(w: number, h: number): EarthView {
  * BURN result: cut back to quiet orbital Earth after the vehicle is gone.
  */
 function earthView(
-  playback: number,
+  altitudeM: number,
   outcome: ReentryOutcome | undefined,
   idle: boolean,
   phase: ReentryPhase,
@@ -96,35 +97,35 @@ function earthView(
     return orbitalEarth(w, h);
   }
 
-  if (outcome === "SKIP" && playback > 0.72) {
-    const retreat = smoothstep((playback - 0.72) / 0.28);
-    const nearR = w * 0.19;
+  // Keep the globe distant until the vehicle is actually near the atmosphere.
+  // No automatic "camera attraction" when the craft flies away.
+  const atmosphereProximity = smoothstep((125_000 - altitudeM) / 78_000);
+  const lowAltitude = smoothstep((92_000 - altitudeM) / 62_000);
+
+  if (outcome === "SKIP" && phase === "result") {
     const far = orbitalEarth(w, h);
     return {
-      x: mix(w * 0.16, far.x, retreat),
-      y: mix(h * 0.72, far.y, retreat),
-      r: mix(nearR, far.r * 0.9, retreat),
-      horizonMix: mix(0.15, 0, retreat),
-      alpha: 1,
+      ...far,
+      r: far.r * 0.92,
     };
   }
 
-  const push = smoothstep((playback - 0.10) / 0.62);
-  const horizon = smoothstep((playback - 0.54) / 0.30);
-
-  const r = mix(w * 0.052, w * 1.38, horizon) + w * 0.11 * push;
-  const x = mix(w * 0.105, w * 0.27, horizon);
+  const r =
+    w * 0.052 +
+    w * 0.17 * atmosphereProximity +
+    w * 1.02 * lowAltitude;
+  const x = mix(w * 0.105, w * 0.26, lowAltitude);
   const y = mix(
     h - w * 0.052 - Math.min(w, h) * 0.043,
     h + r * 0.43,
-    horizon,
+    lowAltitude,
   );
 
   return {
     x,
     y,
     r,
-    horizonMix: horizon,
+    horizonMix: lowAltitude,
     alpha: 1,
   };
 }
@@ -333,28 +334,31 @@ function craftOutline(
   length: number,
   width: number,
 ): void {
+  // Compact lifting-body silhouette with a broad heat-shielded aft section.
   ctx.beginPath();
-  ctx.moveTo(length * 0.58, 0);
+  ctx.moveTo(length * 0.62, 0);
   ctx.bezierCurveTo(
-    length * 0.44,
-    -width * 0.14,
-    length * 0.25,
-    -width * 0.20,
-    length * 0.08,
+    length * 0.48,
+    -width * 0.11,
+    length * 0.30,
+    -width * 0.18,
+    length * 0.10,
     -width * 0.22,
   );
-  ctx.lineTo(-length * 0.25, -width * 0.47);
-  ctx.lineTo(-length * 0.54, -width * 0.34);
-  ctx.lineTo(-length * 0.43, 0);
-  ctx.lineTo(-length * 0.54, width * 0.34);
-  ctx.lineTo(-length * 0.25, width * 0.47);
-  ctx.lineTo(length * 0.08, width * 0.22);
+  ctx.lineTo(-length * 0.12, -width * 0.46);
+  ctx.lineTo(-length * 0.40, -width * 0.52);
+  ctx.lineTo(-length * 0.56, -width * 0.30);
+  ctx.lineTo(-length * 0.50, 0);
+  ctx.lineTo(-length * 0.56, width * 0.30);
+  ctx.lineTo(-length * 0.40, width * 0.52);
+  ctx.lineTo(-length * 0.12, width * 0.46);
+  ctx.lineTo(length * 0.10, width * 0.22);
   ctx.bezierCurveTo(
-    length * 0.25,
-    width * 0.20,
-    length * 0.44,
-    width * 0.14,
-    length * 0.58,
+    length * 0.30,
+    width * 0.18,
+    length * 0.48,
+    width * 0.11,
+    length * 0.62,
     0,
   );
   ctx.closePath();
@@ -369,38 +373,40 @@ function drawCraft(
   alpha: number,
   heat: number,
 ): void {
-  const width = length * 0.64;
+  const width = length * 0.62;
 
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
   ctx.globalAlpha = alpha;
 
-  // Dark heat shield offset gives thickness.
+  // Deep heat-shield shadow gives the craft thickness without a photo asset.
   ctx.save();
-  ctx.translate(-length * 0.025, length * 0.035);
+  ctx.translate(-length * 0.03, length * 0.035);
   craftOutline(ctx, length, width);
-  ctx.fillStyle = "#10161b";
+  ctx.fillStyle = "#070b0e";
   ctx.shadowColor =
-    heat > 0.15
-      ? `rgba(255,82,18,${0.22 + heat * 0.40})`
-      : "rgba(0,0,0,0.72)";
-  ctx.shadowBlur = heat > 0.15 ? 10 + heat * 22 : 7;
+    heat > 0.14
+      ? `rgba(255,88,18,${0.18 + heat * 0.34})`
+      : "rgba(0,0,0,0.78)";
+  ctx.shadowBlur = heat > 0.14 ? 8 + heat * 18 : 7;
   ctx.fill();
   ctx.restore();
 
+  // Main upper body.
   craftOutline(ctx, length, width);
   const hull = ctx.createLinearGradient(
-    -length * 0.50,
-    -width * 0.22,
-    length * 0.58,
-    width * 0.16,
+    -length * 0.52,
+    -width * 0.28,
+    length * 0.62,
+    width * 0.22,
   );
-  hull.addColorStop(0, "#757c81");
-  hull.addColorStop(0.24, "#d8d9d6");
-  hull.addColorStop(0.57, "#f1efe8");
-  hull.addColorStop(0.82, "#c9ccca");
-  hull.addColorStop(1, "#a7adb0");
+  hull.addColorStop(0, "#60686e");
+  hull.addColorStop(0.18, "#b9bec0");
+  hull.addColorStop(0.43, "#ecece8");
+  hull.addColorStop(0.68, "#faf8f1");
+  hull.addColorStop(0.86, "#b7bdc0");
+  hull.addColorStop(1, "#737c82");
   ctx.fillStyle = hull;
   ctx.fill();
 
@@ -408,57 +414,92 @@ function drawCraft(
   craftOutline(ctx, length, width);
   ctx.clip();
 
-  const underside = ctx.createLinearGradient(
+  // Faceted lower half / thermal protection.
+  const shield = ctx.createLinearGradient(
     0,
-    -width * 0.42,
+    -width * 0.35,
     0,
-    width * 0.52,
+    width * 0.54,
   );
-  underside.addColorStop(0.43, "rgba(20,24,28,0)");
-  underside.addColorStop(0.64, "rgba(10,14,18,0.24)");
-  underside.addColorStop(1, "rgba(3,5,7,0.86)");
-  ctx.fillStyle = underside;
+  shield.addColorStop(0.38, "rgba(20,24,28,0)");
+  shield.addColorStop(0.58, "rgba(14,18,22,0.25)");
+  shield.addColorStop(0.78, "rgba(7,10,12,0.58)");
+  shield.addColorStop(1, "rgba(2,4,6,0.93)");
+  ctx.fillStyle = shield;
   ctx.fillRect(-length, -width, length * 2, width * 2);
 
-  ctx.strokeStyle = "rgba(35,45,52,0.20)";
-  ctx.lineWidth = Math.max(0.7, length * 0.008);
+  // Side facets create a more three-dimensional lifting-body form.
+  ctx.fillStyle = "rgba(80,90,97,0.28)";
   ctx.beginPath();
-  ctx.moveTo(-length * 0.40, 0);
-  ctx.lineTo(length * 0.48, 0);
-  ctx.stroke();
+  ctx.moveTo(-length * 0.50, -width * 0.30);
+  ctx.lineTo(-length * 0.12, -width * 0.46);
+  ctx.lineTo(length * 0.20, -width * 0.17);
+  ctx.lineTo(-length * 0.12, -width * 0.08);
+  ctx.closePath();
+  ctx.fill();
 
-  for (let i = 0; i < 4; i++) {
-    const px = mix(-length * 0.28, length * 0.30, i / 3);
+  ctx.fillStyle = "rgba(255,255,255,0.13)";
+  ctx.beginPath();
+  ctx.moveTo(-length * 0.12, width * 0.08);
+  ctx.lineTo(length * 0.22, width * 0.14);
+  ctx.lineTo(length * 0.45, width * 0.04);
+  ctx.lineTo(length * 0.12, width * 0.01);
+  ctx.closePath();
+  ctx.fill();
+
+  // Irregular panel seams: subtle and non-uniform.
+  ctx.strokeStyle = "rgba(44,52,57,0.20)";
+  ctx.lineWidth = Math.max(0.65, length * 0.006);
+  const seams = [-0.34, -0.18, 0.02, 0.19, 0.34];
+  for (let i = 0; i < seams.length; i++) {
+    const px = length * seams[i];
     ctx.beginPath();
-    ctx.moveTo(px, -width * 0.17);
-    ctx.lineTo(px + length * 0.035, width * 0.17);
+    ctx.moveTo(px, -width * (0.18 + (i % 2) * 0.03));
+    ctx.lineTo(
+      px + length * (0.018 + (i % 3) * 0.008),
+      width * (0.17 + (i % 2) * 0.025),
+    );
     ctx.stroke();
   }
   ctx.restore();
 
-  // Cockpit.
+  // Dark recessed cockpit glazing near the nose.
   ctx.save();
-  ctx.translate(length * 0.29, 0);
-  const glass = ctx.createLinearGradient(0, -width * 0.11, 0, width * 0.11);
-  glass.addColorStop(0, "#34424c");
-  glass.addColorStop(0.52, "#0c141a");
-  glass.addColorStop(1, "#020507");
+  ctx.translate(length * 0.31, 0);
+  const glass = ctx.createLinearGradient(
+    -length * 0.12,
+    -width * 0.11,
+    length * 0.10,
+    width * 0.10,
+  );
+  glass.addColorStop(0, "#495a65");
+  glass.addColorStop(0.28, "#17232c");
+  glass.addColorStop(0.72, "#070d12");
+  glass.addColorStop(1, "#020406");
   ctx.fillStyle = glass;
-  ctx.strokeStyle = "rgba(210,225,232,0.34)";
-  ctx.lineWidth = Math.max(0.8, length * 0.008);
+  ctx.strokeStyle = "rgba(210,228,238,0.38)";
+  ctx.lineWidth = Math.max(0.75, length * 0.007);
   ctx.beginPath();
-  ctx.moveTo(length * 0.12, 0);
-  ctx.lineTo(-length * 0.035, -width * 0.105);
-  ctx.lineTo(-length * 0.12, -width * 0.075);
-  ctx.lineTo(-length * 0.12, width * 0.075);
-  ctx.lineTo(-length * 0.035, width * 0.105);
+  ctx.moveTo(length * 0.13, 0);
+  ctx.lineTo(-length * 0.025, -width * 0.105);
+  ctx.lineTo(-length * 0.13, -width * 0.070);
+  ctx.lineTo(-length * 0.13, width * 0.070);
+  ctx.lineTo(-length * 0.025, width * 0.105);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
   ctx.restore();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.48)";
-  ctx.lineWidth = Math.max(0.8, length * 0.007);
+  // Rear heat shield edge.
+  ctx.strokeStyle = "rgba(15,18,20,0.75)";
+  ctx.lineWidth = Math.max(1.1, length * 0.012);
+  ctx.beginPath();
+  ctx.moveTo(-length * 0.52, -width * 0.27);
+  ctx.lineTo(-length * 0.47, width * 0.27);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(255,255,255,0.46)";
+  ctx.lineWidth = Math.max(0.7, length * 0.0065);
   craftOutline(ctx, length, width);
   ctx.stroke();
 
@@ -473,10 +514,12 @@ function drawFlowLines(
   length: number,
   heat: number,
   playback: number,
+  seed = 1,
 ): void {
-  if (heat < 0.10) return;
+  if (heat < 0.12) return;
 
-  const intensity = smoothstep((heat - 0.10) / 0.90);
+  const intensity = smoothstep((heat - 0.12) / 0.88);
+  const timeBucket = Math.floor(playback * 96);
 
   ctx.save();
   ctx.translate(x, y);
@@ -484,31 +527,38 @@ function drawFlowLines(
   ctx.globalCompositeOperation = "lighter";
   ctx.lineCap = "round";
 
-  for (let i = 0; i < 9; i++) {
-    const side = (i - 4) / 4;
-    const phase = playback * 12 + i * 0.7;
-    const wobble = Math.sin(phase) * length * 0.035;
-    const y0 = side * length * (0.12 + intensity * 0.16);
-    const back = length * (1.4 + intensity * 2.3 + (i % 3) * 0.16);
+  // Non-uniform streamlines. Positions, lengths and bends are deterministic
+  // but intentionally irregular so they do not read as evenly spaced wires.
+  for (let i = 0; i < 15; i++) {
+    const a = hash01(seed ^ 0x35a7f1c9, i * 11 + timeBucket);
+    const b = hash01(seed ^ 0x7f4a7c15, i * 17 + 5);
+    const c = hash01(seed ^ 0x91e10da5, i * 23 + 9);
+    const side = (a - 0.5) * 2;
+    const y0 =
+      side * length * (0.08 + intensity * (0.12 + b * 0.10));
+    const back =
+      length * (0.75 + b * 0.8 + intensity * (1.25 + c * 1.5));
+    const bend =
+      (c - 0.5) * length * (0.10 + intensity * 0.18);
 
     ctx.strokeStyle =
-      i % 3 === 0
-        ? `rgba(245,252,255,${0.07 + intensity * 0.15})`
-        : i % 3 === 1
-          ? `rgba(255,210,120,${0.05 + intensity * 0.12})`
-          : `rgba(255,120,35,${0.04 + intensity * 0.10})`;
-
-    ctx.lineWidth = 0.7 + intensity * (i % 2 ? 1.2 : 0.8);
+      a > 0.72
+        ? `rgba(247,252,255,${0.035 + intensity * 0.11})`
+        : b > 0.48
+          ? `rgba(255,208,112,${0.03 + intensity * 0.09})`
+          : `rgba(255,109,28,${0.025 + intensity * 0.075})`;
+    ctx.lineWidth =
+      0.45 + c * 1.15 + intensity * 0.55;
 
     ctx.beginPath();
-    ctx.moveTo(length * 0.62, y0 * 0.35);
+    ctx.moveTo(length * (0.54 + c * 0.07), y0 * 0.28);
     ctx.bezierCurveTo(
-      length * 0.16,
-      y0 + wobble,
-      -length * 0.62,
-      y0 * 1.9 - wobble,
+      length * (0.10 + b * 0.10),
+      y0 + bend * 0.35,
+      -length * (0.45 + a * 0.38),
+      y0 * (1.35 + b * 0.8) - bend,
       -back,
-      y0 * 2.5,
+      y0 * (1.8 + c * 1.25),
     );
     ctx.stroke();
   }
@@ -530,20 +580,17 @@ function drawPlasma(
 
   const width = length * 0.64;
   const intensity = smoothstep(heat);
+  const timeBucket = Math.floor(playback * 120);
 
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
   ctx.globalCompositeOperation = "lighter";
 
-  /*
-   * Detached hypersonic bow-shock dome.
-   * It is a filled rounded volume, not a C-shaped stroke.
-   * The craft is drawn AFTER this effect so the hull stays readable.
-   */
-  const domeX = length * (0.60 + intensity * 0.045);
-  const domeRx = length * (0.21 + intensity * 0.21);
-  const domeRy = width * (0.50 + intensity * 0.40);
+  // Detached rounded bow-shock volume.
+  const domeX = length * (0.60 + intensity * 0.04);
+  const domeRx = length * (0.20 + intensity * 0.20);
+  const domeRy = width * (0.48 + intensity * 0.38);
 
   ctx.save();
   ctx.translate(domeX, 0);
@@ -559,29 +606,30 @@ function drawPlasma(
   );
   outer.addColorStop(
     0,
-    `rgba(248,253,255,${0.10 + intensity * 0.44})`,
+    `rgba(248,253,255,${0.08 + intensity * 0.42})`,
   );
   outer.addColorStop(
     0.24,
-    `rgba(255,250,220,${0.12 + intensity * 0.40})`,
+    `rgba(255,250,222,${0.10 + intensity * 0.38})`,
   );
   outer.addColorStop(
-    0.49,
-    `rgba(255,191,76,${0.10 + intensity * 0.35})`,
+    0.50,
+    `rgba(255,191,78,${0.08 + intensity * 0.32})`,
   );
   outer.addColorStop(
-    0.73,
-    `rgba(255,87,18,${0.08 + intensity * 0.28})`,
+    0.74,
+    `rgba(255,86,18,${0.06 + intensity * 0.24})`,
   );
   outer.addColorStop(
-    0.90,
-    `rgba(180,28,5,${0.04 + intensity * 0.17})`,
+    0.91,
+    `rgba(178,26,5,${0.025 + intensity * 0.13})`,
   );
-  outer.addColorStop(1, "rgba(100,5,0,0)");
+  outer.addColorStop(1, "rgba(90,4,0,0)");
 
   ctx.fillStyle = outer;
-  ctx.shadowColor = `rgba(255,94,18,${0.30 + intensity * 0.48})`;
-  ctx.shadowBlur = 12 + intensity * 34;
+  ctx.shadowColor =
+    `rgba(255,92,18,${0.25 + intensity * 0.44})`;
+  ctx.shadowBlur = 10 + intensity * 30;
   ctx.beginPath();
   ctx.arc(0, 0, domeRx, 0, Math.PI * 2);
   ctx.fill();
@@ -592,109 +640,121 @@ function drawPlasma(
     0,
     -domeRx * 0.08,
     0,
-    domeRx * 0.58,
+    domeRx * 0.56,
   );
   core.addColorStop(
     0,
-    `rgba(248,254,255,${0.12 + intensity * 0.52})`,
+    `rgba(250,254,255,${0.10 + intensity * 0.48})`,
   );
   core.addColorStop(
-    0.31,
-    `rgba(255,251,230,${0.12 + intensity * 0.43})`,
+    0.32,
+    `rgba(255,252,232,${0.10 + intensity * 0.39})`,
   );
   core.addColorStop(
-    0.70,
-    `rgba(255,153,42,${0.06 + intensity * 0.24})`,
+    0.72,
+    `rgba(255,151,40,${0.05 + intensity * 0.20})`,
   );
-  core.addColorStop(1, "rgba(255,70,12,0)");
-
+  core.addColorStop(1, "rgba(255,68,12,0)");
   ctx.fillStyle = core;
   ctx.beginPath();
-  ctx.arc(-domeRx * 0.08, 0, domeRx * 0.66, 0, Math.PI * 2);
+  ctx.arc(-domeRx * 0.08, 0, domeRx * 0.64, 0, Math.PI * 2);
   ctx.fill();
+
   ctx.restore();
 
-  // Plasma sheath.
+  // Plasma sheath around the body.
   const sheath = ctx.createLinearGradient(
-    -length * 1.85,
+    -length * 1.95,
     0,
-    length * 0.68,
+    length * 0.67,
     0,
   );
-  sheath.addColorStop(0, "rgba(130,16,4,0)");
+  sheath.addColorStop(0, "rgba(120,14,3,0)");
   sheath.addColorStop(
-    0.28,
-    `rgba(210,39,8,${0.05 + intensity * 0.15})`,
+    0.30,
+    `rgba(208,37,8,${0.035 + intensity * 0.12})`,
   );
   sheath.addColorStop(
-    0.53,
-    `rgba(255,83,14,${0.08 + intensity * 0.23})`,
+    0.54,
+    `rgba(255,82,14,${0.065 + intensity * 0.19})`,
   );
   sheath.addColorStop(
-    0.76,
-    `rgba(255,177,55,${0.10 + intensity * 0.29})`,
+    0.77,
+    `rgba(255,176,55,${0.085 + intensity * 0.25})`,
   );
   sheath.addColorStop(
-    0.93,
-    `rgba(255,245,208,${0.10 + intensity * 0.34})`,
+    0.94,
+    `rgba(255,245,210,${0.085 + intensity * 0.30})`,
   );
   sheath.addColorStop(1, "rgba(248,253,255,0)");
 
   ctx.fillStyle = sheath;
-  ctx.shadowColor = `rgba(255,73,12,${0.24 + intensity * 0.42})`;
-  ctx.shadowBlur = 8 + intensity * 28;
+  ctx.shadowColor =
+    `rgba(255,73,12,${0.20 + intensity * 0.36})`;
+  ctx.shadowBlur = 7 + intensity * 24;
+
   ctx.beginPath();
   ctx.moveTo(length * 0.62, 0);
   ctx.bezierCurveTo(
-    length * 0.24,
-    -width * (0.48 + intensity * 0.20),
-    -length * 0.28,
-    -width * (0.70 + intensity * 0.35),
-    -length * 1.55,
-    -width * 0.18,
+    length * 0.22,
+    -width * (0.44 + intensity * 0.18),
+    -length * 0.30,
+    -width * (0.66 + intensity * 0.30),
+    -length * 1.58,
+    -width * 0.16,
   );
-  ctx.lineTo(-length * 2.20, 0);
-  ctx.lineTo(-length * 1.55, width * 0.18);
+  ctx.lineTo(-length * 2.25, 0);
+  ctx.lineTo(-length * 1.58, width * 0.16);
   ctx.bezierCurveTo(
-    -length * 0.28,
-    width * (0.70 + intensity * 0.35),
-    length * 0.24,
-    width * (0.48 + intensity * 0.20),
+    -length * 0.30,
+    width * (0.66 + intensity * 0.30),
+    length * 0.22,
+    width * (0.44 + intensity * 0.18),
     length * 0.62,
     0,
   );
   ctx.closePath();
   ctx.fill();
 
-  // Turbulent hot wake.
-  for (let i = 0; i < 38; i++) {
-    const n = hash01(seed, i + Math.floor(playback * 110));
-    const n2 = hash01(seed ^ 0xa511e9b3, i * 7 + 3);
-    const n3 = hash01(seed ^ 0x43f14a1d, i * 13 + 17);
+  // Irregular incandescent sparks: short streaks / flakes rather than circles.
+  for (let i = 0; i < 34; i++) {
+    const a = hash01(seed ^ 0x43f14a1d, i * 13 + timeBucket);
+    const b = hash01(seed ^ 0xa511e9b3, i * 19 + 3);
+    const c = hash01(seed ^ 0x27d4eb2f, i * 29 + 17);
 
-    const back = length * (0.52 + n * (1.8 + intensity * 2.2));
-    const spread =
-      width * (n2 - 0.5) * (0.18 + intensity * 1.0);
-    const rr = Math.max(
-      0.7,
-      length * (0.009 + n3 * 0.026) * (0.75 + intensity),
-    );
+    const back = length * (0.58 + a * (1.6 + intensity * 2.35));
+    const py =
+      width * (b - 0.5) * (0.20 + intensity * 1.05);
+    const sparkLen =
+      length * (0.035 + c * 0.12) * (0.5 + intensity);
+    const drift = (b - 0.5) * length * 0.08;
 
-    const hot = 1 - clamp01(back / (length * 3.5));
-    const a =
-      (0.045 + intensity * 0.30) *
-      (0.45 + hot * 0.55);
+    const hot = 1 - clamp01(back / (length * 3.6));
+    const alpha =
+      (0.04 + intensity * 0.28) * (0.45 + hot * 0.55);
 
-    ctx.fillStyle =
+    ctx.strokeStyle =
       hot > 0.72
-        ? `rgba(255,250,225,${a})`
+        ? `rgba(255,250,226,${alpha})`
         : hot > 0.44
-          ? `rgba(255,177,54,${a})`
-          : `rgba(215,47,10,${a * 0.76})`;
-
+          ? `rgba(255,174,52,${alpha})`
+          : `rgba(218,47,10,${alpha * 0.74})`;
+    ctx.lineWidth = 0.7 + c * 1.6;
     ctx.beginPath();
-    ctx.arc(-back, spread, rr, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(-back, py);
+    ctx.lineTo(-back - sparkLen, py + drift);
+    ctx.stroke();
+
+    if (i % 7 === 0 && intensity > 0.52) {
+      const s = Math.max(0.7, length * (0.010 + c * 0.009));
+      ctx.fillStyle = `rgba(255,205,92,${alpha * 0.65})`;
+      ctx.beginPath();
+      ctx.moveTo(-back, py - s);
+      ctx.lineTo(-back + s * 0.9, py + s * 0.2);
+      ctx.lineTo(-back - s * 0.7, py + s * 0.8);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 
   ctx.restore();
@@ -828,106 +888,58 @@ function drawBreakup(
 
 function readableHeat(
   physicalHeat: number,
-  playback: number,
+  altitudeM: number,
   outcome: ReentryOutcome | undefined,
 ): number {
-  let heat = physicalHeat;
-
-  // Delay visible heating so the early orbit remains calm.
-  const gate = smoothstep((playback - 0.49) / 0.16);
+  // Visible heating begins only when the vehicle is genuinely near the
+  // atmosphere. A craft flying away in space stays dark.
+  const altitudeGate = smoothstep((118_000 - altitudeM) / 52_000);
+  let heat = physicalHeat * altitudeGate;
 
   if (outcome === "BURN") {
-    heat = Math.max(
-      heat * gate,
-      smoothstep((playback - 0.56) / 0.27),
-    );
+    heat = Math.max(heat, altitudeGate * 0.98);
   } else if (outcome === "BREAK") {
-    heat = Math.max(
-      heat * gate,
-      smoothstep((playback - 0.57) / 0.29) * 0.82,
-    );
+    heat = Math.max(heat, altitudeGate * 0.82);
   } else if (outcome === "EARTH_REACHED") {
-    const rise = smoothstep((playback - 0.55) / 0.23);
-    const fall = 1 - smoothstep((playback - 0.86) / 0.12);
-    heat = Math.max(heat * gate, rise * fall * 0.72);
+    heat = Math.max(heat, altitudeGate * 0.72);
   } else if (outcome === "SKIP") {
-    const rise = smoothstep((playback - 0.54) / 0.20);
-    const fall = 1 - smoothstep((playback - 0.72) / 0.18);
-    heat = Math.max(heat * gate, rise * fall * 0.50);
+    heat = Math.max(heat, altitudeGate * 0.48);
   }
 
   return clamp01(heat);
 }
 
-function pathPoint(
-  playback: number,
-  outcome: ReentryOutcome | undefined,
-  angleNorm: number,
+function projectPhysicsFrame(
+  frame: ReentryFrame,
+  initialAltitudeM: number,
   w: number,
   h: number,
 ): Point {
+  const minSide = Math.min(w, h);
   const start = { x: w * 0.80, y: h * 0.15 };
-  const steer = (angleNorm - 0.5) * 2;
 
-  if (playback <= 0.58) {
-    const t = smoothstep(playback / 0.58);
-    return {
-      x: cubic(
-        start.x,
-        w * (0.80 - steer * 0.035),
-        w * (0.70 - steer * 0.055),
-        w * (0.58 - steer * 0.035),
-        t,
-      ),
-      y: cubic(
-        start.y,
-        h * (0.18 + steer * 0.025),
-        h * (0.28 + steer * 0.085),
-        h * (0.39 + steer * 0.10),
-        t,
-      ),
-    };
-  }
+  // Local tangent / Earthward screen basis. The position comes from the
+  // simulated downrange and altitude, so a bad direction is not corrected
+  // toward Earth by the renderer.
+  const tangent = { x: -0.86, y: 0.22 };
+  const earthward = { x: -0.28, y: 0.96 };
 
-  const t = smoothstep((playback - 0.58) / 0.42);
-  const ex = w * (0.58 - steer * 0.035);
-  const ey = h * (0.39 + steer * 0.10);
-
-  if (outcome === "SKIP") {
-    return {
-      x: cubic(ex, w * 0.48, w * 0.63, w * 0.84, t),
-      y: cubic(
-        ey,
-        h * (0.48 - steer * 0.06),
-        h * 0.33,
-        h * 0.20,
-        t,
-      ),
-    };
-  }
-
-  if (outcome === "EARTH_REACHED") {
-    return {
-      x: cubic(ex, w * 0.53, w * 0.47, w * 0.40, t),
-      y: cubic(
-        ey,
-        h * (0.49 + steer * 0.05),
-        h * 0.61,
-        h * 0.76,
-        t,
-      ),
-    };
-  }
+  const downrangePx =
+    (frame.x / 4_200_000) * minSide * 0.95;
+  const descentPx =
+    ((initialAltitudeM - frame.altitudeM) / 180_000) *
+    minSide *
+    0.48;
 
   return {
-    x: cubic(ex, w * 0.54, w * 0.50, w * 0.46, t),
-    y: cubic(
-      ey,
-      h * (0.48 + steer * 0.04),
-      h * 0.56,
-      h * 0.62,
-      t,
-    ),
+    x:
+      start.x +
+      tangent.x * downrangePx +
+      earthward.x * descentPx,
+    y:
+      start.y +
+      tangent.y * downrangePx +
+      earthward.y * descentPx,
   };
 }
 
@@ -938,93 +950,95 @@ function craftPose(
   idle: boolean,
   heat: number,
   seed: number,
+  result: ReentryResult | null,
+  currentFrame: ReentryFrame,
   w: number,
   h: number,
 ): { x: number; y: number; angle: number } {
-  const p = pathPoint(playback, outcome, angleNorm, w, h);
-  const q = pathPoint(
-    Math.min(1, playback + 0.008),
-    outcome,
-    angleNorm,
+  const initialAltitudeM =
+    result?.frames[0]?.altitudeM ??
+    currentFrame.altitudeM ??
+    160_000;
+
+  if (idle || !result || result.frames.length < 2) {
+    const start = { x: w * 0.80, y: h * 0.15 };
+    const entryAngleDeg =
+      directionNormToEntryAngleDeg(angleNorm);
+    const gamma = (-entryAngleDeg * Math.PI) / 180;
+
+    const tangent = { x: -0.86, y: 0.22 };
+    const earthward = { x: -0.28, y: 0.96 };
+
+    const vx =
+      Math.cos(gamma) * tangent.x +
+      (-Math.sin(gamma)) * earthward.x;
+    const vy =
+      Math.cos(gamma) * tangent.y +
+      (-Math.sin(gamma)) * earthward.y;
+
+    return {
+      ...start,
+      angle: Math.atan2(vy, vx),
+    };
+  }
+
+  const p = projectPhysicsFrame(
+    currentFrame,
+    initialAltitudeM,
     w,
     h,
   );
-  const pathAngle = Math.atan2(q.y - p.y, q.x - p.x);
 
-  // Large visual steering range, while physics remains the existing
-  // shallow↔steep entry-angle mapping.
-  const steerAngle = (angleNorm - 0.5) * 1.55;
+  const nextPlayback = Math.min(1, playback + 0.012);
+  const nextFrame = sampleFrame(
+    result.frames,
+    playbackToFrameProgress(
+      nextPlayback,
+      outcome ?? result.outcome,
+    ),
+  );
+  const q = projectPhysicsFrame(
+    nextFrame,
+    initialAltitudeM,
+    w,
+    h,
+  );
 
-  const stress =
-    idle
-      ? 0
-      : smoothstep((heat - 0.28) / 0.72) *
-        smoothstep((playback - 0.55) / 0.30);
+  let angle = Math.atan2(q.y - p.y, q.x - p.x);
 
-  const burnBoost =
+  // External camera: only restrained airframe motion. Do not shake the whole
+  // craft like an interior cockpit camera.
+  const highStress = smoothstep((heat - 0.62) / 0.38);
+  const finalFailure =
     outcome === "BURN"
-      ? smoothstep((playback - 0.68) / 0.18)
-      : 0;
+      ? smoothstep((playback - 0.79) / 0.13)
+      : outcome === "BREAK"
+        ? smoothstep((playback - 0.76) / 0.15)
+        : 0;
 
-  const shake = stress * (1 + burnBoost * 1.7);
+  const micro =
+    highStress * (0.25 + finalFailure * 0.75);
+
   const jitterX =
-    Math.sin(playback * 132 + seed * 0.00001) *
+    Math.sin(playback * 97 + seed * 0.00001) *
     Math.min(w, h) *
-    0.006 *
-    shake;
+    0.00075 *
+    micro;
   const jitterY =
-    Math.sin(playback * 177 + seed * 0.000013 + 1.7) *
+    Math.sin(playback * 131 + seed * 0.000013 + 1.7) *
     Math.min(w, h) *
-    0.007 *
-    shake;
-  const jitterA =
-    Math.sin(playback * 155 + seed * 0.000009 + 0.4) *
-    0.055 *
-    shake;
+    0.0009 *
+    micro;
+  angle +=
+    Math.sin(playback * 109 + seed * 0.000009 + 0.4) *
+    0.012 *
+    micro;
 
   return {
     x: p.x + jitterX,
     y: p.y + jitterY,
-    angle: pathAngle + steerAngle * (idle ? 0.76 : 0.42) + jitterA,
+    angle,
   };
-}
-
-function drawDirectionRing(
-  ctx: CanvasRenderingContext2D,
-  pose: { x: number; y: number; angle: number },
-  craftLength: number,
-): void {
-  ctx.save();
-  ctx.translate(pose.x, pose.y);
-
-  const ringR = craftLength * 1.02;
-
-  ctx.strokeStyle = "rgba(205,220,232,0.30)";
-  ctx.lineWidth = 1.15;
-  ctx.setLineDash([3, 5]);
-  ctx.beginPath();
-  ctx.arc(0, 0, ringR, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.rotate(pose.angle);
-
-  ctx.strokeStyle = "rgba(238,246,250,0.88)";
-  ctx.fillStyle = "rgba(238,246,250,0.88)";
-  ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  ctx.moveTo(craftLength * 0.70, 0);
-  ctx.lineTo(craftLength * 1.48, 0);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(craftLength * 1.48, 0);
-  ctx.lineTo(craftLength * 1.25, -craftLength * 0.12);
-  ctx.lineTo(craftLength * 1.25, craftLength * 0.12);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.restore();
 }
 
 function drawResultLabel(
@@ -1168,14 +1182,14 @@ export function ReentryPresentationCanvas({
             );
 
       const heat =
-        idle ? 0 : readableHeat(rawHeat, playback, outcome);
+        idle ? 0 : readableHeat(rawHeat, frame.altitudeM, outcome);
 
       if (variant === "stage" && phase === "flight") {
         setReentryAudioFlight(playback, heat, outcome);
       }
 
       const earth = earthView(
-        playback,
+        frame.altitudeM,
         outcome,
         idle,
         phase,
@@ -1208,12 +1222,17 @@ export function ReentryPresentationCanvas({
         idle,
         heat,
         result?.seed ?? 1,
+        result,
+        frame,
         w,
         h,
       );
 
-      const approachScale =
-        idle ? 0 : smoothstep((playback - 0.20) / 0.66);
+      const altitudeApproach =
+        idle
+          ? 0
+          : smoothstep((135_000 - frame.altitudeM) / 105_000);
+      const approachScale = altitudeApproach;
       const baseCraft =
         Math.min(w, h) *
         (variant === "preview" ? 0.088 : 0.102);
@@ -1243,6 +1262,7 @@ export function ReentryPresentationCanvas({
           craftLength,
           heat,
           playback,
+          result?.seed ?? 1,
         );
 
         drawPlasma(
@@ -1298,10 +1318,6 @@ export function ReentryPresentationCanvas({
           result?.seed ?? 1,
           smoothstep((playback - 0.71) / 0.255),
         );
-      }
-
-      if (phase === "angle") {
-        drawDirectionRing(ctx, pose, craftLength);
       }
 
       if (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { ReentryFullscreenPortal } from "./ReentryFullscreenPortal";
 import { ReentryHybridStage } from "./ReentryHybridStage";
 import { ReentryLaunchControls } from "./ReentryLaunchControls";
 import { ReentryShellProvider } from "./reentryShellContext";
@@ -74,10 +75,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     lockPower,
     launch,
     nudgeAngle,
-    onPointerDown,
-    onPointerMove,
-    onPointerUp,
-    onPointerCancel,
     retry,
   } = useReentryGame({ onFlightStart });
 
@@ -91,7 +88,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     seed,
   };
 
-  const angleAdjusting = expanded && phase === "angle";
   const showEffects =
     expanded && (phase === "flight" || phase === "result");
 
@@ -129,23 +125,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     retry();
     setExpanded(false);
   }, [retry]);
-
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      dismissFsHints();
-      onPointerDown(event);
-    },
-    [dismissFsHints, onPointerDown],
-  );
-
-  const surfaceHandlers = expanded
-    ? {
-        onPointerDown: handlePointerDown,
-        onPointerMove,
-        onPointerUp,
-        onPointerCancel,
-      }
-    : {};
 
   return (
     <ReentryShellProvider openStage={openExpanded}>
@@ -185,17 +164,24 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
       </section>
 
       {expanded && (
+        <ReentryFullscreenPortal>
         <div
-          className="fixed inset-0 z-50 bg-[#020304]"
+          className="fixed inset-0 z-[9999] bg-[#020304]"
           role="dialog"
           aria-modal="true"
           aria-label="MIAV reentry stage"
         >
+          <button
+            type="button"
+            onClick={closeSession}
+            className="absolute left-5 top-5 z-50 rounded-sm border border-white/15 bg-black/35 px-4 py-2 text-[0.72rem] font-medium tracking-[0.20em] text-white/85 backdrop-blur-sm transition-colors hover:bg-black/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+            aria-label="Return to MIAV-922228 home"
+          >
+            MIAV-922228
+          </button>
           <div
             ref={surfaceRef}
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
-            style={{ touchAction: angleAdjusting ? "none" : "auto" }}
-            {...surfaceHandlers}
             role="application"
           >
             <ReentryHybridStage
@@ -238,17 +224,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 </button>
               </div>
             )}
-
-            <button
-              type="button"
-              onClick={closeSession}
-              className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center text-lg leading-none text-[var(--foreground-muted)] opacity-80 transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground-muted)]"
-              aria-label="Close reentry"
-            >
-              ×
-            </button>
           </div>
         </div>
+        </ReentryFullscreenPortal>
       )}
     </ReentryShellProvider>
   );
