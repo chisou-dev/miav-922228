@@ -891,11 +891,30 @@ function readableHeat(
   altitudeM: number,
   outcome: ReentryOutcome | undefined,
 ): number {
-  // Visible heating begins only when the vehicle is genuinely near the
-  // atmosphere. A craft flying away in space stays dark.
-  const altitudeGate = smoothstep((118_000 - altitudeM) / 52_000);
+  /*
+   * Presentation-only visibility gate.
+   *
+   * The simulation may already report non-zero heating in the very thin
+   * upper atmosphere, but that should not look like a bright movie-style
+   * plasma envelope while Earth is still visibly far away.
+   *
+   * > 95 km : visually dark
+   * ~90 km  : only the faintest hint
+   * ~80 km  : visible entry glow begins
+   * ~70 km  : strong plasma
+   * <=55 km : full presentation intensity
+   *
+   * This does NOT alter physics, heatFlux, integrity, or outcome.
+   */
+  const altitudeGate = smoothstep((95_000 - altitudeM) / 40_000);
+
+  // Keep actual heatFlux as the primary driver once the visible atmosphere
+  // has been reached.
   let heat = physicalHeat * altitudeGate;
 
+  // Outcome floors only ensure that the already-determined event is readable
+  // once the craft is genuinely low enough. They cannot light the craft above
+  // the altitude gate.
   if (outcome === "BURN") {
     heat = Math.max(heat, altitudeGate * 0.98);
   } else if (outcome === "BREAK") {
@@ -906,7 +925,11 @@ function readableHeat(
     heat = Math.max(heat, altitudeGate * 0.48);
   }
 
-  return clamp01(heat);
+  // Extra suppression in the extremely thin upper edge so the first visible
+  // cue is a faint glow rather than an immediate orange fireball.
+  const upperAtmosphereFade = smoothstep((91_000 - altitudeM) / 16_000);
+
+  return clamp01(heat * mix(0.18, 1, upperAtmosphereFade));
 }
 
 function projectPhysicsFrame(
@@ -989,6 +1012,16 @@ function craftPose(
     h,
   );
 
+  /*
+   * Use a forward tangent during normal flight.
+   *
+   * At playback === 1 the "next" sampled frame is often identical to the
+   * terminal frame. Previously this produced atan2(0, 0) === 0, so the craft,
+   * plasma and breakup suddenly snapped horizontal on the result frame.
+   *
+   * If the forward tangent collapses, fall back to the previous simulated
+   * frame. That preserves the actual terminal flight direction.
+   */
   const nextPlayback = Math.min(1, playback + 0.012);
   const nextFrame = sampleFrame(
     result.frames,
@@ -1004,7 +1037,48 @@ function craftPose(
     h,
   );
 
-  let angle = Math.atan2(q.y - p.y, q.x - p.x);
+  let dx = q.x - p.x;
+  let dy = q.y - p.y;
+
+  if (Math.hypot(dx, dy) < 0.25) {
+    const previousPlayback = Math.max(0, playback - 0.024);
+    const previousFrame = sampleFrame(
+      result.frames,
+      playbackToFrameProgress(
+        previousPlayback,
+        outcome ?? result.outcome,
+      ),
+    );
+    const previousPoint = projectPhysicsFrame(
+      previousFrame,
+      initialAltitudeM,
+      w,
+      h,
+    );
+
+    dx = p.x - previousPoint.x;
+    dy = p.y - previousPoint.y;
+  }
+
+  // Absolute fallback only for a pathological zero-motion frame. Prefer the
+  // user's selected initial direction instead of snapping horizontally.
+  if (Math.hypot(dx, dy) < 0.25) {
+    const entryAngleDeg =
+      directionNormToEntryAngleDeg(angleNorm);
+    const gamma = (-entryAngleDeg * Math.PI) / 180;
+
+    const tangent = { x: -0.86, y: 0.22 };
+    const earthward = { x: -0.28, y: 0.96 };
+
+    dx =
+      Math.cos(gamma) * tangent.x +
+      (-Math.sin(gamma)) * earthward.x;
+    dy =
+      Math.cos(gamma) * tangent.y +
+      (-Math.sin(gamma)) * earthward.y;
+  }
+
+  let angle = Math.atan2(dy, dx);
 
   // External camera: only restrained airframe motion. Do not shake the whole
   // craft like an interior cockpit camera.
@@ -1253,7 +1327,11 @@ export function ReentryPresentationCanvas({
         outcome === "BURN" &&
         (phase === "result" || playback >= 0.965);
 
-      if (!idle && !burnGone) {
+      const terminalFailure =
+        phase === "result" &&
+        (outcome === "BURN" || outcome === "BREAK");
+
+      if (!idle && !burnGone && !terminalFailure) {
         drawFlowLines(
           ctx,
           pose.x,
