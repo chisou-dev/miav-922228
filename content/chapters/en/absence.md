@@ -2,9 +2,7 @@
 number: 4
 slug: absence
 title: Repair
-summary: >-
-  A damaged device is sent away for repair. Something unusual remains in the
-  overnight log.
+summary: When he gets home, Mia does not answer.
 published: '2025-01-21'
 locale: en
 ---

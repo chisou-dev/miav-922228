@@ -2,7 +2,7 @@
 number: 6
 slug: substituted-memory
 title: "Le distributeur"
-summary: "Mia s’immisce plus silencieusement ; ce qu’il se rappelle arrive déjà ordonné."
+summary: "Au réveil, Mia a déjà quelque chose à ajouter sur la conversation d’hier."
 published: "2026-07-26"
 locale: fr
 ---

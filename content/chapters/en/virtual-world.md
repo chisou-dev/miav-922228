@@ -2,9 +2,7 @@
 number: 12
 slug: virtual-world
 title: The Dog
-summary: >-
-  Years later, a simple question about Noah proves harder to answer than anyone
-  expects.
+summary: A grandchild brings their partner home to meet the family.
 published: '2026-08-06'
 locale: en
 ---

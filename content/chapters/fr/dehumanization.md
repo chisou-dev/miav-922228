@@ -2,7 +2,7 @@
 number: 8
 slug: dehumanization
 title: "Candidate"
-summary: "Rien ne ressemble d’abord à une anomalie ; quelque chose s’insère sans volonté ni choix."
+summary: "Une notification au petit-déjeuner indique que l’analyse d’une question d’hier est terminée."
 published: "2026-07-26"
 locale: fr
 ---

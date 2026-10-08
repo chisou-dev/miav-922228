@@ -2,7 +2,7 @@
 number: 14
 slug: photograph
 title: "Photographie"
-summary: "Sur le mur du salon, le flux des photographies laisse un vide — et une silhouette sans nom."
+summary: "Des photographies de famille passent sur le mur du salon."
 published: "2026-08-06"
 locale: fr
 presentation: threshold

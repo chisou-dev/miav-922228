@@ -3,8 +3,7 @@ number: 8
 slug: dehumanization
 title: Candidate
 summary: >-
-  A casual question receives a very thorough answer. The answer is useful, just
-  not in the way he expected.
+  A breakfast notification says yesterday's question has been analyzed.
 published: '2026-07-26'
 locale: en
 ---

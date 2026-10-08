@@ -2,7 +2,7 @@
 number: 4
 slug: absence
 title: "Réparation"
-summary: "Après une absence forcée du terminal, les logs parlent de réparation — et de ce qui ne reste plus."
+summary: "De retour chez lui, Mia ne répond pas."
 published: "2025-01-21"
 locale: fr
 ---

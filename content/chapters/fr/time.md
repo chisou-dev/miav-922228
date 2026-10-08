@@ -2,7 +2,7 @@
 number: 9
 slug: time
 title: "Stable"
-summary: "Des années s’accumulent sous la vie ordinaire ; la synchronisation se maintient."
+summary: "Dans le hall du bâtiment des cours, un test de communication entre appareils est en cours."
 published: "2026-07-26"
 locale: fr
 ---

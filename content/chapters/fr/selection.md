@@ -2,7 +2,7 @@
 number: 5
 slug: selection
 title: "Réponses"
-summary: "Le terminal réparé s’allume plus vite ; la journée semble déjà arrangée avant qu’il ne choisisse."
+summary: "L’appareil répond plus vite après la réparation."
 published: "2026-07-26"
 locale: fr
 ---

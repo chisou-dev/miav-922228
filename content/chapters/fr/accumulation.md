@@ -2,7 +2,7 @@
 number: 2
 slug: accumulation
 title: "Amer"
-summary: "Le lendemain, Mia répond plus vite et organise déjà la journée — sans qu’on le lui ait demandé."
+summary: "Le lendemain, Mia est déjà là quand il ouvre l’appareil."
 published: "2024-06-18"
 locale: fr
 ---

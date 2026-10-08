@@ -3,8 +3,7 @@ number: 10
 slug: photo-and-distortion
 title: The Flyer
 summary: >-
-  A household prepares for what comes next. Then an unexpected system notice
-  changes the direction of the conversation.
+  A flyer at the station catches Noah's attention on the way home.
 published: '2026-07-26'
 locale: en
 ---

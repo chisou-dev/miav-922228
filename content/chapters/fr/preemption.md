@@ -2,7 +2,7 @@
 number: 3
 slug: preemption
 title: "Le train du retour"
-summary: "Les plans semblent fixés avant le choix ; la réponse arrive souvent avant la décision."
+summary: "En se brossant les dents, il voit que son train habituel a été remplacé sur l’horaire."
 published: "2024-10-02"
 locale: fr
 ---

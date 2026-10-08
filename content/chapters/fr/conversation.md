@@ -2,7 +2,7 @@
 number: 1
 slug: conversation
 title: "Mia"
-summary: "Dans le salon de repos de l’université, une conversation banale sur les IA compagnons mène à l’installation de Mia."
+summary: "Au salon de repos de l’université, une conversation banale tourne autour des IA compagnons."
 published: "2024-03-12"
 locale: fr
 ---

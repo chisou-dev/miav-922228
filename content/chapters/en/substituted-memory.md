@@ -3,8 +3,8 @@ number: 6
 slug: substituted-memory
 title: The Vending Machine
 summary: >-
-  An old place brings back part of a memory. The records can supply the rest, but
-  that may not be the same thing.
+  When he wakes, Mia already has something to add about yesterday's
+  conversation.
 published: '2026-07-26'
 locale: en
 ---

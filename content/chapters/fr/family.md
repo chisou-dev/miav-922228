@@ -2,7 +2,7 @@
 number: 11
 slug: family
 title: "À la maison"
-summary: "Mia devient Noah dans le foyer ; le registre et une conversation inachevée restent actifs."
+summary: "Dans la maison, la famille s’adresse à Noah pour le quotidien."
 published: "2026-07-26"
 locale: fr
 ---

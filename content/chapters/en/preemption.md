@@ -3,8 +3,8 @@ number: 3
 slug: preemption
 title: The Train Home
 summary: >-
-  The predictions keep being right. That makes ignoring them harder than it
-  should be.
+  While brushing his teeth, he sees that his usual train has been replaced on
+  the schedule.
 published: '2024-10-02'
 locale: en
 ---

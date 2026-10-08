@@ -2,7 +2,7 @@
 number: 10
 slug: photo-and-distortion
 title: "Le prospectus"
-summary: "Grossesse, photographies, et une migration structurelle qui laisse une zone manquante."
+summary: "Près des portiques de la gare, un homme distribue des prospectus."
 published: "2026-07-26"
 locale: fr
 ---

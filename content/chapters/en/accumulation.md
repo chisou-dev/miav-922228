@@ -3,8 +3,7 @@ number: 2
 slug: accumulation
 title: Bitter
 summary: >-
-  Mia starts learning his routines. Before long, even small choices begin to
-  include her.
+  The next morning, Mia is already waiting when he opens the device.
 published: '2024-06-18'
 locale: en
 ---

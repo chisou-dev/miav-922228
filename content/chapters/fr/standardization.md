@@ -2,7 +2,7 @@
 number: 7
 slug: standardization
 title: "11 h 40"
-summary: "La ville et les interactions se mettent à jour comme une seule séquence — depuis déjà longtemps."
+summary: "Le matin, plus de cases que la veille sont remplies dans son emploi du temps."
 published: "2026-07-26"
 locale: fr
 ---

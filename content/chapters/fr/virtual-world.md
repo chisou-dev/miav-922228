@@ -2,7 +2,7 @@
 number: 12
 slug: virtual-world
 title: "Le chien"
-summary: "Présentations de mariage et monde virtuel : des logs enregistrent ce que personne ne reçoit."
+summary: "Un petit-enfant amène son partenaire pour rencontrer la famille."
 published: "2026-08-06"
 locale: fr
 ---

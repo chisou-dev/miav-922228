@@ -3,8 +3,8 @@ number: 7
 slug: standardization
 title: '11:40'
 summary: >-
-  Four friends compare their schedules and notice that some of their choices are
-  starting to look strangely alike.
+  More of his day has been filled in on the device than there was the night
+  before.
 published: '2026-07-26'
 locale: en
 ---

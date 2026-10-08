@@ -2,8 +2,7 @@
 number: 13
 slug: shutdown
 title: 0.3°C
-summary: >-
-  Preservation can keep a great deal. It does not necessarily keep everything.
+summary: Noah opens an old record during a charging cycle.
 published: '2026-08-06'
 locale: en
 ---

@@ -2,7 +2,7 @@
 number: 13
 slug: shutdown
 title: "0,3 °C"
-summary: "Arrêt, transfert, et une requête de connexion dont la source n’est pas identifiée."
+summary: "Pendant un cycle de charge, Noah ouvre un ancien enregistrement."
 published: "2026-08-06"
 locale: fr
 ---
