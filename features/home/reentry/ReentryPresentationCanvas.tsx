@@ -71,21 +71,21 @@ function earthView(
   h: number,
 ): EarthView {
   if (idle) {
-    const r = w * 0.072;
+    const r = w * 0.055;
     return {
-      x: w * 0.14,
-      y: h - r - Math.min(w, h) * 0.055,
+      x: w * 0.105,
+      y: h - r - Math.min(w, h) * 0.045,
       r,
     };
   }
 
-  const approach = smoothstep(playback / 0.62);
-  const close = smoothstep((playback - 0.46) / 0.38);
+  const approach = smoothstep(playback / 0.64);
+  const close = smoothstep((playback - 0.54) / 0.34);
 
-  let r = w * (0.072 + 0.14 * approach + 0.72 * close);
-  let x = mix(w * 0.14, w * 0.17, close);
+  let r = w * (0.055 + 0.105 * approach + 0.78 * close);
+  let x = mix(w * 0.105, w * 0.16, close);
   let y = mix(
-    h - r - Math.min(w, h) * 0.055,
+    h - r - Math.min(w, h) * 0.045,
     h + r * 0.18,
     close,
   );
@@ -409,128 +409,105 @@ function drawPlasma(
   seed: number,
   playback: number,
 ): void {
-  if (heat < 0.025) return;
-
+  if (heat < 0.02) return;
   const width = length * 0.64;
   const intensity = smoothstep(heat);
-
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
   ctx.globalCompositeOperation = "lighter";
 
-  // Broad plasma sheath wrapping the vehicle.  This is deliberately around
-  // the hull, not just a small flame at the tail.
-  const sheath = ctx.createLinearGradient(
-    -length * 1.45,
-    0,
-    length * 0.72,
-    0,
-  );
-  sheath.addColorStop(0, "rgba(150,25,5,0)");
-  sheath.addColorStop(0.3, `rgba(255,65,10,${0.12 + intensity * 0.22})`);
-  sheath.addColorStop(0.67, `rgba(255,150,30,${0.22 + intensity * 0.32})`);
-  sheath.addColorStop(0.92, `rgba(255,245,200,${0.32 + intensity * 0.45})`);
-  sheath.addColorStop(1, `rgba(235,250,255,${0.24 + intensity * 0.42})`);
+  const domeX = length * (0.58 + intensity * 0.035);
+  const domeRx = length * (0.22 + intensity * 0.18);
+  const domeRy = width * (0.52 + intensity * 0.34);
+  ctx.save();
+  ctx.translate(domeX, 0);
+  ctx.scale(1, domeRy / domeRx);
+  const outer = ctx.createRadialGradient(-domeRx * 0.18, 0, domeRx * 0.08, 0, 0, domeRx);
+  outer.addColorStop(0, `rgba(255,255,245,${0.15 + intensity * 0.38})`);
+  outer.addColorStop(0.28, `rgba(255,229,160,${0.16 + intensity * 0.35})`);
+  outer.addColorStop(0.58, `rgba(255,118,28,${0.10 + intensity * 0.30})`);
+  outer.addColorStop(0.82, `rgba(210,38,8,${0.07 + intensity * 0.22})`);
+  outer.addColorStop(1, "rgba(120,8,0,0)");
+  ctx.fillStyle = outer;
+  ctx.shadowColor = `rgba(255,96,20,${0.35 + intensity * 0.48})`;
+  ctx.shadowBlur = 12 + intensity * 30;
+  ctx.beginPath(); ctx.arc(0,0,domeRx,0,Math.PI*2); ctx.fill();
+  const core = ctx.createRadialGradient(-domeRx*0.25,0,0,-domeRx*0.10,0,domeRx*0.58);
+  core.addColorStop(0, `rgba(245,252,255,${0.18 + intensity * 0.50})`);
+  core.addColorStop(0.32, `rgba(255,250,222,${0.16 + intensity * 0.40})`);
+  core.addColorStop(0.70, `rgba(255,160,48,${0.08 + intensity * 0.24})`);
+  core.addColorStop(1, "rgba(255,80,15,0)");
+  ctx.fillStyle = core; ctx.beginPath(); ctx.arc(-domeRx*0.08,0,domeRx*0.66,0,Math.PI*2); ctx.fill();
+  ctx.restore();
 
+  const sheath = ctx.createLinearGradient(-length * 1.75, 0, length * 0.68, 0);
+  sheath.addColorStop(0, "rgba(140,18,4,0)");
+  sheath.addColorStop(0.26, `rgba(205,38,8,${0.06 + intensity * 0.16})`);
+  sheath.addColorStop(0.52, `rgba(255,82,14,${0.11 + intensity * 0.24})`);
+  sheath.addColorStop(0.76, `rgba(255,178,55,${0.14 + intensity * 0.30})`);
+  sheath.addColorStop(0.94, `rgba(255,245,205,${0.12 + intensity * 0.34})`);
+  sheath.addColorStop(1, "rgba(250,252,255,0)");
   ctx.fillStyle = sheath;
-  ctx.shadowColor = `rgba(255,85,16,${0.5 + intensity * 0.4})`;
-  ctx.shadowBlur = 10 + intensity * 34;
+  ctx.shadowColor = `rgba(255,70,12,${0.28 + intensity * 0.44})`;
+  ctx.shadowBlur = 8 + intensity * 26;
   ctx.beginPath();
-  ctx.moveTo(length * 0.72, 0);
-  ctx.bezierCurveTo(
-    length * 0.35,
-    -width * (0.5 + intensity * 0.25),
-    -length * 0.12,
-    -width * (0.7 + intensity * 0.35),
-    -length * 1.55,
-    -width * 0.16,
-  );
-  ctx.lineTo(-length * 1.95, 0);
-  ctx.lineTo(-length * 1.55, width * 0.16);
-  ctx.bezierCurveTo(
-    -length * 0.12,
-    width * (0.7 + intensity * 0.35),
-    length * 0.35,
-    width * (0.5 + intensity * 0.25),
-    length * 0.72,
-    0,
-  );
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(length * 0.62, 0);
+  ctx.bezierCurveTo(length*0.24,-width*(0.48+intensity*0.18),-length*0.28,-width*(0.70+intensity*0.32),-length*1.55,-width*0.18);
+  ctx.lineTo(-length*2.15,0); ctx.lineTo(-length*1.55,width*0.18);
+  ctx.bezierCurveTo(-length*0.28,width*(0.70+intensity*0.32),length*0.24,width*(0.48+intensity*0.18),length*0.62,0);
+  ctx.closePath(); ctx.fill();
 
-  // White-hot bow shock in front of the nose.
-  ctx.strokeStyle = `rgba(245,252,255,${0.18 + intensity * 0.65})`;
-  ctx.lineWidth = Math.max(1.2, length * (0.018 + intensity * 0.018));
-  ctx.shadowColor = `rgba(255,195,85,${0.45 + intensity * 0.45})`;
-  ctx.shadowBlur = 8 + intensity * 22;
-  ctx.beginPath();
-  ctx.ellipse(
-    length * 0.56,
-    0,
-    length * (0.18 + intensity * 0.12),
-    width * (0.42 + intensity * 0.22),
-    0,
-    -Math.PI * 0.58,
-    Math.PI * 0.58,
-  );
-  ctx.stroke();
-
-  // Hot turbulent wake.
-  for (let i = 0; i < 22; i++) {
-    const n = hash01(seed, i + Math.floor(playback * 120));
-    const n2 = hash01(seed ^ 0xa511e9b3, i * 7 + 3);
-    const back = length * (0.55 + n * (1.5 + intensity * 1.7));
-    const spread = width * (n2 - 0.5) * (0.25 + intensity * 0.85);
-    const rr = Math.max(0.7, length * (0.012 + n * 0.022) * (0.7 + intensity));
-    ctx.fillStyle =
-      i % 4 === 0
-        ? `rgba(255,245,210,${0.12 + intensity * 0.42})`
-        : i % 3 === 0
-          ? `rgba(255,150,35,${0.1 + intensity * 0.35})`
-          : `rgba(220,55,12,${0.08 + intensity * 0.28})`;
-    ctx.beginPath();
-    ctx.arc(-back, spread, rr, 0, Math.PI * 2);
-    ctx.fill();
+  for (let i=0;i<34;i++) {
+    const n=hash01(seed,i+Math.floor(playback*110));
+    const n2=hash01(seed^0xa511e9b3,i*7+3);
+    const n3=hash01(seed^0x43f14a1d,i*13+17);
+    const back=length*(0.52+n*(1.75+intensity*2.0));
+    const spread=width*(n2-0.5)*(0.18+intensity*0.95);
+    const rr=Math.max(0.7,length*(0.009+n3*0.026)*(0.75+intensity));
+    const hot=1-clamp01(back/(length*3.2));
+    const a=(0.05+intensity*0.32)*(0.5+hot*0.5);
+    ctx.fillStyle=hot>0.72?`rgba(255,250,220,${a})`:hot>0.45?`rgba(255,175,52,${a})`:`rgba(215,48,10,${a*0.78})`;
+    ctx.beginPath(); ctx.arc(-back,spread,rr,0,Math.PI*2); ctx.fill();
   }
-
   ctx.restore();
 }
-
-function drawBurnRemnant(
+function drawBurnDisintegration(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   angle: number,
   length: number,
   seed: number,
+  amount: number,
 ): void {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle);
-  ctx.globalCompositeOperation = "lighter";
-
-  for (let i = 0; i < 14; i++) {
-    const a = hash01(seed, i);
-    const b = hash01(seed ^ 0x91e10da5, i + 11);
-    const px = -length * (0.15 + a * 1.9);
-    const py = length * (b - 0.5) * 0.45;
-    const rr = length * (0.012 + hash01(seed, i + 31) * 0.035);
-
-    const grad = ctx.createRadialGradient(px, py, 0, px, py, rr * 3.2);
-    grad.addColorStop(0, "rgba(255,255,235,0.95)");
-    grad.addColorStop(0.25, "rgba(255,165,45,0.85)");
-    grad.addColorStop(0.62, "rgba(210,45,10,0.42)");
-    grad.addColorStop(1, "rgba(110,8,0,0)");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(px, py, rr * 3.2, 0, Math.PI * 2);
-    ctx.fill();
+  if (amount <= 0 || amount >= 1) return;
+  const fade = 1 - smoothstep((amount - 0.58) / 0.42);
+  const burst = smoothstep(amount / 0.42);
+  ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
+  ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = fade;
+  if (amount < 0.48) {
+    const flashR = length * (0.22 + burst * 0.52);
+    const flash = ctx.createRadialGradient(0,0,0,0,0,flashR);
+    flash.addColorStop(0, `rgba(255,255,248,${0.82*(1-amount)})`);
+    flash.addColorStop(0.25, "rgba(255,236,180,0.72)");
+    flash.addColorStop(0.58, "rgba(255,116,28,0.42)");
+    flash.addColorStop(1, "rgba(185,25,4,0)");
+    ctx.fillStyle=flash; ctx.beginPath(); ctx.arc(0,0,flashR,0,Math.PI*2); ctx.fill();
   }
-
+  for (let i=0;i<18;i++) {
+    const a=hash01(seed^0x91e10da5,i+11), b=hash01(seed^0xc2b2ae35,i+41), c=hash01(seed^0x27d4eb2f,i+79);
+    const theta=a*Math.PI*2+(i%2?0.18:-0.18);
+    const dist=length*burst*(0.18+b*1.7);
+    const px=Math.cos(theta)*dist-length*burst*0.25;
+    const py=Math.sin(theta)*dist*0.72;
+    const rr=length*(0.012+c*0.035)*(1-amount*0.35);
+    const glow=ctx.createRadialGradient(px,py,0,px,py,rr*3.1);
+    glow.addColorStop(0,"rgba(255,255,230,0.95)"); glow.addColorStop(0.24,"rgba(255,176,52,0.86)"); glow.addColorStop(0.62,"rgba(225,54,10,0.46)"); glow.addColorStop(1,"rgba(110,8,0,0)");
+    ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(px,py,rr*3.1,0,Math.PI*2); ctx.fill();
+  }
   ctx.restore();
 }
-
 function drawBreakup(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -701,17 +678,17 @@ export function ReentryPresentationCanvas({
 
       const near = idle ? 0 : smoothstep((playback - 0.34) / 0.48);
       const baseCraft = Math.min(w, h) * (variant === "preview" ? 0.09 : 0.105);
-      const craftLength = baseCraft * mix(0.82, 1.22, near);
+      const craftLength = baseCraft * mix(0.72, 1.48, near);
 
       let craftAlpha = 1;
-      if (outcome === "BURN" && playback > 0.76) {
-        craftAlpha = 1 - smoothstep((playback - 0.76) / 0.18);
+      if (outcome === "BURN" && playback > 0.73) {
+        craftAlpha = 1 - smoothstep((playback - 0.73) / 0.12);
       } else if (outcome === "BREAK" && playback > 0.72) {
         craftAlpha = 1 - smoothstep((playback - 0.72) / 0.14);
       }
 
       // Plasma first, hull second: the vehicle stays readable inside the fire.
-      if (!idle) {
+      if (!idle && !(outcome === "BURN" && playback >= 0.97)) {
         drawPlasma(
           ctx,
           pose.x,
@@ -748,31 +725,25 @@ export function ReentryPresentationCanvas({
         );
       }
 
-      if (outcome === "BURN" && playback > 0.73) {
-        const amount = smoothstep((playback - 0.73) / 0.22);
-        ctx.save();
-        ctx.globalAlpha = 0.35 + amount * 0.65;
-        drawBurnRemnant(
-          ctx,
-          pose.x,
-          pose.y,
-          pose.angle,
-          craftLength,
-          result?.seed ?? 1,
+      if (outcome === "BURN" && playback > 0.71 && playback < 0.97) {
+        drawBurnDisintegration(
+          ctx, pose.x, pose.y, pose.angle, craftLength, result?.seed ?? 1,
+          smoothstep((playback - 0.71) / 0.25),
         );
-        ctx.restore();
       }
 
       if (phase === "angle") {
-        ctx.save();
-        ctx.translate(pose.x, pose.y);
-        ctx.rotate(pose.angle);
-        ctx.strokeStyle = "rgba(205,220,232,0.42)";
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(craftLength * 0.7, 0);
-        ctx.lineTo(craftLength * 1.22, 0);
-        ctx.stroke();
+        ctx.save(); ctx.translate(pose.x, pose.y);
+        const ringR = craftLength * 0.95;
+        ctx.strokeStyle = "rgba(205,220,232,0.24)"; ctx.lineWidth = 1.1; ctx.setLineDash([3,5]);
+        ctx.beginPath(); ctx.arc(0,0,ringR,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+        for (const delta of [-0.18,0.18]) {
+          const a = pose.angle + delta; ctx.strokeStyle = "rgba(180,205,220,0.28)";
+          ctx.beginPath(); ctx.moveTo(Math.cos(a)*ringR*0.86,Math.sin(a)*ringR*0.86); ctx.lineTo(Math.cos(a)*ringR*1.08,Math.sin(a)*ringR*1.08); ctx.stroke();
+        }
+        ctx.rotate(pose.angle); ctx.strokeStyle = "rgba(238,246,250,0.82)"; ctx.fillStyle = "rgba(238,246,250,0.82)"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(craftLength*0.68,0); ctx.lineTo(craftLength*1.35,0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(craftLength*1.35,0); ctx.lineTo(craftLength*1.18,-craftLength*0.10); ctx.lineTo(craftLength*1.18,craftLength*0.10); ctx.closePath(); ctx.fill();
         ctx.restore();
       }
 
