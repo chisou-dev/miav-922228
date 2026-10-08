@@ -6,18 +6,12 @@ import { ReentryLaunchControls } from "./ReentryLaunchControls";
 import { ReentryShellProvider } from "./reentryShellContext";
 import { useBodyScrollLock } from "./useBodyScrollLock";
 import { useReentryGame } from "./useReentryGame";
-import type { ReentryOutcome } from "./reentryTypes";
 import { REENTRY_ART } from "./reentryArtPresentation";
 import { REENTRY_SCENE } from "./reentrySceneLayout";
 import { preloadReentryPreviewAssets } from "./reentryAssets";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)]";
-
-function outcomeLabel(outcome: ReentryOutcome): string {
-  if (outcome === "EARTH_REACHED") return "EARTH REACHED";
-  return outcome;
-}
 
 function devPresetRequiresExpand(): boolean {
   if (process.env.NODE_ENV === "production") return false;
@@ -231,15 +225,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 className="pointer-events-none absolute inset-x-0 bottom-[26%] z-[3] text-center text-[0.62rem] tracking-[0.14em] text-[var(--foreground-muted)] transition-opacity duration-700 sm:text-[0.68rem] opacity-80"
               >
                 {REENTRY_SCENE.hintText}
-              </p>
-            )}
-
-            {phase === "result" && result && (
-              <p
-                className="pointer-events-none absolute inset-x-0 bottom-[14%] z-[3] text-center text-[0.78rem] font-medium tracking-[0.28em] text-[var(--foreground)]"
-                aria-live="polite"
-              >
-                {outcomeLabel(result.outcome)}
               </p>
             )}
 
