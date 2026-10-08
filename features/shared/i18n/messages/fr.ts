@@ -53,6 +53,7 @@ export const fr: MessageCatalog = {
   "startHere.readHeading": "LIRE",
   "startHere.readBody": "Des histoires que vous pouvez lire tout de suite.",
   "startHere.readCta": "Commencer à lire",
+  "startHere.readingTestLink": "Essayer un test de lecture →",
   "startHere.playHeading": "JOUER",
   "startHere.playBody": "Petits jeux de navigateur et expériences.",
   "startHere.playCta": "Jouer",
@@ -65,6 +66,7 @@ export const fr: MessageCatalog = {
 
   "works.newHereEyebrow": "Première visite ?",
   "works.newHereLead": "Commencez par une nouvelle courte.",
+  "works.readingTestLink": "Tests de lecture pour les flash fiction →",
   "works.minutesRead": "{minutes} min de lecture",
   "home.readChapters": "Chapitres",
   "home.readBooks": "Livres",
@@ -115,6 +117,7 @@ export const fr: MessageCatalog = {
   "apps.nextAppAria": "Applications à venir",
   "apps.writerMemo.description":
     "Une application de notes simple et privée pour les écrivains.",
+  "apps.readingTestLink": "Test de lecture →",
 
   // about / contact (home sections)
   "home.booksBody":

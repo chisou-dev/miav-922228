@@ -399,12 +399,12 @@ export const flashPieces: readonly FlashPiece[] = [
     title: "The Silver Thread",
     minutes: 5,
     blurb:
-      "A silver thread rises above a mountain as offerings gather and memories begin to disappear.",
+      "Researchers discover a silver thread emerging from the rock at a mountain summit.",
     genre: "Flash Fiction",
     seo: {
       title: "The Silver Thread | Flash Fiction",
       description:
-        "A quiet flash fiction story about a silver thread, vanished wishes, and what can no longer be agreed upon.",
+        "Researchers discover a silver thread emerging from the rock at a mountain summit.",
     },
     body: [
       "The thread appeared one morning in a place no one remembered. It rose from a seam in the exposed rock at the summit of a mountain, silver and about as thick as a person's arm. The first survey team felt a faint vibration when they touched it. Their instruments could not establish its temperature.",
@@ -440,12 +440,12 @@ export const flashPieces: readonly FlashPiece[] = [
     title: "The Day I Couldn't Find Anyone",
     minutes: 4,
     blurb:
-      "A quiet story about losing a phone — and losing every address, number, and face that lived inside it.",
+      "He gets off the bus in an unfamiliar hillside suburb and realizes his phone is missing.",
     genre: "Flash Fiction",
     seo: {
       title: "The Day I Couldn't Find Anyone | Flash Fiction",
       description:
-        "A quiet flash fiction story about a lost phone, a hillside suburb, and becoming unreachable as a person.",
+        "He gets off the bus in an unfamiliar hillside suburb and realizes his phone is missing.",
     },
     body: [
       "The bus had pulled away by the time I noticed my phone was missing. I checked my pockets again, then looked down the slope, where the blue bus was already turning the corner. Sunlight flashed across its windows before it disappeared. I must have left the phone on the bus.",
@@ -488,12 +488,12 @@ export const flashPieces: readonly FlashPiece[] = [
     title: "Lost Property",
     minutes: 2,
     blurb:
-      "A quiet story about reporting a loss from thirty years ago — and finding something gray waiting in the back.",
+      "A man visits a lost-property counter to ask about something he lost thirty years ago.",
     genre: "Flash Fiction",
     seo: {
       title: "Lost Property | Flash Fiction",
       description:
-        "A quiet flash fiction story about a lost property office, thirty years of weight, and something gray waiting in the back.",
+        "A man visits a lost-property counter to ask about something he lost thirty years ago.",
     },
     body: [
       '"I\'ve lost something."',
@@ -529,7 +529,7 @@ export const flashPieces: readonly FlashPiece[] = [
       title:
         "After the Rain — Flash Fiction About Memory and Perception | Takashi Yabe",
       description:
-        "A flash fiction story about memory and perception—a stranger beneath a bookshop awning remembers the hill differently.",
+        "Halfway up the hill, he takes shelter from the rain beneath a secondhand bookshop awning.",
     },
     body: [
       "Halfway up the hill, I took shelter from the rain beneath the awning of a secondhand bookshop. An old man was standing there, holding a closed umbrella. He tapped its tip against the wet pavement.",

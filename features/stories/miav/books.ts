@@ -55,7 +55,7 @@ export const miavBooks: Book[] = [
     partLabel: "PART I",
     title: "MIAV-922228",
     description:
-      "The first volume of a literary series about the relationship between humans and artificial intelligence.",
+      "In a university lounge, a casual conversation about companion AIs leads him to install RIS without giving the decision much thought.",
     editions: [
       {
         id: "english-kindle",
@@ -95,7 +95,7 @@ export const miavBooks: Book[] = [
     title: "MIAV-922228 Part II",
     subtitle: "Homeward",
     description:
-      "The story continues. MIAV-922228 Part II : Homeward — Kindle Edition by Takashi Yabe.",
+      "The second volume of MIAV-922228. English Kindle edition.",
     editions: [
       {
         id: "english-kindle",
@@ -124,7 +124,7 @@ export const miavBooks: Book[] = [
     title: "MIAV-922228 Part III",
     subtitle: "The Edge of the World",
     description:
-      "MIAV-922228 Part III: The Edge of the World — Kindle Edition by Takashi Yabe.",
+      "The third volume of MIAV-922228. English Kindle edition.",
     editions: [
       {
         id: "english-kindle",

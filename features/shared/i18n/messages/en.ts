@@ -54,6 +54,7 @@ export const en = {
   "startHere.readBody":
     "Stories you can start reading right away.",
   "startHere.readCta": "Start Reading",
+  "startHere.readingTestLink": "Try a reading test →",
   "startHere.playHeading": "PLAY",
   "startHere.playBody": "Small browser games and experiments.",
   "startHere.playCta": "Play a Game",
@@ -67,6 +68,7 @@ export const en = {
   // works — first-time reader entry
   "works.newHereEyebrow": "New here?",
   "works.newHereLead": "Start with a short story.",
+  "works.readingTestLink": "Reading tests for flash fiction →",
   "works.minutesRead": "{minutes} min read",
   "home.readChapters": "Chapters",
   "home.readBooks": "Books",
@@ -116,6 +118,7 @@ export const en = {
   "apps.nextAppEyebrow": "Next app",
   "apps.nextAppAria": "Future apps",
   "apps.writerMemo.description": "A simple, private memo app for writers.",
+  "apps.readingTestLink": "Reading Test →",
 
   // about / contact (home sections)
   "home.booksBody":

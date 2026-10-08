@@ -36,6 +36,16 @@ function StartHerePathway({ id, heading, body, href, cta }: PathwayProps) {
           {cta}
         </Link>
       </p>
+      {id === "start-here-read" ? (
+        <p className="mt-5">
+          <Link
+            href="/reading-test"
+            className="text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)]"
+          >
+            {t("startHere.readingTestLink")}
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

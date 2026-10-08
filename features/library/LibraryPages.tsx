@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getChapterBySlug,
@@ -21,6 +22,7 @@ import {
 import { getSeriesStoryChapter } from "@/features/library/seriesContent";
 import { BookContinueCard } from "@/features/library/BookContinueCard";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
+import { FlashPieceAfterNav } from "@/features/library/FlashPieceAfterNav";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
 import {
   BookJsonLd,
@@ -106,6 +108,14 @@ export function FlashFictionPage() {
               description={piece.blurb}
             />
           ))}
+          <p className="mt-16 border-t border-[var(--line)] pt-12 text-center sm:mt-20 sm:pt-14">
+            <Link
+              href="/reading-test"
+              className="text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)]"
+            >
+              Reading tests for selected flash fiction →
+            </Link>
+          </p>
         </div>
       </LibraryShell>
     </>
@@ -597,6 +607,7 @@ export function FlashPiecePage({ slug }: { slug: string }) {
           <ReadingLayout label="Flash fiction text">
             <Prose text={piece.body} />
           </ReadingLayout>
+          <FlashPieceAfterNav slug={piece.slug} />
         </div>
       </LibraryShell>
     </>

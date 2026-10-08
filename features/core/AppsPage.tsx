@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AppListing } from "@/features/core/AppListing";
 import { MIAV_APPS } from "@/features/core/apps";
 import { SfDivider } from "@/features/shared/SfSection";
@@ -38,8 +39,17 @@ export function AppsPage() {
 
         <SfDivider variant="trace" className="my-20 sm:my-28" />
 
+        <p className="text-center">
+          <Link
+            href="/reading-test"
+            className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.5em] transition-colors duration-300 hover:text-[var(--foreground)]"
+          >
+            {t("apps.readingTestLink")}
+          </Link>
+        </p>
+
         <div
-          className="border-t border-[var(--line)] pt-16 text-center sm:pt-20"
+          className="mt-16 border-t border-[var(--line)] pt-16 text-center sm:mt-20 sm:pt-20"
           aria-label={t("apps.nextAppAria")}
         >
           <p className="text-[0.68rem] tracking-[0.18em] text-[var(--foreground-muted)] uppercase opacity-80">

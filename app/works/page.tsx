@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   categories,
   flashHref,
@@ -59,6 +60,14 @@ export default function WorksPage() {
               meta={t("works.minutesRead", { minutes: starterFlash.minutes })}
               actionLabel={t("home.featured.readCta")}
             />
+            <p className="mt-6 text-center sm:mt-8">
+              <Link
+                href="/reading-test"
+                className="text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)]"
+              >
+                {t("works.readingTestLink")}
+              </Link>
+            </p>
           </div>
         ) : null}
 
