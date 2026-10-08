@@ -2,17 +2,31 @@
 
 import { useEffect, useRef } from "react";
 import {
+  BURN_PHYSICS_SHARE,
   playbackToFrameProgress,
   presentationHeatGlow,
+  SKIP_PHYSICS_SHARE,
 } from "./reentryPlayback";
 import type { ReentryArtVariant } from "./reentryArtPresentation";
 import type { ReentryOutcome, ReentryPhase, ReentryResult } from "./reentryTypes";
 import { restFrame, sampleFrame } from "./reentryVisual";
 import { craftPose } from "./reentryCraftProjection";
 import {
+  burnDestructionAmount,
+  reentryStageMix,
+  visualAtmosphereGate,
+} from "./reentryCinematicStages";
+import {
+  buildOrbitAftermath,
+  orbitStateFromFrames,
+  projectOrbitPoint,
+  sampleOrbitPoint,
+  type OrbitPoint,
+} from "./reentryOrbitAftermath";
+import {
   finishReentryAudio,
   setReentryAudioFlight,
-  stopReentryAudio,
+  startReentryAmbience,
 } from "./reentryAudio";
 
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
@@ -132,9 +146,12 @@ function drawStars(
   playback: number,
   moving: boolean,
   horizonMix: number,
+  stars = 1,
 ): void {
+  if (stars <= 0.001) return;
+
   const streak = moving ? smoothstep((playback - 0.10) / 0.42) : 0;
-  const fade = 1 - horizonMix * 0.72;
+  const fade = (1 - horizonMix * 0.72) * stars;
 
   ctx.save();
   ctx.globalAlpha = fade;
@@ -159,6 +176,217 @@ function drawStars(
       ctx.fillRect(x, y, size, size);
     }
   }
+
+  ctx.restore();
+}
+
+function drawAtmosphericHorizon(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  atmosphereMix: number,
+  blueLimb: number,
+): void {
+  if (atmosphereMix <= 0.001) return;
+
+  ctx.save();
+  ctx.globalAlpha = atmosphereMix;
+
+  const sky = ctx.createLinearGradient(
+    0,
+    0,
+    0,
+    h,
+  );
+
+  sky.addColorStop(
+    0,
+    `rgba(0, 3, 10, ${0.98})`,
+  );
+  sky.addColorStop(
+    0.42,
+    `rgba(3, 18, 43, ${0.94})`,
+  );
+  sky.addColorStop(
+    0.72,
+    `rgba(18, 74, 132, ${0.88 * blueLimb})`,
+  );
+  sky.addColorStop(
+    1,
+    `rgba(102, 170, 220, ${0.72 * blueLimb})`,
+  );
+
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
+
+  const horizonY =
+    h * (0.78 - atmosphereMix * 0.16);
+
+  const ocean = ctx.createLinearGradient(
+    0,
+    horizonY,
+    0,
+    h,
+  );
+
+  ocean.addColorStop(
+    0,
+    "rgba(48,105,150,0.82)",
+  );
+  ocean.addColorStop(
+    0.32,
+    "rgba(20,65,105,0.94)",
+  );
+  ocean.addColorStop(
+    1,
+    "rgba(4,20,38,1)",
+  );
+
+  ctx.fillStyle = ocean;
+  ctx.fillRect(
+    0,
+    horizonY,
+    w,
+    h - horizonY,
+  );
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  const limb = ctx.createLinearGradient(
+    0,
+    horizonY - h * 0.075,
+    0,
+    horizonY + h * 0.018,
+  );
+
+  limb.addColorStop(
+    0,
+    "rgba(15,90,220,0)",
+  );
+  limb.addColorStop(
+    0.48,
+    `rgba(70,170,255,${0.18 + blueLimb * 0.34})`,
+  );
+  limb.addColorStop(
+    0.72,
+    `rgba(190,235,255,${0.20 + blueLimb * 0.40})`,
+  );
+  limb.addColorStop(
+    1,
+    "rgba(210,245,255,0)",
+  );
+
+  ctx.fillStyle = limb;
+  ctx.fillRect(
+    0,
+    horizonY - h * 0.10,
+    w,
+    h * 0.14,
+  );
+
+  ctx.restore();
+
+  ctx.globalCompositeOperation = "screen";
+
+  for (let i = 0; i < 13; i++) {
+    const yy =
+      horizonY +
+      h * (0.015 + i * 0.016);
+
+    ctx.strokeStyle =
+      `rgba(235,245,250,${
+        0.018 + (i % 4) * 0.010
+      })`;
+
+    ctx.lineWidth =
+      2.5 + (i % 3) * 1.8;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -w * 0.05,
+      yy + Math.sin(i * 1.7) * 7,
+    );
+
+    ctx.bezierCurveTo(
+      w * 0.22,
+      yy - 12,
+      w * 0.63,
+      yy + 9,
+      w * 1.06,
+      yy - 4,
+    );
+
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawSurfaceApproach(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  surfaceMix: number,
+): void {
+  if (surfaceMix <= 0.001) return;
+
+  ctx.save();
+  ctx.globalAlpha = surfaceMix;
+
+  const sky = ctx.createLinearGradient(
+    0,
+    0,
+    0,
+    h * 0.72,
+  );
+
+  sky.addColorStop(
+    0,
+    "#1b5f9d",
+  );
+  sky.addColorStop(
+    0.56,
+    "#5ba3d2",
+  );
+  sky.addColorStop(
+    1,
+    "#b8d9ea",
+  );
+
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
+
+  const oceanY = h * 0.63;
+
+  const ocean = ctx.createLinearGradient(
+    0,
+    oceanY,
+    0,
+    h,
+  );
+
+  ocean.addColorStop(
+    0,
+    "#457e9e",
+  );
+  ocean.addColorStop(
+    0.38,
+    "#245775",
+  );
+  ocean.addColorStop(
+    1,
+    "#0c2a3d",
+  );
+
+  ctx.fillStyle = ocean;
+  ctx.fillRect(
+    0,
+    oceanY,
+    w,
+    h - oceanY,
+  );
 
   ctx.restore();
 }
@@ -626,7 +854,7 @@ function drawPlasma(
     `rgba(255,92,18,${0.25 + intensity * 0.44})`;
   ctx.shadowBlur = 10 + intensity * 30;
   ctx.beginPath();
-  ctx.arc(0, 0, domeRx, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, domeRx, domeRx * 0.92, 0.08, -Math.PI * 0.82, Math.PI * 0.82);
   ctx.fill();
 
   const core = ctx.createRadialGradient(
@@ -652,7 +880,7 @@ function drawPlasma(
   core.addColorStop(1, "rgba(255,68,12,0)");
   ctx.fillStyle = core;
   ctx.beginPath();
-  ctx.arc(-domeRx * 0.08, 0, domeRx * 0.64, 0, Math.PI * 2);
+  ctx.ellipse(-domeRx * 0.08, 0, domeRx * 0.64, domeRx * 0.52, 0.06, -Math.PI * 0.9, Math.PI * 0.9);
   ctx.fill();
 
   ctx.restore();
@@ -734,7 +962,7 @@ function drawPlasma(
         : hot > 0.44
           ? `rgba(255,174,52,${alpha})`
           : `rgba(218,47,10,${alpha * 0.74})`;
-    ctx.lineWidth = 0.7 + c * 1.6;
+    ctx.lineWidth = 0.55 + c * 1.1;
     ctx.beginPath();
     ctx.moveTo(-back, py);
     ctx.lineTo(-back - sparkLen, py + drift);
@@ -901,30 +1129,61 @@ function readableHeat(
    *
    * This does NOT alter physics, heatFlux, integrity, or outcome.
    */
-  const altitudeGate = smoothstep((95_000 - altitudeM) / 40_000);
+  /*
+   * Presentation only.
+   *
+   * > 82 km : orange plasma OFF
+   * ~78 km  : extremely faint onset
+   * ~68 km  : clearly visible
+   * <=52 km : full presentation intensity
+   *
+   * Physics and outcome are unchanged.
+   */
+  if (altitudeM >= 82_000) return 0;
 
-  // Keep actual heatFlux as the primary driver once the visible atmosphere
-  // has been reached.
-  let heat = physicalHeat * altitudeGate;
+  const altitudeGate = smoothstep(
+    (82_000 - altitudeM) / 30_000,
+  );
 
-  // Outcome floors only ensure that the already-determined event is readable
-  // once the craft is genuinely low enough. They cannot light the craft above
-  // the altitude gate.
+  const onsetSoftener = smoothstep(
+    (77_000 - altitudeM) / 12_000,
+  );
+
+  let heat =
+    physicalHeat * altitudeGate;
+
   if (outcome === "BURN") {
-    heat = Math.max(heat, altitudeGate * 0.98);
+    heat = Math.max(
+      heat,
+      altitudeGate * 0.98,
+    );
   } else if (outcome === "BREAK") {
-    heat = Math.max(heat, altitudeGate * 0.82);
-  } else if (outcome === "EARTH_REACHED") {
-    heat = Math.max(heat, altitudeGate * 0.72);
+    heat = Math.max(
+      heat,
+      altitudeGate * 0.82,
+    );
+  } else if (
+    outcome === "EARTH_REACHED"
+  ) {
+    heat = Math.max(
+      heat,
+      altitudeGate * 0.72,
+    );
   } else if (outcome === "SKIP") {
-    heat = Math.max(heat, altitudeGate * 0.48);
+    heat = Math.max(
+      heat,
+      altitudeGate * 0.42,
+    );
   }
 
-  // Extra suppression in the extremely thin upper edge so the first visible
-  // cue is a faint glow rather than an immediate orange fireball.
-  const upperAtmosphereFade = smoothstep((91_000 - altitudeM) / 16_000);
-
-  return clamp01(heat * mix(0.18, 1, upperAtmosphereFade));
+  return clamp01(
+    heat *
+      mix(
+        0.08,
+        1,
+        onsetSoftener,
+      ),
+  );
 }
 
 function drawResultLabel(
@@ -973,6 +1232,7 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const resultSoundRef = useRef<string | null>(null);
+  const orbitRef = useRef<{ key: string; points: OrbitPoint[] } | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -995,7 +1255,7 @@ export function ReentryPresentationCanvas({
 
     if (phase === "power") {
       resultSoundRef.current = null;
-      stopReentryAudio();
+      startReentryAmbience();
       return;
     }
 
@@ -1047,66 +1307,84 @@ export function ReentryPresentationCanvas({
             : 0;
       const outcome = result?.outcome;
 
+      const skipAftermath =
+        !idle &&
+        outcome === "SKIP" &&
+        playback > SKIP_PHYSICS_SHARE;
+      const physicsPlayback =
+        outcome === "SKIP"
+          ? Math.min(1, playback / SKIP_PHYSICS_SHARE)
+          : outcome === "BURN"
+            ? Math.min(1, playback / BURN_PHYSICS_SHARE)
+            : playback;
+
       const frame =
         result && (phase === "flight" || phase === "result")
           ? sampleFrame(
               result.frames,
               playbackToFrameProgress(
-                playback,
+                physicsPlayback,
                 outcome ?? "BURN",
               ),
             )
           : restFrame(result);
 
+      let displayAltitude = frame.altitudeM;
+      if (
+        outcome === "BURN" &&
+        playback > BURN_PHYSICS_SHARE &&
+        frame.altitudeM > 46_000
+      ) {
+        const extra =
+          (playback - BURN_PHYSICS_SHARE) /
+          Math.max(1e-4, 1 - BURN_PHYSICS_SHARE);
+        displayAltitude = frame.altitudeM - extra * 8_000;
+      }
+
+      const stageMix = skipAftermath
+        ? reentryStageMix(160_000)
+        : reentryStageMix(displayAltitude);
+
       const rawHeat =
-        idle
+        idle || skipAftermath
           ? 0
           : presentationHeatGlow(
               frame.heatFluxWm2,
-              playback,
+              physicsPlayback,
               outcome ?? "BURN",
             );
 
-      const heat =
-        idle ? 0 : readableHeat(rawHeat, frame.altitudeM, outcome);
+      const gatedHeat =
+        idle || skipAftermath
+          ? 0
+          : readableHeat(rawHeat, displayAltitude, outcome);
 
-      if (variant === "stage" && phase === "flight") {
-        setReentryAudioFlight(playback, heat, outcome);
-      }
+      const earth = skipAftermath
+        ? {
+            x: w * 0.5,
+            y: h * 0.5,
+            r: Math.min(w, h) * 0.072,
+            horizonMix: 0,
+            alpha: 1,
+          }
+        : earthView(
+            displayAltitude,
+            outcome,
+            idle,
+            phase,
+            w,
+            h,
+          );
 
-      const earth = earthView(
-        frame.altitudeM,
-        outcome,
-        idle,
-        phase,
-        w,
-        h,
-      );
+      const horizonY =
+        h * (0.78 - stageMix.atmosphere * 0.16);
 
-      drawStars(
-        ctx,
-        w,
-        h,
-        playback,
-        !idle,
-        earth.horizonMix,
-      );
-
-      drawEarth(
-        ctx,
-        earthRef.current,
-        earth,
-        heat,
-        w,
-        h,
-      );
-
-      const pose = craftPose(
-        playback,
+      let pose = craftPose(
+        physicsPlayback,
         outcome,
         angleNorm,
         idle,
-        heat,
+        gatedHeat,
         result?.seed ?? 1,
         result,
         frame,
@@ -1114,22 +1392,127 @@ export function ReentryPresentationCanvas({
         h,
       );
 
-      const altitudeApproach =
-        idle
+      if (skipAftermath && result) {
+        const key = `${result.seed}:skip-orbit`;
+        if (!orbitRef.current || orbitRef.current.key !== key) {
+          const initial = orbitStateFromFrames(result.frames);
+          orbitRef.current = {
+            key,
+            points: initial ? buildOrbitAftermath(initial) : [],
+          };
+        }
+        const aftermathT =
+          (playback - SKIP_PHYSICS_SHARE) /
+          Math.max(1e-4, 1 - SKIP_PHYSICS_SHARE);
+        const sampled = sampleOrbitPoint(
+          orbitRef.current.points,
+          aftermathT,
+        );
+        if (sampled) {
+          pose = projectOrbitPoint(sampled, w, h);
+        }
+      } else if (
+        outcome === "BURN" &&
+        playback > BURN_PHYSICS_SHARE
+      ) {
+        const extra =
+          (playback - BURN_PHYSICS_SHARE) /
+          Math.max(1e-4, 1 - BURN_PHYSICS_SHARE);
+        const nudge = Math.min(w, h) * 0.035 * extra;
+        pose = {
+          x: pose.x + Math.cos(pose.angle) * nudge,
+          y: pose.y + Math.sin(pose.angle) * nudge,
+          angle: pose.angle,
+        };
+      }
+
+      const limbGate = visualAtmosphereGate(
+        pose.x,
+        pose.y,
+        horizonY,
+        h,
+      );
+      const discBand = Math.max(24, h * 0.065);
+      const earthDist = Math.hypot(pose.x - earth.x, pose.y - earth.y);
+      const discGate =
+        1 -
+        smoothstep(
+          Math.max(0, earthDist - earth.r) / discBand,
+        );
+      const atmosphereVisualGate = mix(
+        discGate,
+        limbGate,
+        stageMix.atmosphere,
+      );
+      const heat =
+        skipAftermath
           ? 0
-          : smoothstep((135_000 - frame.altitudeM) / 105_000);
+          : gatedHeat * atmosphereVisualGate;
+
+      if (variant === "stage" && phase === "flight") {
+        setReentryAudioFlight(playback, heat, outcome);
+      }
+
+      drawStars(
+        ctx,
+        w,
+        h,
+        playback,
+        !idle && !skipAftermath,
+        earth.horizonMix,
+        skipAftermath ? 1 : stageMix.stars,
+      );
+
+      if (stageMix.atmosphere < 0.55 || skipAftermath || idle) {
+        drawEarth(
+          ctx,
+          earthRef.current,
+          skipAftermath || idle
+            ? earth
+            : {
+                ...earth,
+                r: Math.min(earth.r, w * 0.12),
+              },
+          heat,
+          w,
+          h,
+        );
+      }
+
+      if (!idle && !skipAftermath) {
+        drawAtmosphericHorizon(
+          ctx,
+          w,
+          h,
+          stageMix.atmosphere,
+          stageMix.blueLimb,
+        );
+        drawSurfaceApproach(ctx, w, h, stageMix.surface);
+      }
+
+      const altitudeApproach =
+        idle || skipAftermath
+          ? 0
+          : smoothstep((135_000 - displayAltitude) / 105_000);
       const approachScale = altitudeApproach;
       const baseCraft =
         Math.min(w, h) *
         (variant === "preview" ? 0.088 : 0.102);
       const craftLength =
-        baseCraft * mix(0.62, 1.62, approachScale);
+        skipAftermath
+          ? baseCraft * 0.42
+          : baseCraft * mix(0.62, 1.62, approachScale);
+
+      const burnAmount = burnDestructionAmount(
+        playback,
+        displayAltitude,
+        outcome,
+      );
 
       let craftAlpha = 1;
 
-      if (outcome === "BURN" && playback > 0.74) {
-        craftAlpha =
-          1 - smoothstep((playback - 0.74) / 0.12);
+      if (outcome === "BURN") {
+        craftAlpha = 1 - burnAmount;
       } else if (outcome === "BREAK" && playback > 0.72) {
         craftAlpha =
           1 - smoothstep((playback - 0.72) / 0.14);
@@ -1137,13 +1520,13 @@ export function ReentryPresentationCanvas({
 
       const burnGone =
         outcome === "BURN" &&
-        (phase === "result" || playback >= 0.965);
+        (phase === "result" || burnAmount >= 0.97);
 
       const terminalFailure =
         phase === "result" &&
         (outcome === "BURN" || outcome === "BREAK");
 
-      if (!idle && !burnGone && !terminalFailure) {
+      if (!idle && !burnGone && !terminalFailure && !skipAftermath) {
         drawFlowLines(
           ctx,
           pose.x,
@@ -1196,8 +1579,8 @@ export function ReentryPresentationCanvas({
 
       if (
         outcome === "BURN" &&
-        playback > 0.71 &&
-        playback < 0.965
+        burnAmount > 0.02 &&
+        burnAmount < 0.97
       ) {
         drawBurnDisintegration(
           ctx,
@@ -1206,8 +1589,31 @@ export function ReentryPresentationCanvas({
           pose.angle,
           craftLength,
           result?.seed ?? 1,
-          smoothstep((playback - 0.71) / 0.255),
+          burnAmount,
         );
+      }
+
+      if (
+        outcome === "EARTH_REACHED" &&
+        stageMix.surface > 0.55 &&
+        physicsPlayback > 0.88
+      ) {
+        const splash = smoothstep((physicsPlayback - 0.88) / 0.1);
+        ctx.save();
+        ctx.globalAlpha = splash * 0.28;
+        ctx.fillStyle = "rgba(220,236,245,0.55)";
+        ctx.beginPath();
+        ctx.ellipse(
+          pose.x,
+          h * 0.66,
+          craftLength * (1.4 + splash),
+          craftLength * 0.22,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.restore();
       }
 
       if (

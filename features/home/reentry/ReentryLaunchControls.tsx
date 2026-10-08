@@ -10,7 +10,7 @@ import type { ReentryPhase } from "./reentryTypes";
 import {
   playDirectionTick,
   playPowerLockTone,
-  startReentryAudio,
+  startReentryAmbience,
 } from "./reentryAudio";
 
 const btnClass =
@@ -139,7 +139,7 @@ export function ReentryLaunchControls({
   };
 
   const launch = () => {
-    startReentryAudio();
+    startReentryAmbience();
     onLaunch();
   };
 

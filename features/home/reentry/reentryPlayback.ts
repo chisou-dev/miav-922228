@@ -14,12 +14,17 @@ export function flightDurationMs(outcome: ReentryOutcome): number {
     case "EARTH_REACHED":
       return 14000;
     case "SKIP":
+      return 19500;
     case "BURN":
+      return 13200;
     case "BREAK":
     default:
       return 12000;
   }
 }
+
+export const SKIP_PHYSICS_SHARE = 12000 / 19500;
+export const BURN_PHYSICS_SHARE = 12000 / 13200;
 
 function clamp01(t: number): number {
   return Math.min(1, Math.max(0, t));

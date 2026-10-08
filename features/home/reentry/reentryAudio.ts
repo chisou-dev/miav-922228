@@ -13,7 +13,7 @@ type AudioState = {
 };
 
 let state: AudioState | null = null;
-let beaconTimer: number | null = null;
+let spacePingTimer: number | null = null;
 let resultTimer: number | null = null;
 
 function hasAudio(): boolean {
@@ -71,13 +71,23 @@ function getContext(): AudioContext | null {
   return ctx;
 }
 
+function clearSpacePingTimer(): void {
+  if (
+    spacePingTimer !== null &&
+    typeof window !== "undefined"
+  ) {
+    window.clearTimeout(
+      spacePingTimer,
+    );
+  }
+
+  spacePingTimer = null;
+}
+
 function clearTimers(): void {
   if (typeof window === "undefined") return;
 
-  if (beaconTimer !== null) {
-    window.clearInterval(beaconTimer);
-    beaconTimer = null;
-  }
+  clearSpacePingTimer();
 
   if (resultTimer !== null) {
     window.clearTimeout(resultTimer);
@@ -182,34 +192,53 @@ function glassPing(
   overtone.stop(at + duration + 0.05);
 }
 
-function scheduleBeacon(): void {
-  if (!state || typeof window === "undefined") return;
+function scheduleSpacePings(): void {
+  if (
+    !state ||
+    typeof window === "undefined"
+  ) {
+    return;
+  }
 
-  const ping = () => {
-    if (!state) return;
+  if (spacePingTimer !== null) {
+    return;
+  }
 
-    const t = state.ctx.currentTime;
-    // Sparse original "deep-space signal": two quiet high glass tones.
+  const play = () => {
+    if (!state) {
+      clearSpacePingTimer();
+      return;
+    }
+
+    const ctx = state.ctx;
+    const t = ctx.currentTime;
+
     glassPing(
-      state.ctx,
+      ctx,
       state.master,
       1320,
       t,
-      1.9,
-      0.022,
+      2.6,
+      0.017,
     );
+
     glassPing(
-      state.ctx,
+      ctx,
       state.master,
-      1760,
-      t + 0.18,
-      1.4,
-      0.010,
+      990,
+      t + 0.44,
+      2.2,
+      0.008,
     );
+
+    spacePingTimer =
+      window.setTimeout(() => {
+        spacePingTimer = null;
+        play();
+      }, 6400);
   };
 
-  ping();
-  beaconTimer = window.setInterval(ping, 3150);
+  play();
 }
 
 export function playPowerLockTone(): void {
@@ -235,52 +264,53 @@ export function playDirectionTick(direction: number): void {
   );
 }
 
-export function startReentryAudio(): void {
+export function startReentryAmbience(): void {
   const ctx = getContext();
   if (!ctx || !state) return;
 
-  clearTimers();
-  stopNodes();
   void ctx.resume();
 
   const t = ctx.currentTime;
 
-  state.master.gain.cancelScheduledValues(t);
-  state.master.gain.setValueAtTime(0.0001, t);
-  state.master.gain.exponentialRampToValueAtTime(0.32, t + 0.8);
+  state.master.gain.setTargetAtTime(0.32, t, 0.35);
+  state.spacePad.gain.setTargetAtTime(0.048, t, 0.45);
 
-  state.spacePad.gain.cancelScheduledValues(t);
-  state.spacePad.gain.setValueAtTime(0.0001, t);
-  state.spacePad.gain.exponentialRampToValueAtTime(0.048, t + 1.4);
+  if (state.oscillators.length === 0) {
+    const lowFrequencies = [41.2, 61.8, 82.4];
 
-  const lowFrequencies = [41.2, 61.8, 82.4];
+    state.oscillators = lowFrequencies.map((frequency, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-  state.oscillators = lowFrequencies.map((frequency, index) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+      osc.type = index === 0 ? "sine" : "triangle";
+      osc.frequency.value = frequency;
+      gain.gain.value = index === 0 ? 0.10 : 0.028;
 
-    osc.type = index === 0 ? "sine" : "triangle";
-    osc.frequency.value = frequency;
-    gain.gain.value = index === 0 ? 0.10 : 0.028;
+      osc.connect(gain);
+      gain.connect(state!.spacePad);
+      osc.start();
 
-    osc.connect(gain);
-    gain.connect(state!.spacePad);
-    osc.start();
+      return osc;
+    });
+  }
 
-    return osc;
-  });
+  if (state.noiseSources.length === 0) {
+    const rumbleNoise = makeNoise(ctx);
+    rumbleNoise.connect(state.rumble);
+    rumbleNoise.start();
 
-  const rumbleNoise = makeNoise(ctx);
-  rumbleNoise.connect(state.rumble);
-  rumbleNoise.start();
+    const hissNoise = makeNoise(ctx);
+    hissNoise.connect(state.hiss);
+    hissNoise.start();
 
-  const hissNoise = makeNoise(ctx);
-  hissNoise.connect(state.hiss);
-  hissNoise.start();
+    state.noiseSources = [rumbleNoise, hissNoise];
+  }
 
-  state.noiseSources = [rumbleNoise, hissNoise];
+  scheduleSpacePings();
+}
 
-  scheduleBeacon();
+export function startReentryAudio(): void {
+  startReentryAmbience();
 }
 
 export function setReentryAudioFlight(

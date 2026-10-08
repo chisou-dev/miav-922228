@@ -152,28 +152,18 @@ export function craftPose(
   const headingBlend = smoothstep(playback / 0.14);
   let angle = lerpAngle(idleAngle, physicsAngle, headingBlend);
 
-  const highStress = smoothstep((heat - 0.62) / 0.38);
-  const finalFailure =
-    outcome === "BURN"
-      ? smoothstep((playback - 0.79) / 0.13)
-      : outcome === "BREAK"
-        ? smoothstep((playback - 0.76) / 0.15)
-        : 0;
-
-  const micro = highStress * (0.25 + finalFailure * 0.75);
+  const positionShakePx =
+    playback <= 0.002
+      ? 0
+      : Math.min(1.6, heat * 1.2);
+  const angleShakeRad = heat * 0.006;
 
   const jitterX =
-    Math.sin(playback * 97 + seed * 0.00001) *
-    Math.min(w, h) *
-    0.00075 *
-    micro;
+    Math.sin(playback * 97 + seed * 0.00001) * positionShakePx;
   const jitterY =
-    Math.sin(playback * 131 + seed * 0.000013 + 1.7) *
-    Math.min(w, h) *
-    0.0009 *
-    micro;
+    Math.sin(playback * 131 + seed * 0.000013 + 1.7) * positionShakePx;
   angle +=
-    Math.sin(playback * 109 + seed * 0.000009 + 0.4) * 0.012 * micro;
+    Math.sin(playback * 109 + seed * 0.000009 + 0.4) * angleShakeRad;
 
   return {
     x: x + jitterX,

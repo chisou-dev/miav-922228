@@ -13,6 +13,7 @@ import { REENTRY_SCENE } from "./reentrySceneLayout";
 import { preloadReentryPreviewAssets } from "./reentryAssets";
 import { shouldShowNearbySuccess } from "./reentryNearbySuccess";
 import type { ReentryOutcome } from "./reentryTypes";
+import { startReentryAmbience, stopReentryAudio } from "./reentryAudio";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
@@ -109,6 +110,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     expanded && (phase === "flight" || phase === "result");
 
   const openExpanded = useCallback(() => {
+    startReentryAmbience();
     setExpanded(true);
     void preloadReentryPreviewAssets();
     try {
@@ -139,6 +141,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   }, []);
 
   const closeSession = useCallback(() => {
+    stopReentryAudio();
     retry();
     setExpanded(false);
   }, [retry]);
@@ -241,15 +244,20 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               <p className="text-[0.82rem] font-semibold tracking-[0.18em] text-white sm:text-[0.95rem]">
                 {resultTitle(result.outcome)}
               </p>
+              {result.outcome === "EARTH_REACHED" && (
+                <p className="mt-1 text-[0.62rem] tracking-[0.16em] text-white/55">
+                  STAGE 1
+                </p>
+              )}
               {shouldShowNearbySuccess(result.outcome) && (
                 <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
                   {nearbySuccess
                     ? `NEARBY SUCCESS ${nearbySuccess.percent}%`
                     : "NEARBY SUCCESS …"}
-                  <span className="mt-0.5 block text-[0.58rem] tracking-[0.08em] text-white/55">
+                  <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
                     {nearbySuccess
-                      ? `近い操作での成功割合（${nearbySuccess.total}回の試行）`
-                      : "近い操作での成功割合"}
+                      ? `${nearbySuccess.total} nearby simulations`
+                      : "nearby simulations"}
                   </span>
                 </p>
               )}
