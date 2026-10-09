@@ -14,6 +14,7 @@ import { preloadReentryPreviewAssets } from "./reentryAssets";
 import { shouldShowNearbySuccess } from "./reentryNearbySuccess";
 import type { ReentryOutcome } from "./reentryTypes";
 import { startReentryAmbience, stopReentryAudio } from "./reentryAudio";
+import { ReentryAudioControl } from "./ReentryAudioControl";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
@@ -203,6 +204,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
           >
             MIAV-922228
           </button>
+          <ReentryAudioControl />
           <div
             ref={surfaceRef}
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}

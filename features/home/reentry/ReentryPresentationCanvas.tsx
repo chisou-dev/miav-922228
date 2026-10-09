@@ -23,6 +23,7 @@ import {
   type SpaceState,
 } from "./reentrySpaceApproach";
 import { mapLaunchToInput } from "./reentryLaunchInput";
+import { cinematicEarthView } from "./reentryEarthCamera";
 import {
   finishReentryAudio,
   setReentryAudioFlight,
@@ -43,8 +44,6 @@ function smoothstep(value: number): number {
 function mix(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
-
-const EARTH_RADIUS_M = 6_371_000;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -491,24 +490,28 @@ function drawCurvedAtmosphereRim(
   const glow = ctx.createRadialGradient(
     cx,
     cy,
-    r * 0.985,
+    r * 0.82,
     cx,
     cy,
-    r * 1.035,
+    r * 1.22,
   );
   glow.addColorStop(0, "rgba(90,180,255,0)");
   glow.addColorStop(
-    0.46,
-    `rgba(85,175,255,${0.16 + strength * 0.23})`,
+    0.58,
+    `rgba(70,160,255,${0.04 + strength * 0.08})`,
   );
   glow.addColorStop(
-    0.70,
-    `rgba(205,240,255,${0.25 + strength * 0.33})`,
+    0.78,
+    `rgba(160,220,255,${0.08 + strength * 0.16})`,
+  );
+  glow.addColorStop(
+    0.92,
+    `rgba(210,240,255,${0.05 + strength * 0.10})`,
   );
   glow.addColorStop(1, "rgba(80,150,255,0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 1.04, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r * 1.22, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -1471,15 +1474,6 @@ export function ReentryPresentationCanvas({
           (displayAltitude - ATMOSPHERE_HANDOFF_ALTITUDE_M) /
             (SPACE_START_ALTITUDE_M - ATMOSPHERE_HANDOFF_ALTITUDE_M),
       );
-      const spaceScale = miss
-        ? mix(minDim * 0.13, minDim * 0.075, smoothstep(spaceT)) /
-          Math.max(1, EARTH_RADIUS_M + (sampledSpace?.altitudeM ?? SPACE_START_ALTITUDE_M))
-        : mix(minDim * 0.065, minDim * 0.86, smoothstep(inboundApproach)) /
-          EARTH_RADIUS_M;
-
-      const earthR = EARTH_RADIUS_M * spaceScale;
-      const earthCx = mix(w * 0.18, w * 0.5, miss ? 0.35 : inboundApproach);
-      const earthCy = mix(h * 0.78, h * 0.62, miss ? spaceT : inboundApproach);
 
       let pose = craftPose(
         physicsPlayback,
@@ -1495,19 +1489,17 @@ export function ReentryPresentationCanvas({
       );
 
       if (firstSpace && spaceState && (idle || inSpace || miss)) {
-        const fittedScale = miss
-          ? mix(minDim * 0.13, minDim * 0.075, spaceT) /
-            Math.max(
-              EARTH_RADIUS_M,
-              Math.hypot(spaceState.position.x, spaceState.position.y),
-            )
-          : mix(minDim * 0.000000018, minDim * 0.00000005, inboundApproach);
+        const motionScale = mix(
+          minDim * 0.000000018,
+          minDim * 0.000000042,
+          miss ? 0 : inboundApproach,
+        );
         pose = spaceScreenPose(
           spaceState,
           firstSpace,
           launch.x,
           launch.y,
-          fittedScale,
+          motionScale,
         );
         if (miss && playback > 0.82) {
           const fadeMove = (playback - 0.82) / 0.18;
@@ -1519,25 +1511,23 @@ export function ReentryPresentationCanvas({
         }
       }
 
+      const earthCam = cinematicEarthView({
+        w,
+        h,
+        idle,
+        miss,
+        inboundApproach: miss ? 0 : inboundApproach,
+        spaceT,
+      });
       const earth = {
-        x: firstSpace
-          ? launch.x - firstSpace.position.x * (earthR / EARTH_RADIUS_M)
-          : earthCx,
-        y: firstSpace
-          ? launch.y + firstSpace.position.y * (earthR / EARTH_RADIUS_M)
-          : earthCy,
-        r: earthR,
+        x: earthCam.x,
+        y: earthCam.y,
+        r: earthCam.r,
         horizonMix: stageMix.atmosphere,
         alpha: 1,
       };
 
-      if (miss) {
-        earth.x = mix(earth.x, w * 0.42, smoothstep(spaceT));
-        earth.y = mix(earth.y, h * 0.62, smoothstep(spaceT));
-        earth.r = mix(minDim * 0.13, minDim * 0.075, smoothstep(spaceT));
-      }
-
-      const horizonY = earth.y - earth.r * 0.12;
+      const horizonY = earth.y - earth.r * 0.18;
 
       const plasmaAge = inSpace || miss
         ? 0
@@ -1569,8 +1559,8 @@ export function ReentryPresentationCanvas({
       );
 
       const surfaceAlpha = miss
-        ? 0.35
-        : mix(0.2, 1, stageMix.atmosphere);
+        ? 0.55
+        : mix(0.55, 1, stageMix.atmosphere);
       drawTexturedEarthDisc(
         ctx,
         earthRef.current,
@@ -1584,10 +1574,20 @@ export function ReentryPresentationCanvas({
         earth.x,
         earth.y,
         earth.r,
-        miss ? 0.12 : stageMix.blueLimb,
+        miss ? 0.18 : mix(0.22, 1, stageMix.blueLimb),
       );
 
-      if (!idle && !miss && stageMix.surface > 0.65) {
+      if (!idle && !miss && stageMix.atmosphere > 0.12) {
+        drawAtmosphericHorizon(
+          ctx,
+          w,
+          h,
+          stageMix.atmosphere * mix(0.35, 1, inboundApproach),
+          stageMix.blueLimb,
+        );
+      }
+
+      if (!idle && !miss && stageMix.surface > 0.45) {
         drawSurfaceApproach(ctx, w, h, stageMix.surface);
       }
 
@@ -1767,5 +1767,4 @@ export function ReentryPresentationCanvas({
 }
 
 void earthView;
-void drawAtmosphericHorizon;
 void drawEarth;

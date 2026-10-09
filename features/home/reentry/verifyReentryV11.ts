@@ -1,3 +1,4 @@
+import { launchEarthView } from "./reentryEarthCamera";
 import { launchAnchorPx } from "./reentryCraftProjection";
 import { directionNormToScreenHeadingRad } from "./reentrySpaceApproach";
 import {
@@ -47,6 +48,10 @@ const sizes = [
 ];
 
 for (const size of sizes) {
+  const earth = launchEarthView(size.w, size.h);
+  if (earth.x > size.w * 0.22 || earth.y < size.h * 0.62) {
+    throw new Error(`${size.name} earth not lower-left`);
+  }
   const a = screenPose(0.5, 0, size.w, size.h);
   const idle = launchAnchorPx(size.w, size.h);
   const posErr = Math.hypot(a.x - idle.x, a.y - idle.y);

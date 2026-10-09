@@ -15,6 +15,50 @@ type AudioState = {
 let state: AudioState | null = null;
 let spacePingTimer: number | null = null;
 let resultTimer: number | null = null;
+let userVolume = 0.82;
+const VOLUME_KEY = "miav_reentry_vol_v1";
+const MASTER_PEAK = 0.58;
+
+function readStoredVolume(): number {
+  if (typeof window === "undefined") return 0.82;
+  try {
+    const raw = window.localStorage.getItem(VOLUME_KEY);
+    if (raw === null) return 0.82;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return 0.82;
+    return Math.min(1, Math.max(0, n));
+  } catch {
+    return 0.82;
+  }
+}
+
+userVolume = readStoredVolume();
+
+function applyMasterVolume(timeConstant = 0.08): void {
+  if (!state) return;
+  const t = state.ctx.currentTime;
+  state.master.gain.setTargetAtTime(
+    Math.max(0.0001, MASTER_PEAK * userVolume),
+    t,
+    timeConstant,
+  );
+}
+
+export function getReentryUserVolume(): number {
+  return userVolume;
+}
+
+export function setReentryUserVolume(next: number): void {
+  userVolume = Math.min(1, Math.max(0, next));
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(VOLUME_KEY, String(userVolume));
+    } catch {
+      /* ignore */
+    }
+  }
+  applyMasterVolume();
+}
 
 function hasAudio(): boolean {
   return typeof window !== "undefined" && "AudioContext" in window;
@@ -219,7 +263,7 @@ function scheduleSpacePings(): void {
       1320,
       t,
       2.6,
-      0.017,
+      0.038,
     );
 
     glassPing(
@@ -228,7 +272,7 @@ function scheduleSpacePings(): void {
       990,
       t + 0.44,
       2.2,
-      0.008,
+      0.018,
     );
 
     spacePingTimer =
@@ -272,8 +316,8 @@ export function startReentryAmbience(): void {
 
   const t = ctx.currentTime;
 
-  state.master.gain.setTargetAtTime(0.32, t, 0.35);
-  state.spacePad.gain.setTargetAtTime(0.048, t, 0.45);
+  applyMasterVolume(0.35);
+  state.spacePad.gain.setTargetAtTime(0.092, t, 0.45);
 
   if (state.oscillators.length === 0) {
     const lowFrequencies = [41.2, 61.8, 82.4];
