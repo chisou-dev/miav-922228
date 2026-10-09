@@ -3,14 +3,23 @@ import { REENTRY_PHYSICS_VERSION } from "./reentryConstants";
 import { simulateReentry } from "./reentryPhysics";
 import { flightDurationMs } from "./reentryPlayback";
 import {
+  ATMOSPHERE_FAILURE_MS,
+  ATMOSPHERE_SUCCESS_MS,
+  FAILURE_HOLD_MS,
+  SPACE_INBOUND_DURATION_MS,
+  SPACE_MISS_DURATION_MS,
+} from "./reentryStageTimeline";
+import {
   launchSpaceApproach,
   type SpaceApproachResult,
 } from "./reentrySpaceApproach";
 import type { ReentryPlayRecord, ReentryResult } from "./reentryTypes";
 
-export const SPACE_MISS_DURATION_MS = 8200;
-export const SPACE_INBOUND_DURATION_MS = 6000;
-export const FAILURE_HOLD_MS = 3800;
+export {
+  FAILURE_HOLD_MS,
+  SPACE_INBOUND_DURATION_MS,
+  SPACE_MISS_DURATION_MS,
+};
 
 function skipOnlyResult(seed: number): ReentryResult {
   return {
@@ -63,7 +72,12 @@ export function durationForStage1(
     };
   }
 
-  const atmosphereMs = flightDurationMs(result.outcome);
+  const atmosphereMs =
+    result.outcome === "EARTH_REACHED"
+      ? ATMOSPHERE_SUCCESS_MS
+      : result.outcome === "BURN" || result.outcome === "BREAK"
+        ? ATMOSPHERE_FAILURE_MS
+        : flightDurationMs(result.outcome);
   const hold =
     result.outcome === "BURN" || result.outcome === "BREAK"
       ? FAILURE_HOLD_MS

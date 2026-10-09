@@ -1,6 +1,15 @@
-import { launchEarthView } from "./reentryEarthCamera";
+import {
+  earthGrowthRatioAtApproach,
+  launchEarthView,
+} from "./reentryEarthCamera";
 import { launchAnchorPx } from "./reentryCraftProjection";
 import { directionNormToScreenHeadingRad } from "./reentrySpaceApproach";
+import {
+  atmosphereThicknessPx,
+  hazeEntryTarget,
+  spaceApproach01,
+  spaceCraftScreenPosition,
+} from "./reentryVisualCausality";
 import {
   headingDeltaDeg,
   launchSpaceApproach,
@@ -30,15 +39,28 @@ function screenPose(
   const space = launchSpaceApproach(speed, angleNorm);
   const first = space.points[0].state;
   const sampled = sampleSpacePoint(space.points, t)!;
-  const minDim = Math.min(w, h);
-  const scale = minDim * 0.000000018;
   const launch = launchAnchorPx(w, h);
+  const earth = launchEarthView(w, h);
+  const approach01 = spaceApproach01(
+    sampled.altitudeM,
+    ATMOSPHERE_HANDOFF_ALTITUDE_M,
+    SPACE_START_ALTITUDE_M,
+  );
+  const travelT = Math.max(smoothstep(approach01), t * 0.25);
+  const traveled = spaceCraftScreenPosition(
+    sampled.state.position,
+    first.position,
+    launch,
+    hazeEntryTarget(launch, earth, atmosphereThicknessPx(earth.r)),
+    travelT,
+  );
   return {
     space,
-    x: launch.x + (sampled.state.position.x - first.position.x) * scale,
-    y: launch.y - (sampled.state.position.y - first.position.y) * scale,
+    x: traveled.x,
+    y: traveled.y,
     angle: sampled.screenHeadingRad,
     idleAngle: directionNormToScreenHeadingRad(angleNorm),
+    approach01,
   };
 }
 
@@ -138,10 +160,26 @@ console.log(
 function destructionAmount(timeSinceAtmosphereEntryS: number, outcome: string) {
   if (outcome !== "BURN" && outcome !== "BREAK") return 0;
   if (timeSinceAtmosphereEntryS < 3) return 0;
-  return smoothstep((timeSinceAtmosphereEntryS - 3) / 1.1);
+  return smoothstep((timeSinceAtmosphereEntryS - 3) / 7);
 }
 if (destructionAmount(2.9, "BURN") !== 0) throw new Error("early burn");
 if (destructionAmount(3.0, "BURN") !== 0) throw new Error("burn at 3s should start 0");
 if (destructionAmount(4.2, "BURN") <= 0) throw new Error("late burn");
 console.log("start altitude", SPACE_START_ALTITUDE_M, "handoff", ATMOSPHERE_HANDOFF_ALTITUDE_M);
-console.log("v11 checks ok");
+const ratio50 = earthGrowthRatioAtApproach(0.5);
+const ratio85 = earthGrowthRatioAtApproach(0.85);
+if (ratio50 > 1.2) throw new Error(`earth growth at 50% ${ratio50}`);
+const travel50 = smoothstep(0.5);
+const travel70 = smoothstep(0.7);
+if (travel70 < 0.55) throw new Error(`travel at 70% ${travel70}`);
+console.log(
+  "v14 earth@50=",
+  ratio50.toFixed(4),
+  "earth@85=",
+  ratio85.toFixed(4),
+  "travel@50=",
+  travel50.toFixed(4),
+  "travel@70=",
+  travel70.toFixed(4),
+);
+console.log("v14 checks ok");

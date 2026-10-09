@@ -12,14 +12,14 @@ export function flightDurationMs(outcome: ReentryOutcome): number {
   }
   switch (outcome) {
     case "EARTH_REACHED":
-      return 14000;
+      return 18000;
     case "SKIP":
-      return 19500;
+      return 11000;
     case "BURN":
-      return 13200;
+      return 10000;
     case "BREAK":
     default:
-      return 12000;
+      return 10000;
   }
 }
 

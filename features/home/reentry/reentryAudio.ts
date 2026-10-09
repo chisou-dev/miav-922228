@@ -17,7 +17,7 @@ let spacePingTimer: number | null = null;
 let resultTimer: number | null = null;
 let userVolume = 0.82;
 const VOLUME_KEY = "miav_reentry_vol_v1";
-const MASTER_PEAK = 0.58;
+const MASTER_PEAK = 0.68;
 
 function readStoredVolume(): number {
   if (typeof window === "undefined") return 0.82;
@@ -263,7 +263,7 @@ function scheduleSpacePings(): void {
       1320,
       t,
       2.6,
-      0.038,
+      0.045,
     );
 
     glassPing(
@@ -272,7 +272,7 @@ function scheduleSpacePings(): void {
       990,
       t + 0.44,
       2.2,
-      0.018,
+      0.026,
     );
 
     spacePingTimer =
@@ -317,7 +317,7 @@ export function startReentryAmbience(): void {
   const t = ctx.currentTime;
 
   applyMasterVolume(0.35);
-  state.spacePad.gain.setTargetAtTime(0.092, t, 0.45);
+  state.spacePad.gain.setTargetAtTime(0.118, t, 0.45);
 
   if (state.oscillators.length === 0) {
     const lowFrequencies = [41.2, 61.8, 82.4];
