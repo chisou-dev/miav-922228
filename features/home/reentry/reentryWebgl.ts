@@ -1,5 +1,6 @@
 import type { AimingPull } from "./reentryAimInput";
 import type { ReentryPhase, ReentryResult } from "./reentryTypes";
+import type { SpaceApproachResult } from "./reentrySpaceApproach";
 import {
   cameraMix,
   cockpitStress,
@@ -28,6 +29,8 @@ export interface ReentryDrawState {
   aimingPull?: AimingPull | null;
   seed: number;
   angleNorm?: number;
+  spaceApproach?: SpaceApproachResult | null;
+  spaceShare?: number;
   /** Static image layers behind canvas; WebGL draws effects only. */
   hybridMode?: boolean;
 }

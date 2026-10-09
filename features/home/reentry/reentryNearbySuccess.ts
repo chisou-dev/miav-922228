@@ -1,5 +1,5 @@
-import { mapLaunchToInput, wrap01 } from "./reentryLaunchInput";
-import { simulateReentry } from "./reentryPhysics";
+import { wrap01 } from "./reentryLaunchInput";
+import { runStage1Launch } from "./reentryLaunchPipeline";
 import type { ReentryOutcome } from "./reentryTypes";
 
 export const NEARBY_POWER_OFFSETS = [0, -0.02, 0.02, -0.04, 0.04] as const;
@@ -63,8 +63,8 @@ export function nearbyJobs(
 }
 
 export function evaluateNearbyJob(job: NearbySample & { seed: number }): boolean {
-  const input = mapLaunchToInput(job.powerNorm, job.angleNorm, job.seed);
-  return simulateReentry(input).outcome === "EARTH_REACHED";
+  const launched = runStage1Launch(job.powerNorm, job.angleNorm, job.seed);
+  return launched.result.outcome === "EARTH_REACHED";
 }
 
 export function nearbySuccessStats(reached: number, total: number): NearbySuccessStats {

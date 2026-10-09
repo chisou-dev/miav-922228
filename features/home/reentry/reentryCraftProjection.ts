@@ -1,4 +1,4 @@
-import { directionNormToEntryAngleDeg } from "./reentryLaunchInput";
+import { directionNormToScreenHeadingRad } from "./reentrySpaceApproach";
 import { playbackToFrameProgress } from "./reentryPlayback";
 import type {
   ReentryFrame,
@@ -34,18 +34,10 @@ export function launchAnchorPx(w: number, h: number): Point {
 }
 
 export function idleHeadingScreen(angleNorm: number): Point {
-  const entryAngleDeg = directionNormToEntryAngleDeg(angleNorm);
-  const gamma = (-entryAngleDeg * Math.PI) / 180;
-  const tangent = { x: -0.86, y: 0.22 };
-  const earthward = { x: -0.28, y: 0.96 };
-
+  const heading = directionNormToScreenHeadingRad(angleNorm);
   return {
-    x:
-      Math.cos(gamma) * tangent.x +
-      (-Math.sin(gamma)) * earthward.x,
-    y:
-      Math.cos(gamma) * tangent.y +
-      (-Math.sin(gamma)) * earthward.y,
+    x: Math.cos(heading),
+    y: Math.sin(heading),
   };
 }
 

@@ -40,6 +40,8 @@ export function ReentryHybridStage({
         result={state.result}
         flightProgress={state.flightProgress}
         angleNorm={state.angleNorm ?? 0.5}
+        spaceApproach={state.spaceApproach ?? null}
+        spaceShare={state.spaceShare ?? 1}
         variant={variant}
       />
     </div>

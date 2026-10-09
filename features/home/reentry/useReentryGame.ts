@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { simulateReentry } from "./reentryPhysics";
-import { flightDurationMs } from "./reentryPlayback";
-import { mapLaunchToInput } from "./reentryLaunchInput";
+import { runStage1Launch } from "./reentryLaunchPipeline";
 import { useReentryDevPreset } from "./useReentryDevPreset";
 import type {
   ReentryPhase,
   ReentryPlayRecord,
   ReentryResult,
 } from "./reentryTypes";
+import type { SpaceApproachResult } from "./reentrySpaceApproach";
 
 const POWER_CYCLE_MS = 4400;
 const POWER_STEPS = 52;
@@ -49,6 +48,9 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
   const [result, setResult] = useState<ReentryResult | null>(null);
   const [playRecord, setPlayRecord] =
     useState<ReentryPlayRecord | null>(null);
+  const [spaceApproach, setSpaceApproach] =
+    useState<SpaceApproachResult | null>(null);
+  const [spaceShare, setSpaceShare] = useState(1);
   const [flightProgress, setFlightProgress] = useState(0);
 
   const surfaceRef = useRef<HTMLDivElement | null>(null);
@@ -104,15 +106,17 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
   const setSeedState = useCallback((next: number) => setSeed(next), []);
 
   const beginFlight = useCallback(
-    (simResult: ReentryResult, record: ReentryPlayRecord) => {
+    (simResult: ReentryResult, record: ReentryPlayRecord, durationMs?: number) => {
       options?.onFlightStart?.();
       setResult(simResult);
       setPlayRecord(record);
+      setSpaceApproach(record.spaceApproach ?? null);
+      setSpaceShare(record.spaceShare ?? 1);
       setFlightProgress(0);
       setPhase("flight");
       flightStartRef.current = performance.now();
 
-      const duration = flightDurationMs(simResult.outcome);
+      const duration = durationMs ?? 12000;
       let hiddenAt: number | null = null;
 
       const tick = (now: number) => {
@@ -155,6 +159,8 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
     stopFlightLoop();
     setResult(null);
     setPlayRecord(null);
+    setSpaceApproach(null);
+    setSpaceShare(1);
     setLockedPowerNorm(null);
     setAngleNorm(0.5);
     setFlightProgress(0);
@@ -179,14 +185,12 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
   const launch = useCallback(() => {
     if (phase !== "angle" || lockedPowerNorm === null) return;
 
-    const input = mapLaunchToInput(
+    const simStarted = performance.now();
+    const launched = runStage1Launch(
       lockedPowerNorm,
       angleNorm,
       seed,
     );
-
-    const simStarted = performance.now();
-    const simResult = simulateReentry(input);
 
     if (surfaceRef.current) {
       surfaceRef.current.dataset.simMs = (
@@ -194,13 +198,7 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
       ).toFixed(1);
     }
 
-    const record: ReentryPlayRecord = {
-      input,
-      seed,
-      version: simResult.version,
-    };
-
-    beginFlight(simResult, record);
+    beginFlight(launched.result, launched.record, launched.durationMs);
   }, [angleNorm, beginFlight, lockedPowerNorm, phase, seed]);
 
   const nudgeAngle = useCallback(
@@ -229,6 +227,8 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
     angleNorm,
     result,
     playRecord,
+    spaceApproach,
+    spaceShare,
     flightProgress,
     surfaceRef,
     lockPower,

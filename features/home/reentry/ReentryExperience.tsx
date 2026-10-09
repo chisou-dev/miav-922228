@@ -79,6 +79,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     angleNorm,
     result,
     flightProgress,
+    spaceApproach,
+    spaceShare,
     surfaceRef,
     lockPower,
     launch,
@@ -104,6 +106,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     flightProgress,
     angleNorm,
     seed,
+    spaceApproach,
+    spaceShare,
   };
 
   const showEffects =

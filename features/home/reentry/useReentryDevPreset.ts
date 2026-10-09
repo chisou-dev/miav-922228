@@ -7,6 +7,7 @@ import type { ReentryPlayRecord, ReentryResult } from "./reentryTypes";
 type BeginFlight = (
   simResult: ReentryResult,
   record: ReentryPlayRecord,
+  durationMs?: number,
 ) => void;
 
 /**

@@ -51,6 +51,8 @@ export interface ReentryPlayRecord {
   input: ReentryInput;
   seed: number;
   version: string;
+  spaceApproach?: import("./reentrySpaceApproach").SpaceApproachResult;
+  spaceShare?: number;
 }
 
 export type ReentrySimulator = (input: ReentryInput) => ReentryResult;
