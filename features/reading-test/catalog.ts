@@ -6,7 +6,14 @@ import { countEnglishWords, estimatedReadingMinutes } from "@/features/reading-t
 import { analyzeReadability } from "@/features/reading-test/readability";
 import { flashTests } from "@/features/reading-test/stories/flash-tests";
 import { santasBells } from "@/features/reading-test/stories/santas-bells";
+import { desk } from "@/features/reading-test/stories/desk";
+import { entrance } from "@/features/reading-test/stories/entrance";
+import { layers } from "@/features/reading-test/stories/layers";
+import { rust } from "@/features/reading-test/stories/rust";
 import { sampleStory } from "@/features/reading-test/stories/sample-story";
+import { stillness } from "@/features/reading-test/stories/stillness";
+import { theMonsterChapter1 } from "@/features/reading-test/stories/the-monster-chapter-1";
+import { tissue } from "@/features/reading-test/stories/tissue";
 import { seriesOpenings } from "@/features/reading-test/stories/series-openings";
 import type {
   ReadingLevel,
@@ -71,6 +78,13 @@ const sources: readonly ReadingStoryInput[] = [
   flashSource("the-silver-thread"),
   sampleStory,
   ...seriesSources,
+  tissue,
+  rust,
+  layers,
+  desk,
+  entrance,
+  stillness,
+  theMonsterChapter1,
 ];
 
 function assertStory(story: ReadingStoryInput) {

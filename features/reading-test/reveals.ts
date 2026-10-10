@@ -17,6 +17,13 @@ const readingAuthors: Readonly<Record<string, { name: string; slug: string }>> =
   "the-honest-woodcutter": { name: "Takashi Yabe", slug: "takashi-yabe" },
   "the-ant-and-the-grasshopper": { name: "Takashi Yabe", slug: "takashi-yabe" },
   milk: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  layers: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  tissue: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  rust: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  desk: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  entrance: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  stillness: { name: "Takashi Yabe", slug: "takashi-yabe" },
+  "the-monster-chapter-1": { name: "Takashi Yabe", slug: "takashi-yabe" },
 };
 
 export function revealAuthor(slug: string) {
