@@ -17,7 +17,7 @@ let spacePingTimer: number | null = null;
 let resultTimer: number | null = null;
 let userVolume = 0.82;
 const VOLUME_KEY = "miav_reentry_vol_v1";
-const MASTER_PEAK = 0.68;
+const MASTER_PEAK = 0.74;
 
 function readStoredVolume(): number {
   if (typeof window === "undefined") return 0.82;
@@ -317,7 +317,7 @@ export function startReentryAmbience(): void {
   const t = ctx.currentTime;
 
   applyMasterVolume(0.35);
-  state.spacePad.gain.setTargetAtTime(0.118, t, 0.45);
+  state.spacePad.gain.setTargetAtTime(0.13, t, 0.45);
 
   if (state.oscillators.length === 0) {
     const lowFrequencies = [41.2, 61.8, 82.4];
@@ -403,9 +403,15 @@ export function setReentryAudioFlight(
 
   if (
     outcome === "BURN" &&
+    atmospheric > 0.12 &&
     progress > 0.76
   ) {
     state.rumble.gain.setTargetAtTime(0.34, t, 0.07);
+  }
+
+  if (atmospheric < 0.04) {
+    state.rumble.gain.setTargetAtTime(0.0001, t, 0.12);
+    state.hiss.gain.setTargetAtTime(0.0001, t, 0.12);
   }
 }
 

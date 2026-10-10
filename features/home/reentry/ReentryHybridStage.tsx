@@ -42,6 +42,7 @@ export function ReentryHybridStage({
         angleNorm={state.angleNorm ?? 0.5}
         spaceApproach={state.spaceApproach ?? null}
         spaceShare={state.spaceShare ?? 1}
+        powerNorm={state.powerNorm ?? 0.5}
         variant={variant}
       />
     </div>

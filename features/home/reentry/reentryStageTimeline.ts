@@ -4,7 +4,7 @@
  */
 
 export const SPACE_INBOUND_DURATION_MS = 7000;
-export const SPACE_MISS_DURATION_MS = 11000;
+export const SPACE_MISS_DURATION_MS = 8000;
 export const ATMOSPHERE_SUCCESS_MS = 18000;
 export const ATMOSPHERE_FAILURE_MS = 10000;
 export const FAILURE_HOLD_MS = 2200;

@@ -43,6 +43,7 @@ import {
   signedDistanceToAtmospherePx,
   spaceApproach01,
   spaceCraftScreenPosition,
+  spaceTravelT,
   tangentAngleFromPoints,
 } from "./reentryVisualCausality";
 import {
@@ -180,11 +181,12 @@ function drawStars(
   ctx.save();
   ctx.globalAlpha = fade;
 
-  for (let i = 0; i < 54; i++) {
+  for (let i = 0; i < 86; i++) {
     const x = (((i * 89 + 17) % 101) / 101) * w;
     const y = (((i * 47 + 29) % 103) / 103) * h;
-    const alpha = 0.10 + (i % 6) * 0.038;
-    const size = i % 11 === 0 ? 1.35 : 0.75;
+    const bright = i % 17 === 0;
+    const alpha = bright ? 0.28 + (i % 3) * 0.05 : 0.06 + (i % 7) * 0.018;
+    const size = bright ? 1.45 : i % 11 === 0 ? 1.05 : 0.65;
 
     ctx.strokeStyle = `rgba(228,237,245,${alpha})`;
     ctx.fillStyle = `rgba(228,237,245,${alpha})`;
@@ -353,15 +355,20 @@ function drawAtmosphereVolume(
   w: number,
   h: number,
   atmosphereSceneMix: number,
+  heading = Math.PI * 0.7,
+  craftX = w * 0.55,
+  craftY = h * 0.32,
 ): void {
   if (atmosphereSceneMix <= 0.001) return;
   ctx.save();
   ctx.globalAlpha = atmosphereSceneMix;
+  const ux = Math.cos(heading);
+  const uy = Math.sin(heading);
   const gradient = ctx.createLinearGradient(
-    w * 0.15,
-    h * 0.10,
-    w * 0.72,
-    h * 0.92,
+    craftX - ux * w * 0.42,
+    craftY - uy * h * 0.42,
+    craftX + ux * w * 0.55,
+    craftY + uy * h * 0.55,
   );
   gradient.addColorStop(0, "rgba(0,2,8,1)");
   gradient.addColorStop(0.46, "rgba(1,8,20,1)");
@@ -1480,6 +1487,7 @@ export function ReentryPresentationCanvas({
   angleNorm,
   spaceApproach,
   spaceShare,
+  powerNorm,
   variant,
 }: {
   phase: ReentryPhase;
@@ -1488,6 +1496,7 @@ export function ReentryPresentationCanvas({
   angleNorm: number;
   spaceApproach: SpaceApproachResult | null;
   spaceShare: number;
+  powerNorm: number;
   variant: ReentryArtVariant;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1629,15 +1638,14 @@ export function ReentryPresentationCanvas({
         latchPoseRef.current = null;
       }
 
+      const travelT = spaceTravelT(spaceT, powerNorm, miss);
       const earthCam = cinematicEarthView({
         w,
         h,
         idle,
         miss,
-        altitudeM: sampledSpace?.altitudeM ?? displayAltitude,
+        travelT,
         spaceT,
-        handoffAltitudeM: ATMOSPHERE_HANDOFF_ALTITUDE_M,
-        startAltitudeM: SPACE_START_ALTITUDE_M,
       });
       const earth = {
         x: earthCam.x,
@@ -1655,9 +1663,7 @@ export function ReentryPresentationCanvas({
             ATMOSPHERE_HANDOFF_ALTITUDE_M,
             SPACE_START_ALTITUDE_M,
           );
-      const travelT = miss
-        ? approach01
-        : Math.max(smoothstep(approach01), spaceT * 0.25);
+      void approach01;
       const entryTarget = miss
         ? {
             x: launch.x + (earth.x - launch.x) * 1.55,
@@ -1684,6 +1690,14 @@ export function ReentryPresentationCanvas({
           y: traveled.y,
           angle: canvasHeadingFromWorld(spaceState.velocity),
         };
+        if (miss && playback > 0.55) {
+          const out = (playback - 0.55) / 0.45;
+          pose = {
+            x: pose.x + Math.cos(pose.angle) * Math.min(w, h) * 0.42 * out,
+            y: pose.y + Math.sin(pose.angle) * Math.min(w, h) * 0.42 * out,
+            angle: pose.angle,
+          };
+        }
       }
 
       const atmosphereDistancePx = signedDistanceToAtmospherePx(
@@ -1806,7 +1820,7 @@ export function ReentryPresentationCanvas({
       );
 
       const surfaceReveal = latched && !miss
-        ? smoothstep((timeSinceVisualAtmosphereEntryS - 1.2) / 5.8)
+        ? smoothstep((timeSinceVisualAtmosphereEntryS - 1.0) / 2.2)
         : 0;
       const surfaceAlpha = miss
         ? 0.55
@@ -1824,7 +1838,7 @@ export function ReentryPresentationCanvas({
         earth.x,
         earth.y,
         earth.r,
-        miss ? 0.16 : mix(0.18, 0.55, latched ? 1 : approach01),
+        miss ? 0.14 : mix(0.14, 0.42, latched ? 1 : travelT),
       );
 
       if (latched && !miss) {
@@ -1833,6 +1847,9 @@ export function ReentryPresentationCanvas({
           w,
           h,
           smoothstep(timeSinceVisualAtmosphereEntryS / 0.7),
+          pose.angle,
+          pose.x,
+          pose.y,
         );
         const showSurfaceApproach =
           outcome === "EARTH_REACHED" &&
@@ -1866,8 +1883,8 @@ export function ReentryPresentationCanvas({
       );
 
       let craftAlpha = 1;
-      if (miss && playback > 0.82) {
-        craftAlpha = 1 - smoothstep((playback - 0.82) / 0.18);
+      if (miss && playback > 0.88) {
+        craftAlpha = 1 - smoothstep((playback - 0.88) / 0.12);
       } else if (outcome === "BURN") {
         craftAlpha = 1 - destructionAmount;
       } else if (outcome === "BREAK") {
@@ -1993,6 +2010,7 @@ export function ReentryPresentationCanvas({
     result,
     spaceApproach,
     spaceShare,
+    powerNorm,
     variant,
   ]);
 

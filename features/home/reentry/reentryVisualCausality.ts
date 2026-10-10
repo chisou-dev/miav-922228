@@ -17,6 +17,18 @@ export function spaceApproach01(altitudeM: number, handoffM: number, startM: num
   return clamp01(1 - (altitudeM - handoffM) / (startM - handoffM));
 }
 
+/** Monotonic screen travel. Higher power reaches the limb sooner, never stalls. */
+export function spaceTravelT(
+  spaceT: number,
+  powerNorm: number,
+  miss: boolean,
+): number {
+  const t = clamp01(spaceT);
+  if (miss) return t;
+  const exp = mixNum(1.32, 0.66, clamp01(powerNorm));
+  return Math.pow(t, exp);
+}
+
 export function spaceCraftScreenPosition(
   current: Vec2,
   initial: Vec2,
@@ -35,7 +47,7 @@ export function spaceCraftScreenPosition(
     entryTargetPoint.x - launchPoint.x,
     entryTargetPoint.y - launchPoint.y,
   );
-  const screenTravel = targetDistance * smoothstep01(approach01);
+  const screenTravel = targetDistance * clamp01(approach01);
 
   return {
     x: launchPoint.x + ux * screenTravel,

@@ -31,6 +31,7 @@ export interface ReentryDrawState {
   angleNorm?: number;
   spaceApproach?: SpaceApproachResult | null;
   spaceShare?: number;
+  powerNorm?: number;
   /** Static image layers behind canvas; WebGL draws effects only. */
   hybridMode?: boolean;
 }

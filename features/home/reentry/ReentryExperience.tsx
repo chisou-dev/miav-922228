@@ -109,6 +109,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     seed,
     spaceApproach,
     spaceShare,
+    powerNorm: lockedPowerNorm ?? 0.5,
   };
 
   const showEffects =
