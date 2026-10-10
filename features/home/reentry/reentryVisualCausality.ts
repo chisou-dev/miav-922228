@@ -110,6 +110,56 @@ export function clampHeadingJump(from: number, to: number, maxDeg = 8): number {
   return from + delta;
 }
 
+export function closestApproachIndex(
+  points: { altitudeM: number }[],
+): number {
+  let best = 0;
+  for (let i = 1; i < points.length; i++) {
+    if (points[i].altitudeM < points[best].altitudeM) best = i;
+  }
+  return best;
+}
+
+/** Map wall-clock flyby 0–1 so closest approach sits near 48%. */
+export function missPlaybackToPathT(
+  spaceT: number,
+  periIndex: number,
+  pointCount: number,
+): number {
+  const t = clamp01(spaceT);
+  const last = Math.max(1, pointCount - 1);
+  const periT = periIndex / last;
+  if (periT < 0.12 || periT > 0.9) return t;
+  if (t < 0.48) return periT * (t / 0.48);
+  return periT + (1 - periT) * ((t - 0.48) / 0.52);
+}
+
+export function gravityPathScalePx(
+  first: Vec2,
+  peri: Vec2,
+  launchPoint: Vec2,
+  periScreen: Vec2,
+): number {
+  const world = Math.hypot(peri.x - first.x, peri.y - first.y);
+  const screen = Math.hypot(
+    periScreen.x - launchPoint.x,
+    periScreen.y - launchPoint.y,
+  );
+  return screen / Math.max(world, 1e3);
+}
+
+export function gravityScreenPosition(
+  current: Vec2,
+  first: Vec2,
+  launchPoint: Vec2,
+  scale: number,
+): Vec2 {
+  return {
+    x: launchPoint.x + (current.x - first.x) * scale,
+    y: launchPoint.y - (current.y - first.y) * scale,
+  };
+}
+
 export function elapsedSincePlaybackS(
   playback: number,
   startPlayback: number,

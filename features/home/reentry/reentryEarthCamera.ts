@@ -35,11 +35,17 @@ export function cinematicEarthView({
   if (idle) return start;
 
   if (miss) {
-    const outbound = smoothstep01((spaceT - 0.38) / 0.62);
+    const outbound01 = smoothstep01((spaceT - 0.48) / 0.52);
+    const rClose = start.r * 1.08;
+    const minDim = Math.min(w, h);
     return {
-      x: mixNum(start.x, start.x + w * 0.03, outbound),
-      y: mixNum(start.y, start.y - h * 0.02, outbound),
-      r: mixNum(start.r, start.r * 0.72, outbound),
+      x: mixNum(start.x, start.x + w * 0.02, outbound01),
+      y: mixNum(start.y, start.y - h * 0.015, outbound01),
+      r: mixNum(
+        rClose,
+        Math.max(minDim * 0.07, rClose * 0.48),
+        outbound01,
+      ),
     };
   }
 

@@ -38,8 +38,12 @@ import {
 import {
   atmosphereThicknessPx,
   clampHeadingJump,
+  closestApproachIndex,
   elapsedSincePlaybackS,
+  gravityPathScalePx,
+  gravityScreenPosition,
   hazeEntryTarget,
+  missPlaybackToPathT,
   signedDistanceToAtmospherePx,
   spaceApproach01,
   spaceCraftScreenPosition,
@@ -175,28 +179,32 @@ function drawStars(
 ): void {
   if (stars <= 0.001) return;
 
-  const streak = moving ? smoothstep((playback - 0.10) / 0.42) : 0;
+  const streak = moving ? smoothstep((playback - 0.10) / 0.42) * 0.35 : 0;
   const fade = (1 - horizonMix * 0.72) * stars;
 
   ctx.save();
   ctx.globalAlpha = fade;
 
-  for (let i = 0; i < 86; i++) {
+  for (let i = 0; i < 64; i++) {
     const x = (((i * 89 + 17) % 101) / 101) * w;
     const y = (((i * 47 + 29) % 103) / 103) * h;
-    const bright = i % 17 === 0;
-    const alpha = bright ? 0.28 + (i % 3) * 0.05 : 0.06 + (i % 7) * 0.018;
-    const size = bright ? 1.45 : i % 11 === 0 ? 1.05 : 0.65;
+    const bright = i % 11 === 0 && i < 70;
+    const twinkle =
+      i % 19 === 0
+        ? 0.55 + 0.45 * Math.sin(playback * 2.1 + i)
+        : 1;
+    const alpha = (bright ? 0.34 : 0.08 + (i % 5) * 0.025) * twinkle;
+    const size = bright ? 1.05 : 0.55 + (i % 3) * 0.12;
 
-    ctx.strokeStyle = `rgba(228,237,245,${alpha})`;
     ctx.fillStyle = `rgba(228,237,245,${alpha})`;
 
-    if (streak > 0.03 && i % 3 === 0) {
-      const len = (3 + (i % 6) * 2.2) * streak;
-      ctx.lineWidth = 0.65;
+    if (streak > 0.04 && i % 11 === 0) {
+      ctx.strokeStyle = `rgba(228,237,245,${alpha * 0.45})`;
+      const len = (2 + (i % 4) * 1.4) * streak;
+      ctx.lineWidth = 0.5;
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + len * 0.58, y - len);
+      ctx.lineTo(x + len * 0.4, y - len);
       ctx.stroke();
     } else {
       ctx.fillRect(x, y, size, size);
@@ -1605,7 +1613,15 @@ export function ReentryPresentationCanvas({
       );
       const activeSpace = spaceApproach ?? idleSpace;
       const firstSpace = activeSpace.points[0]?.state;
-      const sampledSpace = sampleSpacePoint(activeSpace.points, spaceT);
+      const periIdx = closestApproachIndex(activeSpace.points);
+      const pathT = miss
+        ? missPlaybackToPathT(
+            spaceT,
+            periIdx,
+            activeSpace.points.length,
+          )
+        : spaceT;
+      const sampledSpace = sampleSpacePoint(activeSpace.points, pathT);
       const spaceState = sampledSpace?.state ?? firstSpace;
 
       const frame =
@@ -1678,24 +1694,38 @@ export function ReentryPresentationCanvas({
       };
 
       if (firstSpace && spaceState) {
-        const traveled = spaceCraftScreenPosition(
-          spaceState.position,
-          firstSpace.position,
-          launch,
-          entryTarget,
-          travelT,
-        );
-        pose = {
-          x: traveled.x,
-          y: traveled.y,
-          angle: canvasHeadingFromWorld(spaceState.velocity),
-        };
-        if (miss && playback > 0.55) {
-          const out = (playback - 0.55) / 0.45;
+        if (miss) {
+          const periPt = activeSpace.points[periIdx]?.state ?? firstSpace;
+          const periScreen = hazeEntryTarget(launch, earth, thickness);
+          const scale = gravityPathScalePx(
+            firstSpace.position,
+            periPt.position,
+            launch,
+            periScreen,
+          );
+          const traveled = gravityScreenPosition(
+            spaceState.position,
+            firstSpace.position,
+            launch,
+            scale,
+          );
           pose = {
-            x: pose.x + Math.cos(pose.angle) * Math.min(w, h) * 0.42 * out,
-            y: pose.y + Math.sin(pose.angle) * Math.min(w, h) * 0.42 * out,
-            angle: pose.angle,
+            x: traveled.x,
+            y: traveled.y,
+            angle: canvasHeadingFromWorld(spaceState.velocity),
+          };
+        } else {
+          const traveled = spaceCraftScreenPosition(
+            spaceState.position,
+            firstSpace.position,
+            launch,
+            entryTarget,
+            travelT,
+          );
+          pose = {
+            x: traveled.x,
+            y: traveled.y,
+            angle: canvasHeadingFromWorld(spaceState.velocity),
           };
         }
       }
@@ -1871,8 +1901,9 @@ export function ReentryPresentationCanvas({
       const baseCraft =
         Math.min(w, h) *
         (variant === "preview" ? 0.088 : 0.102);
+      const outbound01 = miss ? smoothstep((spaceT - 0.48) / 0.52) : 0;
       const craftLength = miss
-        ? baseCraft * mix(0.55, 0.28, spaceT)
+        ? baseCraft * mix(1, 0.36, outbound01)
         : baseCraft * mix(0.62, 1.62, altitudeApproach);
 
       const destructionAmount = smoothstep(
@@ -1883,8 +1914,8 @@ export function ReentryPresentationCanvas({
       );
 
       let craftAlpha = 1;
-      if (miss && playback > 0.88) {
-        craftAlpha = 1 - smoothstep((playback - 0.88) / 0.12);
+      if (miss) {
+        craftAlpha = 1 - smoothstep((spaceT - 0.84) / 0.16);
       } else if (outcome === "BURN") {
         craftAlpha = 1 - destructionAmount;
       } else if (outcome === "BREAK") {

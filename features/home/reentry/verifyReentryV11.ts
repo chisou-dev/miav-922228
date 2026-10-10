@@ -1,4 +1,5 @@
 import {
+  cinematicEarthView,
   earthGrowthRatioAtApproach,
   launchEarthView,
 } from "./reentryEarthCamera";
@@ -6,11 +7,16 @@ import { launchAnchorPx } from "./reentryCraftProjection";
 import { directionNormToScreenHeadingRad } from "./reentrySpaceApproach";
 import {
   atmosphereThicknessPx,
+  closestApproachIndex,
+  gravityPathScalePx,
+  gravityScreenPosition,
   hazeEntryTarget,
+  missPlaybackToPathT,
   spaceCraftScreenPosition,
   spaceTravelT,
 } from "./reentryVisualCausality";
 import {
+  canvasHeadingFromWorld,
   headingDeltaDeg,
   launchSpaceApproach,
   maxHeadingJumpDeg,
@@ -20,6 +26,7 @@ import {
 } from "./reentrySpaceApproach";
 import { mapLaunchToInput } from "./reentryLaunchInput";
 import { runStage1Launch } from "./reentryLaunchPipeline";
+import { SPACE_MISS_DURATION_MS } from "./reentryStageTimeline";
 
 function clamp01(v: number): number {
   return Math.min(1, Math.max(0, v));
@@ -177,3 +184,97 @@ console.log(
   travel70.toFixed(4),
 );
 console.log("v15 checks ok");
+
+if (SPACE_MISS_DURATION_MS < 6700 || SPACE_MISS_DURATION_MS > 8800) {
+  throw new Error(`SPACE_MISS duration ${SPACE_MISS_DURATION_MS}`);
+}
+
+const missW = 1280;
+const missH = 720;
+const missLaunch = launchAnchorPx(missW, missH);
+const missEarth = cinematicEarthView({
+  w: missW,
+  h: missH,
+  idle: false,
+  miss: true,
+  travelT: 1,
+  spaceT: 1,
+});
+const startEarth = launchEarthView(missW, missH);
+if (missEarth.r >= startEarth.r * 1.08) {
+  throw new Error(`earth did not shrink outbound ${missEarth.r}`);
+}
+
+const periIdx = closestApproachIndex(miss.points);
+const firstPt = miss.points[0].state;
+const periPt = miss.points[periIdx].state;
+const periScreen = hazeEntryTarget(
+  missLaunch,
+  { x: startEarth.x, y: startEarth.y, r: startEarth.r * 1.08 },
+  atmosphereThicknessPx(startEarth.r * 1.08),
+);
+const gScale = gravityPathScalePx(
+  firstPt.position,
+  periPt.position,
+  missLaunch,
+  periScreen,
+);
+
+const missPositions: { t: number; x: number; y: number }[] = [];
+for (let ms = 0; ms <= SPACE_MISS_DURATION_MS; ms += 500) {
+  const spaceT = ms / SPACE_MISS_DURATION_MS;
+  const pathT = missPlaybackToPathT(spaceT, periIdx, miss.points.length);
+  const sampled = sampleSpacePoint(miss.points, pathT);
+  if (!sampled) throw new Error("missing miss sample");
+  const pos = gravityScreenPosition(
+    sampled.state.position,
+    firstPt.position,
+    missLaunch,
+    gScale,
+  );
+  missPositions.push({ t: spaceT, x: pos.x, y: pos.y });
+}
+for (let i = 1; i < missPositions.length; i++) {
+  const prev = missPositions[i - 1];
+  const cur = missPositions[i];
+  const dist = Math.hypot(cur.x - prev.x, cur.y - prev.y);
+  if (prev.t < 0.84 && dist < 0.25) {
+    throw new Error(`SPACE_MISS freeze at t=${prev.t} Δ=${dist}`);
+  }
+}
+
+const last = missPositions[missPositions.length - 1];
+const periScreened = gravityScreenPosition(
+  periPt.position,
+  firstPt.position,
+  missLaunch,
+  gScale,
+);
+const outboundTravel = Math.hypot(last.x - periScreened.x, last.y - periScreened.y);
+if (outboundTravel < 40) {
+  throw new Error(`outbound travel too small ${outboundTravel}`);
+}
+
+let headingJump = 0;
+let prevHeading = 0;
+for (let i = 0; i < miss.points.length; i++) {
+  const heading = canvasHeadingFromWorld(miss.points[i].state.velocity);
+  if (i > 0) {
+    headingJump = Math.max(headingJump, headingDeltaDeg(prevHeading, heading));
+  }
+  prevHeading = heading;
+}
+if (headingJump > 8.01) {
+  throw new Error(`canvas heading jump ${headingJump}`);
+}
+
+void spaceCraftScreenPosition;
+console.log(
+  "v16 miss durationMs",
+  SPACE_MISS_DURATION_MS,
+  "outboundPx",
+  outboundTravel.toFixed(1),
+  "headingJump",
+  headingJump.toFixed(3),
+);
+console.log("v16 checks ok");

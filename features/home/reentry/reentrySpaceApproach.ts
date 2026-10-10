@@ -307,10 +307,12 @@ export function simulateSpaceApproach(
       };
     }
 
-    if (
-      accumulatedAngle >=
-        Math.PI * 0.95
-    ) {
+    const radial = radialVelocity(state);
+    const departed =
+      radial > 0 &&
+      alt > SPACE_START_ALTITUDE_M * 1.35;
+
+    if (accumulatedAngle >= Math.PI * 0.95 && departed) {
       return {
         kind: "SPACE_MISS",
         points,
@@ -319,12 +321,9 @@ export function simulateSpaceApproach(
 
     if (
       state.elapsedS > 120 &&
-      alt >
-        SPACE_START_ALTITUDE_M *
-          1.8 &&
-      radialVelocity(state) > 0 &&
-      accumulatedAngle >
-        Math.PI * 0.18
+      departed &&
+      alt > SPACE_START_ALTITUDE_M * 1.8 &&
+      accumulatedAngle > Math.PI * 0.18
     ) {
       return {
         kind: "SPACE_MISS",
