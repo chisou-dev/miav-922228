@@ -55,6 +55,8 @@ export interface ReentryPlayRecord {
   spaceShare?: number;
   /** Screen bearing from the launch craft toward the rendered Earth at launch. */
   earthBearingScreenRad?: number;
+  /** SPACE start altitude chosen to match visible Earth angular size. */
+  spaceStartAltitudeM?: number;
 }
 
 export type ReentrySimulator = (input: ReentryInput) => ReentryResult;

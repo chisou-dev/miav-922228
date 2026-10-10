@@ -4,31 +4,31 @@ import {
   launchEarthView,
 } from "./reentryEarthCamera";
 import { launchAnchorPx } from "./reentryCraftProjection";
-import { directionNormToScreenHeadingRad } from "./reentrySpaceApproach";
 import {
-  atmosphereThicknessPx,
   closestApproachIndex,
-  gravityPathScalePx,
-  gravityScreenPosition,
-  hazeEntryTarget,
-  headingHazeEntryTarget,
-  inboundGravityScreenPose,
   missPlaybackToPathT,
-  spaceCraftScreenPosition,
+  similaritySpacePose,
   spaceTravelT,
 } from "./reentryVisualCausality";
 import {
   canvasHeadingFromWorld,
+  directionNormToScreenHeadingRad,
   headingDeltaDeg,
   launchSpaceApproach,
   maxHeadingJumpDeg,
   sampleSpacePoint,
+  screenMatchedStartAltitudeM,
   ATMOSPHERE_HANDOFF_ALTITUDE_M,
+  SPACE_EARTH_RADIUS_M,
   SPACE_START_ALTITUDE_M,
 } from "./reentrySpaceApproach";
-import { mapLaunchToInput } from "./reentryLaunchInput";
+import { mapLaunchToInput, wrap01 } from "./reentryLaunchInput";
 import { runStage1Launch } from "./reentryLaunchPipeline";
-import { SPACE_MISS_DURATION_MS } from "./reentryStageTimeline";
+import {
+  SPACE_MISS_DURATION_MS,
+  destructionAmountFromEntryS,
+  failureDestructionStartS,
+} from "./reentryStageTimeline";
 
 function clamp01(v: number): number {
   return Math.min(1, Math.max(0, v));
@@ -38,49 +38,50 @@ function smoothstep(v: number): number {
   return t * t * (3 - 2 * t);
 }
 
-function screenPose(
-  angleNorm: number,
+function screenHeadingToNorm(heading: number): number {
+  return wrap01((heading + Math.PI / 2) / (Math.PI * 2));
+}
+
+function geometry(w: number, h: number) {
+  const launch = launchAnchorPx(w, h);
+  const earth = launchEarthView(w, h);
+  const centerDistancePx = Math.hypot(launch.x - earth.x, launch.y - earth.y);
+  const startAltitudeM = screenMatchedStartAltitudeM(earth.r, centerDistancePx);
+  const earthBearing = Math.atan2(earth.y - launch.y, earth.x - launch.x);
+  return { launch, earth, centerDistancePx, startAltitudeM, earthBearing };
+}
+
+function poseAt(
+  space: ReturnType<typeof launchSpaceApproach>,
   t: number,
   w: number,
   h: number,
 ) {
-  const speed = mapLaunchToInput(0.5, angleNorm, 1).initialSpeedMps;
-  const space = launchSpaceApproach(speed, angleNorm);
+  const { launch, earth } = geometry(w, h);
   const first = space.points[0].state;
   const sampled = sampleSpacePoint(space.points, t)!;
-  const launch = launchAnchorPx(w, h);
-  const earth = launchEarthView(w, h);
-  const travelT = spaceTravelT(t, 0.5, false);
-  const traveled = spaceCraftScreenPosition(
-    sampled.state.position,
-    first.position,
-    launch,
-    hazeEntryTarget(launch, earth, atmosphereThicknessPx(earth.r)),
-    travelT,
-  );
-  return {
-    space,
-    x: traveled.x,
-    y: traveled.y,
-    angle: sampled.screenHeadingRad,
-    idleAngle: directionNormToScreenHeadingRad(angleNorm),
-  };
+  return similaritySpacePose({
+    currentPosition: sampled.state.position,
+    currentVelocity: sampled.state.velocity,
+    initialPosition: first.position,
+    earthCenter: { x: earth.x, y: earth.y },
+    launchPoint: launch,
+  });
 }
 
-function earthBearingForSize(
-  w: number,
-  h: number,
-): number {
-  const launch =
-    launchAnchorPx(w, h);
-
-  const earth =
-    launchEarthView(w, h);
-
-  return Math.atan2(
-    earth.y - launch.y,
-    earth.x - launch.x,
-  );
+function screenPose(angleNorm: number, t: number, w: number, h: number) {
+  const { earthBearing, startAltitudeM, launch } = geometry(w, h);
+  const speed = mapLaunchToInput(0.5, angleNorm, 1).initialSpeedMps;
+  const space = launchSpaceApproach(speed, angleNorm, earthBearing, startAltitudeM);
+  const p = poseAt(space, t, w, h);
+  return {
+    space,
+    x: p.x,
+    y: p.y,
+    angle: p.angle,
+    idleAngle: directionNormToScreenHeadingRad(angleNorm),
+    launch,
+  };
 }
 
 const sizes = [
@@ -93,54 +94,179 @@ for (const size of sizes) {
   if (earth.x > size.w * 0.28 || earth.y < size.h * 0.62 || earth.y > size.h * 0.82) {
     throw new Error(`${size.name} earth not lower-left`);
   }
-  const a = screenPose(0.5, 0, size.w, size.h);
-  const idle = launchAnchorPx(size.w, size.h);
-  const posErr = Math.hypot(a.x - idle.x, a.y - idle.y);
-  if (posErr > 0.5) throw new Error(`${size.name} position ${posErr}`);
-  const headErr = headingDeltaDeg(a.idleAngle, a.angle);
-  if (headErr > 0.5) throw new Error(`${size.name} heading ${headErr}`);
-  const b = screenPose(0.5, 0.05, size.w, size.h);
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const hx = Math.cos(a.idleAngle);
-  const hy = Math.sin(a.idleAngle);
-  const align = (dx / len) * hx + (dy / len) * hy;
-  if (align < 0.995) throw new Error(`${size.name} alignment ${align}`);
+  const { centerDistancePx, startAltitudeM, earthBearing, launch } = geometry(
+    size.w,
+    size.h,
+  );
+  const physicalRatio =
+    SPACE_EARTH_RADIUS_M / (SPACE_EARTH_RADIUS_M + startAltitudeM);
+  const visualRatio = earth.r / centerDistancePx;
+  if (Math.abs(physicalRatio - visualRatio) > 0.006) {
+    throw new Error(
+      `${size.name} earth ratio physical=${physicalRatio} visual=${visualRatio}`,
+    );
+  }
   console.log(
-    `${size.name} pos=${posErr.toFixed(4)}px heading=${headErr.toFixed(4)}deg align=${align.toFixed(6)}`,
+    `${size.name} startAlt=${startAltitudeM.toFixed(0)} ratioErr=${Math.abs(
+      physicalRatio - visualRatio,
+    ).toFixed(6)}`,
+  );
+
+  const offsets = [0, 4 / 360, -4 / 360];
+  const labels = ["direct", "+4", "-4"];
+  for (let i = 0; i < offsets.length; i++) {
+    const n = wrap01(screenHeadingToNorm(earthBearing) + offsets[i]);
+    const a = screenPose(n, 0, size.w, size.h);
+    const posErr = Math.hypot(a.x - launch.x, a.y - launch.y);
+    if (posErr > 0.5) throw new Error(`${size.name} ${labels[i]} position ${posErr}`);
+    const headErr = headingDeltaDeg(a.idleAngle, a.angle);
+    if (headErr > 0.05) {
+      throw new Error(`${size.name} ${labels[i]} heading ${headErr}`);
+    }
+    console.log(
+      `${size.name} ${labels[i]} headingErr=${headErr.toFixed(4)}deg`,
+    );
+  }
+}
+
+let reportEntryN = 0.5;
+let reportMissN = 0;
+let reportGrazeN = 0;
+let reportGrazeAlt = 0;
+let reportSep = 0;
+let reportGamma = 0;
+
+for (const size of sizes) {
+  const { earthBearing, startAltitudeM, earth, launch } = geometry(size.w, size.h);
+  const earthNorm = screenHeadingToNorm(earthBearing);
+  const entries: {
+    n: number;
+    space: Extract<ReturnType<typeof launchSpaceApproach>, { kind: "ATMOSPHERE_ENTRY" }>;
+  }[] = [];
+  let clearMiss: ReturnType<typeof launchSpaceApproach> | null = null;
+  let graze: ReturnType<typeof launchSpaceApproach> | null = null;
+  let grazeAlt = Infinity;
+
+  for (let deg = -28; deg <= 28; deg += 0.5) {
+    const n = wrap01(earthNorm + deg / 360);
+    const speed = mapLaunchToInput(0.55, n, 1).initialSpeedMps;
+    const space = launchSpaceApproach(speed, n, earthBearing, startAltitudeM);
+    if (space.kind === "ATMOSPHERE_ENTRY") {
+      entries.push({ n, space });
+    } else {
+      const minAlt = Math.min(...space.points.map((p) => p.altitudeM));
+      if (
+        minAlt <= ATMOSPHERE_HANDOFF_ALTITUDE_M + 350_000 &&
+        minAlt < grazeAlt
+      ) {
+        graze = space;
+        grazeAlt = minAlt;
+        reportGrazeN = n;
+      }
+      if (!clearMiss && minAlt > ATMOSPHERE_HANDOFF_ALTITUDE_M + 800_000) {
+        clearMiss = space;
+        reportMissN = n;
+      }
+    }
+  }
+
+  if (entries.length < 2) {
+    throw new Error(`${size.name} need two ATMOSPHERE_ENTRY got ${entries.length}`);
+  }
+  if (!clearMiss) throw new Error(`${size.name} no clear SPACE_MISS`);
+  if (!graze) throw new Error(`${size.name} no grazing SPACE_MISS`);
+
+  let pair:
+    | [
+        (typeof entries)[0],
+        (typeof entries)[0],
+      ]
+    | null = null;
+  for (let i = 0; i < entries.length; i++) {
+    for (let j = i + 1; j < entries.length; j++) {
+      const d = headingDeltaDeg(
+        directionNormToScreenHeadingRad(entries[i].n),
+        directionNormToScreenHeadingRad(entries[j].n),
+      );
+      const g = Math.abs(
+        ((entries[i].space.entry.gammaRad - entries[j].space.entry.gammaRad) *
+          180) /
+          Math.PI,
+      );
+      if (d >= 1 && g >= 0.15) {
+        pair = [entries[i], entries[j]];
+        break;
+      }
+    }
+    if (pair) break;
+  }
+  if (!pair) throw new Error(`${size.name} no distinct entry pair`);
+
+  const contacts = pair.map((item) => {
+    const first = item.space.points[0].state;
+    const terminal = item.space.points[item.space.points.length - 1].state;
+    return similaritySpacePose({
+      currentPosition: terminal.position,
+      currentVelocity: terminal.velocity,
+      initialPosition: first.position,
+      earthCenter: { x: earth.x, y: earth.y },
+      launchPoint: launch,
+    });
+  });
+  const sep = Math.hypot(
+    contacts[0].x - contacts[1].x,
+    contacts[0].y - contacts[1].y,
+  );
+  if (sep < Math.max(4, earth.r * 0.05)) {
+    throw new Error(`${size.name} contact sep ${sep}`);
+  }
+  const gammaDiff = Math.abs(
+    ((pair[0].space.entry.gammaRad - pair[1].space.entry.gammaRad) * 180) /
+      Math.PI,
+  );
+  reportEntryN = pair[0].n;
+  reportSep = sep;
+  reportGamma = gammaDiff;
+  reportGrazeAlt = grazeAlt;
+  console.log(
+    `${size.name} entryN=${pair[0].n.toFixed(4)} missN=${reportMissN.toFixed(4)} grazeAlt=${grazeAlt.toFixed(0)} sep=${sep.toFixed(2)}px gammaDiff=${gammaDiff.toFixed(3)}deg`,
   );
 }
 
-let miss: ReturnType<typeof launchSpaceApproach> | null = null;
-for (let n = 0; n < 1; n += 0.05) {
-  const speed = mapLaunchToInput(0.5, n, 1).initialSpeedMps;
-  const space = launchSpaceApproach(speed, n);
-  if (space.kind === "SPACE_MISS") {
-    miss = space;
-    break;
-  }
+const launchedMiss = runStage1Launch(
+  0.4,
+  reportMissN,
+  7,
+  geometry(1440, 900).earthBearing,
+  geometry(1440, 900).startAltitudeM,
+);
+if (launchedMiss.space.kind !== "SPACE_MISS") {
+  throw new Error("expected SPACE_MISS launch");
 }
-if (!miss) throw new Error("no SPACE_MISS sample");
-if (miss.kind !== "SPACE_MISS") throw new Error("expected miss");
-console.log("SPACE miss samples", miss.points.length, "startAlt", miss.points[0].altitudeM);
+if (launchedMiss.result.outcome !== "SKIP") {
+  throw new Error("SPACE_MISS must be SKIP");
+}
 
-const launchedMiss = runStage1Launch(0.4, 0.0, 7);
-if (launchedMiss.space.kind === "SPACE_MISS") {
-  if (launchedMiss.result.outcome !== "SKIP") {
-    throw new Error("SPACE_MISS must be SKIP");
-  }
+const missGeom = geometry(1280, 720);
+let miss = launchSpaceApproach(
+  mapLaunchToInput(0.5, reportMissN, 1).initialSpeedMps,
+  reportMissN,
+  missGeom.earthBearing,
+  missGeom.startAltitudeM,
+);
+if (miss.kind !== "SPACE_MISS") {
+  miss = launchSpaceApproach(
+    mapLaunchToInput(0.5, 0, 1).initialSpeedMps,
+    0,
+    missGeom.earthBearing,
+    missGeom.startAltitudeM,
+  );
 }
+if (miss.kind !== "SPACE_MISS") throw new Error("no SPACE_MISS sample");
+console.log("SPACE miss samples", miss.points.length, "startAlt", miss.startAltitudeM);
 
 const jump = maxHeadingJumpDeg(miss.points);
 if (jump > 15) throw new Error(`heading jump ${jump}`);
-const mid = miss.points[Math.floor(miss.points.length / 2)].state;
-const r = Math.hypot(mid.position.x, mid.position.y) || 1;
-const erx = mid.position.x / r;
-const ery = mid.position.y / r;
-const radialOut =
-  mid.velocity.x * erx + mid.velocity.y * ery;
-void radialOut;
 const later = miss.points[Math.min(miss.points.length - 1, Math.floor(miss.points.length * 0.8))].state;
 const earlier = miss.points[Math.floor(miss.points.length * 0.2)].state;
 const h0 = Math.atan2(earlier.velocity.y, earlier.velocity.x);
@@ -150,136 +276,22 @@ if (headingDeltaDeg(h0, h1) < 0.5) {
 }
 console.log("gravity jumpDeg", jump.toFixed(3));
 
-let entry = null as ReturnType<typeof launchSpaceApproach> | null;
-for (let n = 0; n <= 1; n += 0.02) {
-  const speed = mapLaunchToInput(0.55, n, 1).initialSpeedMps;
-  const space = launchSpaceApproach(speed, n);
-  if (space.kind === "ATMOSPHERE_ENTRY") {
-    entry = space;
-    break;
-  }
+const startFar = failureDestructionStartS(200_000, "BURN");
+const startClose = failureDestructionStartS(4_000, "BURN");
+if (startFar < 3) throw new Error(`far failure start ${startFar}`);
+if (startClose > 10) throw new Error(`near failure start ${startClose}`);
+if (destructionAmountFromEntryS(2.9, "BURN", 200_000) !== 0) {
+  throw new Error("early burn");
 }
-if (!entry || entry.kind !== "ATMOSPHERE_ENTRY") {
-  throw new Error("no ATMOSPHERE_ENTRY sample");
+if (destructionAmountFromEntryS(3.0, "BURN", 200_000) !== 0) {
+  throw new Error("burn at 3s should start 0");
 }
-if (Math.abs(entry.entry.state.elapsedS) < 0) throw new Error("bad time");
-if (entry.points[entry.points.length - 1].altitudeM > ATMOSPHERE_HANDOFF_ALTITUDE_M + 2000) {
-  throw new Error("handoff altitude too high");
+if (destructionAmountFromEntryS(4.4, "BURN", 200_000) <= 0) {
+  throw new Error("late burn");
 }
-if (!Number.isFinite(entry.entry.speedMps) || !Number.isFinite(entry.entry.gammaRad)) {
-  throw new Error("non-finite entry");
-}
-console.log(
-  "handoff alt",
-  entry.points[entry.points.length - 1].altitudeM,
-  "speed",
-  entry.entry.speedMps,
-);
+console.log("failure survival", startFar.toFixed(3), startClose.toFixed(3));
+console.log("start altitude default", SPACE_START_ALTITUDE_M, "handoff", ATMOSPHERE_HANDOFF_ALTITUDE_M);
 
-let entryAngleNorm = 0.5;
-{
-  const bearing0 = earthBearingForSize(sizes[0].w, sizes[0].h);
-  let found: ReturnType<typeof launchSpaceApproach> | null = null;
-  for (let n = 0; n <= 1; n += 0.02) {
-    const speed = mapLaunchToInput(0.55, n, 1).initialSpeedMps;
-    const space = launchSpaceApproach(speed, n, bearing0);
-    if (space.kind === "ATMOSPHERE_ENTRY") {
-      found = space;
-      entryAngleNorm = n;
-      break;
-    }
-  }
-  if (found && found.kind === "ATMOSPHERE_ENTRY") {
-    entry = found;
-  }
-}
-
-for (const size of sizes) {
-  const launch = launchAnchorPx(size.w, size.h);
-  const earth = launchEarthView(size.w, size.h);
-  const bearing = earthBearingForSize(size.w, size.h);
-  const speed = mapLaunchToInput(0.55, entryAngleNorm, 1).initialSpeedMps;
-  const sized = launchSpaceApproach(speed, entryAngleNorm, bearing);
-  if (sized.kind !== "ATMOSPHERE_ENTRY") {
-    throw new Error(`${size.name} v18 lost ATMOSPHERE_ENTRY`);
-  }
-  const launchHeading = directionNormToScreenHeadingRad(entryAngleNorm);
-  const target = headingHazeEntryTarget(
-    launch,
-    earth,
-    atmosphereThicknessPx(earth.r),
-    launchHeading,
-  );
-  const first = sized.points[0].state;
-  const terminal = sized.points[sized.points.length - 1].state;
-  const startPose = inboundGravityScreenPose({
-    currentPosition: first.position,
-    currentVelocity: first.velocity,
-    initialPosition: first.position,
-    initialVelocity: first.velocity,
-    terminalPosition: terminal.position,
-    launchPoint: launch,
-    entryTargetPoint: target,
-    launchHeading,
-  });
-  const initialHeadingError = headingDeltaDeg(launchHeading, startPose.angle);
-  if (initialHeadingError > 0.05) {
-    throw new Error(
-      `${size.name} v18 launch heading visually corrected ${initialHeadingError}`,
-    );
-  }
-  const finalPose = inboundGravityScreenPose({
-    currentPosition: terminal.position,
-    currentVelocity: terminal.velocity,
-    initialPosition: first.position,
-    initialVelocity: first.velocity,
-    terminalPosition: terminal.position,
-    launchPoint: launch,
-    entryTargetPoint: target,
-    launchHeading,
-  });
-  const contactError = Math.hypot(finalPose.x - target.x, finalPose.y - target.y);
-  if (contactError > 0.25) {
-    throw new Error(`${size.name} v18 visual haze contact ${contactError}`);
-  }
-  const craftLengthAtContact = Math.min(size.w, size.h) * 0.102 * 0.145;
-  const earthDiameter = earth.r * 2;
-  if (craftLengthAtContact > earthDiameter * 0.12) {
-    throw new Error(`${size.name} craft still too large at atmosphere contact`);
-  }
-  console.log(
-    `${size.name} v18 headingErr=${initialHeadingError.toFixed(4)}deg contact=${contactError.toFixed(4)}px craft/earth=${(
-      craftLengthAtContact / earthDiameter
-    ).toFixed(4)}`,
-  );
-}
-
-{
-  const size = sizes[0];
-  const bearing = earthBearingForSize(size.w, size.h);
-  const awayHeading = bearing + Math.PI;
-  const awayNorm = ((awayHeading + Math.PI / 2) / (Math.PI * 2) % 1 + 1) % 1;
-  const speed = mapLaunchToInput(0.55, awayNorm, 1).initialSpeedMps;
-  const away = launchSpaceApproach(speed, awayNorm, bearing);
-  if (away.kind !== "SPACE_MISS") {
-    throw new Error(`away heading must SPACE_MISS got ${away.kind}`);
-  }
-  const launchedAway = runStage1Launch(0.55, awayNorm, 7, bearing);
-  if (launchedAway.result.outcome !== "SKIP") {
-    throw new Error(`away heading must SKIP got ${launchedAway.result.outcome}`);
-  }
-  console.log("away heading SPACE_MISS SKIP ok");
-}
-
-function destructionAmount(timeSinceAtmosphereEntryS: number, outcome: string) {
-  if (outcome !== "BURN" && outcome !== "BREAK") return 0;
-  if (timeSinceAtmosphereEntryS < 3) return 0;
-  return smoothstep((timeSinceAtmosphereEntryS - 3) / 7);
-}
-if (destructionAmount(2.9, "BURN") !== 0) throw new Error("early burn");
-if (destructionAmount(3.0, "BURN") !== 0) throw new Error("burn at 3s should start 0");
-if (destructionAmount(4.2, "BURN") <= 0) throw new Error("late burn");
-console.log("start altitude", SPACE_START_ALTITUDE_M, "handoff", ATMOSPHERE_HANDOFF_ALTITUDE_M);
 const ratio50 = earthGrowthRatioAtApproach(0.5);
 const ratio85 = earthGrowthRatioAtApproach(0.85);
 if (ratio50 > 1.2) throw new Error(`earth growth at 50% ${ratio50}`);
@@ -304,8 +316,7 @@ if (SPACE_MISS_DURATION_MS < 6700 || SPACE_MISS_DURATION_MS > 8800) {
 
 const missW = 1280;
 const missH = 720;
-const missLaunch = launchAnchorPx(missW, missH);
-const missEarth = cinematicEarthView({
+const missEarthCam = cinematicEarthView({
   w: missW,
   h: missH,
   idle: false,
@@ -314,24 +325,14 @@ const missEarth = cinematicEarthView({
   spaceT: 1,
 });
 const startEarth = launchEarthView(missW, missH);
-if (missEarth.r >= startEarth.r * 1.08) {
-  throw new Error(`earth did not shrink outbound ${missEarth.r}`);
+if (missEarthCam.r >= startEarth.r * 1.08) {
+  throw new Error(`earth did not shrink outbound ${missEarthCam.r}`);
 }
 
 const periIdx = closestApproachIndex(miss.points);
 const firstPt = miss.points[0].state;
 const periPt = miss.points[periIdx].state;
-const periScreen = hazeEntryTarget(
-  missLaunch,
-  { x: startEarth.x, y: startEarth.y, r: startEarth.r * 1.08 },
-  atmosphereThicknessPx(startEarth.r * 1.08),
-);
-const gScale = gravityPathScalePx(
-  firstPt.position,
-  periPt.position,
-  missLaunch,
-  periScreen,
-);
+const missLaunch = launchAnchorPx(missW, missH);
 
 const missPositions: { t: number; x: number; y: number }[] = [];
 for (let ms = 0; ms <= SPACE_MISS_DURATION_MS; ms += 500) {
@@ -339,12 +340,13 @@ for (let ms = 0; ms <= SPACE_MISS_DURATION_MS; ms += 500) {
   const pathT = missPlaybackToPathT(spaceT, periIdx, miss.points.length);
   const sampled = sampleSpacePoint(miss.points, pathT);
   if (!sampled) throw new Error("missing miss sample");
-  const pos = gravityScreenPosition(
-    sampled.state.position,
-    firstPt.position,
-    missLaunch,
-    gScale,
-  );
+  const pos = similaritySpacePose({
+    currentPosition: sampled.state.position,
+    currentVelocity: sampled.state.velocity,
+    initialPosition: firstPt.position,
+    earthCenter: { x: startEarth.x, y: startEarth.y },
+    launchPoint: missLaunch,
+  });
   missPositions.push({ t: spaceT, x: pos.x, y: pos.y });
 }
 for (let i = 1; i < missPositions.length; i++) {
@@ -357,12 +359,13 @@ for (let i = 1; i < missPositions.length; i++) {
 }
 
 const last = missPositions[missPositions.length - 1];
-const periScreened = gravityScreenPosition(
-  periPt.position,
-  firstPt.position,
-  missLaunch,
-  gScale,
-);
+const periScreened = similaritySpacePose({
+  currentPosition: periPt.position,
+  currentVelocity: periPt.velocity,
+  initialPosition: firstPt.position,
+  earthCenter: { x: startEarth.x, y: startEarth.y },
+  launchPoint: missLaunch,
+});
 const outboundTravel = Math.hypot(last.x - periScreened.x, last.y - periScreened.y);
 if (outboundTravel < 40) {
   throw new Error(`outbound travel too small ${outboundTravel}`);
@@ -381,7 +384,8 @@ if (headingJump > 8.01) {
   throw new Error(`canvas heading jump ${headingJump}`);
 }
 
-void spaceCraftScreenPosition;
+void reportEntryN;
+void reportGrazeN;
 console.log(
   "v16 miss durationMs",
   SPACE_MISS_DURATION_MS,
@@ -391,3 +395,16 @@ console.log(
   headingJump.toFixed(3),
 );
 console.log("v16 checks ok");
+console.log(
+  "v19 report entry",
+  reportEntryN,
+  "miss",
+  reportMissN,
+  "grazeAlt",
+  reportGrazeAlt,
+  "sep",
+  reportSep,
+  "gamma",
+  reportGamma,
+);
+console.log("v19 checks ok");

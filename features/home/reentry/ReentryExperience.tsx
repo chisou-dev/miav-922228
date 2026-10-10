@@ -100,6 +100,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     angleNorm,
     earthBearingScreenRad:
       playRecord?.earthBearingScreenRad,
+    spaceStartAltitudeM: playRecord?.spaceStartAltitudeM,
   });
 
   useBodyScrollLock(expanded);

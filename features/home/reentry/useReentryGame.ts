@@ -10,7 +10,10 @@ import type {
   ReentryPlayRecord,
   ReentryResult,
 } from "./reentryTypes";
-import type { SpaceApproachResult } from "./reentrySpaceApproach";
+import {
+  screenMatchedStartAltitudeM,
+  type SpaceApproachResult,
+} from "./reentrySpaceApproach";
 
 const POWER_CYCLE_MS = 4400;
 const POWER_STEPS = 52;
@@ -223,12 +226,22 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
         earthAtLaunch.x -
           launchPoint.x,
       );
+    const centerDistancePx = Math.hypot(
+      earthAtLaunch.x - launchPoint.x,
+      earthAtLaunch.y - launchPoint.y,
+    );
+
+    const spaceStartAltitudeM = screenMatchedStartAltitudeM(
+      earthAtLaunch.r,
+      centerDistancePx,
+    );
     const simStarted = performance.now();
     const launched = runStage1Launch(
       lockedPowerNorm,
       angleNorm,
       seed,
       earthBearingScreenRad,
+      spaceStartAltitudeM,
     );
 
     if (surfaceRef.current) {

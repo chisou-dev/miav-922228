@@ -63,23 +63,18 @@ export function nearbyJobs(
 }
 
 export function evaluateNearbyJob(
-  job: NearbySample & {
-    seed: number;
-  },
+  job: NearbySample & { seed: number },
   earthBearingScreenRad?: number,
+  spaceStartAltitudeM?: number,
 ): boolean {
-  const launched =
-    runStage1Launch(
-      job.powerNorm,
-      job.angleNorm,
-      job.seed,
-      earthBearingScreenRad,
-    );
-
-  return (
-    launched.result.outcome ===
-    "EARTH_REACHED"
+  const launched = runStage1Launch(
+    job.powerNorm,
+    job.angleNorm,
+    job.seed,
+    earthBearingScreenRad,
+    spaceStartAltitudeM,
   );
+  return launched.result.outcome === "EARTH_REACHED";
 }
 
 export function nearbySuccessStats(reached: number, total: number): NearbySuccessStats {
@@ -97,6 +92,7 @@ export function evaluateNearbySuccessSync(
   powerNorm: number,
   angleNorm: number,
   earthBearingScreenRad?: number,
+  spaceStartAltitudeM?: number,
 ): NearbySuccessStats {
   const jobs = nearbyJobs(powerNorm, angleNorm);
   let reached = 0;
@@ -105,6 +101,7 @@ export function evaluateNearbySuccessSync(
       evaluateNearbyJob(
         job,
         earthBearingScreenRad,
+        spaceStartAltitudeM,
       )
     ) {
       reached += 1;

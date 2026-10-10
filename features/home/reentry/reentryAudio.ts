@@ -361,57 +361,69 @@ export function setReentryAudioFlight(
   progress: number,
   heat: number,
   outcome: ReentryOutcome | undefined,
+  timeSinceEntryS = 0,
+  failurePeakS = 10,
+  destructionAmount = 0,
+  landingT = 0,
 ): void {
   if (!state) return;
+  void progress;
 
   const ctx = state.ctx;
   const t = ctx.currentTime;
+  const burnAge = Math.max(0, timeSinceEntryS - 0.65);
+  const targetPeakS =
+    outcome === "EARTH_REACHED"
+      ? 10
+      : Math.max(2.2, failurePeakS - 0.65);
+  const age01 = Math.min(1, burnAge / targetPeakS);
+  const ageRamp = age01 * age01 * (3 - 2 * age01);
 
-  // Space remains almost silent. Atmospheric sound arrives only with heat.
-  const atmospheric = Math.max(0, Math.min(1, heat));
+  const successFade =
+    outcome === "EARTH_REACHED"
+      ? 1 - Math.min(1, Math.max(landingT, (timeSinceEntryS - 10) / 1.2))
+      : 1;
+
+  const failureFade =
+    outcome === "BURN" || outcome === "BREAK"
+      ? 1 - Math.min(0.82, destructionAmount * 0.82)
+      : 1;
+
+  const cinematic = Math.max(0, ageRamp * successFade * failureFade);
+  const atmospheric = Math.max(
+    0,
+    Math.min(1, Math.max(heat, cinematic * 0.94)),
+  );
 
   state.rumble.gain.setTargetAtTime(
-    0.0001 + atmospheric * atmospheric * 0.26,
+    0.0001 + atmospheric * atmospheric * 0.33,
     t,
-    0.10,
+    0.12,
   );
-
   state.hiss.gain.setTargetAtTime(
-    0.0001 + atmospheric * 0.14,
-    t,
-    0.08,
-  );
-
-  state.rumbleFilter.frequency.setTargetAtTime(
-    170 + atmospheric * 260,
+    0.0001 + atmospheric * 0.18,
     t,
     0.10,
   );
-
+  state.rumbleFilter.frequency.setTargetAtTime(
+    165 + atmospheric * 310,
+    t,
+    0.13,
+  );
   state.hissFilter.frequency.setTargetAtTime(
-    950 + atmospheric * 1500,
+    900 + atmospheric * 1750,
     t,
-    0.09,
+    0.11,
   );
-
-  // Beacon fades away as the atmosphere gets loud.
   state.spacePad.gain.setTargetAtTime(
-    0.048 * (1 - atmospheric * 0.75),
+    0.048 * (1 - atmospheric * 0.82),
     t,
-    0.20,
+    0.22,
   );
 
-  if (
-    outcome === "BURN" &&
-    atmospheric > 0.12 &&
-    progress > 0.76
-  ) {
-    state.rumble.gain.setTargetAtTime(0.34, t, 0.07);
-  }
-
-  if (atmospheric < 0.04) {
-    state.rumble.gain.setTargetAtTime(0.0001, t, 0.12);
-    state.hiss.gain.setTargetAtTime(0.0001, t, 0.12);
+  if (atmospheric < 0.035) {
+    state.rumble.gain.setTargetAtTime(0.0001, t, 0.14);
+    state.hiss.gain.setTargetAtTime(0.0001, t, 0.14);
   }
 }
 

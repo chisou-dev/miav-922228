@@ -1,15 +1,15 @@
 import { wrap01 } from "./reentryLaunchInput";
 
-const EARTH_RADIUS_M = 6_371_000;
+export const SPACE_EARTH_RADIUS_M = 6_371_000;
 const MU = 3.986004418e14;
 
 export const ATMOSPHERE_HANDOFF_ALTITUDE_M = 120_000;
-export const SPACE_START_ALTITUDE_M = 2_000_000;
+export const SPACE_START_ALTITUDE_M = 60_000_000;
 
-export type Vec2 = {
-  x: number;
-  y: number;
-};
+const MIN_SCREEN_MATCHED_START_ALTITUDE_M = 30_000_000;
+const MAX_SCREEN_MATCHED_START_ALTITUDE_M = 95_000_000;
+
+export type Vec2 = { x: number; y: number };
 
 export type SpaceState = {
   position: Vec2;
@@ -34,10 +34,12 @@ export type SpaceApproachResult =
       kind: "ATMOSPHERE_ENTRY";
       points: SpaceApproachPoint[];
       entry: SpaceEntry;
+      startAltitudeM: number;
     }
   | {
       kind: "SPACE_MISS";
       points: SpaceApproachPoint[];
+      startAltitudeM: number;
     };
 
 function signedAngleRad(value: number): number {
@@ -47,201 +49,121 @@ function signedAngleRad(value: number): number {
   return angle;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function length(v: Vec2): number {
   return Math.hypot(v.x, v.y);
 }
 
 function normalize(v: Vec2): Vec2 {
   const l = Math.max(1e-9, length(v));
-  return {
-    x: v.x / l,
-    y: v.y / l,
-  };
+  return { x: v.x / l, y: v.y / l };
 }
 
-function acceleration(
-  position: Vec2,
-): Vec2 {
+export function screenMatchedStartAltitudeM(
+  screenEarthRadiusPx: number,
+  screenCenterDistancePx: number,
+): number {
+  const radiusPx = Math.max(1, screenEarthRadiusPx);
+  const distancePx = Math.max(radiusPx * 1.05, screenCenterDistancePx);
+  const physicalCenterDistanceM =
+    SPACE_EARTH_RADIUS_M * (distancePx / radiusPx);
+
+  return clamp(
+    physicalCenterDistanceM - SPACE_EARTH_RADIUS_M,
+    MIN_SCREEN_MATCHED_START_ALTITUDE_M,
+    MAX_SCREEN_MATCHED_START_ALTITUDE_M,
+  );
+}
+
+function acceleration(position: Vec2): Vec2 {
   const r = length(position);
-  const scale =
-    -MU / (r * r * r);
-
-  return {
-    x: position.x * scale,
-    y: position.y * scale,
-  };
+  const scale = -MU / (r * r * r);
+  return { x: position.x * scale, y: position.y * scale };
 }
 
-function midpointStep(
-  state: SpaceState,
-  dt: number,
-): SpaceState {
-  const a1 =
-    acceleration(state.position);
-
+function midpointStep(state: SpaceState, dt: number): SpaceState {
+  const a1 = acceleration(state.position);
   const midPosition = {
-    x:
-      state.position.x +
-      state.velocity.x * dt * 0.5,
-    y:
-      state.position.y +
-      state.velocity.y * dt * 0.5,
+    x: state.position.x + state.velocity.x * dt * 0.5,
+    y: state.position.y + state.velocity.y * dt * 0.5,
   };
-
   const midVelocity = {
-    x:
-      state.velocity.x +
-      a1.x * dt * 0.5,
-    y:
-      state.velocity.y +
-      a1.y * dt * 0.5,
+    x: state.velocity.x + a1.x * dt * 0.5,
+    y: state.velocity.y + a1.y * dt * 0.5,
   };
-
-  const a2 =
-    acceleration(midPosition);
+  const a2 = acceleration(midPosition);
 
   return {
     position: {
-      x:
-        state.position.x +
-        midVelocity.x * dt,
-      y:
-        state.position.y +
-        midVelocity.y * dt,
+      x: state.position.x + midVelocity.x * dt,
+      y: state.position.y + midVelocity.y * dt,
     },
     velocity: {
-      x:
-        state.velocity.x +
-        a2.x * dt,
-      y:
-        state.velocity.y +
-        a2.y * dt,
+      x: state.velocity.x + a2.x * dt,
+      y: state.velocity.y + a2.y * dt,
     },
-    elapsedS:
-      state.elapsedS + dt,
+    elapsedS: state.elapsedS + dt,
   };
 }
 
-function altitudeM(
-  state: SpaceState,
-): number {
-  return (
-    length(state.position) -
-    EARTH_RADIUS_M
-  );
+function altitudeM(state: SpaceState): number {
+  return length(state.position) - SPACE_EARTH_RADIUS_M;
 }
 
-function radialVelocity(
-  state: SpaceState,
-): number {
-  const er =
-    normalize(state.position);
-
-  return (
-    state.velocity.x * er.x +
-    state.velocity.y * er.y
-  );
+function radialVelocity(state: SpaceState): number {
+  const er = normalize(state.position);
+  return state.velocity.x * er.x + state.velocity.y * er.y;
 }
 
-function gammaRad(
-  state: SpaceState,
-): number {
-  const er =
-    normalize(state.position);
-
-  const et = {
-    x: -er.y,
-    y: er.x,
-  };
-
-  const vr =
-    state.velocity.x * er.x +
-    state.velocity.y * er.y;
-
-  const vt =
-    state.velocity.x * et.x +
-    state.velocity.y * et.y;
-
-  return Math.atan2(
-    vr,
-    Math.abs(vt),
-  );
+function gammaRad(state: SpaceState): number {
+  const er = normalize(state.position);
+  const et = { x: -er.y, y: er.x };
+  const vr = state.velocity.x * er.x + state.velocity.y * er.y;
+  const vt = state.velocity.x * et.x + state.velocity.y * et.y;
+  return Math.atan2(vr, Math.abs(vt));
 }
 
-export function canvasHeadingFromWorld(
-  velocity: Vec2,
-): number {
+export function canvasHeadingFromWorld(velocity: Vec2): number {
   return Math.atan2(-velocity.y, velocity.x);
 }
 
-export function directionNormToScreenHeadingRad(
-  directionNorm: number,
-): number {
-  const n =
-    ((directionNorm % 1) + 1) % 1;
-
-  return (
-    -Math.PI / 2 +
-    n * Math.PI * 2
-  );
+export function directionNormToScreenHeadingRad(directionNorm: number): number {
+  const n = ((directionNorm % 1) + 1) % 1;
+  return -Math.PI / 2 + n * Math.PI * 2;
 }
 
 export function makeInitialSpaceState(
   speedMps: number,
   headingWorldRad: number,
   startRadialAngleRad: number,
+  startAltitudeM = SPACE_START_ALTITUDE_M,
 ): SpaceState {
-  const r =
-    EARTH_RADIUS_M +
-    SPACE_START_ALTITUDE_M;
-
-  const position = {
-    x:
-      Math.cos(startRadialAngleRad) *
-      r,
-    y:
-      Math.sin(startRadialAngleRad) *
-      r,
-  };
-
+  const r = SPACE_EARTH_RADIUS_M + startAltitudeM;
   return {
-    position,
+    position: {
+      x: Math.cos(startRadialAngleRad) * r,
+      y: Math.sin(startRadialAngleRad) * r,
+    },
     velocity: {
-      x:
-        Math.cos(headingWorldRad) *
-        speedMps,
-      y:
-        Math.sin(headingWorldRad) *
-        speedMps,
+      x: Math.cos(headingWorldRad) * speedMps,
+      y: Math.sin(headingWorldRad) * speedMps,
     },
     elapsedS: 0,
   };
 }
 
-export function simulateSpaceApproach(
-  initial: SpaceState,
-): SpaceApproachResult {
+export function simulateSpaceApproach(initial: SpaceState): SpaceApproachResult {
   const points: SpaceApproachPoint[] = [];
-
   let state = initial;
-
-  const startAngle =
-    Math.atan2(
-      initial.position.y,
-      initial.position.x,
-    );
-
-  let previousAngle =
-    startAngle;
-
+  const startAltitudeM = altitudeM(initial);
+  const startAngle = Math.atan2(initial.position.y, initial.position.x);
+  let previousAngle = startAngle;
   let accumulatedAngle = 0;
-
   const dt = 1;
-
-  const maxSteps =
-    Math.floor(
-      (2.5 * 60 * 60) / dt,
-    );
+  const maxSteps = Math.floor((5 * 60 * 60) / dt);
 
   points.push({
     state,
@@ -249,144 +171,81 @@ export function simulateSpaceApproach(
     screenHeadingRad: canvasHeadingFromWorld(state.velocity),
   });
 
-  for (
-    let i = 0;
-    i < maxSteps;
-    i++
-  ) {
-    state =
-      midpointStep(state, dt);
-
-    const alt =
-      altitudeM(state);
-
-    const angle =
-      Math.atan2(
-        state.position.y,
-        state.position.x,
-      );
-
-    let da =
-      angle - previousAngle;
-
-    while (da > Math.PI) {
-      da -= Math.PI * 2;
-    }
-
-    while (da < -Math.PI) {
-      da += Math.PI * 2;
-    }
-
-    accumulatedAngle +=
-      Math.abs(da);
-
+  for (let i = 0; i < maxSteps; i++) {
+    state = midpointStep(state, dt);
+    const alt = altitudeM(state);
+    const angle = Math.atan2(state.position.y, state.position.x);
+    let da = angle - previousAngle;
+    while (da > Math.PI) da -= Math.PI * 2;
+    while (da < -Math.PI) da += Math.PI * 2;
+    accumulatedAngle += Math.abs(da);
     previousAngle = angle;
 
-    if (
-      i % 2 === 0 ||
-      alt <=
-        ATMOSPHERE_HANDOFF_ALTITUDE_M +
-          60_000
-    ) {
+    if (i % 4 === 0 || alt <= ATMOSPHERE_HANDOFF_ALTITUDE_M + 120_000) {
       points.push({
         state,
         altitudeM: alt,
-        screenHeadingRad:
-          canvasHeadingFromWorld(state.velocity),
+        screenHeadingRad: canvasHeadingFromWorld(state.velocity),
       });
     }
 
     if (
-      alt <=
-        ATMOSPHERE_HANDOFF_ALTITUDE_M &&
+      alt <= ATMOSPHERE_HANDOFF_ALTITUDE_M &&
       radialVelocity(state) < 0
     ) {
       return {
         kind: "ATMOSPHERE_ENTRY",
         points,
         entry: {
-          speedMps:
-            length(state.velocity),
-          gammaRad:
-            gammaRad(state),
+          speedMps: length(state.velocity),
+          gammaRad: gammaRad(state),
           state,
         },
+        startAltitudeM,
       };
     }
 
     const radial = radialVelocity(state);
     const departed =
       radial > 0 &&
-      alt > SPACE_START_ALTITUDE_M * 1.35;
+      alt > Math.max(startAltitudeM * 1.18, startAltitudeM + 4_000_000);
 
     if (accumulatedAngle >= Math.PI * 0.95 && departed) {
-      return {
-        kind: "SPACE_MISS",
-        points,
-      };
+      return { kind: "SPACE_MISS", points, startAltitudeM };
     }
 
     if (
-      state.elapsedS > 120 &&
+      state.elapsedS > 180 &&
       departed &&
-      alt > SPACE_START_ALTITUDE_M * 1.8 &&
-      accumulatedAngle > Math.PI * 0.18
+      accumulatedAngle > Math.PI * 0.035
     ) {
-      return {
-        kind: "SPACE_MISS",
-        points,
-      };
+      return { kind: "SPACE_MISS", points, startAltitudeM };
     }
 
-    if (
-      !Number.isFinite(alt)
-    ) {
-      break;
-    }
+    if (!Number.isFinite(alt)) break;
   }
 
-  return {
-    kind: "SPACE_MISS",
-    points,
-  };
+  return { kind: "SPACE_MISS", points, startAltitudeM };
 }
 
 export function launchSpaceApproach(
   speedMps: number,
   directionNorm: number,
   earthBearingScreenRad?: number,
+  startAltitudeM = SPACE_START_ALTITUDE_M,
 ): SpaceApproachResult {
-  const screenHeading =
-    directionNormToScreenHeadingRad(
-      wrap01(directionNorm),
-    );
-
+  const screenHeading = directionNormToScreenHeadingRad(wrap01(directionNorm));
   const startRadial = Math.PI / 4;
-
   let worldHeading: number;
 
   if (
     earthBearingScreenRad !== undefined &&
     Number.isFinite(earthBearingScreenRad)
   ) {
-    const screenOffset =
-      signedAngleRad(
-        screenHeading -
-          earthBearingScreenRad,
-      );
-
-    const inwardWorldHeading =
-      startRadial + Math.PI;
-
-    /*
-     * Screen Y points down, world Y points up.
-     * Preserve the player's angular miss relative to Earth.
-     */
-    worldHeading =
-      inwardWorldHeading -
-      screenOffset;
+    const screenOffset = signedAngleRad(screenHeading - earthBearingScreenRad);
+    const inwardWorldHeading = startRadial + Math.PI;
+    worldHeading = inwardWorldHeading - screenOffset;
   } else {
-    // Compatibility fallback for old dev/test callers.
     worldHeading = -screenHeading;
   }
 
@@ -395,6 +254,7 @@ export function launchSpaceApproach(
       speedMps,
       worldHeading,
       startRadial,
+      startAltitudeM,
     ),
   );
 }
@@ -418,8 +278,7 @@ export function sampleSpacePoint(
       x: a.state.velocity.x + (b.state.velocity.x - a.state.velocity.x) * u,
       y: a.state.velocity.y + (b.state.velocity.y - a.state.velocity.y) * u,
     },
-    elapsedS:
-      a.state.elapsedS + (b.state.elapsedS - a.state.elapsedS) * u,
+    elapsedS: a.state.elapsedS + (b.state.elapsedS - a.state.elapsedS) * u,
   };
   return {
     state,
@@ -428,13 +287,10 @@ export function sampleSpacePoint(
   };
 }
 
-export function maxHeadingJumpDeg(
-  points: SpaceApproachPoint[],
-): number {
+export function maxHeadingJumpDeg(points: SpaceApproachPoint[]): number {
   let maxJump = 0;
   for (let i = 1; i < points.length; i++) {
-    let d =
-      points[i].screenHeadingRad - points[i - 1].screenHeadingRad;
+    let d = points[i].screenHeadingRad - points[i - 1].screenHeadingRad;
     while (d > Math.PI) d -= Math.PI * 2;
     while (d < -Math.PI) d += Math.PI * 2;
     maxJump = Math.max(maxJump, Math.abs((d * 180) / Math.PI));
@@ -442,10 +298,7 @@ export function maxHeadingJumpDeg(
   return maxJump;
 }
 
-export function headingDeltaDeg(
-  fromRad: number,
-  toRad: number,
-): number {
+export function headingDeltaDeg(fromRad: number, toRad: number): number {
   let d = toRad - fromRad;
   while (d > Math.PI) d -= Math.PI * 2;
   while (d < -Math.PI) d += Math.PI * 2;

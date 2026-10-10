@@ -94,12 +94,14 @@ export function runStage1Launch(
   angleNorm: number,
   seed: number,
   earthBearingScreenRad?: number,
+  spaceStartAltitudeM?: number,
 ): Stage1Launch {
   const input = mapLaunchToInput(powerNorm, angleNorm, seed);
   const space = launchSpaceApproach(
     input.initialSpeedMps,
     angleNorm,
     earthBearingScreenRad,
+    spaceStartAltitudeM,
   );
 
   if (space.kind === "SPACE_MISS") {
@@ -115,6 +117,7 @@ export function runStage1Launch(
         spaceApproach: space,
         spaceShare: timing.spaceShare,
         earthBearingScreenRad,
+        spaceStartAltitudeM: space.startAltitudeM,
       },
       ...timing,
     };
@@ -143,6 +146,7 @@ export function runStage1Launch(
       spaceApproach: space,
       spaceShare: timing.spaceShare,
       earthBearingScreenRad,
+      spaceStartAltitudeM: space.startAltitudeM,
     },
     ...timing,
   };

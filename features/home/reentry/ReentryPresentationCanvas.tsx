@@ -11,14 +11,12 @@ import { restFrame, sampleFrame } from "./reentryVisual";
 import {
   craftPose,
   launchAnchorPx,
-  projectPhysicsFrame,
 } from "./reentryCraftProjection";
 import {
   reentryStageMix,
   visualAtmosphereGate,
 } from "./reentryCinematicStages";
 import {
-  ATMOSPHERE_HANDOFF_ALTITUDE_M,
   canvasHeadingFromWorld,
   directionNormToScreenHeadingRad,
   launchSpaceApproach,
@@ -32,9 +30,9 @@ import {
   launchEarthView,
 } from "./reentryEarthCamera";
 import {
-  ATMOSPHERE_SURVIVE_S,
   SPACE_INBOUND_DURATION_MS,
   destructionAmountFromEntryS,
+  failureDestructionStartS,
   successLandingT,
 } from "./reentryStageTimeline";
 import {
@@ -42,15 +40,10 @@ import {
   clampHeadingJump,
   closestApproachIndex,
   elapsedSincePlaybackS,
-  gravityPathScalePx,
-  gravityScreenPosition,
-  hazeEntryTarget,
-  headingHazeEntryTarget,
-  inboundGravityScreenPose,
   missPlaybackToPathT,
   signedDistanceToAtmospherePx,
+  similaritySpacePose,
   spaceTravelT,
-  tangentAngleFromPoints,
 } from "./reentryVisualCausality";
 import {
   finishReentryAudio,
@@ -78,6 +71,34 @@ function lerpAngle(from: number, to: number, t: number): number {
   while (delta > Math.PI) delta -= Math.PI * 2;
   while (delta < -Math.PI) delta += Math.PI * 2;
   return from + delta * t;
+}
+
+function lineAngleNearHorizontal(angle: number): number {
+  let a = angle;
+  while (a > Math.PI / 2) a -= Math.PI;
+  while (a < -Math.PI / 2) a += Math.PI;
+  return Math.max(-0.48, Math.min(0.48, a));
+}
+
+function angularDistance(a: number, b: number): number {
+  let d = b - a;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return Math.abs(d);
+}
+
+function descendingCameraHeading(
+  horizonAngle: number,
+  gammaAbsRad: number,
+  referenceHeading: number,
+): number {
+  const gamma = Math.max(0.025, Math.min(1.15, Math.abs(gammaAbsRad)));
+  const rightward = horizonAngle + gamma;
+  const leftward = horizonAngle + Math.PI - gamma;
+  return angularDistance(referenceHeading, rightward) <=
+    angularDistance(referenceHeading, leftward)
+    ? rightward
+    : leftward;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -180,105 +201,59 @@ function drawStars(
   stars = 1,
 ): void {
   if (stars <= 0.001) return;
-
   void playback;
   void moving;
 
-  const fade =
-    (1 - horizonMix * 0.90) * stars;
-
-  const clockS =
-    typeof performance !== "undefined"
-      ? performance.now() / 1000
-      : 0;
+  const fade = (1 - horizonMix * 0.90) * stars;
+  const clockS = typeof performance !== "undefined" ? performance.now() / 1000 : 0;
 
   ctx.save();
   ctx.globalAlpha = fade;
 
-  for (let i = 0; i < 96; i++) {
+  for (let i = 0; i < 104; i++) {
     const rx = hash01(0x51a2, i * 7 + 1);
     const ry = hash01(0x71c9, i * 11 + 3);
     const rb = hash01(0x91ef, i * 13 + 5);
-    const phase =
-      hash01(0xa217, i * 17 + 9) *
-      Math.PI *
-      2;
-
+    const phase = hash01(0xa217, i * 17 + 9) * Math.PI * 2;
     const x = rx * w;
     const y = ry * h;
+    const bright = i % 19 === 0;
+    const cool = i % 31 === 0;
+    const warm = i % 37 === 0;
 
-    const bright = i % 17 === 0;
-    const cool = i % 23 === 0;
-    const warm = i % 29 === 0;
-
-    const twinkleAmount =
-      bright
-        ? 0.24
-        : cool || warm
-          ? 0.15
-          : 0.045;
-
-    const twinkle =
+    const shimmer =
       0.88 +
-      Math.sin(
-        clockS * (0.35 + rb * 0.50) +
-          phase,
-      ) *
-        twinkleAmount;
+      Math.sin(clockS * (1.7 + rb * 0.9) + phase) * (bright ? 0.070 : 0.026) +
+      Math.sin(clockS * (4.9 + rb * 2.0) + phase * 1.71) *
+        (bright || cool || warm ? 0.045 : 0.013) +
+      Math.sin(clockS * (10.7 + rb * 3.4) + phase * 2.37) *
+        (bright ? 0.022 : 0.006);
 
     const alpha =
-      (
-        bright
-          ? 0.76
-          : cool || warm
-            ? 0.58
-            : 0.16 + rb * 0.18
-      ) *
-      twinkle;
-
+      (bright ? 0.74 : cool || warm ? 0.54 : 0.15 + rb * 0.18) * shimmer;
+    const sizeJitter =
+      1 + Math.sin(clockS * (3.1 + rb * 2.8) + phase) * (bright ? 0.09 : 0.025);
     const radius =
-      bright
-        ? 1.05 + rb * 0.72
-        : cool || warm
-          ? 0.72 + rb * 0.42
-          : 0.34 + rb * 0.38;
+      (bright ? 1.05 + rb * 0.66 : cool || warm ? 0.72 + rb * 0.34 : 0.32 + rb * 0.36) *
+      sizeJitter;
 
-    let color =
-      `rgba(232,240,248,${alpha})`;
-
-    if (cool) {
-      color =
-        `rgba(166,205,255,${alpha})`;
-    } else if (warm) {
-      color =
-        `rgba(255,186,142,${alpha * 0.90})`;
-    }
+    let color = `rgba(234,241,248,${alpha})`;
+    if (cool) color = `rgba(151,198,255,${alpha})`;
+    else if (warm) color = `rgba(255,171,128,${alpha * 0.90})`;
 
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(
-      x,
-      y,
-      radius,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
 
     if (bright || cool || warm) {
-      const flare =
-        bright
-          ? 3.6 + rb * 2.6
-          : 2.0 + rb * 1.8;
-
-      ctx.strokeStyle =
-        cool
-          ? `rgba(174,215,255,${alpha * 0.30})`
-          : warm
-            ? `rgba(255,200,166,${alpha * 0.24})`
-            : `rgba(228,240,250,${alpha * 0.28})`;
-
-      ctx.lineWidth = 0.50;
+      const flare = (bright ? 3.3 + rb * 2.6 : 1.9 + rb * 1.5) * sizeJitter;
+      ctx.strokeStyle = cool
+        ? `rgba(160,208,255,${alpha * 0.27})`
+        : warm
+          ? `rgba(255,190,154,${alpha * 0.22})`
+          : `rgba(230,241,250,${alpha * 0.25})`;
+      ctx.lineWidth = 0.46;
       ctx.beginPath();
       ctx.moveTo(x - flare, y);
       ctx.lineTo(x + flare, y);
@@ -442,200 +417,60 @@ function drawAtmosphereVolume(
   h: number,
   atmosphereSceneMix: number,
   timeSinceEntryS: number,
-  heading: number,
+  horizonAngle: number,
+  surfacePhase: number,
+  entrySteepness: number,
 ): void {
-  if (
-    atmosphereSceneMix <=
-    0.001
-  ) {
-    return;
-  }
+  if (atmosphereSceneMix <= 0.001) return;
 
-  const mixIn =
-    clamp01(
-      atmosphereSceneMix,
-    );
-
-  const deep =
-    smoothstep(
-      (
-        timeSinceEntryS -
-        1.0
-      ) /
-        8.0,
-    );
-
-  const surfaceReveal =
-    smoothstep(
-      (
-        timeSinceEntryS -
-        1.2
-      ) /
-        5.8,
-    );
+  const mixIn = clamp01(atmosphereSceneMix);
+  const deep = smoothstep((timeSinceEntryS - 1.0) / 8.2);
+  const surfaceReveal = smoothstep((timeSinceEntryS - 1.2) / 5.8);
 
   ctx.save();
+  const cx = w * 0.5;
+  const cy = h * 0.5;
+  ctx.translate(cx, cy);
+  ctx.rotate(horizonAngle);
+  ctx.translate(-cx, -cy);
 
-  /*
-   * Upper field: black space.
-   * Lower field: blue atmosphere.
-   *
-   * The vector is slightly diagonal so the vehicle feels as if it is
-   * penetrating a volume rather than crossing a horizontal UI stripe.
-   */
-  const ux =
-    Math.cos(heading);
-
-  const uy =
-    Math.sin(heading);
-
-  const sky =
-    ctx.createLinearGradient(
-      w * 0.10 -
-        ux * w * 0.12,
-      h * 0.02 -
-        uy * h * 0.10,
-      w * 0.72 +
-        ux * w * 0.12,
-      h * 0.96 +
-        uy * h * 0.10,
-    );
-
-  sky.addColorStop(
-    0,
-    "rgba(0,2,8,1)",
-  );
-
-  sky.addColorStop(
-    0.38,
-    "rgba(1,7,18,1)",
-  );
-
-  sky.addColorStop(
-    0.58,
-    `rgba(7,31,70,${
-      0.72 +
-      mixIn * 0.18
-    })`,
-  );
-
-  sky.addColorStop(
-    0.78,
-    `rgba(24,91,154,${
-      0.58 +
-      mixIn * 0.30
-    })`,
-  );
-
-  sky.addColorStop(
-    1,
-    `rgba(108,177,218,${
-      0.50 +
-      mixIn * 0.42
-    })`,
-  );
-
-  ctx.globalAlpha =
-    mixIn;
-
+  const pad = Math.max(w, h) * 0.75;
+  const sky = ctx.createLinearGradient(0, -pad, 0, h + pad);
+  sky.addColorStop(0, "rgba(0,2,8,1)");
+  sky.addColorStop(0.34, "rgba(1,6,16,1)");
+  sky.addColorStop(0.56, `rgba(5,24,58,${0.72 + mixIn * 0.16})`);
+  sky.addColorStop(0.76, `rgba(19,80,145,${0.54 + mixIn * 0.27})`);
+  sky.addColorStop(1, `rgba(105,176,220,${0.44 + mixIn * 0.40})`);
+  ctx.globalAlpha = mixIn;
   ctx.fillStyle = sky;
-  ctx.fillRect(
-    0,
-    0,
-    w,
-    h,
-  );
+  ctx.fillRect(-pad, -pad, w + pad * 2, h + pad * 2);
 
-  /*
-   * Curved Earth horizon.
-   *
-   * At entry it sits low in frame.
-   * During the next several seconds the camera gets closer and the surface
-   * occupies more of the screen.
-   */
-  const maxDim =
-    Math.max(w, h);
+  const maxDim = Math.max(w, h);
+  const steep = clamp01(entrySteepness);
+  const startHorizon = h * mix(0.72, 0.58, steep);
+  const horizonTop = mix(startHorizon, h * 0.30, deep);
+  const earthR = maxDim * mix(1.02, 1.76, deep);
+  const phaseAngle = surfacePhase * Math.PI * 2;
+  const earthX = w * (0.50 + Math.sin(phaseAngle) * 0.055);
+  const earthY = horizonTop + earthR;
 
-  const earthR =
-    maxDim *
-    mix(
-      0.96,
-      1.72,
-      deep,
-    );
-
-  const horizonTop =
-    mix(
-      h * 0.66,
-      h * 0.31,
-      deep,
-    );
-
-  const earthX =
-    w *
-    mix(
-      0.46,
-      0.52,
-      deep,
-    );
-
-  const earthY =
-    horizonTop + earthR;
-
-  /*
-   * Surface is deliberately faint during the first 1–2 seconds.
-   * It then emerges underneath the blue atmosphere.
-   */
   ctx.save();
-
   ctx.beginPath();
-  ctx.arc(
-    earthX,
-    earthY,
-    earthR,
-    0,
-    Math.PI * 2,
-  );
+  ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
   ctx.clip();
+  ctx.globalAlpha = mixIn * mix(0.08, 0.98, surfaceReveal);
 
-  ctx.globalAlpha =
-    mixIn *
-    mix(
-      0.12,
-      0.98,
-      surfaceReveal,
-    );
-
-  if (
-    earth &&
-    earth.naturalWidth > 0
-  ) {
-    const sw =
-      earth.naturalWidth *
-      0.72;
-
-    const sh =
-      earth.naturalHeight *
-      0.72;
-
-    const sx =
-      (
-        earth.naturalWidth -
-        sw
-      ) *
-      0.5;
-
-    const sy =
-      (
-        earth.naturalHeight -
-        sh
-      ) *
-      0.44;
-
+  if (earth && earth.naturalWidth > 0) {
+    const sw = earth.naturalWidth * 0.68;
+    const sh = earth.naturalHeight * 0.68;
+    const maxSx = Math.max(0, earth.naturalWidth - sw);
+    const maxSy = Math.max(0, earth.naturalHeight - sh);
+    const cropX01 = clamp01(0.50 + Math.sin(phaseAngle) * 0.38);
+    const cropY01 = clamp01(0.47 + Math.cos(phaseAngle * 0.73) * 0.22);
     ctx.drawImage(
       earth,
-      sx,
-      sy,
+      maxSx * cropX01,
+      maxSy * cropY01,
       sw,
       sh,
       earthX - earthR,
@@ -644,186 +479,37 @@ function drawAtmosphereVolume(
       earthR * 2,
     );
   } else {
-    const ocean =
-      ctx.createLinearGradient(
-        0,
-        horizonTop,
-        0,
-        h,
-      );
-
-    ocean.addColorStop(
-      0,
-      "#557e9a",
-    );
-
-    ocean.addColorStop(
-      0.35,
-      "#245574",
-    );
-
-    ocean.addColorStop(
-      1,
-      "#071e31",
-    );
-
+    const ocean = ctx.createLinearGradient(0, horizonTop, 0, h);
+    ocean.addColorStop(0, "#567f9c");
+    ocean.addColorStop(0.35, "#255674");
+    ocean.addColorStop(1, "#071d31");
     ctx.fillStyle = ocean;
-    ctx.fillRect(
-      0,
-      horizonTop,
-      w,
-      h - horizonTop,
-    );
+    ctx.fillRect(-pad, horizonTop, w + pad * 2, h + pad);
   }
 
-  /*
-   * Atmospheric blue cast over the surface.
-   */
-  ctx.globalCompositeOperation =
-    "source-over";
-
-  ctx.fillStyle =
-    `rgba(20,72,125,${
-      mix(
-        0.54,
-        0.18,
-        surfaceReveal,
-      )
-    })`;
-
-  ctx.fillRect(
-    0,
-    horizonTop,
-    w,
-    h - horizonTop,
-  );
-
-  /*
-   * Irregular cloud structure for depth.
-   */
-  ctx.globalCompositeOperation =
-    "screen";
-
-  for (
-    let i = 0;
-    i < 9;
-    i++
-  ) {
-    const yy =
-      horizonTop +
-      h *
-        (
-          0.035 +
-          i * 0.045
-        );
-
-    ctx.strokeStyle =
-      `rgba(235,245,250,${
-        (
-          0.020 +
-          (i % 4) *
-            0.010
-        ) *
-        surfaceReveal
-      })`;
-
-    ctx.lineWidth =
-      2.4 +
-      (i % 3) *
-        1.7;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      -w * 0.08,
-      yy +
-        Math.sin(
-          i * 1.9,
-        ) *
-          6,
-    );
-
-    ctx.bezierCurveTo(
-      w * 0.20,
-      yy - h * 0.018,
-      w * 0.62,
-      yy + h * 0.014,
-      w * 1.08,
-      yy - h * 0.010,
-    );
-
-    ctx.stroke();
-  }
-
+  const blueCast = ctx.createLinearGradient(0, horizonTop, 0, h);
+  blueCast.addColorStop(0, `rgba(42,112,180,${mix(0.52, 0.18, surfaceReveal)})`);
+  blueCast.addColorStop(0.34, `rgba(20,73,128,${mix(0.42, 0.12, surfaceReveal)})`);
+  blueCast.addColorStop(1, "rgba(6,24,45,0.08)");
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = blueCast;
+  ctx.fillRect(-pad, horizonTop, w + pad * 2, h + pad);
   ctx.restore();
 
-  /*
-   * Soft atmospheric rim.
-   * No visible hard ring.
-   */
   ctx.save();
-
-  ctx.globalCompositeOperation =
-    "lighter";
-
-  const haze =
-    ctx.createRadialGradient(
-      earthX,
-      earthY,
-      earthR * 0.985,
-      earthX,
-      earthY,
-      earthR * 1.035,
-    );
-
-  haze.addColorStop(
-    0,
-    "rgba(95,180,255,0)",
+  ctx.globalCompositeOperation = "lighter";
+  const haze = ctx.createRadialGradient(
+    earthX, earthY, earthR * 0.995,
+    earthX, earthY, earthR * 1.020,
   );
-
-  haze.addColorStop(
-    0.34,
-    `rgba(95,190,255,${
-      0.10 +
-      mixIn * 0.14
-    })`,
-  );
-
-  haze.addColorStop(
-    0.62,
-    `rgba(195,235,255,${
-      0.16 +
-      mixIn * 0.20
-    })`,
-  );
-
-  haze.addColorStop(
-    0.82,
-    `rgba(80,155,245,${
-      0.08 +
-      mixIn * 0.10
-    })`,
-  );
-
-  haze.addColorStop(
-    1,
-    "rgba(40,105,210,0)",
-  );
-
+  haze.addColorStop(0, "rgba(100,190,255,0)");
+  haze.addColorStop(0.42, `rgba(115,205,255,${0.055 + mixIn * 0.10})`);
+  haze.addColorStop(0.70, `rgba(205,238,255,${0.070 + mixIn * 0.12})`);
+  haze.addColorStop(1, "rgba(60,135,235,0)");
   ctx.fillStyle = haze;
-
   ctx.beginPath();
-
-  ctx.arc(
-    earthX,
-    earthY,
-    earthR * 1.04,
-    0,
-    Math.PI * 2,
-  );
-
+  ctx.arc(earthX, earthY, earthR * 1.021, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.restore();
 
   ctx.restore();
@@ -1101,27 +787,20 @@ function drawCurvedAtmosphereRim(
 
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
+
   const haze = ctx.createRadialGradient(
-    cx,
-    cy,
-    r * 0.985,
-    cx,
-    cy,
-    r * 1.11,
+    cx, cy, r * 0.995,
+    cx, cy, r * 1.045,
   );
-  haze.addColorStop(0, "rgba(135,210,255,0.00)");
-  haze.addColorStop(
-    0.34,
-    `rgba(125,205,255,${0.06 + hazeStrength * 0.07})`,
-  );
-  haze.addColorStop(
-    0.64,
-    `rgba(95,175,255,${0.045 + hazeStrength * 0.055})`,
-  );
-  haze.addColorStop(1, "rgba(55,120,235,0.00)");
+  haze.addColorStop(0, "rgba(125,205,255,0)");
+  haze.addColorStop(0.38, `rgba(125,205,255,${0.022 + hazeStrength * 0.035})`);
+  haze.addColorStop(0.60, `rgba(178,225,255,${0.036 + hazeStrength * 0.050})`);
+  haze.addColorStop(0.80, `rgba(85,160,245,${0.018 + hazeStrength * 0.030})`);
+  haze.addColorStop(1, "rgba(55,120,235,0)");
+
   ctx.fillStyle = haze;
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 1.11, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r * 1.045, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -2104,6 +1783,7 @@ export function ReentryPresentationCanvas({
         atmosphereThicknessPx(
           pathEarth.r,
         );
+      void pathThickness;
 
       if (idle || miss) {
         visualLatchPlaybackRef.current = null;
@@ -2126,30 +1806,6 @@ export function ReentryPresentationCanvas({
         alpha: 1,
       };
 
-      const thickness =
-        atmosphereThicknessPx(
-          earth.r,
-        );
-
-      const entryTarget =
-        miss
-          ? {
-              x:
-                launch.x +
-                (pathEarth.x - launch.x) *
-                  1.55,
-              y:
-                launch.y +
-                (pathEarth.y - launch.y) *
-                  1.55,
-            }
-          : headingHazeEntryTarget(
-              launch,
-              pathEarth,
-              pathThickness,
-              launchHeading,
-            );
-
       let pose = {
         x: launch.x,
         y: launch.y,
@@ -2157,63 +1813,33 @@ export function ReentryPresentationCanvas({
       };
 
       if (firstSpace && spaceState) {
-        if (miss) {
-          const periPt = activeSpace.points[periIdx]?.state ?? firstSpace;
-          const periScreen = hazeEntryTarget(launch, earth, thickness);
-          const scale = gravityPathScalePx(
-            firstSpace.position,
-            periPt.position,
-            launch,
-            periScreen,
-          );
-          const traveled = gravityScreenPosition(
-            spaceState.position,
-            firstSpace.position,
-            launch,
-            scale,
-          );
-          pose = {
-            x: traveled.x,
-            y: traveled.y,
-            angle: canvasHeadingFromWorld(spaceState.velocity),
-          };
-        } else {
-          const terminalSpace =
-            activeSpace.points[
-              activeSpace.points.length - 1
-            ]?.state ??
-            spaceState;
+        const cameraScale = earth.r / Math.max(1, pathEarth.r);
 
-          pose =
-            inboundGravityScreenPose({
-              currentPosition:
-                spaceState.position,
-              currentVelocity:
-                spaceState.velocity,
-              initialPosition:
-                firstSpace.position,
-              initialVelocity:
-                firstSpace.velocity,
-              terminalPosition:
-                terminalSpace.position,
-              launchPoint:
-                launch,
-              entryTargetPoint:
-                entryTarget,
-              launchHeading,
-            });
-        }
+        pose = similaritySpacePose({
+          currentPosition: spaceState.position,
+          currentVelocity: spaceState.velocity,
+          initialPosition: firstSpace.position,
+          earthCenter: {
+            x: pathEarth.x,
+            y: pathEarth.y,
+          },
+          launchPoint: launch,
+          cameraEarthCenter: {
+            x: earth.x,
+            y: earth.y,
+          },
+          cameraScale,
+        });
       }
 
-      const atmosphereDistancePx =
-        signedDistanceToAtmospherePx(
-          pose.x,
-          pose.y,
-          pathEarth.x,
-          pathEarth.y,
-          pathEarth.r,
-          pathThickness,
-        );
+      const atmosphereDistancePx = signedDistanceToAtmospherePx(
+        pose.x,
+        pose.y,
+        earth.x,
+        earth.y,
+        earth.r,
+        atmosphereThicknessPx(earth.r),
+      );
 
       const visualAtmosphereEntry =
         physicsHandoffReached &&
@@ -2243,183 +1869,73 @@ export function ReentryPresentationCanvas({
           : 0;
 
 
-      if (
-        latched &&
-        result &&
-        latchPoseRef.current &&
-        !miss
-      ) {
-        const initialAltitudeM =
-          result.frames[0]?.altitudeM ??
-          frame.altitudeM;
+      const physicalEntryGamma =
+        spaceApproach?.kind === "ATMOSPHERE_ENTRY"
+          ? Math.abs(spaceApproach.entry.gammaRad)
+          : 0.08;
 
-        const progressNow =
-          playbackToFrameProgress(
-            physicsPlayback,
-            outcome ?? "BURN",
-          );
+      const contactPolar = latchPoseRef.current
+        ? Math.atan2(
+            latchPoseRef.current.y - pathEarth.y,
+            latchPoseRef.current.x - pathEarth.x,
+          )
+        : 0;
 
-        const prevFrame =
-          sampleFrame(
-            result.frames,
-            Math.max(
-              0,
-              progressNow - 0.012,
-            ),
-          );
+      const horizonAngle = lineAngleNearHorizontal(contactPolar + Math.PI / 2);
 
-        const nextFrame =
-          sampleFrame(
-            result.frames,
-            Math.min(
-              1,
-              progressNow + 0.012,
-            ),
-          );
-
-        const prevP =
-          projectPhysicsFrame(
-            prevFrame,
-            initialAltitudeM,
-            w,
-            h,
-          );
-
-        const nowP =
-          projectPhysicsFrame(
-            frame,
-            initialAltitudeM,
-            w,
-            h,
-          );
-
-        const nextP =
-          projectPhysicsFrame(
-            nextFrame,
-            initialAltitudeM,
-            w,
-            h,
-          );
-
-        const physicalAngle =
-          tangentAngleFromPoints(
-            prevP,
-            nowP,
-            nextP,
+      const atmosphereEntryHeading = latchPoseRef.current
+        ? descendingCameraHeading(
+            horizonAngle,
+            physicalEntryGamma,
             latchPoseRef.current.angle,
-          );
+          )
+        : launchHeading;
 
-        /*
-         * Tracking-shot entry camera:
-         * the ship keeps its entry direction; the camera moves with it.
-         * This prevents the tiny ship from freezing beside the globe.
-         */
-        const cameraIn =
-          smoothstep(
-            timeSinceVisualAtmosphereEntryS /
-              0.85,
-          );
+      const entrySteepness = clamp01((physicalEntryGamma - 0.02) / 0.62);
+      const surfacePhase = (((contactPolar / (Math.PI * 2)) % 1) + 1) % 1;
 
-        const minSide =
-          Math.min(w, h);
+      if (latched && result && latchPoseRef.current && !miss) {
+        const cameraIn = smoothstep(timeSinceVisualAtmosphereEntryS / 0.90);
+        const minSide = Math.min(w, h);
 
         const atmosphericAnchor = {
-          x: w * 0.63,
-          y: h * 0.34,
+          x: w * mix(0.58, 0.66, entrySteepness),
+          y: h * mix(0.28, 0.37, entrySteepness),
         };
 
         const forwardDrift =
           minSide *
-          0.075 *
-          smoothstep(
-            timeSinceVisualAtmosphereEntryS /
-              7.5,
-          );
-
-        const entryAngle =
-          latchPoseRef.current.angle;
-
-        const tracked = {
-          x:
-            atmosphericAnchor.x +
-            Math.cos(entryAngle) *
-              forwardDrift,
-          y:
-            atmosphericAnchor.y +
-            Math.sin(entryAngle) *
-              forwardDrift,
-        };
-
-        const aeroAngleMix =
-          smoothstep(
-            (
-              timeSinceVisualAtmosphereEntryS -
-              2.4
-            ) /
-              4.0,
-          ) *
-          0.42;
-
-        let trackedAngle =
-          lerpAngle(
-            entryAngle,
-            physicalAngle,
-            aeroAngleMix,
-          );
+          mix(0.12, 0.055, entrySteepness) *
+          smoothstep(timeSinceVisualAtmosphereEntryS / 8.5);
 
         let trackedX =
-          mix(
-            latchPoseRef.current.x,
-            tracked.x,
-            cameraIn,
-          );
-
+          atmosphericAnchor.x +
+          Math.cos(atmosphereEntryHeading) * forwardDrift;
         let trackedY =
-          mix(
-            latchPoseRef.current.y,
-            tracked.y,
-            cameraIn,
-          );
+          atmosphericAnchor.y +
+          Math.sin(atmosphereEntryHeading) * forwardDrift;
+        let trackedAngle = atmosphereEntryHeading;
 
         const landing =
           outcome === "EARTH_REACHED"
-            ? successLandingT(
-                timeSinceVisualAtmosphereEntryS,
-              )
+            ? successLandingT(timeSinceVisualAtmosphereEntryS)
             : 0;
 
         if (landing > 0) {
-          const ocean = {
-            x: w * 0.48,
-            y: h * 0.78,
-          };
-
-          trackedX =
-            mix(
-              trackedX,
-              ocean.x,
-              landing,
-            );
-
-          trackedY =
-            mix(
-              trackedY,
-              ocean.y,
-              landing,
-            );
-
-          trackedAngle =
-            lerpAngle(
-              trackedAngle,
-              Math.PI / 2,
-              smoothstep(landing) * 0.72,
-            );
+          const ocean = { x: w * 0.48, y: h * 0.78 };
+          trackedX = mix(trackedX, ocean.x, landing);
+          trackedY = mix(trackedY, ocean.y, landing);
+          trackedAngle = lerpAngle(
+            trackedAngle,
+            Math.PI / 2,
+            smoothstep(landing) * 0.72,
+          );
         }
 
         pose = {
-          x: trackedX,
-          y: trackedY,
-          angle: trackedAngle,
+          x: mix(latchPoseRef.current.x, trackedX, cameraIn),
+          y: mix(latchPoseRef.current.y, trackedY, cameraIn),
+          angle: lerpAngle(latchPoseRef.current.angle, trackedAngle, cameraIn),
         };
       }
 
@@ -2434,10 +1950,17 @@ export function ReentryPresentationCanvas({
       const plasmaAge = !latched || miss
         ? 0
         : clamp01((timeSinceVisualAtmosphereEntryS - 0.7) / 2.3);
+      const failureStartS = failureDestructionStartS(
+        result?.metrics.minimumAltitudeM,
+        outcome,
+      );
+
       const failureUnlocked =
         latched &&
         !miss &&
-        timeSinceVisualAtmosphereEntryS >= ATMOSPHERE_SURVIVE_S;
+        (outcome === "BURN" || outcome === "BREAK") &&
+        timeSinceVisualAtmosphereEntryS >= failureStartS;
+
       const rawHeat =
         !latched || miss || idle
           ? 0
@@ -2446,21 +1969,62 @@ export function ReentryPresentationCanvas({
               physicsPlayback,
               outcome ?? "BURN",
             );
+
       const gatedHeat =
         !latched || miss || idle
           ? 0
           : readableHeat(rawHeat, displayAltitude, outcome);
-      const landingHeatCut =
+
+      const peakTimeS =
         outcome === "EARTH_REACHED"
-          ? 1 - successLandingT(timeSinceVisualAtmosphereEntryS)
+          ? 10
+          : failureStartS;
+
+      const burnAge01 = smoothstep(
+        (timeSinceVisualAtmosphereEntryS - 0.75) /
+          Math.max(1.2, peakTimeS - 0.75),
+      );
+
+      const successHeatCut =
+        outcome === "EARTH_REACHED"
+          ? 1 - smoothstep((timeSinceVisualAtmosphereEntryS - 10) / 1.15)
           : 1;
+
+      const cinematicHeat =
+        burnAge01 *
+        successHeatCut *
+        (outcome === "EARTH_REACHED" ? 0.82 : 0.96);
+
       const heat =
         miss || !latched || outcome === "SKIP"
           ? 0
-          : gatedHeat * atmosphereGate * plasmaAge * landingHeatCut;
+          : clamp01(
+              Math.max(
+                gatedHeat * atmosphereGate * plasmaAge,
+                cinematicHeat,
+              ),
+            );
+
+      const destructionAmount = smoothstep(
+        destructionAmountFromEntryS(
+          timeSinceVisualAtmosphereEntryS,
+          outcome,
+          result?.metrics.minimumAltitudeM,
+        ),
+      );
 
       if (variant === "stage" && phase === "flight") {
-        setReentryAudioFlight(playback, heat, outcome);
+        setReentryAudioFlight(
+          playback,
+          heat,
+          outcome,
+          timeSinceVisualAtmosphereEntryS,
+          failureStartS,
+          destructionAmount,
+          outcome === "EARTH_REACHED"
+            ? successLandingT(timeSinceVisualAtmosphereEntryS)
+            : 0,
+        );
       }
 
       drawStars(
@@ -2540,7 +2104,9 @@ export function ReentryPresentationCanvas({
           h,
           atmosphereSceneMix,
           timeSinceVisualAtmosphereEntryS,
-          pose.angle,
+          horizonAngle,
+          surfacePhase,
+          entrySteepness,
         );
 
         const showSurfaceApproach =
@@ -2669,13 +2235,6 @@ export function ReentryPresentationCanvas({
             atmosphereClose,
           );
       }
-
-      const destructionAmount = smoothstep(
-        destructionAmountFromEntryS(
-          timeSinceVisualAtmosphereEntryS,
-          outcome,
-        ),
-      );
 
       let craftAlpha = 1;
       if (miss) {
