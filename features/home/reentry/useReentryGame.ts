@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { runStage1Launch } from "./reentryLaunchPipeline";
+import { launchAnchorPx } from "./reentryCraftProjection";
+import { launchEarthView } from "./reentryEarthCamera";
 import { useReentryDevPreset } from "./useReentryDevPreset";
 import type {
   ReentryPhase,
@@ -185,11 +187,48 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
   const launch = useCallback(() => {
     if (phase !== "angle" || lockedPowerNorm === null) return;
 
+    const rect =
+      surfaceRef.current?.getBoundingClientRect();
+
+    const viewportW =
+      Math.max(
+        1,
+        rect?.width ??
+          window.innerWidth,
+      );
+
+    const viewportH =
+      Math.max(
+        1,
+        rect?.height ??
+          window.innerHeight,
+      );
+
+    const launchPoint =
+      launchAnchorPx(
+        viewportW,
+        viewportH,
+      );
+
+    const earthAtLaunch =
+      launchEarthView(
+        viewportW,
+        viewportH,
+      );
+
+    const earthBearingScreenRad =
+      Math.atan2(
+        earthAtLaunch.y -
+          launchPoint.y,
+        earthAtLaunch.x -
+          launchPoint.x,
+      );
     const simStarted = performance.now();
     const launched = runStage1Launch(
       lockedPowerNorm,
       angleNorm,
       seed,
+      earthBearingScreenRad,
     );
 
     if (surfaceRef.current) {

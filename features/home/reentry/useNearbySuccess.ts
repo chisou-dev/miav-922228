@@ -17,17 +17,19 @@ export function useNearbySuccess({
   outcome,
   powerNorm,
   angleNorm,
+  earthBearingScreenRad,
 }: {
   enabled: boolean;
   outcome: ReentryOutcome | null | undefined;
   powerNorm: number | null;
   angleNorm: number;
+  earthBearingScreenRad?: number;
 }): NearbySuccessStats | null {
   const show =
     enabled &&
     powerNorm !== null &&
     shouldShowNearbySuccess(outcome);
-  const token = `${powerNorm ?? "none"}:${angleNorm}:${outcome ?? "none"}`;
+  const token = `${powerNorm ?? "none"}:${angleNorm}:${outcome ?? "none"}:${earthBearingScreenRad ?? "default"}`;
   const [bundle, setBundle] = useState<{
     token: string;
     stats: NearbySuccessStats;
@@ -50,7 +52,14 @@ export function useNearbySuccess({
 
       const end = Math.min(index + BATCH_SIZE, jobs.length);
       for (; index < end; index += 1) {
-        if (evaluateNearbyJob(jobs[index])) reached += 1;
+        if (
+          evaluateNearbyJob(
+            jobs[index],
+            earthBearingScreenRad,
+          )
+        ) {
+          reached += 1;
+        }
       }
 
       if (index >= jobs.length) {
@@ -72,7 +81,7 @@ export function useNearbySuccess({
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [angleNorm, powerNorm, show, token]);
+  }, [angleNorm, earthBearingScreenRad, powerNorm, show, token]);
 
   if (!show) return null;
   if (bundle?.token !== token) return null;

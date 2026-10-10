@@ -93,9 +93,14 @@ export function runStage1Launch(
   powerNorm: number,
   angleNorm: number,
   seed: number,
+  earthBearingScreenRad?: number,
 ): Stage1Launch {
   const input = mapLaunchToInput(powerNorm, angleNorm, seed);
-  const space = launchSpaceApproach(input.initialSpeedMps, angleNorm);
+  const space = launchSpaceApproach(
+    input.initialSpeedMps,
+    angleNorm,
+    earthBearingScreenRad,
+  );
 
   if (space.kind === "SPACE_MISS") {
     const result = skipOnlyResult(seed);
@@ -109,6 +114,7 @@ export function runStage1Launch(
         version: result.version,
         spaceApproach: space,
         spaceShare: timing.spaceShare,
+        earthBearingScreenRad,
       },
       ...timing,
     };
@@ -136,6 +142,7 @@ export function runStage1Launch(
       version: result.version,
       spaceApproach: space,
       spaceShare: timing.spaceShare,
+      earthBearingScreenRad,
     },
     ...timing,
   };

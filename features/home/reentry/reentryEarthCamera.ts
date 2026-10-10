@@ -96,48 +96,13 @@ export function cinematicEarthView({
     };
   }
 
-  /*
-   * Only a 4% change through the whole SPACE approach.
-   * The large visual change happens after atmospheric contact.
-   */
-  const late =
-    smoothstep01(
-      (travelT - 0.84) /
-        0.16,
-    );
-
-  return {
-    x: mixNum(
-      start.x,
-      start.x + w * 0.008,
-      late,
-    ),
-    y: mixNum(
-      start.y,
-      start.y - h * 0.008,
-      late,
-    ),
-    r: start.r *
-      mixNum(
-        1,
-        1.04,
-        late,
-      ),
-  };
+  void travelT;
+  return start;
 }
 
 export function earthGrowthRatioAtApproach(
   travelT: number,
 ): number {
-  const late =
-    smoothstep01(
-      (travelT - 0.84) /
-        0.16,
-    );
-
-  return mixNum(
-    1,
-    1.04,
-    late,
-  );
+  void travelT;
+  return 1;
 }

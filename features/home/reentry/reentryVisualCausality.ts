@@ -1,4 +1,7 @@
-export type Vec2 = { x: number; y: number };
+export type Vec2 = {
+  x: number;
+  y: number;
+};
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -13,11 +16,27 @@ export function mixNum(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function lerpAngle(from: number, to: number, t: number): number {
-  let delta = to - from;
-  while (delta > Math.PI) delta -= Math.PI * 2;
-  while (delta < -Math.PI) delta += Math.PI * 2;
-  return from + delta * clamp01(t);
+function dot(a: Vec2, b: Vec2): number {
+  return a.x * b.x + a.y * b.y;
+}
+
+function length(v: Vec2): number {
+  return Math.hypot(v.x, v.y);
+}
+
+function normalized(v: Vec2): Vec2 {
+  const len = Math.max(1e-9, length(v));
+  return {
+    x: v.x / len,
+    y: v.y / len,
+  };
+}
+
+function perpendicular(v: Vec2): Vec2 {
+  return {
+    x: -v.y,
+    y: v.x,
+  };
 }
 
 export function spaceApproach01(
@@ -32,11 +51,6 @@ export function spaceApproach01(
   );
 }
 
-/**
- * Monotonic wall-clock travel.
- * Higher POWER visibly reaches Earth faster during the early approach,
- * but all valid inbound runs still arrive at the visual haze at t=1.
- */
 export function spaceTravelT(
   spaceT: number,
   powerNorm: number,
@@ -44,22 +58,19 @@ export function spaceTravelT(
 ): number {
   const t = clamp01(spaceT);
 
-  if (miss) {
-    return t;
-  }
+  if (miss) return t;
 
-  const exp = mixNum(
-    1.32,
-    0.66,
-    clamp01(powerNorm),
-  );
+  const exp =
+    mixNum(
+      1.30,
+      0.68,
+      clamp01(powerNorm),
+    );
 
   return Math.pow(t, exp);
 }
 
-/**
- * Legacy helper kept for compatibility.
- */
+/** Legacy helper for old verifier/dev code. */
 export function spaceCraftScreenPosition(
   current: Vec2,
   initial: Vec2,
@@ -71,17 +82,16 @@ export function spaceCraftScreenPosition(
   const rawDy = current.y - initial.y;
   const rawLen = Math.hypot(rawDx, rawDy);
 
-  if (rawLen < 1e-6) {
-    return launchPoint;
-  }
+  if (rawLen < 1e-6) return launchPoint;
 
   const ux = rawDx / rawLen;
   const uy = rawDy / rawLen;
 
-  const targetDistance = Math.hypot(
-    entryTargetPoint.x - launchPoint.x,
-    entryTargetPoint.y - launchPoint.y,
-  );
+  const targetDistance =
+    Math.hypot(
+      entryTargetPoint.x - launchPoint.x,
+      entryTargetPoint.y - launchPoint.y,
+    );
 
   const screenTravel =
     targetDistance * clamp01(approach01);
@@ -92,178 +102,209 @@ export function spaceCraftScreenPosition(
   };
 }
 
+export function hazeEntryTarget(
+  launchPoint: Vec2,
+  earth: { x: number; y: number; r: number },
+  atmosphereThicknessPx: number,
+): Vec2 {
+  const dx = earth.x - launchPoint.x;
+  const dy = earth.y - launchPoint.y;
+  const dist = Math.max(1e-6, Math.hypot(dx, dy));
+  const reach = earth.r + atmosphereThicknessPx;
+
+  return {
+    x: earth.x - (dx / dist) * reach,
+    y: earth.y - (dy / dist) * reach,
+  };
+}
+
+export function headingHazeEntryTarget(
+  launchPoint: Vec2,
+  earth: { x: number; y: number; r: number },
+  atmosphereThicknessPx: number,
+  headingRad: number,
+): Vec2 {
+  const radius = earth.r + atmosphereThicknessPx;
+
+  const dx = Math.cos(headingRad);
+  const dy = Math.sin(headingRad);
+
+  const fx = launchPoint.x - earth.x;
+  const fy = launchPoint.y - earth.y;
+
+  const b = 2 * (fx * dx + fy * dy);
+  const c = fx * fx + fy * fy - radius * radius;
+  const disc = b * b - 4 * c;
+
+  if (disc >= 0) {
+    const root = Math.sqrt(disc);
+    const t0 = (-b - root) / 2;
+    const t1 = (-b + root) / 2;
+    const candidates =
+      [t0, t1]
+        .filter((t) => t > 0)
+        .sort((a, b2) => a - b2);
+
+    if (candidates.length > 0) {
+      const t = candidates[0];
+      return {
+        x: launchPoint.x + dx * t,
+        y: launchPoint.y + dy * t,
+      };
+    }
+  }
+
+  return hazeEntryTarget(
+    launchPoint,
+    earth,
+    atmosphereThicknessPx,
+  );
+}
+
+function axisScale(
+  terminalComponent: number,
+  targetComponent: number,
+  fallback: number,
+): number {
+  if (Math.abs(terminalComponent) > 1) {
+    const candidate =
+      targetComponent / terminalComponent;
+
+    if (Number.isFinite(candidate) && candidate !== 0) {
+      return candidate;
+    }
+  }
+
+  return fallback;
+}
+
 /**
- * v17 inbound visual mapping.
- *
- * The previous presentation projected the current world displacement along
- * its own ray. That meant a physically valid ATMOSPHERE_ENTRY could still
- * visually miss the rendered Earth/haze. The game then reached a BREAK/BURN
- * result while the craft was visibly still in space.
- *
- * This maps the real gravity path onto a screen-space chord from the launch
- * anchor to the actual visible haze contact point.
- *
- * Properties:
- * - t=0 is exactly the launch anchor.
- * - t=1 is exactly the haze contact target.
- * - the real gravity path's cross-track curvature is retained.
- * - the craft heading is derived from the transformed physical velocity.
- * - the first frames preserve the player's selected launch heading.
+ * Selected launch heading is the forward basis.
+ * Gravity is the only source of cross-track curvature.
+ * There is no renderer-side steering blend toward Earth.
  */
 export function inboundGravityScreenPose({
   currentPosition,
   currentVelocity,
   initialPosition,
+  initialVelocity,
   terminalPosition,
   launchPoint,
   entryTargetPoint,
-  travelT,
   launchHeading,
 }: {
   currentPosition: Vec2;
   currentVelocity: Vec2;
   initialPosition: Vec2;
+  initialVelocity: Vec2;
   terminalPosition: Vec2;
   launchPoint: Vec2;
   entryTargetPoint: Vec2;
-  travelT: number;
   launchHeading: number;
 }): {
   x: number;
   y: number;
   angle: number;
 } {
-  const t = clamp01(travelT);
+  const worldForward =
+    normalized(initialVelocity);
 
-  const worldDx =
-    terminalPosition.x - initialPosition.x;
-  const worldDy =
-    terminalPosition.y - initialPosition.y;
-  const worldLen =
-    Math.max(1, Math.hypot(worldDx, worldDy));
+  const worldSide =
+    perpendicular(worldForward);
 
-  const worldTx = worldDx / worldLen;
-  const worldTy = worldDy / worldLen;
-  const worldNx = -worldTy;
-  const worldNy = worldTx;
+  const screenForward = {
+    x: Math.cos(launchHeading),
+    y: Math.sin(launchHeading),
+  };
 
-  const screenDx =
-    entryTargetPoint.x - launchPoint.x;
-  const screenDy =
-    entryTargetPoint.y - launchPoint.y;
-  const screenLen =
-    Math.max(1, Math.hypot(screenDx, screenDy));
+  const screenSide =
+    perpendicular(screenForward);
 
-  const screenTx = screenDx / screenLen;
-  const screenTy = screenDy / screenLen;
-  const screenNx = -screenTy;
-  const screenNy = screenTx;
+  const terminalDelta = {
+    x: terminalPosition.x - initialPosition.x,
+    y: terminalPosition.y - initialPosition.y,
+  };
 
-  const currentDx =
-    currentPosition.x - initialPosition.x;
-  const currentDy =
-    currentPosition.y - initialPosition.y;
+  const targetDelta = {
+    x: entryTargetPoint.x - launchPoint.x,
+    y: entryTargetPoint.y - launchPoint.y,
+  };
 
-  const crossMeters =
-    currentDx * worldNx +
-    currentDy * worldNy;
+  const terminalForward =
+    dot(terminalDelta, worldForward);
 
-  const pxPerMeter =
-    screenLen / worldLen;
+  const terminalSide =
+    dot(terminalDelta, worldSide);
 
-  /*
-   * Keep some real gravity curvature, but taper cross-track displacement near
-   * contact so the visual path is guaranteed to meet the rendered haze.
-   */
-  const contactStraighten =
-    1 -
-    smoothstep01(
-      (t - 0.78) / 0.22,
-    ) *
-      0.72;
+  const targetForward =
+    dot(targetDelta, screenForward);
 
-  const crossPx =
-    crossMeters *
-    pxPerMeter *
-    0.48 *
-    contactStraighten;
+  const targetSide =
+    dot(targetDelta, screenSide);
+
+  const worldTravel =
+    Math.max(1, length(terminalDelta));
+
+  const screenTravel =
+    Math.max(1, length(targetDelta));
+
+  const fallbackScale =
+    screenTravel / worldTravel;
+
+  const forwardScale =
+    axisScale(
+      terminalForward,
+      targetForward,
+      fallbackScale,
+    );
+
+  const sideScale =
+    axisScale(
+      terminalSide,
+      targetSide,
+      forwardScale,
+    );
+
+  const delta = {
+    x: currentPosition.x - initialPosition.x,
+    y: currentPosition.y - initialPosition.y,
+  };
+
+  const along = dot(delta, worldForward);
+  const across = dot(delta, worldSide);
 
   const x =
     launchPoint.x +
-    screenDx * t +
-    screenNx * crossPx;
+    screenForward.x * along * forwardScale +
+    screenSide.x * across * sideScale;
 
   const y =
     launchPoint.y +
-    screenDy * t +
-    screenNy * crossPx;
+    screenForward.y * along * forwardScale +
+    screenSide.y * across * sideScale;
 
-  const velocityAlong =
-    currentVelocity.x * worldTx +
-    currentVelocity.y * worldTy;
+  const velocityForward =
+    dot(currentVelocity, worldForward);
 
-  const velocityCross =
-    currentVelocity.x * worldNx +
-    currentVelocity.y * worldNy;
+  const velocitySide =
+    dot(currentVelocity, worldSide);
 
   const screenVx =
-    screenTx * velocityAlong +
-    screenNx * velocityCross * 0.48;
+    screenForward.x * velocityForward * forwardScale +
+    screenSide.x * velocitySide * sideScale;
 
   const screenVy =
-    screenTy * velocityAlong +
-    screenNy * velocityCross * 0.48;
-
-  const mappedHeading =
-    Math.atan2(screenVy, screenVx);
-
-  const headingBlend =
-    smoothstep01(t / 0.16);
+    screenForward.y * velocityForward * forwardScale +
+    screenSide.y * velocitySide * sideScale;
 
   return {
     x,
     y,
-    angle: lerpAngle(
-      launchHeading,
-      mappedHeading,
-      headingBlend,
-    ),
+    angle: Math.atan2(screenVy, screenVx),
   };
 }
 
-export function hazeEntryTarget(
-  launchPoint: Vec2,
-  earth: {
-    x: number;
-    y: number;
-    r: number;
-  },
-  atmosphereThicknessPx: number,
-): Vec2 {
-  const dx =
-    earth.x - launchPoint.x;
-  const dy =
-    earth.y - launchPoint.y;
-
-  const dist =
-    Math.max(1e-6, Math.hypot(dx, dy));
-
-  const reach =
-    earth.r + atmosphereThicknessPx;
-
-  return {
-    x:
-      earth.x -
-      (dx / dist) * reach,
-    y:
-      earth.y -
-      (dy / dist) * reach,
-  };
-}
-
-export function atmosphereThicknessPx(
-  earthR: number,
-): number {
+export function atmosphereThicknessPx(earthR: number): number {
   return Math.max(
     18,
     Math.min(74, earthR * 0.055),
@@ -293,25 +334,17 @@ export function tangentAngleFromPoints(
   next: Vec2,
   fallback: number,
 ): number {
-  const dx1 =
-    next.x - current.x;
-  const dy1 =
-    next.y - current.y;
+  const dx1 = next.x - current.x;
+  const dy1 = next.y - current.y;
 
-  if (
-    Math.hypot(dx1, dy1) >= 0.25
-  ) {
+  if (Math.hypot(dx1, dy1) >= 0.25) {
     return Math.atan2(dy1, dx1);
   }
 
-  const dx0 =
-    current.x - prev.x;
-  const dy0 =
-    current.y - prev.y;
+  const dx0 = current.x - prev.x;
+  const dy0 = current.y - prev.y;
 
-  if (
-    Math.hypot(dx0, dy0) >= 0.25
-  ) {
+  if (Math.hypot(dx0, dy0) >= 0.25) {
     return Math.atan2(dy0, dx0);
   }
 
@@ -325,44 +358,24 @@ export function clampHeadingJump(
 ): number {
   let delta = to - from;
 
-  while (delta > Math.PI) {
-    delta -= Math.PI * 2;
-  }
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
 
-  while (delta < -Math.PI) {
-    delta += Math.PI * 2;
-  }
+  const max = (maxDeg * Math.PI) / 180;
 
-  const max =
-    (maxDeg * Math.PI) / 180;
-
-  if (delta > max) {
-    delta = max;
-  }
-
-  if (delta < -max) {
-    delta = -max;
-  }
+  if (delta > max) delta = max;
+  if (delta < -max) delta = -max;
 
   return from + delta;
 }
 
 export function closestApproachIndex(
-  points: {
-    altitudeM: number;
-  }[],
+  points: { altitudeM: number }[],
 ): number {
   let best = 0;
 
-  for (
-    let i = 1;
-    i < points.length;
-    i++
-  ) {
-    if (
-      points[i].altitudeM <
-      points[best].altitudeM
-    ) {
+  for (let i = 1; i < points.length; i++) {
+    if (points[i].altitudeM < points[best].altitudeM) {
       best = i;
     }
   }
@@ -370,42 +383,22 @@ export function closestApproachIndex(
   return best;
 }
 
-/**
- * SPACE_MISS playback mapping.
- * Closest approach occurs near 48% of the visible flyby.
- */
 export function missPlaybackToPathT(
   spaceT: number,
   periIndex: number,
   pointCount: number,
 ): number {
   const t = clamp01(spaceT);
+  const last = Math.max(1, pointCount - 1);
+  const periT = periIndex / last;
 
-  const last =
-    Math.max(1, pointCount - 1);
-
-  const periT =
-    periIndex / last;
-
-  if (
-    periT < 0.12 ||
-    periT > 0.9
-  ) {
-    return t;
-  }
+  if (periT < 0.12 || periT > 0.9) return t;
 
   if (t < 0.48) {
-    return (
-      periT *
-      (t / 0.48)
-    );
+    return periT * (t / 0.48);
   }
 
-  return (
-    periT +
-    (1 - periT) *
-      ((t - 0.48) / 0.52)
-  );
+  return periT + (1 - periT) * ((t - 0.48) / 0.52);
 }
 
 export function gravityPathScalePx(
@@ -426,10 +419,7 @@ export function gravityPathScalePx(
       periScreen.y - launchPoint.y,
     );
 
-  return (
-    screen /
-    Math.max(world, 1e3)
-  );
+  return screen / Math.max(world, 1e3);
 }
 
 export function gravityScreenPosition(
@@ -441,12 +431,10 @@ export function gravityScreenPosition(
   return {
     x:
       launchPoint.x +
-      (current.x - first.x) *
-        scale,
+      (current.x - first.x) * scale,
     y:
       launchPoint.y -
-      (current.y - first.y) *
-        scale,
+      (current.y - first.y) * scale,
   };
 }
 
@@ -465,14 +453,10 @@ export function elapsedSincePlaybackS(
 
   const totalMs =
     inboundMs /
-    Math.max(
-      1e-4,
-      spaceShare,
-    );
+    Math.max(1e-4, spaceShare);
 
   return (
-    ((playback - startPlayback) *
-      totalMs) /
+    ((playback - startPlayback) * totalMs) /
     1000
   );
 }

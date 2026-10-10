@@ -79,6 +79,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     lockedPowerNorm,
     angleNorm,
     result,
+    playRecord,
     flightProgress,
     spaceApproach,
     spaceShare,
@@ -97,6 +98,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     outcome: result?.outcome,
     powerNorm: lockedPowerNorm,
     angleNorm,
+    earthBearingScreenRad:
+      playRecord?.earthBearingScreenRad,
   });
 
   useBodyScrollLock(expanded);

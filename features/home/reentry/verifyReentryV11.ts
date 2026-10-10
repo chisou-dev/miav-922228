@@ -11,6 +11,7 @@ import {
   gravityPathScalePx,
   gravityScreenPosition,
   hazeEntryTarget,
+  headingHazeEntryTarget,
   inboundGravityScreenPose,
   missPlaybackToPathT,
   spaceCraftScreenPosition,
@@ -64,6 +65,22 @@ function screenPose(
     angle: sampled.screenHeadingRad,
     idleAngle: directionNormToScreenHeadingRad(angleNorm),
   };
+}
+
+function earthBearingForSize(
+  w: number,
+  h: number,
+): number {
+  const launch =
+    launchAnchorPx(w, h);
+
+  const earth =
+    launchEarthView(w, h);
+
+  return Math.atan2(
+    earth.y - launch.y,
+    earth.x - launch.x,
+  );
 }
 
 const sizes = [
@@ -159,100 +176,99 @@ console.log(
   entry.entry.speedMps,
 );
 
+let entryAngleNorm = 0.5;
+{
+  const bearing0 = earthBearingForSize(sizes[0].w, sizes[0].h);
+  let found: ReturnType<typeof launchSpaceApproach> | null = null;
+  for (let n = 0; n <= 1; n += 0.02) {
+    const speed = mapLaunchToInput(0.55, n, 1).initialSpeedMps;
+    const space = launchSpaceApproach(speed, n, bearing0);
+    if (space.kind === "ATMOSPHERE_ENTRY") {
+      found = space;
+      entryAngleNorm = n;
+      break;
+    }
+  }
+  if (found && found.kind === "ATMOSPHERE_ENTRY") {
+    entry = found;
+  }
+}
+
 for (const size of sizes) {
-  const launch =
-    launchAnchorPx(
-      size.w,
-      size.h,
-    );
-
-  const earth =
-    launchEarthView(
-      size.w,
-      size.h,
-    );
-
-  const target =
-    hazeEntryTarget(
-      launch,
-      earth,
-      atmosphereThicknessPx(
-        earth.r,
-      ),
-    );
-
-  const first =
-    entry.points[0].state;
-
-  const terminal =
-    entry.points[
-      entry.points.length - 1
-    ].state;
-
-  const finalPose =
-    inboundGravityScreenPose({
-      currentPosition:
-        terminal.position,
-      currentVelocity:
-        terminal.velocity,
-      initialPosition:
-        first.position,
-      terminalPosition:
-        terminal.position,
-      launchPoint:
-        launch,
-      entryTargetPoint:
-        target,
-      travelT: 1,
-      launchHeading:
-        directionNormToScreenHeadingRad(
-          0.5,
-        ),
-    });
-
-  const contactError =
-    Math.hypot(
-      finalPose.x -
-        target.x,
-      finalPose.y -
-        target.y,
-    );
-
-  if (
-    contactError >
-    0.25
-  ) {
+  const launch = launchAnchorPx(size.w, size.h);
+  const earth = launchEarthView(size.w, size.h);
+  const bearing = earthBearingForSize(size.w, size.h);
+  const speed = mapLaunchToInput(0.55, entryAngleNorm, 1).initialSpeedMps;
+  const sized = launchSpaceApproach(speed, entryAngleNorm, bearing);
+  if (sized.kind !== "ATMOSPHERE_ENTRY") {
+    throw new Error(`${size.name} v18 lost ATMOSPHERE_ENTRY`);
+  }
+  const launchHeading = directionNormToScreenHeadingRad(entryAngleNorm);
+  const target = headingHazeEntryTarget(
+    launch,
+    earth,
+    atmosphereThicknessPx(earth.r),
+    launchHeading,
+  );
+  const first = sized.points[0].state;
+  const terminal = sized.points[sized.points.length - 1].state;
+  const startPose = inboundGravityScreenPose({
+    currentPosition: first.position,
+    currentVelocity: first.velocity,
+    initialPosition: first.position,
+    initialVelocity: first.velocity,
+    terminalPosition: terminal.position,
+    launchPoint: launch,
+    entryTargetPoint: target,
+    launchHeading,
+  });
+  const initialHeadingError = headingDeltaDeg(launchHeading, startPose.angle);
+  if (initialHeadingError > 0.05) {
     throw new Error(
-      `${size.name} v17 visual haze contact ${contactError}`,
+      `${size.name} v18 launch heading visually corrected ${initialHeadingError}`,
     );
   }
-
-  const craftLengthAtContact =
-    Math.min(
-      size.w,
-      size.h,
-    ) *
-    0.102 *
-    0.145;
-
-  const earthDiameter =
-    earth.r * 2;
-
-  if (
-    craftLengthAtContact >
-    earthDiameter * 0.12
-  ) {
-    throw new Error(
-      `${size.name} craft still too large at atmosphere contact`,
-    );
+  const finalPose = inboundGravityScreenPose({
+    currentPosition: terminal.position,
+    currentVelocity: terminal.velocity,
+    initialPosition: first.position,
+    initialVelocity: first.velocity,
+    terminalPosition: terminal.position,
+    launchPoint: launch,
+    entryTargetPoint: target,
+    launchHeading,
+  });
+  const contactError = Math.hypot(finalPose.x - target.x, finalPose.y - target.y);
+  if (contactError > 0.25) {
+    throw new Error(`${size.name} v18 visual haze contact ${contactError}`);
   }
-
+  const craftLengthAtContact = Math.min(size.w, size.h) * 0.102 * 0.145;
+  const earthDiameter = earth.r * 2;
+  if (craftLengthAtContact > earthDiameter * 0.12) {
+    throw new Error(`${size.name} craft still too large at atmosphere contact`);
+  }
   console.log(
-    `${size.name} v17 visual contact=${contactError.toFixed(4)}px craft/earth=${(
-      craftLengthAtContact /
-      earthDiameter
+    `${size.name} v18 headingErr=${initialHeadingError.toFixed(4)}deg contact=${contactError.toFixed(4)}px craft/earth=${(
+      craftLengthAtContact / earthDiameter
     ).toFixed(4)}`,
   );
+}
+
+{
+  const size = sizes[0];
+  const bearing = earthBearingForSize(size.w, size.h);
+  const awayHeading = bearing + Math.PI;
+  const awayNorm = ((awayHeading + Math.PI / 2) / (Math.PI * 2) % 1 + 1) % 1;
+  const speed = mapLaunchToInput(0.55, awayNorm, 1).initialSpeedMps;
+  const away = launchSpaceApproach(speed, awayNorm, bearing);
+  if (away.kind !== "SPACE_MISS") {
+    throw new Error(`away heading must SPACE_MISS got ${away.kind}`);
+  }
+  const launchedAway = runStage1Launch(0.55, awayNorm, 7, bearing);
+  if (launchedAway.result.outcome !== "SKIP") {
+    throw new Error(`away heading must SKIP got ${launchedAway.result.outcome}`);
+  }
+  console.log("away heading SPACE_MISS SKIP ok");
 }
 
 function destructionAmount(timeSinceAtmosphereEntryS: number, outcome: string) {

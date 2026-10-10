@@ -53,6 +53,8 @@ export interface ReentryPlayRecord {
   version: string;
   spaceApproach?: import("./reentrySpaceApproach").SpaceApproachResult;
   spaceShare?: number;
+  /** Screen bearing from the launch craft toward the rendered Earth at launch. */
+  earthBearingScreenRad?: number;
 }
 
 export type ReentrySimulator = (input: ReentryInput) => ReentryResult;

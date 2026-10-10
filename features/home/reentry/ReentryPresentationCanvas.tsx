@@ -27,7 +27,10 @@ import {
   type SpaceState,
 } from "./reentrySpaceApproach";
 import { mapLaunchToInput } from "./reentryLaunchInput";
-import { cinematicEarthView } from "./reentryEarthCamera";
+import {
+  cinematicEarthView,
+  launchEarthView,
+} from "./reentryEarthCamera";
 import {
   ATMOSPHERE_SURVIVE_S,
   SPACE_INBOUND_DURATION_MS,
@@ -42,6 +45,7 @@ import {
   gravityPathScalePx,
   gravityScreenPosition,
   hazeEntryTarget,
+  headingHazeEntryTarget,
   inboundGravityScreenPose,
   missPlaybackToPathT,
   signedDistanceToAtmospherePx,
@@ -175,16 +179,13 @@ function drawStars(
   horizonMix: number,
   stars = 1,
 ): void {
-  if (stars <= 0.001) {
-    return;
-  }
+  if (stars <= 0.001) return;
 
   void playback;
   void moving;
 
   const fade =
-    (1 - horizonMix * 0.90) *
-    stars;
+    (1 - horizonMix * 0.90) * stars;
 
   const clockS =
     typeof performance !== "undefined"
@@ -194,86 +195,66 @@ function drawStars(
   ctx.save();
   ctx.globalAlpha = fade;
 
-  /*
-   * Real distant stars should read as points, not scratches.
-   * Most are dim. A few brighter ones have a tiny diffraction sparkle.
-   */
-  for (
-    let i = 0;
-    i < 88;
-    i++
-  ) {
-    const rx =
-      hash01(
-        0x51a2,
-        i * 7 + 1,
-      );
-
-    const ry =
-      hash01(
-        0x71c9,
-        i * 11 + 3,
-      );
-
-    const rb =
-      hash01(
-        0x91ef,
-        i * 13 + 5,
-      );
-
+  for (let i = 0; i < 96; i++) {
+    const rx = hash01(0x51a2, i * 7 + 1);
+    const ry = hash01(0x71c9, i * 11 + 3);
+    const rb = hash01(0x91ef, i * 13 + 5);
     const phase =
-      hash01(
-        0xa217,
-        i * 17 + 9,
-      ) *
+      hash01(0xa217, i * 17 + 9) *
       Math.PI *
       2;
 
-    const x =
-      rx * w;
+    const x = rx * w;
+    const y = ry * h;
 
-    const y =
-      ry * h;
+    const bright = i % 17 === 0;
+    const cool = i % 23 === 0;
+    const warm = i % 29 === 0;
 
-    const bright =
-      i % 13 === 0;
-
-    const medium =
-      i % 7 === 0;
+    const twinkleAmount =
+      bright
+        ? 0.24
+        : cool || warm
+          ? 0.15
+          : 0.045;
 
     const twinkle =
-      bright || medium
-        ? 0.82 +
-          Math.sin(
-            clockS *
-              (0.30 + rb * 0.34) +
-              phase,
-          ) *
-            (bright
-              ? 0.15
-              : 0.08)
-        : 1;
+      0.88 +
+      Math.sin(
+        clockS * (0.35 + rb * 0.50) +
+          phase,
+      ) *
+        twinkleAmount;
 
     const alpha =
       (
         bright
-          ? 0.66
-          : medium
-            ? 0.38
+          ? 0.76
+          : cool || warm
+            ? 0.58
             : 0.16 + rb * 0.18
       ) *
       twinkle;
 
     const radius =
       bright
-        ? 1.05 + rb * 0.65
-        : medium
-          ? 0.72 + rb * 0.30
-          : 0.36 + rb * 0.38;
+        ? 1.05 + rb * 0.72
+        : cool || warm
+          ? 0.72 + rb * 0.42
+          : 0.34 + rb * 0.38;
 
-    ctx.fillStyle =
-      `rgba(228,238,248,${alpha})`;
+    let color =
+      `rgba(232,240,248,${alpha})`;
 
+    if (cool) {
+      color =
+        `rgba(166,205,255,${alpha})`;
+    } else if (warm) {
+      color =
+        `rgba(255,186,142,${alpha * 0.90})`;
+    }
+
+    ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(
       x,
@@ -284,34 +265,25 @@ function drawStars(
     );
     ctx.fill();
 
-    if (bright) {
+    if (bright || cool || warm) {
       const flare =
-        2.2 + rb * 2.8;
+        bright
+          ? 3.6 + rb * 2.6
+          : 2.0 + rb * 1.8;
 
       ctx.strokeStyle =
-        `rgba(220,236,250,${
-          alpha * 0.34
-        })`;
+        cool
+          ? `rgba(174,215,255,${alpha * 0.30})`
+          : warm
+            ? `rgba(255,200,166,${alpha * 0.24})`
+            : `rgba(228,240,250,${alpha * 0.28})`;
 
-      ctx.lineWidth = 0.55;
-
+      ctx.lineWidth = 0.50;
       ctx.beginPath();
-      ctx.moveTo(
-        x - flare,
-        y,
-      );
-      ctx.lineTo(
-        x + flare,
-        y,
-      );
-      ctx.moveTo(
-        x,
-        y - flare,
-      );
-      ctx.lineTo(
-        x,
-        y + flare,
-      );
+      ctx.moveTo(x - flare, y);
+      ctx.lineTo(x + flare, y);
+      ctx.moveTo(x, y - flare);
+      ctx.lineTo(x, y + flare);
       ctx.stroke();
     }
   }
@@ -2074,15 +2046,31 @@ export function ReentryPresentationCanvas({
       const activeSpace = spaceApproach ?? idleSpace;
       const firstSpace = activeSpace.points[0]?.state;
       const periIdx = closestApproachIndex(activeSpace.points);
-      const pathT = miss
-        ? missPlaybackToPathT(
-            spaceT,
-            periIdx,
-            activeSpace.points.length,
-          )
-        : spaceT;
-      const sampledSpace = sampleSpacePoint(activeSpace.points, pathT);
-      const spaceState = sampledSpace?.state ?? firstSpace;
+      const travelT =
+        spaceTravelT(
+          spaceT,
+          powerNorm,
+          miss,
+        );
+
+      const pathT =
+        miss
+          ? missPlaybackToPathT(
+              spaceT,
+              periIdx,
+              activeSpace.points.length,
+            )
+          : travelT;
+
+      const sampledSpace =
+        sampleSpacePoint(
+          activeSpace.points,
+          pathT,
+        );
+
+      const spaceState =
+        sampledSpace?.state ??
+        firstSpace;
 
       const frame =
         result &&
@@ -2109,12 +2097,19 @@ export function ReentryPresentationCanvas({
       const launch = launchAnchorPx(w, h);
       const launchHeading = directionNormToScreenHeadingRad(angleNorm);
 
+      const pathEarth =
+        launchEarthView(w, h);
+
+      const pathThickness =
+        atmosphereThicknessPx(
+          pathEarth.r,
+        );
+
       if (idle || miss) {
         visualLatchPlaybackRef.current = null;
         latchPoseRef.current = null;
       }
 
-      const travelT = spaceTravelT(spaceT, powerNorm, miss);
       const earthCam = cinematicEarthView({
         w,
         h,
@@ -2131,13 +2126,29 @@ export function ReentryPresentationCanvas({
         alpha: 1,
       };
 
-      const thickness = atmosphereThicknessPx(earth.r);
-      const entryTarget = miss
-        ? {
-            x: launch.x + (earth.x - launch.x) * 1.55,
-            y: launch.y + (earth.y - launch.y) * 1.55,
-          }
-        : hazeEntryTarget(launch, earth, thickness);
+      const thickness =
+        atmosphereThicknessPx(
+          earth.r,
+        );
+
+      const entryTarget =
+        miss
+          ? {
+              x:
+                launch.x +
+                (pathEarth.x - launch.x) *
+                  1.55,
+              y:
+                launch.y +
+                (pathEarth.y - launch.y) *
+                  1.55,
+            }
+          : headingHazeEntryTarget(
+              launch,
+              pathEarth,
+              pathThickness,
+              launchHeading,
+            );
 
       let pose = {
         x: launch.x,
@@ -2181,28 +2192,32 @@ export function ReentryPresentationCanvas({
                 spaceState.velocity,
               initialPosition:
                 firstSpace.position,
+              initialVelocity:
+                firstSpace.velocity,
               terminalPosition:
                 terminalSpace.position,
               launchPoint:
                 launch,
               entryTargetPoint:
                 entryTarget,
-              travelT,
               launchHeading,
             });
         }
       }
 
-      const atmosphereDistancePx = signedDistanceToAtmospherePx(
-        pose.x,
-        pose.y,
-        earth.x,
-        earth.y,
-        earth.r,
-        thickness,
-      );
+      const atmosphereDistancePx =
+        signedDistanceToAtmospherePx(
+          pose.x,
+          pose.y,
+          pathEarth.x,
+          pathEarth.y,
+          pathEarth.r,
+          pathThickness,
+        );
+
       const visualAtmosphereEntry =
-        physicsHandoffReached && atmosphereDistancePx <= 0;
+        physicsHandoffReached &&
+        atmosphereDistancePx <= 1.5;
 
       if (visualAtmosphereEntry && visualLatchPlaybackRef.current === null) {
         visualLatchPlaybackRef.current = playback;
@@ -2223,50 +2238,188 @@ export function ReentryPresentationCanvas({
         latched && !miss
           ? smoothstep(
               timeSinceVisualAtmosphereEntryS /
-                0.85,
+                1.05,
             )
           : 0;
 
 
-      if (latched && result && latchPoseRef.current && !miss) {
-        const initialAltitudeM = result.frames[0]?.altitudeM ?? frame.altitudeM;
-        const latchFrame = sampleFrame(
-          result.frames,
+      if (
+        latched &&
+        result &&
+        latchPoseRef.current &&
+        !miss
+      ) {
+        const initialAltitudeM =
+          result.frames[0]?.altitudeM ??
+          frame.altitudeM;
+
+        const progressNow =
           playbackToFrameProgress(
-            latchPhysicsPlaybackRef.current,
+            physicsPlayback,
             outcome ?? "BURN",
-          ),
-        );
-        const nowP = projectPhysicsFrame(frame, initialAltitudeM, w, h);
-        const latchP = projectPhysicsFrame(latchFrame, initialAltitudeM, w, h);
-        const prevFrame = sampleFrame(
-          result.frames,
-          Math.max(0, playbackToFrameProgress(physicsPlayback, outcome ?? "BURN") - 0.012),
-        );
-        const nextFrame = sampleFrame(
-          result.frames,
-          Math.min(1, playbackToFrameProgress(physicsPlayback, outcome ?? "BURN") + 0.012),
-        );
-        const prevP = projectPhysicsFrame(prevFrame, initialAltitudeM, w, h);
-        const nextP = projectPhysicsFrame(nextFrame, initialAltitudeM, w, h);
-        const phys = {
-          x: latchPoseRef.current.x + (nowP.x - latchP.x),
-          y: latchPoseRef.current.y + (nowP.y - latchP.y),
-        };
-        const landing =
-          outcome === "EARTH_REACHED"
-            ? successLandingT(timeSinceVisualAtmosphereEntryS)
-            : 0;
-        const ocean = { x: w * 0.48, y: h * 0.78 };
-        pose = {
-          x: mix(phys.x, ocean.x, landing),
-          y: mix(phys.y, ocean.y, landing),
-          angle: tangentAngleFromPoints(
+          );
+
+        const prevFrame =
+          sampleFrame(
+            result.frames,
+            Math.max(
+              0,
+              progressNow - 0.012,
+            ),
+          );
+
+        const nextFrame =
+          sampleFrame(
+            result.frames,
+            Math.min(
+              1,
+              progressNow + 0.012,
+            ),
+          );
+
+        const prevP =
+          projectPhysicsFrame(
+            prevFrame,
+            initialAltitudeM,
+            w,
+            h,
+          );
+
+        const nowP =
+          projectPhysicsFrame(
+            frame,
+            initialAltitudeM,
+            w,
+            h,
+          );
+
+        const nextP =
+          projectPhysicsFrame(
+            nextFrame,
+            initialAltitudeM,
+            w,
+            h,
+          );
+
+        const physicalAngle =
+          tangentAngleFromPoints(
             prevP,
             nowP,
             nextP,
             latchPoseRef.current.angle,
-          ),
+          );
+
+        /*
+         * Tracking-shot entry camera:
+         * the ship keeps its entry direction; the camera moves with it.
+         * This prevents the tiny ship from freezing beside the globe.
+         */
+        const cameraIn =
+          smoothstep(
+            timeSinceVisualAtmosphereEntryS /
+              0.85,
+          );
+
+        const minSide =
+          Math.min(w, h);
+
+        const atmosphericAnchor = {
+          x: w * 0.63,
+          y: h * 0.34,
+        };
+
+        const forwardDrift =
+          minSide *
+          0.075 *
+          smoothstep(
+            timeSinceVisualAtmosphereEntryS /
+              7.5,
+          );
+
+        const entryAngle =
+          latchPoseRef.current.angle;
+
+        const tracked = {
+          x:
+            atmosphericAnchor.x +
+            Math.cos(entryAngle) *
+              forwardDrift,
+          y:
+            atmosphericAnchor.y +
+            Math.sin(entryAngle) *
+              forwardDrift,
+        };
+
+        const aeroAngleMix =
+          smoothstep(
+            (
+              timeSinceVisualAtmosphereEntryS -
+              2.4
+            ) /
+              4.0,
+          ) *
+          0.42;
+
+        let trackedAngle =
+          lerpAngle(
+            entryAngle,
+            physicalAngle,
+            aeroAngleMix,
+          );
+
+        let trackedX =
+          mix(
+            latchPoseRef.current.x,
+            tracked.x,
+            cameraIn,
+          );
+
+        let trackedY =
+          mix(
+            latchPoseRef.current.y,
+            tracked.y,
+            cameraIn,
+          );
+
+        const landing =
+          outcome === "EARTH_REACHED"
+            ? successLandingT(
+                timeSinceVisualAtmosphereEntryS,
+              )
+            : 0;
+
+        if (landing > 0) {
+          const ocean = {
+            x: w * 0.48,
+            y: h * 0.78,
+          };
+
+          trackedX =
+            mix(
+              trackedX,
+              ocean.x,
+              landing,
+            );
+
+          trackedY =
+            mix(
+              trackedY,
+              ocean.y,
+              landing,
+            );
+
+          trackedAngle =
+            lerpAngle(
+              trackedAngle,
+              Math.PI / 2,
+              smoothstep(landing) * 0.72,
+            );
+        }
+
+        pose = {
+          x: trackedX,
+          y: trackedY,
+          angle: trackedAngle,
         };
       }
 

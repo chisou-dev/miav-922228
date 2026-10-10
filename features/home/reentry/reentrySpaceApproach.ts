@@ -40,6 +40,13 @@ export type SpaceApproachResult =
       points: SpaceApproachPoint[];
     };
 
+function signedAngleRad(value: number): number {
+  let angle = value;
+  while (angle > Math.PI) angle -= Math.PI * 2;
+  while (angle < -Math.PI) angle += Math.PI * 2;
+  return angle;
+}
+
 function length(v: Vec2): number {
   return Math.hypot(v.x, v.y);
 }
@@ -347,13 +354,48 @@ export function simulateSpaceApproach(
 export function launchSpaceApproach(
   speedMps: number,
   directionNorm: number,
+  earthBearingScreenRad?: number,
 ): SpaceApproachResult {
   const screenHeading =
-    directionNormToScreenHeadingRad(wrap01(directionNorm));
-  const worldHeading = -screenHeading;
+    directionNormToScreenHeadingRad(
+      wrap01(directionNorm),
+    );
+
   const startRadial = Math.PI / 4;
+
+  let worldHeading: number;
+
+  if (
+    earthBearingScreenRad !== undefined &&
+    Number.isFinite(earthBearingScreenRad)
+  ) {
+    const screenOffset =
+      signedAngleRad(
+        screenHeading -
+          earthBearingScreenRad,
+      );
+
+    const inwardWorldHeading =
+      startRadial + Math.PI;
+
+    /*
+     * Screen Y points down, world Y points up.
+     * Preserve the player's angular miss relative to Earth.
+     */
+    worldHeading =
+      inwardWorldHeading -
+      screenOffset;
+  } else {
+    // Compatibility fallback for old dev/test callers.
+    worldHeading = -screenHeading;
+  }
+
   return simulateSpaceApproach(
-    makeInitialSpaceState(speedMps, worldHeading, startRadial),
+    makeInitialSpaceState(
+      speedMps,
+      worldHeading,
+      startRadial,
+    ),
   );
 }
 
