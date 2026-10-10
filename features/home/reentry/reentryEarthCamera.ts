@@ -1,4 +1,7 @@
-import { mixNum, smoothstep01 } from "./reentryVisualCausality";
+import {
+  mixNum,
+  smoothstep01,
+} from "./reentryVisualCausality";
 
 export type StageEarthView = {
   x: number;
@@ -6,16 +9,41 @@ export type StageEarthView = {
   r: number;
 };
 
-/** Idle / launch: lower-left, inset so stars and craft motion stay readable. */
-export function launchEarthView(w: number, h: number): StageEarthView {
-  const minDim = Math.min(w, h);
+/**
+ * SPACE composition.
+ *
+ * Earth is deliberately inset from the lower-left corner so the player can
+ * read both the ship's path and the black space behind it.
+ */
+export function launchEarthView(
+  w: number,
+  h: number,
+): StageEarthView {
+  const minDim =
+    Math.min(w, h);
+
   return {
-    x: w * 0.20,
-    y: h * 0.74,
-    r: minDim * 0.10,
+    x: w * 0.22,
+    y: h * 0.72,
+    r: minDim * 0.105,
   };
 }
 
+/**
+ * During SPACE, Earth is almost a fixed reference object.
+ *
+ * The old camera enlarged Earth while the craft barely moved, which made
+ * Earth feel like the moving subject. v17 removes that effect.
+ *
+ * Inbound:
+ * - Earth stays essentially fixed.
+ * - craft supplies the visible closing movement.
+ * - atmospheric contact triggers a separate cinematic camera.
+ *
+ * Miss:
+ * - Earth stays stable through closest approach.
+ * - only the outbound flyby pulls the camera back and shrinks Earth.
+ */
 export function cinematicEarthView({
   w,
   h,
@@ -31,35 +59,85 @@ export function cinematicEarthView({
   travelT: number;
   spaceT: number;
 }): StageEarthView {
-  const start = launchEarthView(w, h);
-  if (idle) return start;
+  const start =
+    launchEarthView(w, h);
+
+  if (idle) {
+    return start;
+  }
 
   if (miss) {
-    const outbound01 = smoothstep01((spaceT - 0.48) / 0.52);
-    const rClose = start.r * 1.08;
-    const minDim = Math.min(w, h);
+    const outbound01 =
+      smoothstep01(
+        (spaceT - 0.48) /
+          0.52,
+      );
+
     return {
-      x: mixNum(start.x, start.x + w * 0.02, outbound01),
-      y: mixNum(start.y, start.y - h * 0.015, outbound01),
+      x: mixNum(
+        start.x,
+        start.x + w * 0.015,
+        outbound01,
+      ),
+      y: mixNum(
+        start.y,
+        start.y - h * 0.01,
+        outbound01,
+      ),
       r: mixNum(
-        rClose,
-        Math.max(minDim * 0.07, rClose * 0.48),
+        start.r,
+        Math.max(
+          Math.min(w, h) *
+            0.062,
+          start.r * 0.54,
+        ),
         outbound01,
       ),
     };
   }
 
-  const grow = smoothstep01(travelT);
-  const late = smoothstep01((travelT - 0.88) / 0.12);
+  /*
+   * Only a 4% change through the whole SPACE approach.
+   * The large visual change happens after atmospheric contact.
+   */
+  const late =
+    smoothstep01(
+      (travelT - 0.84) /
+        0.16,
+    );
+
   return {
-    x: mixNum(start.x, start.x + w * 0.03, late),
-    y: mixNum(start.y, start.y - h * 0.02, late),
-    r: start.r * mixNum(1, 1.22, grow) * mixNum(1, 1.18, late),
+    x: mixNum(
+      start.x,
+      start.x + w * 0.008,
+      late,
+    ),
+    y: mixNum(
+      start.y,
+      start.y - h * 0.008,
+      late,
+    ),
+    r: start.r *
+      mixNum(
+        1,
+        1.04,
+        late,
+      ),
   };
 }
 
-export function earthGrowthRatioAtApproach(travelT: number): number {
-  const grow = smoothstep01(travelT);
-  const late = smoothstep01((travelT - 0.88) / 0.12);
-  return mixNum(1, 1.22, grow) * mixNum(1, 1.18, late);
+export function earthGrowthRatioAtApproach(
+  travelT: number,
+): number {
+  const late =
+    smoothstep01(
+      (travelT - 0.84) /
+        0.16,
+    );
+
+  return mixNum(
+    1,
+    1.04,
+    late,
+  );
 }

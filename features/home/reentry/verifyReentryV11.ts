@@ -11,6 +11,7 @@ import {
   gravityPathScalePx,
   gravityScreenPosition,
   hazeEntryTarget,
+  inboundGravityScreenPose,
   missPlaybackToPathT,
   spaceCraftScreenPosition,
   spaceTravelT,
@@ -157,6 +158,102 @@ console.log(
   "speed",
   entry.entry.speedMps,
 );
+
+for (const size of sizes) {
+  const launch =
+    launchAnchorPx(
+      size.w,
+      size.h,
+    );
+
+  const earth =
+    launchEarthView(
+      size.w,
+      size.h,
+    );
+
+  const target =
+    hazeEntryTarget(
+      launch,
+      earth,
+      atmosphereThicknessPx(
+        earth.r,
+      ),
+    );
+
+  const first =
+    entry.points[0].state;
+
+  const terminal =
+    entry.points[
+      entry.points.length - 1
+    ].state;
+
+  const finalPose =
+    inboundGravityScreenPose({
+      currentPosition:
+        terminal.position,
+      currentVelocity:
+        terminal.velocity,
+      initialPosition:
+        first.position,
+      terminalPosition:
+        terminal.position,
+      launchPoint:
+        launch,
+      entryTargetPoint:
+        target,
+      travelT: 1,
+      launchHeading:
+        directionNormToScreenHeadingRad(
+          0.5,
+        ),
+    });
+
+  const contactError =
+    Math.hypot(
+      finalPose.x -
+        target.x,
+      finalPose.y -
+        target.y,
+    );
+
+  if (
+    contactError >
+    0.25
+  ) {
+    throw new Error(
+      `${size.name} v17 visual haze contact ${contactError}`,
+    );
+  }
+
+  const craftLengthAtContact =
+    Math.min(
+      size.w,
+      size.h,
+    ) *
+    0.102 *
+    0.145;
+
+  const earthDiameter =
+    earth.r * 2;
+
+  if (
+    craftLengthAtContact >
+    earthDiameter * 0.12
+  ) {
+    throw new Error(
+      `${size.name} craft still too large at atmosphere contact`,
+    );
+  }
+
+  console.log(
+    `${size.name} v17 visual contact=${contactError.toFixed(4)}px craft/earth=${(
+      craftLengthAtContact /
+      earthDiameter
+    ).toFixed(4)}`,
+  );
+}
 
 function destructionAmount(timeSinceAtmosphereEntryS: number, outcome: string) {
   if (outcome !== "BURN" && outcome !== "BREAK") return 0;
