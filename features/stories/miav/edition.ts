@@ -62,7 +62,6 @@ export type ChapterEditionCopy = {
   openRecord: string;
   readingOrder: (n: number) => string;
   startFromChapterOne: string;
-  dateUnrecorded: string;
   chapterTextLabel: string;
   bookCtaLabel: string;
 };
@@ -85,7 +84,6 @@ export const CHAPTER_EDITION_COPY: Record<
     openRecord: "Open record",
     readingOrder: (n) => `This is Chapter ${n} of MIAV-922228.`,
     startFromChapterOne: "Start from Chapter 1 →",
-    dateUnrecorded: "Date unrecorded",
     chapterTextLabel: "Chapter text",
     bookCtaLabel: "Read free chapters",
   },
@@ -103,7 +101,6 @@ export const CHAPTER_EDITION_COPY: Record<
     openRecord: "Ouvrir",
     readingOrder: (n) => `Ceci est le chapitre ${n} de MIAV-922228.`,
     startFromChapterOne: "Commencer au chapitre I →",
-    dateUnrecorded: "Date non enregistrée",
     chapterTextLabel: "Texte du chapitre",
     bookCtaLabel: "Lire les chapitres",
   },
