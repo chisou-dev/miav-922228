@@ -131,7 +131,6 @@ export const miavBooks: Book[] = [
         languageLabel: "English Edition",
         label: "Kindle Edition",
         formatLabel: "Kindle",
-        detailLabel: "Published October 3, 2026",
         status: "available",
         href: MIAV_PART_THREE_KINDLE_URL,
         linkLabel: "Available on Amazon Kindle",
