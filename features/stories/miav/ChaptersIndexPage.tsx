@@ -16,24 +16,6 @@ import { LibraryBreadcrumbs } from "@/features/library/LibraryBreadcrumbs";
 import { BookJsonLd, BreadcrumbJsonLd } from "@/features/library/jsonLd";
 import { miavChapterBreadcrumbs } from "@/features/stories/miav/chapterSeo";
 
-function formatArchiveDate(
-  value: string | null,
-  edition: ChapterEdition,
-  unrecorded: string,
-): string {
-  if (!value) return unrecorded;
-
-  const date = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat(edition === "fr" ? "fr-FR" : "en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-}
-
 type Props = {
   edition?: ChapterEdition;
 };
@@ -108,12 +90,6 @@ export async function ChaptersIndexPage({ edition = "en" }: Props) {
             slug: chapter.slug,
             title: chapter.title,
             summary: chapter.summary,
-            publishedLabel: formatArchiveDate(
-              chapter.published,
-              edition,
-              copy.dateUnrecorded,
-            ),
-            publishedDateTime: chapter.published ?? undefined,
           }))}
         />
 
