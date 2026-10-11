@@ -30,9 +30,10 @@ import {
   launchEarthView,
 } from "./reentryEarthCamera";
 import {
-  SPACE_INBOUND_DURATION_MS,
+  atmosphereTransitionDurationS,
   destructionAmountFromEntryS,
   failureDestructionStartS,
+  spaceInboundDurationMs,
   successLandingT,
 } from "./reentryStageTimeline";
 import {
@@ -1010,12 +1011,13 @@ function drawCraft(
     length * 0.62,
     width * 0.22,
   );
-  hull.addColorStop(0, "#60686e");
-  hull.addColorStop(0.18, "#b9bec0");
-  hull.addColorStop(0.43, "#ecece8");
-  hull.addColorStop(0.68, "#faf8f1");
-  hull.addColorStop(0.86, "#b7bdc0");
-  hull.addColorStop(1, "#737c82");
+  hull.addColorStop(0, "#252b2f");
+  hull.addColorStop(0.16, "#596166");
+  hull.addColorStop(0.36, "#8f9697");
+  hull.addColorStop(0.52, "#c8cac7");
+  hull.addColorStop(0.67, "#a5aaa9");
+  hull.addColorStop(0.84, "#636b6f");
+  hull.addColorStop(1, "#2d3438");
   ctx.fillStyle = hull;
   ctx.fill();
 
@@ -1107,7 +1109,7 @@ function drawCraft(
   ctx.lineTo(-length * 0.47, width * 0.27);
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.46)";
+  ctx.strokeStyle = "rgba(218,226,228,0.30)";
   ctx.lineWidth = Math.max(0.7, length * 0.0065);
   craftOutline(ctx, length, width);
   ctx.stroke();
@@ -1718,6 +1720,16 @@ export function ReentryPresentationCanvas({
           : Math.max(0, (playback - spaceShare) / Math.max(1e-4, 1 - spaceShare));
       const physicsPlayback = atmosphereT;
 
+      const inboundDurationMs =
+        spaceInboundDurationMs(
+          powerNorm,
+        );
+
+      const upperAtmosphereDurationS =
+        atmosphereTransitionDurationS(
+          powerNorm,
+        );
+
       const idleSpace = launchSpaceApproach(
         mapLaunchToInput(0.5, angleNorm, 1).initialSpeedMps,
         angleNorm,
@@ -1832,6 +1844,67 @@ export function ReentryPresentationCanvas({
         });
       }
 
+      /*
+       * LAUNCH must visibly leave on the exact direction selected by the player.
+       *
+       * The physical SPACE path already begins with that velocity, but discrete
+       * path sampling plus immediate gravity can make the first visible frame look
+       * as though it "corrected" itself. For the first fraction of a second, keep
+       * the rendered displacement on the selected tangent, then blend continuously
+       * into the real gravity path. Distance travelled is not changed.
+       */
+      if (!idle && firstSpace && spaceState) {
+        const elapsedSpaceS =
+          (spaceT *
+            inboundDurationMs) /
+          1000;
+
+        const release =
+          smoothstep(
+            elapsedSpaceS /
+              0.42,
+          );
+
+        const distanceFromLaunch =
+          Math.hypot(
+            pose.x - launch.x,
+            pose.y - launch.y,
+          );
+
+        const straightX =
+          launch.x +
+          Math.cos(
+            launchHeading,
+          ) *
+            distanceFromLaunch;
+
+        const straightY =
+          launch.y +
+          Math.sin(
+            launchHeading,
+          ) *
+            distanceFromLaunch;
+
+        pose = {
+          x: mix(
+            straightX,
+            pose.x,
+            release,
+          ),
+          y: mix(
+            straightY,
+            pose.y,
+            release,
+          ),
+          angle:
+            lerpAngle(
+              launchHeading,
+              pose.angle,
+              release,
+            ),
+        };
+      }
+
       const atmosphereDistancePx = signedDistanceToAtmospherePx(
         pose.x,
         pose.y,
@@ -1852,19 +1925,25 @@ export function ReentryPresentationCanvas({
       }
 
       const latched = visualLatchPlaybackRef.current !== null;
-      const timeSinceVisualAtmosphereEntryS = latched
-        ? elapsedSincePlaybackS(
-            playback,
-            visualLatchPlaybackRef.current ?? playback,
-            Math.max(1e-4, spaceShare),
-            SPACE_INBOUND_DURATION_MS,
-          )
-        : 0;
+      const timeSinceVisualAtmosphereEntryS =
+        latched
+          ? elapsedSincePlaybackS(
+              playback,
+              visualLatchPlaybackRef.current ??
+                playback,
+              Math.max(
+                1e-4,
+                spaceShare,
+              ),
+              inboundDurationMs,
+            )
+          : 0;
+
       const atmosphereSceneMix =
         latched && !miss
           ? smoothstep(
               timeSinceVisualAtmosphereEntryS /
-                1.05,
+                upperAtmosphereDurationS,
             )
           : 0;
 
@@ -1895,7 +1974,18 @@ export function ReentryPresentationCanvas({
       const surfacePhase = (((contactPolar / (Math.PI * 2)) % 1) + 1) % 1;
 
       if (latched && result && latchPoseRef.current && !miss) {
-        const cameraIn = smoothstep(timeSinceVisualAtmosphereEntryS / 0.90);
+        const cameraIn =
+          smoothstep(
+            timeSinceVisualAtmosphereEntryS /
+              Math.min(
+                1.45,
+                Math.max(
+                  0.90,
+                  upperAtmosphereDurationS *
+                    0.38,
+                ),
+              ),
+          );
         const minSide = Math.min(w, h);
 
         const atmosphericAnchor = {
@@ -1947,13 +2037,27 @@ export function ReentryPresentationCanvas({
       }
 
       const atmosphereGate = latched && !miss ? 1 : 0;
-      const plasmaAge = !latched || miss
-        ? 0
-        : clamp01((timeSinceVisualAtmosphereEntryS - 0.7) / 2.3);
-      const failureStartS = failureDestructionStartS(
-        result?.metrics.minimumAltitudeM,
-        outcome,
-      );
+      const plasmaAge =
+        !latched || miss
+          ? 0
+          : clamp01(
+              (
+                timeSinceVisualAtmosphereEntryS -
+                0.35
+              ) /
+                Math.max(
+                  1.6,
+                  upperAtmosphereDurationS *
+                    0.92,
+                ),
+            );
+
+      const failureStartS =
+        failureDestructionStartS(
+          result?.metrics.minimumAltitudeM,
+          outcome,
+          powerNorm,
+        );
 
       const failureUnlocked =
         latched &&
@@ -2005,13 +2109,15 @@ export function ReentryPresentationCanvas({
               ),
             );
 
-      const destructionAmount = smoothstep(
-        destructionAmountFromEntryS(
-          timeSinceVisualAtmosphereEntryS,
-          outcome,
-          result?.metrics.minimumAltitudeM,
-        ),
-      );
+      const destructionAmount =
+        smoothstep(
+          destructionAmountFromEntryS(
+            timeSinceVisualAtmosphereEntryS,
+            outcome,
+            result?.metrics.minimumAltitudeM,
+            powerNorm,
+          ),
+        );
 
       if (variant === "stage" && phase === "flight") {
         setReentryAudioFlight(

@@ -263,7 +263,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               {shouldShowNearbySuccess(result.outcome) && (
                 <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
                   {nearbySuccess
-                    ? `NEARBY SUCCESS ${nearbySuccess.percent}%`
+                    ? nearbySuccess.reached === 0
+                    ? "NEARBY SUCCESS <1%"
+                    : `NEARBY SUCCESS ${nearbySuccess.percent}%`
                     : "NEARBY SUCCESS …"}
                   <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
                     {nearbySuccess
@@ -273,7 +275,14 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 </p>
               )}
               <div className="mt-3 flex justify-center gap-8">
-                <button type="button" onClick={retry} className={actionClass}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    startReentryAmbience();
+                    retry();
+                  }}
+                  className={actionClass}
+                >
                   Retry
                 </button>
                 <button type="button" onClick={closeSession} className={actionClass}>

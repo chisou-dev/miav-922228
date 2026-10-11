@@ -128,16 +128,36 @@ function clearSpacePingTimer(): void {
   spacePingTimer = null;
 }
 
+function clearResultTimer(): void {
+  if (
+    resultTimer !== null &&
+    typeof window !== "undefined"
+  ) {
+    window.clearTimeout(resultTimer);
+  }
+
+  resultTimer = null;
+}
+
+function cancelParamAutomation(
+  param: AudioParam,
+  at: number,
+): void {
+  try {
+    param.cancelScheduledValues(at);
+  } catch {
+    // Browser implementation fallback.
+  }
+}
+
+
 function clearTimers(): void {
   if (typeof window === "undefined") return;
 
   clearSpacePingTimer();
-
-  if (resultTimer !== null) {
-    window.clearTimeout(resultTimer);
-    resultTimer = null;
-  }
+  clearResultTimer();
 }
+
 
 function stopNodes(): void {
   if (!state) return;
@@ -312,42 +332,137 @@ export function startReentryAmbience(): void {
   const ctx = getContext();
   if (!ctx || !state) return;
 
+  /*
+   * Retry can happen while finishReentryAudio still owns a delayed fade.
+   * Cancel that old result fade before rebuilding the live ambience.
+   */
+  clearResultTimer();
+
   void ctx.resume();
 
   const t = ctx.currentTime;
 
-  applyMasterVolume(0.35);
-  state.spacePad.gain.setTargetAtTime(0.13, t, 0.45);
+  cancelParamAutomation(
+    state.master.gain,
+    t,
+  );
+  cancelParamAutomation(
+    state.spacePad.gain,
+    t,
+  );
+  cancelParamAutomation(
+    state.rumble.gain,
+    t,
+  );
+  cancelParamAutomation(
+    state.hiss.gain,
+    t,
+  );
+  cancelParamAutomation(
+    state.rumbleFilter.frequency,
+    t,
+  );
+  cancelParamAutomation(
+    state.hissFilter.frequency,
+    t,
+  );
+
+  applyMasterVolume(0.06);
+
+  state.spacePad.gain.setTargetAtTime(
+    0.13,
+    t,
+    0.22,
+  );
+
+  state.rumble.gain.setTargetAtTime(
+    0.0001,
+    t,
+    0.06,
+  );
+
+  state.hiss.gain.setTargetAtTime(
+    0.0001,
+    t,
+    0.06,
+  );
+
+  state.rumbleFilter.frequency.setTargetAtTime(
+    240,
+    t,
+    0.08,
+  );
+
+  state.hissFilter.frequency.setTargetAtTime(
+    1500,
+    t,
+    0.08,
+  );
 
   if (state.oscillators.length === 0) {
-    const lowFrequencies = [41.2, 61.8, 82.4];
+    const lowFrequencies = [
+      41.2,
+      61.8,
+      82.4,
+    ];
 
-    state.oscillators = lowFrequencies.map((frequency, index) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+    state.oscillators =
+      lowFrequencies.map(
+        (
+          frequency,
+          index,
+        ) => {
+          const osc =
+            ctx.createOscillator();
 
-      osc.type = index === 0 ? "sine" : "triangle";
-      osc.frequency.value = frequency;
-      gain.gain.value = index === 0 ? 0.10 : 0.028;
+          const gain =
+            ctx.createGain();
 
-      osc.connect(gain);
-      gain.connect(state!.spacePad);
-      osc.start();
+          osc.type =
+            index === 0
+              ? "sine"
+              : "triangle";
 
-      return osc;
-    });
+          osc.frequency.value =
+            frequency;
+
+          gain.gain.value =
+            index === 0
+              ? 0.10
+              : 0.028;
+
+          osc.connect(gain);
+          gain.connect(
+            state!.spacePad,
+          );
+          osc.start();
+
+          return osc;
+        },
+      );
   }
 
   if (state.noiseSources.length === 0) {
-    const rumbleNoise = makeNoise(ctx);
-    rumbleNoise.connect(state.rumble);
+    const rumbleNoise =
+      makeNoise(ctx);
+
+    rumbleNoise.connect(
+      state.rumble,
+    );
     rumbleNoise.start();
 
-    const hissNoise = makeNoise(ctx);
-    hissNoise.connect(state.hiss);
+    const hissNoise =
+      makeNoise(ctx);
+
+    hissNoise.connect(
+      state.hiss,
+    );
     hissNoise.start();
 
-    state.noiseSources = [rumbleNoise, hissNoise];
+    state.noiseSources = [
+      rumbleNoise,
+      hissNoise,
+    ];
   }
 
   scheduleSpacePings();
@@ -457,9 +572,18 @@ export function finishReentryAudio(
 
   if (typeof window !== "undefined") {
     resultTimer = window.setTimeout(() => {
+      resultTimer = null;
+
       if (!state) return;
-      const end = state.ctx.currentTime;
-      state.master.gain.setTargetAtTime(0.0001, end, 0.42);
+
+      const end =
+        state.ctx.currentTime;
+
+      state.master.gain.setTargetAtTime(
+        0.0001,
+        end,
+        0.42,
+      );
     }, 2200);
   }
 }
