@@ -1,217 +1,426 @@
+
 import { wrap01 } from "./reentryLaunchInput";
+
 import { runStage1Launch } from "./reentryLaunchPipeline";
+
 import type { ReentryOutcome } from "./reentryTypes";
 
-/*
- * Still 75 jobs:
- * 5 POWER samples × 5 DIRECTION samples × 3 deterministic seeds.
- *
- * v20 widens the "nearby" window slightly so the hint is useful rather than
- * returning 0% almost everywhere.
- */
-export const NEARBY_POWER_OFFSETS = [
-  0,
-  -0.04,
-  0.04,
-  -0.08,
-  0.08,
-] as const;
 
-export const NEARBY_DIRECTION_OFFSETS_DEG = [
-  0,
-  -3,
-  3,
-  -7,
-  7,
-] as const;
+
+const DIRECTION_HALF_WINDOW_DEG = 10;
+
+const DIRECTION_STEP_DEG = 0.5;
+
+
 
 export const NEARBY_SEEDS = [
+
   1,
+
   7,
+
   19,
+
 ] as const;
 
+
+
 export type NearbySample = {
+
   powerNorm: number;
+
   angleNorm: number;
+
 };
+
+
 
 export type NearbySuccessStats = {
+
   reached: number;
-  total: number;
+
+  entered: number;
+
+  attempted: number;
+
   percent: number;
+
 };
 
+
+
 export function shouldShowNearbySuccess(
+
   outcome: ReentryOutcome | null | undefined,
+
 ): boolean {
+
   return (
+
     outcome === "BURN" ||
+
     outcome === "BREAK" ||
+
     outcome === "SKIP"
+
   );
+
 }
+
+
+
+function directionOffsetsDeg(): number[] {
+
+  const values: number[] = [];
+
+
+
+  for (
+
+    let deg =
+
+      -DIRECTION_HALF_WINDOW_DEG;
+
+    deg <=
+
+      DIRECTION_HALF_WINDOW_DEG +
+
+        1e-9;
+
+    deg +=
+
+      DIRECTION_STEP_DEG
+
+  ) {
+
+    values.push(
+
+      Number(
+
+        deg.toFixed(3),
+
+      ),
+
+    );
+
+  }
+
+
+
+  return values;
+
+}
+
+
 
 export function nearbyInputGrid(
+
   powerNorm: number,
+
   angleNorm: number,
+
 ): NearbySample[] {
+
   const power =
-    Math.min(1, Math.max(0, powerNorm));
 
-  const seen = new Set<string>();
-  const samples: NearbySample[] = [];
+    Math.min(
 
-  for (
-    const powerOffset of
-    NEARBY_POWER_OFFSETS
-  ) {
-    const nextPower =
-      Math.min(
-        1,
-        Math.max(
-          0,
-          power + powerOffset,
-        ),
-      );
+      1,
 
-    for (
-      const deg of
-      NEARBY_DIRECTION_OFFSETS_DEG
-    ) {
-      const nextAngle =
+      Math.max(0, powerNorm),
+
+    );
+
+
+
+  return directionOffsetsDeg().map(
+
+    (deg) => ({
+
+      powerNorm: power,
+
+      angleNorm:
+
         wrap01(
+
           angleNorm +
+
             deg / 360,
-        );
 
-      const key =
-        `${nextPower.toFixed(6)}:${nextAngle.toFixed(6)}`;
+        ),
 
-      if (seen.has(key)) continue;
+    }),
 
-      seen.add(key);
+  );
 
-      samples.push({
-        powerNorm: nextPower,
-        angleNorm: nextAngle,
-      });
-    }
-  }
-
-  return samples;
 }
+
+
 
 export function nearbyJobs(
+
   powerNorm: number,
+
   angleNorm: number,
+
 ): Array<
+
   NearbySample & {
+
     seed: number;
+
   }
+
 > {
+
   const jobs: Array<
+
     NearbySample & {
+
       seed: number;
+
     }
+
   > = [];
 
+
+
   for (
+
     const sample of
+
     nearbyInputGrid(
+
       powerNorm,
+
       angleNorm,
+
     )
+
   ) {
+
     for (
+
       const seed of
+
       NEARBY_SEEDS
+
     ) {
+
       jobs.push({
+
         ...sample,
+
         seed,
+
       });
+
     }
+
   }
+
+
 
   return jobs;
+
 }
+
+
 
 export function evaluateNearbyJob(
+
   job:
+
     NearbySample & {
+
       seed: number;
+
     },
+
   earthBearingScreenRad?: number,
+
   spaceStartAltitudeM?: number,
-): boolean {
+
+): {
+
+  entered: boolean;
+
+  reached: boolean;
+
+} {
+
   const launched =
+
     runStage1Launch(
+
       job.powerNorm,
+
       job.angleNorm,
+
       job.seed,
+
       earthBearingScreenRad,
+
       spaceStartAltitudeM,
+
     );
 
-  return (
-    launched.result.outcome ===
-    "EARTH_REACHED"
-  );
-}
 
-export function nearbySuccessStats(
-  reached: number,
-  total: number,
-): NearbySuccessStats {
-  if (total <= 0) {
-    return {
-      reached: 0,
-      total: 0,
-      percent: 0,
-    };
-  }
+
+  const entered =
+
+    launched.space.kind ===
+
+      "ATMOSPHERE_ENTRY";
+
+
 
   return {
-    reached,
-    total,
-    percent:
-      Math.round(
-        (reached / total) * 100,
-      ),
+
+    entered,
+
+    reached:
+
+      entered &&
+
+      launched.result.outcome ===
+
+        "EARTH_REACHED",
+
   };
+
 }
 
-export function evaluateNearbySuccessSync(
-  powerNorm: number,
-  angleNorm: number,
-  earthBearingScreenRad?: number,
-  spaceStartAltitudeM?: number,
+
+
+export function nearbySuccessStats(
+
+  reached: number,
+
+  entered: number,
+
+  attempted: number,
+
 ): NearbySuccessStats {
+
+  if (entered <= 0) {
+
+    return {
+
+      reached,
+
+      entered: 0,
+
+      attempted,
+
+      percent: 0,
+
+    };
+
+  }
+
+
+
+  return {
+
+    reached,
+
+    entered,
+
+    attempted,
+
+    percent:
+
+      Math.round(
+
+        (reached / entered) *
+
+          100,
+
+      ),
+
+  };
+
+}
+
+
+
+export function evaluateNearbySuccessSync(
+
+  powerNorm: number,
+
+  angleNorm: number,
+
+  earthBearingScreenRad?: number,
+
+  spaceStartAltitudeM?: number,
+
+): NearbySuccessStats {
+
   const jobs =
+
     nearbyJobs(
+
       powerNorm,
+
       angleNorm,
+
     );
+
+
 
   let reached = 0;
 
+  let entered = 0;
+
+
+
   for (
+
     const job of jobs
+
   ) {
-    if (
+
+    const evaluated =
+
       evaluateNearbyJob(
+
         job,
+
         earthBearingScreenRad,
+
         spaceStartAltitudeM,
-      )
-    ) {
-      reached += 1;
+
+      );
+
+
+
+    if (evaluated.entered) {
+
+      entered += 1;
+
     }
+
+
+
+    if (evaluated.reached) {
+
+      reached += 1;
+
+    }
+
   }
 
+
+
   return nearbySuccessStats(
+
     reached,
+
+    entered,
+
     jobs.length,
+
   );
+
 }

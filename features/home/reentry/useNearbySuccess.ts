@@ -1,92 +1,350 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ReentryOutcome } from "./reentryTypes";
+
+
 import {
+
+  useEffect,
+
+  useState,
+
+} from "react";
+
+import type {
+
+  ReentryOutcome,
+
+} from "./reentryTypes";
+
+import {
+
   evaluateNearbyJob,
+
   nearbyJobs,
+
   nearbySuccessStats,
+
   shouldShowNearbySuccess,
+
   type NearbySuccessStats,
+
 } from "./reentryNearbySuccess";
 
-const BATCH_SIZE = 3;
+
+
+const BATCH_SIZE = 4;
+
+
 
 export function useNearbySuccess({
+
   enabled,
+
   outcome,
+
   powerNorm,
+
   angleNorm,
+
   earthBearingScreenRad,
+
   spaceStartAltitudeM,
+
 }: {
+
   enabled: boolean;
-  outcome: ReentryOutcome | null | undefined;
+
+  outcome:
+
+    ReentryOutcome |
+
+    null |
+
+    undefined;
+
   powerNorm: number | null;
+
   angleNorm: number;
+
   earthBearingScreenRad?: number;
+
   spaceStartAltitudeM?: number;
+
 }): NearbySuccessStats | null {
+
   const show =
+
     enabled &&
+
     powerNorm !== null &&
-    shouldShowNearbySuccess(outcome);
-  const token = `${powerNorm ?? "none"}:${angleNorm}:${outcome ?? "none"}:${earthBearingScreenRad ?? "default"}:${spaceStartAltitudeM ?? "default"}`;
-  const [bundle, setBundle] = useState<{
-    token: string;
-    stats: NearbySuccessStats;
-  } | null>(null);
+
+    shouldShowNearbySuccess(
+
+      outcome,
+
+    );
+
+
+
+  const token =
+
+    `${powerNorm ?? "none"}:${angleNorm}:${outcome ?? "none"}:${earthBearingScreenRad ?? "default"}:${spaceStartAltitudeM ?? "default"}`;
+
+
+
+  const [
+
+    bundle,
+
+    setBundle,
+
+  ] =
+
+    useState<{
+
+      token: string;
+
+      stats: NearbySuccessStats;
+
+    } | null>(null);
+
+
 
   useEffect(() => {
-    if (!show || powerNorm === null) {
+
+    if (
+
+      !show ||
+
+      powerNorm === null
+
+    ) {
+
       return;
+
     }
 
-    const currentToken = token;
+
+
+    const currentToken =
+
+      token;
+
+
+
     let cancelled = false;
+
     let timeout = 0;
-    const jobs = nearbyJobs(powerNorm, angleNorm);
+
+
+
+    const jobs =
+
+      nearbyJobs(
+
+        powerNorm,
+
+        angleNorm,
+
+      );
+
+
+
     let index = 0;
+
     let reached = 0;
 
+    let entered = 0;
+
+
+
     const step = () => {
-      if (cancelled) return;
 
-      const end = Math.min(index + BATCH_SIZE, jobs.length);
-      for (; index < end; index += 1) {
-        if (
-          evaluateNearbyJob(
-            jobs[index],
-            earthBearingScreenRad,
-            spaceStartAltitudeM,
-          )
-        ) {
-          reached += 1;
-        }
-      }
+      if (cancelled) {
 
-      if (index >= jobs.length) {
-        if (!cancelled) {
-          setBundle({
-            token: currentToken,
-            stats: nearbySuccessStats(reached, jobs.length),
-          });
-        }
         return;
+
       }
 
-      timeout = window.setTimeout(step, 0);
+
+
+      const end =
+
+        Math.min(
+
+          index + BATCH_SIZE,
+
+          jobs.length,
+
+        );
+
+
+
+      for (
+
+        ;
+
+        index < end;
+
+        index += 1
+
+      ) {
+
+        const evaluated =
+
+          evaluateNearbyJob(
+
+            jobs[index],
+
+            earthBearingScreenRad,
+
+            spaceStartAltitudeM,
+
+          );
+
+
+
+        if (
+
+          evaluated.entered
+
+        ) {
+
+          entered += 1;
+
+        }
+
+
+
+        if (
+
+          evaluated.reached
+
+        ) {
+
+          reached += 1;
+
+        }
+
+      }
+
+
+
+      if (
+
+        index >=
+
+        jobs.length
+
+      ) {
+
+        if (!cancelled) {
+
+          setBundle({
+
+            token:
+
+              currentToken,
+
+            stats:
+
+              nearbySuccessStats(
+
+                reached,
+
+                entered,
+
+                jobs.length,
+
+              ),
+
+          });
+
+        }
+
+
+
+        return;
+
+      }
+
+
+
+      timeout =
+
+        window.setTimeout(
+
+          step,
+
+          0,
+
+        );
+
     };
 
-    timeout = window.setTimeout(step, 0);
+
+
+    timeout =
+
+      window.setTimeout(
+
+        step,
+
+        0,
+
+      );
+
+
 
     return () => {
+
       cancelled = true;
-      window.clearTimeout(timeout);
+
+      window.clearTimeout(
+
+        timeout,
+
+      );
+
     };
-  }, [angleNorm, earthBearingScreenRad, powerNorm, show, spaceStartAltitudeM, token]);
+
+  }, [
+
+    angleNorm,
+
+    earthBearingScreenRad,
+
+    powerNorm,
+
+    show,
+
+    spaceStartAltitudeM,
+
+    token,
+
+  ]);
+
+
 
   if (!show) return null;
-  if (bundle?.token !== token) return null;
+
+
+
+  if (
+
+    bundle?.token !==
+
+    token
+
+  ) {
+
+    return null;
+
+  }
+
+
+
   return bundle.stats;
+
 }

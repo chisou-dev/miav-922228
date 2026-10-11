@@ -106,33 +106,111 @@ export function failureCloseness01(
  *
  * A run that gets closer to success survives longer before final breakup.
  */
+
 export function failureDestructionStartS(
+
   minimumAltitudeM: number | undefined,
+
   outcome: string | undefined,
+
   powerNorm = 0.5,
+
 ): number {
-  if (outcome !== "BURN" && outcome !== "BREAK") {
+
+  if (
+
+    outcome !== "BURN" &&
+
+    outcome !== "BREAK"
+
+  ) {
+
     return FAILURE_MAX_SURVIVE_S;
+
   }
 
-  const p = smoothstep01(powerNorm);
-  const crossingS = atmosphereTransitionDurationS(powerNorm);
-  const baseDeepSurvivalS = mix(5, 1, p);
-  const closeness = failureCloseness01(minimumAltitudeM, outcome);
 
-  const deepSurvivalS = mix(
-    baseDeepSurvivalS,
-    5,
-    closeness * 0.65,
-  );
+
+  const p =
+
+    smoothstep01(powerNorm);
+
+
+
+  const crossingS =
+
+    atmosphereTransitionDurationS(
+
+      powerNorm,
+
+    );
+
+
+
+  const closeness =
+
+    failureCloseness01(
+
+      minimumAltitudeM,
+
+      outcome,
+
+    );
+
+
+
+  const absoluteMinimumS = 5.0;
+
+
+
+  const powerBaseS =
+
+    mix(
+
+      8.2,
+
+      5.0,
+
+      p,
+
+    );
+
+
+
+  const closenessBonusS =
+
+    closeness *
+
+    mix(
+
+      1.8,
+
+      3.1,
+
+      1 - p,
+
+    );
+
+
 
   return Math.min(
+
     FAILURE_MAX_SURVIVE_S,
+
     Math.max(
-      ATMOSPHERE_SURVIVE_S,
-      crossingS + deepSurvivalS,
+
+      absoluteMinimumS,
+
+      crossingS + 2.25,
+
+      powerBaseS +
+
+        closenessBonusS,
+
     ),
+
   );
+
 }
 
 export function atmosphereFailureDurationMs(

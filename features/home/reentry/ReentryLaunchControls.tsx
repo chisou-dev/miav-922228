@@ -23,10 +23,22 @@ const HOLD_STEP = 6 / 360; // long press visibly rotates the craft.
 const HOLD_DELAY_MS = 280;
 const HOLD_REPEAT_MS = 58;
 
+function headingDeg(
+  angleNorm: number,
+): number {
+  const wrapped =
+    ((angleNorm % 1) + 1) % 1;
+
+  return Math.round(
+    wrapped * 360,
+  ) % 360;
+}
+
 export function ReentryLaunchControls({
   phase,
   powerOscillator,
   lockedPowerNorm,
+  angleNorm,
   onLockPower,
   onLaunch,
   onNudgeAngle,
@@ -34,6 +46,7 @@ export function ReentryLaunchControls({
   phase: ReentryPhase;
   powerOscillator: number;
   lockedPowerNorm: number | null;
+  angleNorm: number;
   onLockPower: () => void;
   onLaunch: () => void;
   onNudgeAngle: (delta: number) => void;
@@ -83,26 +96,60 @@ export function ReentryLaunchControls({
         </p>
 
         <div className="w-full max-w-xs">
-          <div className="mb-1 flex justify-between text-[0.55rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+          <div className="mb-1 flex items-center justify-between text-[0.55rem] tracking-[0.12em] text-[var(--foreground-muted)]">
             <span>LOW</span>
+
+            <span className="tabular-nums text-white/85">
+              {pct}%
+            </span>
+
             <span>HIGH</span>
           </div>
 
           <button
             type="button"
             onClick={lock}
-            className="relative h-3 w-full overflow-hidden rounded-full bg-[var(--line)]/35"
+            className="relative h-5 w-full overflow-visible rounded-full bg-[var(--line)]/35"
             aria-label={`Power meter at ${pct} percent. Tap to lock.`}
           >
+            {[0, 25, 50, 75, 100].map(
+              (mark) => (
+                <span
+                  key={mark}
+                  className="pointer-events-none absolute top-1/2 h-2.5 w-px -translate-y-1/2 bg-white/25"
+                  style={{
+                    left:
+                      mark === 100
+                        ? "calc(100% - 1px)"
+                        : `${mark}%`,
+                  }}
+                />
+              ),
+            )}
+
             <span
-              className="absolute inset-y-0 left-0 bg-[var(--foreground-muted)]/55 transition-[width] duration-75"
-              style={{ width: `${pct}%` }}
+              className="absolute inset-y-[5px] left-0 rounded-full bg-[var(--foreground-muted)]/45 transition-[width] duration-75"
+              style={{
+                width: `${pct}%`,
+              }}
             />
+
             <span
-              className="absolute top-1/2 h-4 w-0.5 -translate-y-1/2 bg-[var(--foreground)] shadow-[0_0_6px_rgba(220,230,240,0.5)]"
-              style={{ left: `calc(${pct}% - 1px)` }}
+              className="absolute top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-[var(--foreground)] shadow-[0_0_8px_rgba(220,230,240,0.68)]"
+              style={{
+                left:
+                  `calc(${pct}% - 1px)`,
+              }}
             />
           </button>
+
+          <div className="mt-1.5 grid grid-cols-5 text-center text-[0.48rem] tabular-nums text-white/35">
+            <span>0</span>
+            <span>25</span>
+            <span>50</span>
+            <span>75</span>
+            <span>100</span>
+          </div>
         </div>
 
         <button
@@ -148,9 +195,17 @@ export function ReentryLaunchControls({
       aria-label="Direction and launch"
       onPointerDown={stopPropagation}
     >
-      <p className="text-[0.62rem] tracking-[0.16em] text-[var(--foreground-muted)]">
-        2 · DIRECTION
-      </p>
+      <div className="text-center">
+        <p className="text-[0.62rem] tracking-[0.16em] text-[var(--foreground-muted)]">
+          2 · DIRECTION
+        </p>
+
+        <p className="mt-1 text-[0.58rem] tabular-nums tracking-[0.13em] text-white/55">
+          POWER {Math.round((lockedPowerNorm ?? 0) * 100)}%
+          <span className="mx-2 text-white/25">·</span>
+          {headingDeg(angleNorm)}°
+        </p>
+      </div>
 
       <div className="flex items-center gap-6">
         <button

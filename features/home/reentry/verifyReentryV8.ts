@@ -35,17 +35,26 @@ for (const outcome of ["BURN", "BREAK", "SKIP"] as const) {
 }
 
 const jobs = nearbyJobs(powerNorm, angleNorm);
-if (jobs.length > 75) {
-  throw new Error(`job cap exceeded: ${jobs.length}`);
+if (jobs.length !== 123) {
+  throw new Error(`job count expected 123 got ${jobs.length}`);
 }
 
 const sampleJob = jobs[0];
 const first = evaluateNearbyJob(sampleJob);
 const second = evaluateNearbyJob(sampleJob);
-if (first !== second) {
+if (
+  first.reached !== second.reached ||
+  first.entered !== second.entered
+) {
   throw new Error("nearby job is not deterministic");
 }
 
-const stats = nearbySuccessStats(first ? 1 : 0, 1);
-console.log(`jobs=${jobs.length} sampleReached=${stats.reached} repeat=${second}`);
+const stats = nearbySuccessStats(
+  first.reached ? 1 : 0,
+  first.entered ? 1 : 0,
+  jobs.length,
+);
+console.log(
+  `jobs=${jobs.length} sampleReached=${stats.reached} repeat=${JSON.stringify(second)}`,
+);
 console.log("v8 checks ok");

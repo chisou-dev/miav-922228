@@ -94,7 +94,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     enabled:
       expanded &&
       phase === "result" &&
-      shouldShowNearbySuccess(result?.outcome),
+      shouldShowNearbySuccess(result?.outcome) &&
+      spaceApproach?.kind !== "SPACE_MISS",
     outcome: result?.outcome,
     powerNorm: lockedPowerNorm,
     angleNorm,
@@ -229,6 +230,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               phase={phase}
               powerOscillator={powerOscillator}
               lockedPowerNorm={lockedPowerNorm}
+              angleNorm={angleNorm}
               onLockPower={() => {
                 dismissFsHints();
                 lockPower();
@@ -283,19 +285,27 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 </p>
 
                 {shouldShowNearbySuccess(result.outcome) && (
-                  <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
-                    {nearbySuccess
-                      ? nearbySuccess.reached === 0
-                        ? "NEARBY SUCCESS <1%"
-                        : `NEARBY SUCCESS ${nearbySuccess.percent}%`
-                      : "NEARBY SUCCESS …"}
+                  spaceApproach?.kind === "SPACE_MISS" ? (
+                    <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
+                      ENTRY SUCCESS 0%
 
-                    <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
+                      <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
+                        MISSED ATMOSPHERE
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
                       {nearbySuccess
-                        ? `${nearbySuccess.total} nearby simulations`
-                        : "nearby simulations"}
-                    </span>
-                  </p>
+                        ? `ENTRY SUCCESS ${nearbySuccess.percent}%`
+                        : "ENTRY SUCCESS …"}
+
+                      <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
+                        {nearbySuccess
+                          ? `${nearbySuccess.reached}/${nearbySuccess.entered} nearby atmospheric entries · same POWER`
+                          : "nearby atmospheric entries · same POWER"}
+                      </span>
+                    </p>
+                  )
                 )}
 
                 <div className="mt-3 flex justify-center gap-8">

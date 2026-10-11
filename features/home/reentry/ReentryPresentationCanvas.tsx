@@ -43,7 +43,7 @@ import {
   elapsedSincePlaybackS,
   missPlaybackToPathT,
   signedDistanceToAtmospherePx,
-  similaritySpacePose,
+  straightSpaceScreenPose,
   spaceTravelT,
 } from "./reentryVisualCausality";
 import {
@@ -4093,24 +4093,34 @@ export function ReentryPresentationCanvas({
         angle: launchHeading,
       };
 
-      if (firstSpace && spaceState) {
-        const cameraScale = earth.r / Math.max(1, pathEarth.r);
+      if (
+        firstSpace &&
+        spaceState
+      ) {
+        const worldEarthDistance =
+          Math.hypot(
+            firstSpace.position.x,
+            firstSpace.position.y,
+          );
 
-        pose = similaritySpacePose({
-          currentPosition: spaceState.position,
-          currentVelocity: spaceState.velocity,
-          initialPosition: firstSpace.position,
-          earthCenter: {
-            x: pathEarth.x,
-            y: pathEarth.y,
-          },
-          launchPoint: launch,
-          cameraEarthCenter: {
-            x: earth.x,
-            y: earth.y,
-          },
-          cameraScale,
-        });
+        const screenEarthDistance =
+          Math.hypot(
+            launch.x - pathEarth.x,
+            launch.y - pathEarth.y,
+          );
+
+        pose =
+          straightSpaceScreenPose({
+            currentPosition:
+              spaceState.position,
+            initialPosition:
+              firstSpace.position,
+            worldEarthDistance,
+            screenEarthDistance,
+            launchPoint:
+              launch,
+            launchHeading,
+          });
       }
 
       const atmosphereDistancePx = signedDistanceToAtmospherePx(
@@ -4133,24 +4143,6 @@ export function ReentryPresentationCanvas({
       }
 
       const latched = visualLatchPlaybackRef.current !== null;
-      /*
-       * v21 absolute SPACE heading.
-       *
-       * Before actual atmospheric contact, the rendered craft orientation is always
-       * the exact heading the player locked. No easing, aim assist, gravity bend or
-       * target correction is allowed.
-       *
-       * The underlying v21 SPACE path is also linear, so position and orientation
-       * agree.
-       */
-      if (
-        !idle &&
-        !visualLatchPlaybackRef.current
-      ) {
-        pose.angle =
-          launchHeading;
-      }
-
       const timeSinceVisualAtmosphereEntryS =
         latched
           ? elapsedSincePlaybackS(
@@ -4275,11 +4267,31 @@ export function ReentryPresentationCanvas({
         };
       }
 
-      if (prevHeadingRef.current === null || idle) {
-        prevHeadingRef.current = pose.angle;
+      if (
+        !latched ||
+        idle ||
+        miss
+      ) {
+        pose.angle =
+          launchHeading;
+
+        prevHeadingRef.current =
+          launchHeading;
+      } else if (
+        prevHeadingRef.current ===
+          null
+      ) {
+        prevHeadingRef.current =
+          pose.angle;
       } else {
-        pose.angle = clampHeadingJump(prevHeadingRef.current, pose.angle);
-        prevHeadingRef.current = pose.angle;
+        pose.angle =
+          clampHeadingJump(
+            prevHeadingRef.current,
+            pose.angle,
+          );
+
+        prevHeadingRef.current =
+          pose.angle;
       }
 
       const atmosphereGate = latched && !miss ? 1 : 0;
@@ -4289,12 +4301,12 @@ export function ReentryPresentationCanvas({
           : clamp01(
               (
                 timeSinceVisualAtmosphereEntryS -
-                0.35
+                0.70
               ) /
                 Math.max(
-                  1.6,
+                  2.1,
                   upperAtmosphereDurationS *
-                    0.92,
+                    1.10,
                 ),
             );
 
@@ -4304,12 +4316,6 @@ export function ReentryPresentationCanvas({
           outcome,
           powerNorm,
         );
-
-      const failureUnlocked =
-        latched &&
-        !miss &&
-        (outcome === "BURN" || outcome === "BREAK") &&
-        timeSinceVisualAtmosphereEntryS >= failureStartS;
 
       const rawHeat =
         !latched || miss || idle
@@ -4355,7 +4361,7 @@ export function ReentryPresentationCanvas({
               ),
             );
 
-      const destructionAmount =
+      const rawDestructionAmount =
         smoothstep(
           destructionAmountFromEntryS(
             timeSinceVisualAtmosphereEntryS,
@@ -4364,6 +4370,28 @@ export function ReentryPresentationCanvas({
             powerNorm,
           ),
         );
+
+      const deepAtmosphereReady =
+        latched &&
+        !miss &&
+        atmosphereSceneMix >=
+          0.72 &&
+        timeSinceVisualAtmosphereEntryS >=
+          5.0;
+
+      const destructionAmount =
+        deepAtmosphereReady
+          ? rawDestructionAmount
+          : 0;
+
+      const failureUnlocked =
+        deepAtmosphereReady &&
+        (
+          outcome === "BURN" ||
+          outcome === "BREAK"
+        ) &&
+        timeSinceVisualAtmosphereEntryS >=
+          failureStartS;
 
       if (variant === "stage" && phase === "flight") {
         setReentryAudioFlight(
