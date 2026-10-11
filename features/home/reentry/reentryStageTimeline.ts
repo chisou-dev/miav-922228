@@ -8,7 +8,12 @@ export const SPACE_MISS_DEPART_MS = 1500;
 export const SPACE_MISS_DURATION_MS =
   SPACE_MISS_FLYBY_MS + SPACE_MISS_DEPART_MS;
 
-export const ATMOSPHERE_SUCCESS_MS = 18000;
+/*
+ * Success gets a full epilogue:
+ * touchdown -> hatch -> alien -> capsule -> escape craft -> STAGE 1 CLEAR
+ * -> quiet final sea/sky with the original craft sinking.
+ */
+export const ATMOSPHERE_SUCCESS_MS = 28_000;
 export const ATMOSPHERE_FAILURE_MS = 12000;
 export const FAILURE_HOLD_MS = 850;
 

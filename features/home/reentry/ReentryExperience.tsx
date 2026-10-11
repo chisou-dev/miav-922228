@@ -247,49 +247,79 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
           </div>
           {phase === "result" && result && (
-            <div
-              className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#05070a]/95 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] text-center"
-              role="region"
-              aria-label="Reentry result"
-            >
-              <p className="text-[0.82rem] font-semibold tracking-[0.18em] text-white sm:text-[0.95rem]">
-                {resultTitle(result.outcome)}
-              </p>
-              {result.outcome === "EARTH_REACHED" && (
-                <p className="mt-1 text-[0.62rem] tracking-[0.16em] text-white/55">
-                  STAGE 1
-                </p>
-              )}
-              {shouldShowNearbySuccess(result.outcome) && (
-                <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
-                  {nearbySuccess
-                    ? nearbySuccess.reached === 0
-                    ? "NEARBY SUCCESS <1%"
-                    : `NEARBY SUCCESS ${nearbySuccess.percent}%`
-                    : "NEARBY SUCCESS …"}
-                  <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
-                    {nearbySuccess
-                      ? `${nearbySuccess.total} nearby simulations`
-                      : "nearby simulations"}
-                  </span>
-                </p>
-              )}
-              <div className="mt-3 flex justify-center gap-8">
+            result.outcome === "EARTH_REACHED" ? (
+              <div
+                className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] flex justify-center gap-8 px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-5 text-center"
+                role="region"
+                aria-label="Stage 1 clear controls"
+              >
                 <button
                   type="button"
                   onClick={() => {
                     startReentryAmbience();
                     retry();
                   }}
-                  className={actionClass}
+                  className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
                 >
                   Retry
                 </button>
-                <button type="button" onClick={closeSession} className={actionClass}>
+
+                <button
+                  type="button"
+                  onClick={closeSession}
+                  className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
+                >
                   Close
                 </button>
               </div>
-            </div>
+            ) : (
+              <div
+                className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#05070a]/95 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] text-center"
+                role="region"
+                aria-label="Reentry result"
+              >
+                <p className="text-[0.82rem] font-semibold tracking-[0.18em] text-white sm:text-[0.95rem]">
+                  {resultTitle(result.outcome)}
+                </p>
+
+                {shouldShowNearbySuccess(result.outcome) && (
+                  <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
+                    {nearbySuccess
+                      ? nearbySuccess.reached === 0
+                        ? "NEARBY SUCCESS <1%"
+                        : `NEARBY SUCCESS ${nearbySuccess.percent}%`
+                      : "NEARBY SUCCESS …"}
+
+                    <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
+                      {nearbySuccess
+                        ? `${nearbySuccess.total} nearby simulations`
+                        : "nearby simulations"}
+                    </span>
+                  </p>
+                )}
+
+                <div className="mt-3 flex justify-center gap-8">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      startReentryAmbience();
+                      retry();
+                    }}
+                    className={actionClass}
+                  >
+                    Retry
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={closeSession}
+                    className={actionClass}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )
           )}
         </div>
         </ReentryFullscreenPortal>

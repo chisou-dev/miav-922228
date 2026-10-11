@@ -51,7 +51,9 @@ export function spaceTravelT(
 
 /**
  * Exact similarity/reflection transform. No target correction.
- * Gravity is the only source of trajectory curvature.
+ *
+ * v21 SPACE geometry is a fixed-heading straight line. This transform must
+ * not add any steering or Earth-seeking correction.
  */
 export function similaritySpacePose({
   currentPosition,

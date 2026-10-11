@@ -15,6 +15,7 @@ type AudioState = {
 let state: AudioState | null = null;
 let spacePingTimer: number | null = null;
 let resultTimer: number | null = null;
+let stage1ClearCueNodes: OscillatorNode[] = [];
 let userVolume = 0.82;
 const VOLUME_KEY = "miav_reentry_vol_v1";
 const MASTER_PEAK = 0.74;
@@ -158,6 +159,35 @@ function clearTimers(): void {
   clearResultTimer();
 }
 
+
+
+function stopStage1ClearCue(): void {
+
+  for (
+
+    const node of
+
+    stage1ClearCueNodes
+
+  ) {
+
+    try {
+
+      node.stop();
+
+    } catch {
+
+      // Already stopped.
+
+    }
+
+  }
+
+
+
+  stage1ClearCueNodes = [];
+
+}
 
 function stopNodes(): void {
   if (!state) return;
@@ -331,6 +361,8 @@ export function playDirectionTick(direction: number): void {
 export function startReentryAmbience(): void {
   const ctx = getContext();
   if (!ctx || !state) return;
+
+  stopStage1ClearCue();
 
   /*
    * Retry can happen while finishReentryAudio still owns a delayed fade.
@@ -542,6 +574,377 @@ export function setReentryAudioFlight(
   }
 }
 
+
+/**
+
+ * Stage 1 clear cue:
+
+ *
+
+ * Not a victory fanfare.
+
+ * It should feel unresolved: "we survived, but was that really okay?"
+
+ *
+
+ * The close low frequencies create a slow acoustic beating.
+
+ * Sparse glass tones form a minor-second / tritone-like cluster and never
+
+ * resolve to a major cadence.
+
+ */
+
+export function startStage1ClearAudio(): void {
+
+  const ctx = getContext();
+
+
+
+  if (!ctx || !state) {
+
+    return;
+
+  }
+
+
+
+  stopStage1ClearCue();
+
+  clearResultTimer();
+
+
+
+  void ctx.resume();
+
+
+
+  const t =
+
+    ctx.currentTime;
+
+
+
+  applyMasterVolume(
+
+    0.08,
+
+  );
+
+
+
+  state.rumble.gain.setTargetAtTime(
+
+    0.0001,
+
+    t,
+
+    0.18,
+
+  );
+
+
+
+  state.hiss.gain.setTargetAtTime(
+
+    0.0001,
+
+    t,
+
+    0.18,
+
+  );
+
+
+
+  state.spacePad.gain.setTargetAtTime(
+
+    0.018,
+
+    t,
+
+    0.5,
+
+  );
+
+
+
+  const clusterGain =
+
+    ctx.createGain();
+
+
+
+  const lowFilter =
+
+    ctx.createBiquadFilter();
+
+
+
+  lowFilter.type =
+
+    "lowpass";
+
+
+
+  lowFilter.frequency.value =
+
+    420;
+
+
+
+  lowFilter.Q.value =
+
+    0.55;
+
+
+
+  clusterGain.gain.setValueAtTime(
+
+    0.0001,
+
+    t,
+
+  );
+
+
+
+  clusterGain.gain.exponentialRampToValueAtTime(
+
+    0.050,
+
+    t + 1.15,
+
+  );
+
+
+
+  clusterGain.gain.setValueAtTime(
+
+    0.050,
+
+    t + 5.4,
+
+  );
+
+
+
+  clusterGain.gain.exponentialRampToValueAtTime(
+
+    0.0001,
+
+    t + 9.2,
+
+  );
+
+
+
+  lowFilter.connect(
+
+    clusterGain,
+
+  );
+
+
+
+  clusterGain.connect(
+
+    state.master,
+
+  );
+
+
+
+  const freqs = [
+
+    55.0,
+
+    58.2,
+
+    82.4,
+
+  ];
+
+
+
+  stage1ClearCueNodes =
+
+    freqs.map(
+
+      (
+
+        frequency,
+
+        index,
+
+      ) => {
+
+        const osc =
+
+          ctx.createOscillator();
+
+
+
+        const gain =
+
+          ctx.createGain();
+
+
+
+        osc.type =
+
+          index === 2
+
+            ? "triangle"
+
+            : "sine";
+
+
+
+        osc.frequency.setValueAtTime(
+
+          frequency,
+
+          t,
+
+        );
+
+
+
+        osc.detune.setValueAtTime(
+
+          index === 1
+
+            ? 3
+
+            : -2,
+
+          t,
+
+        );
+
+
+
+        gain.gain.value =
+
+          index === 0
+
+            ? 0.72
+
+            : index === 1
+
+              ? 0.50
+
+              : 0.20;
+
+
+
+        osc.connect(
+
+          gain,
+
+        );
+
+
+
+        gain.connect(
+
+          lowFilter,
+
+        );
+
+
+
+        osc.start(t);
+
+        osc.stop(
+
+          t + 9.25,
+
+        );
+
+
+
+        return osc;
+
+      },
+
+    );
+
+
+
+  glassPing(
+
+    ctx,
+
+    state.master,
+
+    261.63,
+
+    t + 0.65,
+
+    4.4,
+
+    0.024,
+
+  );
+
+
+
+  glassPing(
+
+    ctx,
+
+    state.master,
+
+    277.18,
+
+    t + 1.05,
+
+    4.9,
+
+    0.018,
+
+  );
+
+
+
+  glassPing(
+
+    ctx,
+
+    state.master,
+
+    369.99,
+
+    t + 2.55,
+
+    5.6,
+
+    0.015,
+
+  );
+
+
+
+  glassPing(
+
+    ctx,
+
+    state.master,
+
+    392.00,
+
+    t + 4.85,
+
+    4.4,
+
+    0.012,
+
+  );
+
+}
+
 export function finishReentryAudio(
   outcome: ReentryOutcome,
 ): void {
@@ -557,9 +960,10 @@ export function finishReentryAudio(
   state.spacePad.gain.setTargetAtTime(0.0001, t + 0.08, 0.35);
 
   if (outcome === "EARTH_REACHED") {
-    glassPing(ctx, state.master, 330, t + 0.08, 2.7, 0.040);
-    glassPing(ctx, state.master, 495, t + 0.42, 3.1, 0.030);
-    glassPing(ctx, state.master, 660, t + 0.78, 3.5, 0.020);
+    /*
+     * The clear cue already played during the alien escape sequence.
+     * Do not add a triumphant result jingle here.
+     */
   } else if (outcome === "BURN") {
     glassPing(ctx, state.master, 196, t + 0.03, 0.9, 0.045);
     glassPing(ctx, state.master, 130, t + 0.18, 1.7, 0.026);
@@ -590,6 +994,7 @@ export function finishReentryAudio(
 
 export function stopReentryAudio(): void {
   clearTimers();
+  stopStage1ClearCue();
 
   if (!state) return;
 
