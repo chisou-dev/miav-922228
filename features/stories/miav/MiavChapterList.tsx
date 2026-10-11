@@ -42,8 +42,6 @@ function useReadThroughChapter(): number {
 type ArchiveProps = {
   chapters: readonly (MiavChapterNavItem & {
     summary: string;
-    publishedLabel: string;
-    publishedDateTime: string | undefined;
   })[];
   edition?: ChapterEdition;
   openRecordLabel?: string;
@@ -86,13 +84,7 @@ export function MiavChapterArchiveList({
                 </a>
               </h2>
 
-              <p className="mt-5 text-[0.78rem] tracking-[0.12em] text-[var(--foreground-muted)] sm:mt-6">
-                <time dateTime={chapter.publishedDateTime}>
-                  {chapter.publishedLabel}
-                </time>
-              </p>
-
-              <p className="mt-10 max-w-lg text-[0.95rem] leading-[2.05] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.15]">
+              <p className="mt-6 max-w-lg text-[0.95rem] leading-[2.05] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-8 sm:text-base sm:leading-[2.15]">
                 {chapter.summary}
               </p>
 
