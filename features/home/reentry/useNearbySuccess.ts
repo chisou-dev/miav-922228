@@ -33,7 +33,7 @@ import {
 
 
 
-const BATCH_SIZE = 4;
+const BATCH_SIZE = 7;
 
 
 

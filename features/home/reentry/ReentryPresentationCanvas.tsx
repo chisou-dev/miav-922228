@@ -33,6 +33,7 @@ import {
   atmosphereTransitionDurationS,
   destructionAmountFromEntryS,
   failureDestructionStartS,
+  failureVisualDepth01,
   spaceInboundDurationMs,
   successLandingT,
 } from "./reentryStageTimeline";
@@ -4211,6 +4212,32 @@ export function ReentryPresentationCanvas({
       const entrySteepness = clamp01((physicalEntryGamma - 0.02) / 0.62);
       const surfacePhase = (((contactPolar / (Math.PI * 2)) % 1) + 1) % 1;
 
+const failureDepth =
+  failureVisualDepth01(
+    result?.metrics.minimumAltitudeM,
+    outcome,
+    powerNorm,
+    physicalEntryGamma,
+  );
+
+const failureStartS =
+  failureDestructionStartS(
+    result?.metrics.minimumAltitudeM,
+    outcome,
+    powerNorm,
+    physicalEntryGamma,
+  );
+
+const failureTravelT =
+  outcome === "BURN" ||
+  outcome === "BREAK"
+    ? smoothstep(
+        timeSinceVisualAtmosphereEntryS /
+          Math.max(5.5, failureStartS),
+      )
+    : 0;
+
+
       if (latched && result && latchPoseRef.current && !miss) {
         const cameraIn =
           smoothstep(
@@ -4243,6 +4270,46 @@ export function ReentryPresentationCanvas({
           atmosphericAnchor.y +
           Math.sin(atmosphereEntryHeading) * forwardDrift;
         let trackedAngle = atmosphereEntryHeading;
+
+        if (
+          outcome === "BURN" ||
+          outcome === "BREAK"
+        ) {
+          const lateralPhase =
+            Math.sin(surfacePhase * Math.PI * 2);
+
+          const failureTargetX =
+            w *
+            (
+              0.50 +
+              lateralPhase *
+                mix(0.08, 0.19, failureDepth)
+            );
+
+          const failureTargetY =
+            h * mix(0.50, 0.76, failureDepth);
+
+          const dive = smoothstep(failureTravelT);
+
+          trackedX = mix(
+            trackedX,
+            failureTargetX,
+            dive * 0.78,
+          );
+
+          trackedY = mix(
+            trackedY,
+            failureTargetY,
+            dive * 0.90,
+          );
+
+          trackedAngle = lerpAngle(
+            trackedAngle,
+            atmosphereEntryHeading +
+              mix(0.02, 0.14, entrySteepness),
+            dive * 0.35,
+          );
+        }
 
         const landing =
           outcome === "EARTH_REACHED"
@@ -4310,13 +4377,6 @@ export function ReentryPresentationCanvas({
                 ),
             );
 
-      const failureStartS =
-        failureDestructionStartS(
-          result?.metrics.minimumAltitudeM,
-          outcome,
-          powerNorm,
-        );
-
       const rawHeat =
         !latched || miss || idle
           ? 0
@@ -4368,6 +4428,7 @@ export function ReentryPresentationCanvas({
             outcome,
             result?.metrics.minimumAltitudeM,
             powerNorm,
+            physicalEntryGamma,
           ),
         );
 
@@ -4511,6 +4572,28 @@ export function ReentryPresentationCanvas({
             ),
           );
         }
+
+        const showFailureSurface =
+          (
+            outcome === "BURN" ||
+            outcome === "BREAK"
+          ) &&
+          failureTravelT > 0.56;
+
+        if (showFailureSurface) {
+          const failureSurfaceAlpha =
+            smoothstep(
+              (failureTravelT - 0.56) / 0.44,
+            ) *
+            mix(0.18, 0.62, failureDepth);
+
+          drawSurfaceApproach(
+            ctx,
+            w,
+            h,
+            failureSurfaceAlpha,
+          );
+        }
       }
 
       const baseCraft =
@@ -4535,16 +4618,16 @@ export function ReentryPresentationCanvas({
          */
         const toPeriapsis =
           smoothstep(
-            spaceT / 0.48,
+            spaceT / 0.54,
           );
 
         const outbound =
           smoothstep(
             (
               spaceT -
-              0.48
+              0.54
             ) /
-              0.52,
+              0.46,
           );
 
         const nearScale =
@@ -4565,7 +4648,7 @@ export function ReentryPresentationCanvas({
           baseCraft *
           (
             spaceT <
-            0.48
+            0.54
               ? nearScale
               : departedScale
           );
@@ -4623,9 +4706,9 @@ export function ReentryPresentationCanvas({
           smoothstep(
             (
               spaceT -
-              0.90
+              0.86
             ) /
-              0.10,
+              0.14,
           );
       } else if (outcome === "BURN") {
         craftAlpha = 1 - destructionAmount;

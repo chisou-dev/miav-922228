@@ -95,6 +95,9 @@ export function durationForStage1(
             result.metrics.minimumAltitudeM,
             result.outcome,
             powerNorm,
+            space.kind === "ATMOSPHERE_ENTRY"
+              ? space.entry.gammaRad
+              : undefined,
           )
         : flightDurationMs(result.outcome);
 

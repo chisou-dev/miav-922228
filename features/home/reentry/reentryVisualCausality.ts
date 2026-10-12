@@ -551,6 +551,7 @@ export function closestApproachIndex(
 
 
 
+
 export function missPlaybackToPathT(
 
   spaceT: number,
@@ -563,53 +564,54 @@ export function missPlaybackToPathT(
 
   const t = clamp01(spaceT);
 
+  const last = Math.max(1, pointCount - 1);
 
-
-  const last =
-
-    Math.max(1, pointCount - 1);
-
-
-
-  const periT =
-
-    periIndex / last;
+  const periT = periIndex / last;
 
 
 
-  if (
+  if (periT < 0.08 || periT > 0.92) {
 
-    periT < 0.08 ||
-
-    periT > 0.92
-
-  ) {
-
-    return t;
+    return 1 - Math.pow(1 - t, 1.72);
 
   }
 
 
 
-  if (t < 0.48) {
+  const periPlayback = 0.54;
 
-    return periT * (t / 0.48);
+
+
+  if (t < periPlayback) {
+
+    const u = t / periPlayback;
+
+    const eased = 1 - Math.pow(1 - u, 1.85);
+
+    return periT * eased;
 
   }
 
 
 
-  return (
+  const u =
 
-    periT +
+    (t - periPlayback) /
 
-    (1 - periT) *
+    (1 - periPlayback);
 
-      ((t - 0.48) / 0.52)
 
-  );
+
+  const eased =
+
+    1 - Math.pow(1 - u, 2.15);
+
+
+
+  return periT + (1 - periT) * eased;
 
 }
+
 
 
 
@@ -667,13 +669,34 @@ export function spaceApproach01(
   return clamp01(1 - (altitudeM - handoffM) / (startM - handoffM));
 }
 
+
 export function spaceTravelT(
+
   spaceT: number,
+
   powerNorm: number,
+
   miss: boolean,
+
 ): number {
+
   const t = clamp01(spaceT);
-  if (miss) return t;
-  const exp = mixNum(1.30, 0.68, clamp01(powerNorm));
-  return Math.pow(t, exp);
+
+  const p = clamp01(powerNorm);
+
+
+
+  const exponent =
+
+    miss
+
+      ? mixNum(1.45, 1.90, p)
+
+      : mixNum(1.55, 2.25, p);
+
+
+
+  return 1 - Math.pow(1 - t, exponent);
+
 }
+

@@ -1,111 +1,213 @@
+
 /**
- * Legacy/default constants are kept for compatibility with old imports.
- * v20 uses the POWER-aware helpers below for actual Stage 1 playback.
+
+ * Legacy/default constants kept for compatibility.
+
  */
+
 export const SPACE_INBOUND_DURATION_MS = 7000;
+
 export const SPACE_MISS_FLYBY_MS = 6200;
-export const SPACE_MISS_DEPART_MS = 1500;
+
+export const SPACE_MISS_DEPART_MS = 3800;
+
 export const SPACE_MISS_DURATION_MS =
+
   SPACE_MISS_FLYBY_MS + SPACE_MISS_DEPART_MS;
 
-/*
- * Success gets a full epilogue:
- * touchdown -> hatch -> alien -> capsule -> escape craft -> STAGE 1 CLEAR
- * -> quiet final sea/sky with the original craft sinking.
- */
+
+
 export const ATMOSPHERE_SUCCESS_MS = 28_000;
-export const ATMOSPHERE_FAILURE_MS = 12000;
+
+export const ATMOSPHERE_FAILURE_MS = 14_000;
+
 export const FAILURE_HOLD_MS = 850;
 
-export const ATMOSPHERE_SURVIVE_S = 3;
-export const FAILURE_MAX_SURVIVE_S = 10;
-export const DESTRUCTION_BURST_S = 1.2;
+
+
+export const ATMOSPHERE_SURVIVE_S = 5;
+
+export const FAILURE_MAX_SURVIVE_S = 11.5;
+
+export const DESTRUCTION_BURST_S = 1.25;
+
+
 
 export const SUCCESS_LANDING_START_S = 11;
+
 export const SUCCESS_LANDING_END_S = 15;
 
+
+
 function clamp01(value: number): number {
+
   return Math.min(1, Math.max(0, value));
+
 }
+
+
 
 function smoothstep01(value: number): number {
+
   const t = clamp01(value);
+
   return t * t * (3 - 2 * t);
+
 }
+
+
 
 function mix(a: number, b: number, t: number): number {
+
   return a + (b - a) * t;
+
 }
 
-/**
- * SPACE travel:
- * LOW POWER  -> about 10 s to the atmospheric handoff
- * HIGH POWER -> about 1.8 s (roughly the current fastest visual speed)
- */
+
+
 export function spaceInboundDurationMs(powerNorm: number): number {
+
   const p = smoothstep01(powerNorm);
+
   return Math.round(mix(10_000, 1_800, p));
+
 }
 
-/**
- * A miss still needs time after closest approach for gravity to bend the
- * trajectory and for both Earth and craft to recede.
- */
+
+
 export function spaceMissDurationMs(powerNorm: number): number {
-  return spaceInboundDurationMs(powerNorm) + 2_600;
+
+  return spaceInboundDurationMs(powerNorm) + 3_800;
+
 }
 
-/**
- * Time used to move from black SPACE into the deep blue atmospheric camera.
- * LOW POWER takes longer; HIGH POWER crosses the upper atmosphere quickly.
- */
+
+
 export function atmosphereTransitionDurationS(powerNorm: number): number {
+
   const p = smoothstep01(powerNorm);
+
   return mix(5, 2, p);
+
 }
+
+
 
 export function atmosphereElapsedS(
+
   playback: number,
+
   spaceShare: number,
+
   inboundMs = SPACE_INBOUND_DURATION_MS,
+
 ): number {
+
   if (spaceShare >= 0.999 || playback <= spaceShare) return 0;
+
   const totalMs = inboundMs / Math.max(1e-4, spaceShare);
+
   return ((playback - spaceShare) * totalMs) / 1000;
+
 }
+
+
 
 export function failureCloseness01(
+
   minimumAltitudeM: number | undefined,
+
   outcome: string | undefined,
+
 ): number {
+
   if (outcome !== "BURN" && outcome !== "BREAK") return 1;
+
+
+
   if (
+
     minimumAltitudeM === undefined ||
+
     !Number.isFinite(minimumAltitudeM)
+
   ) {
+
     return 0;
+
   }
 
-  return smoothstep01((88_000 - minimumAltitudeM) / 84_000);
+
+
+  return smoothstep01((95_000 - minimumAltitudeM) / 92_000);
+
 }
 
-/**
- * v20 failure timing.
- *
- * The craft cannot break on the visible atmospheric rim.
- *
- * HIGH POWER:
- *   about 2 s to cross the blue upper layer
- *   + at least 1 s deeper inside
- *   = earliest destruction ~3 s
- *
- * LOW POWER:
- *   about 5 s through the upper layer
- *   + up to 5 s deeper inside
- *   = destruction can wait until ~10 s
- *
- * A run that gets closer to success survives longer before final breakup.
- */
+
+
+function entrySteepness01(entryGammaRad: number | undefined): number {
+
+  if (
+
+    entryGammaRad === undefined ||
+
+    !Number.isFinite(entryGammaRad)
+
+  ) {
+
+    return 0.5;
+
+  }
+
+
+
+  const gamma = Math.abs(entryGammaRad);
+
+  return smoothstep01((gamma - 0.025) / 0.55);
+
+}
+
+
+
+export function failureVisualDepth01(
+
+  minimumAltitudeM: number | undefined,
+
+  outcome: string | undefined,
+
+  powerNorm: number,
+
+  entryGammaRad?: number,
+
+): number {
+
+  if (outcome !== "BURN" && outcome !== "BREAK") return 1;
+
+
+
+  const p = smoothstep01(powerNorm);
+
+  const steep = entrySteepness01(entryGammaRad);
+
+  const close = failureCloseness01(minimumAltitudeM, outcome);
+
+
+
+  return clamp01(
+
+    0.20 +
+
+      close * 0.44 +
+
+      (1 - steep) * 0.23 +
+
+      (1 - p) * 0.13,
+
+  );
+
+}
+
+
 
 export function failureDestructionStartS(
 
@@ -115,15 +217,11 @@ export function failureDestructionStartS(
 
   powerNorm = 0.5,
 
+  entryGammaRad?: number,
+
 ): number {
 
-  if (
-
-    outcome !== "BURN" &&
-
-    outcome !== "BREAK"
-
-  ) {
+  if (outcome !== "BURN" && outcome !== "BREAK") {
 
     return FAILURE_MAX_SURVIVE_S;
 
@@ -131,65 +229,21 @@ export function failureDestructionStartS(
 
 
 
-  const p =
+  const depth = failureVisualDepth01(
 
-    smoothstep01(powerNorm);
+    minimumAltitudeM,
 
+    outcome,
 
+    powerNorm,
 
-  const crossingS =
+    entryGammaRad,
 
-    atmosphereTransitionDurationS(
-
-      powerNorm,
-
-    );
+  );
 
 
 
-  const closeness =
-
-    failureCloseness01(
-
-      minimumAltitudeM,
-
-      outcome,
-
-    );
-
-
-
-  const absoluteMinimumS = 5.0;
-
-
-
-  const powerBaseS =
-
-    mix(
-
-      8.2,
-
-      5.0,
-
-      p,
-
-    );
-
-
-
-  const closenessBonusS =
-
-    closeness *
-
-    mix(
-
-      1.8,
-
-      3.1,
-
-      1 - p,
-
-    );
+  const crossingS = atmosphereTransitionDurationS(powerNorm);
 
 
 
@@ -199,13 +253,11 @@ export function failureDestructionStartS(
 
     Math.max(
 
-      absoluteMinimumS,
+      5.5,
 
-      crossingS + 2.25,
+      crossingS + 2.6,
 
-      powerBaseS +
-
-        closenessBonusS,
+      mix(5.5, 11.5, depth),
 
     ),
 
@@ -213,49 +265,104 @@ export function failureDestructionStartS(
 
 }
 
+
+
 export function atmosphereFailureDurationMs(
+
   minimumAltitudeM: number | undefined,
+
   outcome: string | undefined,
+
   powerNorm: number,
+
+  entryGammaRad?: number,
+
 ): number {
+
   const destructionStartS = failureDestructionStartS(
+
     minimumAltitudeM,
+
     outcome,
+
     powerNorm,
+
+    entryGammaRad,
+
   );
+
+
 
   return Math.round(
-    (destructionStartS + DESTRUCTION_BURST_S + 0.55) * 1000,
+
+    (destructionStartS + DESTRUCTION_BURST_S + 0.65) * 1000,
+
   );
+
 }
 
+
+
 export function destructionAmountFromEntryS(
+
   timeSinceAtmosphereEntryS: number,
+
   outcome: string | undefined,
+
   minimumAltitudeM?: number,
+
   powerNorm = 0.5,
+
+  entryGammaRad?: number,
+
 ): number {
+
   if (outcome !== "BURN" && outcome !== "BREAK") return 0;
 
+
+
   const start = failureDestructionStartS(
+
     minimumAltitudeM,
+
     outcome,
+
     powerNorm,
+
+    entryGammaRad,
+
   );
+
+
 
   if (timeSinceAtmosphereEntryS < start) return 0;
 
+
+
   return clamp01(
+
     (timeSinceAtmosphereEntryS - start) /
+
       DESTRUCTION_BURST_S,
+
   );
+
 }
 
+
+
 export function successLandingT(
+
   timeSinceAtmosphereEntryS: number,
+
 ): number {
+
   return clamp01(
+
     (timeSinceAtmosphereEntryS - SUCCESS_LANDING_START_S) /
+
       (SUCCESS_LANDING_END_S - SUCCESS_LANDING_START_S),
+
   );
+
 }

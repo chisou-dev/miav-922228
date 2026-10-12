@@ -7,9 +7,9 @@ import type { ReentryOutcome } from "./reentryTypes";
 
 
 
-const DIRECTION_HALF_WINDOW_DEG = 10;
+const DIRECTION_HALF_WINDOW_DEG = 6;
 
-const DIRECTION_STEP_DEG = 0.5;
+const DIRECTION_STEP_DEG = 0.25;
 
 
 
@@ -77,31 +77,15 @@ function directionOffsetsDeg(): number[] {
 
   for (
 
-    let deg =
+    let deg = -DIRECTION_HALF_WINDOW_DEG;
 
-      -DIRECTION_HALF_WINDOW_DEG;
+    deg <= DIRECTION_HALF_WINDOW_DEG + 1e-9;
 
-    deg <=
-
-      DIRECTION_HALF_WINDOW_DEG +
-
-        1e-9;
-
-    deg +=
-
-      DIRECTION_STEP_DEG
+    deg += DIRECTION_STEP_DEG
 
   ) {
 
-    values.push(
-
-      Number(
-
-        deg.toFixed(3),
-
-      ),
-
-    );
+    values.push(Number(deg.toFixed(3)));
 
   }
 
@@ -121,37 +105,17 @@ export function nearbyInputGrid(
 
 ): NearbySample[] {
 
-  const power =
-
-    Math.min(
-
-      1,
-
-      Math.max(0, powerNorm),
-
-    );
+  const power = Math.min(1, Math.max(0, powerNorm));
 
 
 
-  return directionOffsetsDeg().map(
+  return directionOffsetsDeg().map((deg) => ({
 
-    (deg) => ({
+    powerNorm: power,
 
-      powerNorm: power,
+    angleNorm: wrap01(angleNorm + deg / 360),
 
-      angleNorm:
-
-        wrap01(
-
-          angleNorm +
-
-            deg / 360,
-
-        ),
-
-    }),
-
-  );
+  }));
 
 }
 
@@ -163,49 +127,15 @@ export function nearbyJobs(
 
   angleNorm: number,
 
-): Array<
+): Array<NearbySample & { seed: number }> {
 
-  NearbySample & {
-
-    seed: number;
-
-  }
-
-> {
-
-  const jobs: Array<
-
-    NearbySample & {
-
-      seed: number;
-
-    }
-
-  > = [];
+  const jobs: Array<NearbySample & { seed: number }> = [];
 
 
 
-  for (
+  for (const sample of nearbyInputGrid(powerNorm, angleNorm)) {
 
-    const sample of
-
-    nearbyInputGrid(
-
-      powerNorm,
-
-      angleNorm,
-
-    )
-
-  ) {
-
-    for (
-
-      const seed of
-
-      NEARBY_SEEDS
-
-    ) {
+    for (const seed of NEARBY_SEEDS) {
 
       jobs.push({
 
@@ -229,13 +159,7 @@ export function nearbyJobs(
 
 export function evaluateNearbyJob(
 
-  job:
-
-    NearbySample & {
-
-      seed: number;
-
-    },
+  job: NearbySample & { seed: number },
 
   earthBearingScreenRad?: number,
 
@@ -249,29 +173,25 @@ export function evaluateNearbyJob(
 
 } {
 
-  const launched =
+  const launched = runStage1Launch(
 
-    runStage1Launch(
+    job.powerNorm,
 
-      job.powerNorm,
+    job.angleNorm,
 
-      job.angleNorm,
+    job.seed,
 
-      job.seed,
+    earthBearingScreenRad,
 
-      earthBearingScreenRad,
+    spaceStartAltitudeM,
 
-      spaceStartAltitudeM,
-
-    );
+  );
 
 
 
   const entered =
 
-    launched.space.kind ===
-
-      "ATMOSPHERE_ENTRY";
+    launched.space.kind === "ATMOSPHERE_ENTRY";
 
 
 
@@ -283,9 +203,7 @@ export function evaluateNearbyJob(
 
       entered &&
 
-      launched.result.outcome ===
-
-        "EARTH_REACHED",
+      launched.result.outcome === "EARTH_REACHED",
 
   };
 
@@ -321,6 +239,12 @@ export function nearbySuccessStats(
 
 
 
+  const percent =
+
+    Math.round((reached / entered) * 1000) / 10;
+
+
+
   return {
 
     reached,
@@ -329,15 +253,7 @@ export function nearbySuccessStats(
 
     attempted,
 
-    percent:
-
-      Math.round(
-
-        (reached / entered) *
-
-          100,
-
-      ),
+    percent,
 
   };
 
@@ -357,15 +273,7 @@ export function evaluateNearbySuccessSync(
 
 ): NearbySuccessStats {
 
-  const jobs =
-
-    nearbyJobs(
-
-      powerNorm,
-
-      angleNorm,
-
-    );
+  const jobs = nearbyJobs(powerNorm, angleNorm);
 
 
 
@@ -375,39 +283,23 @@ export function evaluateNearbySuccessSync(
 
 
 
-  for (
+  for (const job of jobs) {
 
-    const job of jobs
+    const evaluated = evaluateNearbyJob(
 
-  ) {
+      job,
 
-    const evaluated =
+      earthBearingScreenRad,
 
-      evaluateNearbyJob(
+      spaceStartAltitudeM,
 
-        job,
-
-        earthBearingScreenRad,
-
-        spaceStartAltitudeM,
-
-      );
+    );
 
 
 
-    if (evaluated.entered) {
+    if (evaluated.entered) entered += 1;
 
-      entered += 1;
-
-    }
-
-
-
-    if (evaluated.reached) {
-
-      reached += 1;
-
-    }
+    if (evaluated.reached) reached += 1;
 
   }
 

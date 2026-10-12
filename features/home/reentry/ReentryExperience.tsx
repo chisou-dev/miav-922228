@@ -19,6 +19,13 @@ import { ReentryAudioControl } from "./ReentryAudioControl";
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
 
+function headingDegrees(angleNorm: number): number {
+  const wrapped =
+    ((angleNorm % 1) + 1) % 1;
+
+  return Math.round(wrapped * 360) % 360;
+}
+
 function resultTitle(outcome: ReentryOutcome): string {
   return outcome === "EARTH_REACHED" ? "EARTH REACHED" : outcome;
 }
@@ -248,6 +255,45 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             )}
 
           </div>
+          {phase === "result" &&
+            result &&
+            result.outcome !== "EARTH_REACHED" && (
+              <div
+                className="pointer-events-none absolute left-5 top-[6.5rem] z-[75] border-l border-cyan-100/25 bg-black/10 py-1 pl-3 pr-2 font-mono text-[0.58rem] uppercase tracking-[0.20em] text-cyan-50/70 backdrop-blur-[1px] sm:left-7 sm:top-[7rem] sm:text-[0.64rem]"
+                aria-label="Stage 1 flight telemetry"
+              >
+                <div className="text-cyan-50/90">
+                  {spaceApproach?.kind === "SPACE_MISS"
+                    ? "ENTRY SUCCESS 0.0%"
+                    : nearbySuccess
+                      ? `ENTRY SUCCESS ${nearbySuccess.percent.toFixed(1)}%`
+                      : "ENTRY SUCCESS --.-%"}
+                </div>
+
+                <div className="mt-1 text-cyan-50/55">
+                  POWER{" "}
+                  {Math.round(
+                    (lockedPowerNorm ?? 0) * 100,
+                  )}
+                  %
+                </div>
+
+                <div className="mt-1 text-cyan-50/55">
+                  HEADING{" "}
+                  {String(
+                    headingDegrees(angleNorm),
+                  ).padStart(3, "0")}
+                  °
+                </div>
+
+                {spaceApproach?.kind === "SPACE_MISS" && (
+                  <div className="mt-1 text-cyan-100/35">
+                    MISSED ATMOSPHERE
+                  </div>
+                )}
+              </div>
+            )}
+
           {phase === "result" && result && (
             result.outcome === "EARTH_REACHED" ? (
               <div
@@ -283,30 +329,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 <p className="text-[0.82rem] font-semibold tracking-[0.18em] text-white sm:text-[0.95rem]">
                   {resultTitle(result.outcome)}
                 </p>
-
-                {shouldShowNearbySuccess(result.outcome) && (
-                  spaceApproach?.kind === "SPACE_MISS" ? (
-                    <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
-                      ENTRY SUCCESS 0%
-
-                      <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
-                        MISSED ATMOSPHERE
-                      </span>
-                    </p>
-                  ) : (
-                    <p className="mt-1.5 text-[0.62rem] tracking-[0.12em] text-white/80 sm:text-[0.68rem]">
-                      {nearbySuccess
-                        ? `ENTRY SUCCESS ${nearbySuccess.percent}%`
-                        : "ENTRY SUCCESS …"}
-
-                      <span className="mt-1 block text-[0.62rem] tracking-[0.12em] text-white/45">
-                        {nearbySuccess
-                          ? `${nearbySuccess.reached}/${nearbySuccess.entered} nearby atmospheric entries · same POWER`
-                          : "nearby atmospheric entries · same POWER"}
-                      </span>
-                    </p>
-                  )
-                )}
 
                 <div className="mt-3 flex justify-center gap-8">
                   <button
