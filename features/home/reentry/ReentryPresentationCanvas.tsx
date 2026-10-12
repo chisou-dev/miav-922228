@@ -430,6 +430,32 @@ function drawAtmosphereVolume(
   const deep = smoothstep((timeSinceEntryS - 1.0) / 8.2);
   const surfaceReveal = smoothstep((timeSinceEntryS - 1.2) / 5.8);
 
+  /*
+   * Screen-space atmosphere field.
+   *
+   * Keep the top of the phone visually in space even when the local
+   * horizon is tilted. The previous version rotated this gradient together
+   * with the horizon, which could move the bright lower-atmosphere colors
+   * into the upper part of the screen.
+   */
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "rgba(0,2,8,1)");
+  sky.addColorStop(0.28, "rgba(1,6,16,1)");
+  sky.addColorStop(0.58, "rgba(4,18,42,1)");
+  sky.addColorStop(0.80, "rgba(12,47,86,1)");
+  sky.addColorStop(1, "rgba(44,96,138,1)");
+
+  ctx.save();
+  ctx.globalAlpha = mixIn;
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+
+  /*
+   * Rotate only the curved Earth / atmosphere geometry.
+   * This preserves the physical-looking tilted horizon while the upper
+   * screen remains dark.
+   */
   ctx.save();
   const cx = w * 0.5;
   const cy = h * 0.5;
@@ -438,16 +464,6 @@ function drawAtmosphereVolume(
   ctx.translate(-cx, -cy);
 
   const pad = Math.max(w, h) * 0.75;
-  const sky = ctx.createLinearGradient(0, -pad, 0, h + pad);
-  sky.addColorStop(0, "rgba(0,2,8,1)");
-  sky.addColorStop(0.34, "rgba(1,6,16,1)");
-  sky.addColorStop(0.56, `rgba(5,24,58,${0.72 + mixIn * 0.16})`);
-  sky.addColorStop(0.76, `rgba(19,80,145,${0.54 + mixIn * 0.27})`);
-  sky.addColorStop(1, `rgba(105,176,220,${0.44 + mixIn * 0.40})`);
-  ctx.globalAlpha = mixIn;
-  ctx.fillStyle = sky;
-  ctx.fillRect(-pad, -pad, w + pad * 2, h + pad * 2);
-
   const maxDim = Math.max(w, h);
   const steep = clamp01(entrySteepness);
   const startHorizon = h * mix(0.72, 0.58, steep);
@@ -3394,11 +3410,14 @@ function drawFlowLines(
   heat: number,
   playback: number,
   seed = 1,
+  entrySteepness = 0.5,
 ): void {
   if (heat < 0.12) return;
 
   const intensity = smoothstep((heat - 0.12) / 0.88);
   const timeBucket = Math.floor(playback * 96);
+  const steep = clamp01(entrySteepness);
+  const shallow = 1 - steep;
 
   ctx.save();
   ctx.translate(x, y);
@@ -3413,12 +3432,18 @@ function drawFlowLines(
     const b = hash01(seed ^ 0x7f4a7c15, i * 17 + 5);
     const c = hash01(seed ^ 0x91e10da5, i * 23 + 9);
     const side = (a - 0.5) * 2;
+    const undersideBias =
+      length * shallow * (0.055 + b * 0.095);
     const y0 =
-      side * length * (0.08 + intensity * (0.12 + b * 0.10));
+      side * length * (0.08 + intensity * (0.12 + b * 0.10)) +
+      undersideBias;
     const back =
-      length * (0.75 + b * 0.8 + intensity * (1.25 + c * 1.5));
+      length *
+      (0.75 + b * 0.8 + intensity * (1.25 + c * 1.5)) *
+      mix(1.24, 0.88, steep);
     const bend =
-      (c - 0.5) * length * (0.10 + intensity * 0.18);
+      (c - 0.5) * length * (0.10 + intensity * 0.18) +
+      undersideBias * 0.30;
 
     ctx.strokeStyle =
       a > 0.72
@@ -3454,12 +3479,19 @@ function drawPlasma(
   heat: number,
   seed: number,
   playback: number,
+  entrySteepness = 0.5,
 ): void {
   if (heat < 0.035) return;
 
   const width = length * 0.64;
   const intensity = smoothstep(heat);
   const timeBucket = Math.floor(playback * 120);
+  const steep = clamp01(entrySteepness);
+  const shallow = 1 - steep;
+  const undersideOffset =
+    width * shallow * (0.10 + intensity * 0.10);
+  const tailStretch = mix(1.24, 0.90, steep);
+  const noseFocus = mix(0.92, 1.10, steep);
 
   ctx.save();
   ctx.translate(x, y);
@@ -3467,12 +3499,20 @@ function drawPlasma(
   ctx.globalCompositeOperation = "lighter";
 
   // Detached rounded bow-shock volume.
-  const domeX = length * (0.60 + intensity * 0.04);
-  const domeRx = length * (0.20 + intensity * 0.20);
-  const domeRy = width * (0.48 + intensity * 0.38);
+  const domeX =
+    length * (0.60 + intensity * 0.04 + steep * 0.025);
+  const domeRx =
+    length * (0.20 + intensity * 0.20) * noseFocus;
+  const domeRy =
+    width *
+    (0.48 + intensity * 0.38) *
+    mix(1.08, 0.94, steep);
 
   ctx.save();
-  ctx.translate(domeX, 0);
+  ctx.translate(
+    domeX,
+    undersideOffset * 0.38,
+  );
   ctx.scale(1, domeRy / domeRx);
 
   const outer = ctx.createRadialGradient(
@@ -3543,10 +3583,10 @@ function drawPlasma(
 
   // Plasma sheath around the body.
   const sheath = ctx.createLinearGradient(
-    -length * 1.95,
-    0,
+    -length * 1.95 * tailStretch,
+    undersideOffset,
     length * 0.67,
-    0,
+    undersideOffset * 0.15,
   );
   sheath.addColorStop(0, "rgba(120,14,3,0)");
   sheath.addColorStop(
@@ -3573,24 +3613,37 @@ function drawPlasma(
   ctx.shadowBlur = 7 + intensity * 24;
 
   ctx.beginPath();
-  ctx.moveTo(length * 0.62, 0);
-  ctx.bezierCurveTo(
-    length * 0.22,
-    -width * (0.44 + intensity * 0.18),
-    -length * 0.30,
-    -width * (0.66 + intensity * 0.30),
-    -length * 1.58,
-    -width * 0.16,
-  );
-  ctx.lineTo(-length * 2.25, 0);
-  ctx.lineTo(-length * 1.58, width * 0.16);
-  ctx.bezierCurveTo(
-    -length * 0.30,
-    width * (0.66 + intensity * 0.30),
-    length * 0.22,
-    width * (0.44 + intensity * 0.18),
+  ctx.moveTo(
     length * 0.62,
-    0,
+    undersideOffset * 0.15,
+  );
+  ctx.bezierCurveTo(
+    length * 0.22,
+    -width * (0.44 + intensity * 0.18) +
+      undersideOffset * 0.18,
+    -length * 0.30,
+    -width * (0.66 + intensity * 0.30) +
+      undersideOffset * 0.35,
+    -length * 1.58 * tailStretch,
+    -width * 0.16 + undersideOffset * 0.90,
+  );
+  ctx.lineTo(
+    -length * 2.25 * tailStretch,
+    undersideOffset * 1.25,
+  );
+  ctx.lineTo(
+    -length * 1.58 * tailStretch,
+    width * 0.16 + undersideOffset * 1.65,
+  );
+  ctx.bezierCurveTo(
+    -length * 0.30,
+    width * (0.66 + intensity * 0.30) +
+      undersideOffset * 0.95,
+    length * 0.22,
+    width * (0.44 + intensity * 0.18) +
+      undersideOffset * 0.55,
+    length * 0.62,
+    undersideOffset * 0.15,
   );
   ctx.closePath();
   ctx.fill();
@@ -3601,12 +3654,23 @@ function drawPlasma(
     const b = hash01(seed ^ 0xa511e9b3, i * 19 + 3);
     const c = hash01(seed ^ 0x27d4eb2f, i * 29 + 17);
 
-    const back = length * (0.58 + a * (1.6 + intensity * 2.35));
+    const sparkUnderside =
+      width * shallow * (0.10 + b * 0.24);
+    const back =
+      length *
+      (0.58 + a * (1.6 + intensity * 2.35)) *
+      mix(1.30, 0.82, steep);
     const py =
-      width * (b - 0.5) * (0.20 + intensity * 1.05);
+      width * (b - 0.5) * (0.20 + intensity * 1.05) +
+      sparkUnderside;
     const sparkLen =
-      length * (0.035 + c * 0.12) * (0.5 + intensity);
-    const drift = (b - 0.5) * length * 0.08;
+      length *
+      (0.035 + c * 0.12) *
+      (0.5 + intensity) *
+      mix(1.34, 0.82, steep);
+    const drift =
+      (b - 0.5) * length * 0.08 +
+      sparkUnderside * 0.12;
 
     const hot = 1 - clamp01(back / (length * 3.6));
     const alpha =
@@ -4573,27 +4637,12 @@ const failureTravelT =
           );
         }
 
-        const showFailureSurface =
-          (
-            outcome === "BURN" ||
-            outcome === "BREAK"
-          ) &&
-          failureTravelT > 0.56;
-
-        if (showFailureSurface) {
-          const failureSurfaceAlpha =
-            smoothstep(
-              (failureTravelT - 0.56) / 0.44,
-            ) *
-            mix(0.18, 0.62, failureDepth);
-
-          drawSurfaceApproach(
-            ctx,
-            w,
-            h,
-            failureSurfaceAlpha,
-          );
-        }
+        /*
+         * Failure runs stay inside the curved atmosphere-volume view.
+         * Do not reuse drawSurfaceApproach() here: that landing helper has a
+         * flat ocean boundary and created the visible horizontal seam.
+         * v23 failure depth still moves the craft deeper toward Earth.
+         */
       }
 
       const baseCraft =
@@ -4742,6 +4791,7 @@ const failureTravelT =
           heat,
           playback,
           result?.seed ?? 1,
+          entrySteepness,
         );
 
         drawPlasma(
@@ -4753,6 +4803,7 @@ const failureTravelT =
           heat,
           result?.seed ?? 1,
           playback,
+          entrySteepness,
         );
       }
 
