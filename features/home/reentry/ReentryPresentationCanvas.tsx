@@ -269,6 +269,443 @@ function drawStars(
   ctx.restore();
 }
 
+const SYNODIC_MONTH_MS =
+  29.530588853 * 24 * 60 * 60 * 1000;
+
+/*
+ * Reference new moon: 2000-01-06 18:14 UTC.
+ * This is a lightweight presentation model, not a navigation ephemeris.
+ */
+const MOON_PHASE_REFERENCE_MS =
+  Date.UTC(2000, 0, 6, 18, 14, 0);
+
+function wrapHours12(hours: number): number {
+  let value = hours;
+
+  while (value > 12) value -= 24;
+  while (value < -12) value += 24;
+
+  return value;
+}
+
+function moonPhase01(nowMs: number): number {
+  const cycles =
+    (nowMs - MOON_PHASE_REFERENCE_MS) /
+    SYNODIC_MONTH_MS;
+
+  return (
+    (cycles % 1) +
+    1
+  ) % 1;
+}
+
+function localClockHour(date: Date): number {
+  return (
+    date.getHours() +
+    date.getMinutes() / 60 +
+    date.getSeconds() / 3600
+  );
+}
+
+function localSkyDarkness01(hour: number): number {
+  /*
+   * Presentation-only daypart model:
+   * night = strong moon contrast,
+   * dawn/dusk = partial washout,
+   * daytime = very faint.
+   *
+   * Entry-continent longitude is intentionally not part of v25.
+   */
+  if (hour >= 20 || hour < 4) return 1;
+
+  if (hour < 7) {
+    return mix(
+      1,
+      0.14,
+      smoothstep(
+        (hour - 4) / 3,
+      ),
+    );
+  }
+
+  if (hour < 17) return 0.08;
+
+  return mix(
+    0.14,
+    1,
+    smoothstep(
+      (hour - 17) / 3,
+    ),
+  );
+}
+
+function drawAtmosphericMoon(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  atmosphereSceneMix: number,
+  nowMs: number,
+): void {
+  if (atmosphereSceneMix <= 0.02) return;
+
+  const date = new Date(nowMs);
+  const phase = moonPhase01(nowMs);
+  const hour = localClockHour(date);
+
+  /*
+   * Approximate lunar transit:
+   * new moon ~ noon,
+   * first quarter ~ 18:00,
+   * full moon ~ midnight,
+   * last quarter ~ 06:00.
+   *
+   * This makes waning phases naturally appear in the early morning and
+   * full phases naturally favor nighttime.
+   */
+  const transitHour =
+    (
+      12 +
+      phase * 24
+    ) % 24;
+
+  const hourFromTransit =
+    wrapHours12(
+      hour - transitHour,
+    );
+
+  /*
+   * ±6 hours from transit reaches the visual horizon.
+   */
+  const altitude01 =
+    Math.max(
+      0,
+      Math.cos(
+        (
+          hourFromTransit /
+          6
+        ) *
+          Math.PI /
+          2,
+      ),
+    );
+
+  if (altitude01 <= 0.01) return;
+
+  const illuminated =
+    (
+      1 -
+      Math.cos(
+        phase *
+          Math.PI *
+          2,
+      )
+    ) /
+    2;
+
+  if (illuminated < 0.018) return;
+
+  const darkness =
+    localSkyDarkness01(hour);
+
+  const daylightContrast =
+    mix(
+      0.12,
+      1,
+      darkness,
+    );
+
+  const illuminationGain =
+    mix(
+      0.40,
+      1,
+      Math.sqrt(illuminated),
+    );
+
+  const alpha =
+    clamp01(
+      atmosphereSceneMix *
+        smoothstep(
+          altitude01,
+        ) *
+        daylightContrast *
+        illuminationGain,
+    );
+
+  if (alpha < 0.035) return;
+
+  const transitOffset =
+    clamp01(
+      (
+        hourFromTransit +
+        6
+      ) /
+        12,
+    );
+
+  /*
+   * Before transit the moon sits toward screen-right, after transit toward
+   * screen-left. Higher altitude moves it upward.
+   */
+  const x =
+    mix(
+      w * 0.82,
+      w * 0.18,
+      transitOffset,
+    );
+
+  const y =
+    mix(
+      h * 0.43,
+      h * 0.13,
+      Math.sqrt(
+        altitude01,
+      ),
+    );
+
+  const r =
+    Math.max(
+      4.2,
+      Math.min(
+        10.5,
+        Math.min(w, h) *
+          0.017,
+      ),
+    );
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  const halo =
+    ctx.createRadialGradient(
+      x,
+      y,
+      r * 0.65,
+      x,
+      y,
+      r * 2.8,
+    );
+
+  halo.addColorStop(
+    0,
+    "rgba(224,235,244,0.16)",
+  );
+  halo.addColorStop(
+    0.42,
+    "rgba(176,202,224,0.07)",
+  );
+  halo.addColorStop(
+    1,
+    "rgba(120,160,205,0)",
+  );
+
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(
+    x,
+    y,
+    r * 2.8,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  const disc =
+    ctx.createRadialGradient(
+      x - r * 0.28,
+      y - r * 0.32,
+      r * 0.10,
+      x,
+      y,
+      r,
+    );
+
+  disc.addColorStop(
+    0,
+    "rgba(245,245,236,0.98)",
+  );
+  disc.addColorStop(
+    0.58,
+    "rgba(211,214,207,0.96)",
+  );
+  disc.addColorStop(
+    1,
+    "rgba(151,158,157,0.96)",
+  );
+
+  ctx.fillStyle = disc;
+  ctx.beginPath();
+  ctx.arc(
+    x,
+    y,
+    r,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  /*
+   * Deterministic crater marks keep the small disc from reading as a flat
+   * white icon.
+   */
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(
+    x,
+    y,
+    r,
+    0,
+    Math.PI * 2,
+  );
+  ctx.clip();
+
+  for (
+    let i = 0;
+    i < 7;
+    i += 1
+  ) {
+    const rx =
+      hash01(
+        0x6d6f6f6e,
+        i * 13 + 1,
+      );
+
+    const ry =
+      hash01(
+        0x6d6f6f6e,
+        i * 17 + 9,
+      );
+
+    const rr =
+      hash01(
+        0x6d6f6f6e,
+        i * 19 + 5,
+      );
+
+    const craterX =
+      x +
+      (
+        rx -
+        0.5
+      ) *
+        r *
+        1.25;
+
+    const craterY =
+      y +
+      (
+        ry -
+        0.5
+      ) *
+        r *
+        1.25;
+
+    ctx.fillStyle =
+      "rgba(92,99,101," +
+      (
+        0.08 +
+        rr * 0.12
+      ) +
+      ")";
+
+    ctx.beginPath();
+    ctx.arc(
+      craterX,
+      craterY,
+      r *
+        (
+          0.055 +
+          rr *
+            0.10
+        ),
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  ctx.restore();
+
+  /*
+   * Phase shadow.
+   * An equal-radius shadow disc creates readable crescent / quarter /
+   * gibbous silhouettes at this intentionally tiny on-screen size.
+   */
+  const distanceToFull =
+    phase <= 0.5
+      ? phase / 0.5
+      : (1 - phase) / 0.5;
+
+  const waxing =
+    phase < 0.5;
+
+  const shadowOffset =
+    r *
+    2.15 *
+    Math.pow(
+      clamp01(
+        distanceToFull,
+      ),
+      1.38,
+    );
+
+  const shadowX =
+    x +
+    (
+      waxing
+        ? -shadowOffset
+        : shadowOffset
+    );
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(
+    x,
+    y,
+    r,
+    0,
+    Math.PI * 2,
+  );
+  ctx.clip();
+
+  ctx.fillStyle =
+    darkness > 0.45
+      ? "rgba(2,7,14,0.97)"
+      : "rgba(16,31,48,0.90)";
+
+  ctx.beginPath();
+  ctx.arc(
+    shadowX,
+    y,
+    r * 1.01,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  ctx.restore();
+
+  ctx.strokeStyle =
+    "rgba(235,241,242,0.24)";
+
+  ctx.lineWidth =
+    Math.max(
+      0.45,
+      r * 0.055,
+    );
+
+  ctx.beginPath();
+  ctx.arc(
+    x,
+    y,
+    r,
+    0,
+    Math.PI * 2,
+  );
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawAtmosphericHorizon(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -450,6 +887,14 @@ function drawAtmosphereVolume(
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
+
+  drawAtmosphericMoon(
+    ctx,
+    w,
+    h,
+    mixIn,
+    Date.now(),
+  );
 
   /*
    * Rotate only the curved Earth / atmosphere geometry.
