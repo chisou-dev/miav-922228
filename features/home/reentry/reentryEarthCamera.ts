@@ -1,8 +1,3 @@
-import {
-  mixNum,
-  smoothstep01,
-} from "./reentryVisualCausality";
-
 export type StageEarthView = {
   x: number;
   y: number;
@@ -67,36 +62,17 @@ export function cinematicEarthView({
   }
 
   if (miss) {
-    const outbound01 =
-      smoothstep01(
-        (spaceT - 0.48) /
-          0.52,
-      );
+    /*
+     * Keep the reference Earth fixed during a miss.
+     * The craft now supplies the smooth flyby / departure motion, avoiding a
+     * second camera-speed cue that made the pass feel slow-then-fast.
+     */
 
-    return {
-      x: mixNum(
-        start.x,
-        start.x + w * 0.015,
-        outbound01,
-      ),
-      y: mixNum(
-        start.y,
-        start.y - h * 0.01,
-        outbound01,
-      ),
-      r: mixNum(
-        start.r,
-        Math.max(
-          Math.min(w, h) *
-            0.062,
-          start.r * 0.54,
-        ),
-        outbound01,
-      ),
-    };
+    return start;
   }
 
   void travelT;
+  void spaceT;
   return start;
 }
 

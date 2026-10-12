@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { runStage1Launch } from "./reentryLaunchPipeline";
+import {
+  findGuaranteedStage1Clear,
+  runStage1Launch,
+} from "./reentryLaunchPipeline";
 import { launchAnchorPx } from "./reentryCraftProjection";
 import { launchEarthView } from "./reentryEarthCamera";
 import { useReentryDevPreset } from "./useReentryDevPreset";
@@ -41,7 +44,10 @@ export function createReentrySeed(): number {
   return (Date.now() * 2654435761) >>> 0;
 }
 
-export function useReentryGame(options?: { onFlightStart?: () => void }) {
+export function useReentryGame(options?: {
+  onFlightStart?: () => void;
+  guaranteedClear?: boolean;
+}) {
   const [phase, setPhase] = useState<ReentryPhase>("power");
   const [seed, setSeed] = useState(() => createReentrySeed());
   const [powerOscillator, setPowerOscillator] = useState(0);
@@ -236,13 +242,44 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
       centerDistancePx,
     );
     const simStarted = performance.now();
-    const launched = runStage1Launch(
-      lockedPowerNorm,
-      angleNorm,
-      seed,
-      earthBearingScreenRad,
-      spaceStartAltitudeM,
-    );
+
+    const guaranteed =
+      options?.guaranteedClear
+        ? findGuaranteedStage1Clear(
+            lockedPowerNorm,
+            seed,
+            earthBearingScreenRad,
+            spaceStartAltitudeM,
+          )
+        : null;
+
+    const launched =
+      guaranteed?.launched ??
+      runStage1Launch(
+        lockedPowerNorm,
+        angleNorm,
+        seed,
+        earthBearingScreenRad,
+        spaceStartAltitudeM,
+      );
+
+    if (guaranteed) {
+      setAngleNorm(
+        guaranteed.angleNorm,
+      );
+      setSeed(
+        guaranteed.seed,
+      );
+
+      if (
+        guaranteed.powerNorm !==
+        lockedPowerNorm
+      ) {
+        setLockedPowerNorm(
+          guaranteed.powerNorm,
+        );
+      }
+    }
 
     if (surfaceRef.current) {
       surfaceRef.current.dataset.simMs = (
@@ -251,7 +288,14 @@ export function useReentryGame(options?: { onFlightStart?: () => void }) {
     }
 
     beginFlight(launched.result, launched.record, launched.durationMs);
-  }, [angleNorm, beginFlight, lockedPowerNorm, phase, seed]);
+  }, [
+    angleNorm,
+    beginFlight,
+    lockedPowerNorm,
+    options?.guaranteedClear,
+    phase,
+    seed,
+  ]);
 
   const nudgeAngle = useCallback(
     (delta: number) => {

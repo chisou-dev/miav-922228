@@ -1,6 +1,7 @@
 import {
   mapLaunchToInput,
   spaceGammaToReentryAngleDeg,
+  wrap01,
 } from "./reentryLaunchInput";
 import { REENTRY_PHYSICS_VERSION } from "./reentryConstants";
 import { simulateReentry } from "./reentryPhysics";
@@ -68,6 +69,254 @@ export type Stage1Launch = {
   durationMs: number;
   spaceShare: number;
 };
+
+export type GuaranteedStage1Clear = {
+
+  launched: Stage1Launch;
+
+  angleNorm: number;
+
+  seed: number;
+
+  powerNorm: number;
+
+};
+
+
+
+function clearAssistOffsetsDeg(): number[] {
+
+  const values: number[] = [];
+
+  const seen =
+
+    new Set<string>();
+
+  for (
+
+    let step = 0;
+
+    step <= 18;
+
+    step++
+
+  ) {
+
+    const delta =
+
+      step * 0.25;
+
+    for (const magnitude of [
+
+      3.5 + delta,
+
+      3.5 - delta,
+
+    ]) {
+
+      if (
+
+        magnitude < 1.25 ||
+
+        magnitude > 8
+
+      ) {
+
+        continue;
+
+      }
+
+      for (const sign of [1, -1]) {
+
+        const value =
+
+          sign * magnitude;
+
+        const key =
+
+          value.toFixed(2);
+
+        if (seen.has(key)) {
+
+          continue;
+
+        }
+
+        seen.add(key);
+
+        values.push(value);
+
+      }
+
+    }
+
+  }
+
+  return values;
+
+}
+
+
+
+export function findGuaranteedStage1Clear(
+
+  powerNorm: number,
+
+  preferredSeed: number,
+
+  earthBearingScreenRad: number,
+
+  spaceStartAltitudeM: number,
+
+): GuaranteedStage1Clear | null {
+
+  const earthDirectionNorm =
+
+    wrap01(
+
+      (
+
+        earthBearingScreenRad +
+
+        Math.PI / 2
+
+      ) /
+
+        (
+
+          Math.PI * 2
+
+        ),
+
+    );
+
+  const seeds =
+
+    Array.from(
+
+      new Set([
+
+        7,
+
+        19,
+
+        1,
+
+        preferredSeed >>> 0,
+
+      ]),
+
+    );
+
+  const requestedPower =
+
+    Math.min(
+
+      1,
+
+      Math.max(
+
+        0,
+
+        powerNorm,
+
+      ),
+
+    );
+
+  const powers =
+
+    requestedPower === 0.5
+
+      ? [requestedPower]
+
+      : [
+
+          requestedPower,
+
+          0.5,
+
+        ];
+
+  for (const candidatePower of powers) {
+
+    for (const seed of seeds) {
+
+      for (
+
+        const offsetDeg of
+
+        clearAssistOffsetsDeg()
+
+      ) {
+
+        const candidateAngleNorm =
+
+          wrap01(
+
+            earthDirectionNorm +
+
+            offsetDeg / 360,
+
+          );
+
+        const launched =
+
+          runStage1Launch(
+
+            candidatePower,
+
+            candidateAngleNorm,
+
+            seed,
+
+            earthBearingScreenRad,
+
+            spaceStartAltitudeM,
+
+          );
+
+        if (
+
+          launched.space.kind ===
+
+            "ATMOSPHERE_ENTRY" &&
+
+          launched.result.outcome ===
+
+            "EARTH_REACHED"
+
+        ) {
+
+          return {
+
+            launched,
+
+            angleNorm:
+
+              candidateAngleNorm,
+
+            seed,
+
+            powerNorm:
+
+              candidatePower,
+
+          };
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return null;
+
+}
+
+
 
 export function durationForStage1(
   space: SpaceApproachResult,

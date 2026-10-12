@@ -21,6 +21,7 @@ import {
   directionNormToScreenHeadingRad,
   launchSpaceApproach,
   sampleSpacePoint,
+  sampleSpacePointByElapsed01,
   type SpaceApproachResult,
   type SpaceState,
 } from "./reentrySpaceApproach";
@@ -42,6 +43,7 @@ import {
   clampHeadingJump,
   closestApproachIndex,
   elapsedSincePlaybackS,
+  gravitationalFlybyScreenPose,
   missPlaybackToPathT,
   signedDistanceToAtmospherePx,
   straightSpaceScreenPose,
@@ -55,6 +57,14 @@ import {
 } from "./reentryAudio";
 
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
+
+/*
+ * NASA Blue Marble global texture.
+ * Used only for the close atmospheric surface view; the distant SPACE globe
+ * keeps the original Apollo 17 photograph.
+ */
+const EARTH_SURFACE_SOURCE =
+  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57735/land_ocean_ice_cloud_2048.jpg";
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -925,23 +935,72 @@ function drawAtmosphereVolume(
   ctx.globalAlpha = mixIn * mix(0.08, 0.98, surfaceReveal);
 
   if (earth && earth.naturalWidth > 0) {
-    const sw = earth.naturalWidth * 0.68;
-    const sh = earth.naturalHeight * 0.68;
-    const maxSx = Math.max(0, earth.naturalWidth - sw);
-    const maxSy = Math.max(0, earth.naturalHeight - sh);
-    const cropX01 = clamp01(0.50 + Math.sin(phaseAngle) * 0.38);
-    const cropY01 = clamp01(0.47 + Math.cos(phaseAngle * 0.73) * 0.22);
+    /*
+     * Use a square high-resolution crop rather than stretching an entire
+     * globe/equirectangular image into a square. This preserves coastline,
+     * cloud and ocean detail as the camera gets close.
+     */
+    const cropSize =
+      Math.min(
+        earth.naturalWidth * 0.48,
+        earth.naturalHeight * 0.92,
+      );
+
+    const maxSx =
+      Math.max(
+        0,
+        earth.naturalWidth -
+          cropSize,
+      );
+
+    const maxSy =
+      Math.max(
+        0,
+        earth.naturalHeight -
+          cropSize,
+      );
+
+    const cropX01 =
+      clamp01(
+        0.50 +
+          Math.sin(
+            phaseAngle,
+          ) *
+            0.46,
+      );
+
+    const cropY01 =
+      clamp01(
+        0.50 +
+          Math.cos(
+            phaseAngle *
+              0.73,
+          ) *
+            0.28,
+      );
+
+    ctx.imageSmoothingEnabled =
+      true;
+
+    ctx.imageSmoothingQuality =
+      "high";
+
+    ctx.filter =
+      "saturate(1.08) contrast(1.08)";
+
     ctx.drawImage(
       earth,
       maxSx * cropX01,
       maxSy * cropY01,
-      sw,
-      sh,
+      cropSize,
+      cropSize,
       earthX - earthR,
       earthY - earthR,
       earthR * 2,
       earthR * 2,
     );
+
+    ctx.filter = "none";
   } else {
     const ocean = ctx.createLinearGradient(0, horizonTop, 0, h);
     ocean.addColorStop(0, "#567f9c");
@@ -952,8 +1011,8 @@ function drawAtmosphereVolume(
   }
 
   const blueCast = ctx.createLinearGradient(0, horizonTop, 0, h);
-  blueCast.addColorStop(0, `rgba(42,112,180,${mix(0.52, 0.18, surfaceReveal)})`);
-  blueCast.addColorStop(0.34, `rgba(20,73,128,${mix(0.42, 0.12, surfaceReveal)})`);
+  blueCast.addColorStop(0, `rgba(42,112,180,${mix(0.26, 0.08, surfaceReveal)})`);
+  blueCast.addColorStop(0.34, `rgba(20,73,128,${mix(0.20, 0.06, surfaceReveal)})`);
   blueCast.addColorStop(1, "rgba(6,24,45,0.08)");
   ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = blueCast;
@@ -3711,6 +3770,7 @@ function drawCraft(
   length: number,
   alpha: number,
   heat: number,
+  assistMode = false,
 ): void {
   const width = length * 0.62;
 
@@ -3725,9 +3785,11 @@ function drawCraft(
   craftOutline(ctx, length, width);
   ctx.fillStyle = "#070b0e";
   ctx.shadowColor =
-    heat > 0.14
-      ? `rgba(255,88,18,${0.18 + heat * 0.34})`
-      : "rgba(0,0,0,0.78)";
+    assistMode
+      ? `rgba(65,224,238,${0.22 + heat * 0.22})`
+      : heat > 0.14
+        ? `rgba(255,88,18,${0.18 + heat * 0.34})`
+        : "rgba(0,0,0,0.78)";
   ctx.shadowBlur = heat > 0.14 ? 8 + heat * 18 : 7;
   ctx.fill();
   ctx.restore();
@@ -3740,13 +3802,23 @@ function drawCraft(
     length * 0.62,
     width * 0.22,
   );
-  hull.addColorStop(0, "#252b2f");
-  hull.addColorStop(0.16, "#596166");
-  hull.addColorStop(0.36, "#8f9697");
-  hull.addColorStop(0.52, "#c8cac7");
-  hull.addColorStop(0.67, "#a5aaa9");
-  hull.addColorStop(0.84, "#636b6f");
-  hull.addColorStop(1, "#2d3438");
+  if (assistMode) {
+    hull.addColorStop(0, "#06262c");
+    hull.addColorStop(0.16, "#0b5963");
+    hull.addColorStop(0.36, "#29a9b6");
+    hull.addColorStop(0.52, "#bdeff0");
+    hull.addColorStop(0.67, "#61cbd2");
+    hull.addColorStop(0.84, "#177982");
+    hull.addColorStop(1, "#073941");
+  } else {
+    hull.addColorStop(0, "#252b2f");
+    hull.addColorStop(0.16, "#596166");
+    hull.addColorStop(0.36, "#8f9697");
+    hull.addColorStop(0.52, "#c8cac7");
+    hull.addColorStop(0.67, "#a5aaa9");
+    hull.addColorStop(0.84, "#636b6f");
+    hull.addColorStop(1, "#2d3438");
+  }
   ctx.fillStyle = hull;
   ctx.fill();
 
@@ -3838,7 +3910,10 @@ function drawCraft(
   ctx.lineTo(-length * 0.47, width * 0.27);
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(218,226,228,0.30)";
+  ctx.strokeStyle =
+    assistMode
+      ? "rgba(155,247,255,0.72)"
+      : "rgba(218,226,228,0.30)";
   ctx.lineWidth = Math.max(0.7, length * 0.0065);
   craftOutline(ctx, length, width);
   ctx.stroke();
@@ -4387,6 +4462,7 @@ export function ReentryPresentationCanvas({
   spaceShare,
   powerNorm,
   variant,
+  assistMode = false,
 }: {
   phase: ReentryPhase;
   result: ReentryResult | null;
@@ -4396,9 +4472,11 @@ export function ReentryPresentationCanvas({
   spaceShare: number;
   powerNorm: number;
   variant: ReentryArtVariant;
+  assistMode?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
+  const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
   const resultSoundRef = useRef<string | null>(null);
   const stage1ClearSoundRef = useRef<string | null>(null);
   const visualLatchPlaybackRef = useRef<number | null>(null);
@@ -4417,6 +4495,20 @@ export function ReentryPresentationCanvas({
       })
       .catch(() => {
         if (live) earthRef.current = null;
+      });
+
+    void loadImage(EARTH_SURFACE_SOURCE)
+      .then((img) => {
+        if (live) {
+          earthSurfaceRef.current =
+            img;
+        }
+      })
+      .catch(() => {
+        if (live) {
+          earthSurfaceRef.current =
+            null;
+        }
       });
 
     return () => {
@@ -4533,10 +4625,15 @@ export function ReentryPresentationCanvas({
           : travelT;
 
       const sampledSpace =
-        sampleSpacePoint(
-          activeSpace.points,
-          pathT,
-        );
+        miss
+          ? sampleSpacePointByElapsed01(
+              activeSpace.points,
+              pathT,
+            )
+          : sampleSpacePoint(
+              activeSpace.points,
+              pathT,
+            );
 
       const spaceState =
         sampledSpace?.state ??
@@ -4631,6 +4728,21 @@ export function ReentryPresentationCanvas({
               launch,
             launchHeading,
           });
+
+        if (miss) {
+          pose =
+            gravitationalFlybyScreenPose({
+              pose,
+              launchPoint:
+                launch,
+              earthCenter: {
+                x: pathEarth.x,
+                y: pathEarth.y,
+              },
+              launchHeading,
+              spaceT,
+            });
+        }
       }
 
       const atmosphereDistancePx = signedDistanceToAtmospherePx(
@@ -4848,11 +4960,13 @@ const failureTravelT =
         idle ||
         miss
       ) {
-        pose.angle =
-          launchHeading;
+        if (!miss) {
+          pose.angle =
+            launchHeading;
+        }
 
         prevHeadingRef.current =
-          launchHeading;
+          pose.angle;
       } else if (
         prevHeadingRef.current ===
           null
@@ -5049,7 +5163,8 @@ const failureTravelT =
       ) {
         drawAtmosphereVolume(
           ctx,
-          earthRef.current,
+          earthSurfaceRef.current ??
+            earthRef.current,
           w,
           h,
           atmosphereSceneMix,
@@ -5261,6 +5376,7 @@ const failureTravelT =
           craftLength,
           craftAlpha,
           heat,
+          assistMode,
         );
       }
 
@@ -5337,6 +5453,7 @@ const failureTravelT =
     spaceShare,
     powerNorm,
     variant,
+    assistMode,
   ]);
 
   return (

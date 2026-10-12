@@ -11,6 +11,7 @@ export function ReentryHybridStage({
   showGuides = true,
   showStars = false,
   showIntroPulse = false,
+  assistMode = false,
   className,
 }: {
   state: ReentryDrawState;
@@ -20,6 +21,7 @@ export function ReentryHybridStage({
   showGuides?: boolean;
   showStars?: boolean;
   showIntroPulse?: boolean;
+  assistMode?: boolean;
   className?: string;
 }) {
   // Signature is kept stable so the surrounding experience does not need to
@@ -44,6 +46,7 @@ export function ReentryHybridStage({
         spaceShare={state.spaceShare ?? 1}
         powerNorm={state.powerNorm ?? 0.5}
         variant={variant}
+        assistMode={assistMode}
       />
     </div>
   );

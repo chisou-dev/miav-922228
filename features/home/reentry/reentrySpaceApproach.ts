@@ -901,6 +901,256 @@ export function sampleSpacePoint(
 
 
 
+export function sampleSpacePointByElapsed01(
+
+  points: SpaceApproachPoint[],
+
+  t: number,
+
+): SpaceApproachPoint | null {
+
+  if (points.length === 0) {
+
+    return null;
+
+  }
+
+  if (points.length === 1) {
+
+    return points[0];
+
+  }
+
+  const clamped =
+
+    Math.min(
+
+      1,
+
+      Math.max(0, t),
+
+    );
+
+  const firstElapsed =
+
+    points[0].state.elapsedS;
+
+  const lastElapsed =
+
+    points[points.length - 1]
+
+      .state.elapsedS;
+
+  const targetElapsed =
+
+    firstElapsed +
+
+    (
+
+      lastElapsed -
+
+      firstElapsed
+
+    ) *
+
+      clamped;
+
+  let lo = 0;
+
+  let hi =
+
+    points.length - 1;
+
+  while (lo + 1 < hi) {
+
+    const mid =
+
+      Math.floor(
+
+        (lo + hi) / 2,
+
+      );
+
+    if (
+
+      points[mid].state.elapsedS <=
+
+      targetElapsed
+
+    ) {
+
+      lo = mid;
+
+    } else {
+
+      hi = mid;
+
+    }
+
+  }
+
+  const a =
+
+    points[lo];
+
+  const b =
+
+    points[hi];
+
+  const elapsedSpan =
+
+    Math.max(
+
+      1e-9,
+
+      b.state.elapsedS -
+
+        a.state.elapsedS,
+
+    );
+
+  const u =
+
+    Math.min(
+
+      1,
+
+      Math.max(
+
+        0,
+
+        (
+
+          targetElapsed -
+
+          a.state.elapsedS
+
+        ) /
+
+          elapsedSpan,
+
+      ),
+
+    );
+
+  return {
+
+    state: {
+
+      position: {
+
+        x:
+
+          a.state.position.x +
+
+          (
+
+            b.state.position.x -
+
+            a.state.position.x
+
+          ) *
+
+            u,
+
+        y:
+
+          a.state.position.y +
+
+          (
+
+            b.state.position.y -
+
+            a.state.position.y
+
+          ) *
+
+            u,
+
+      },
+
+      velocity: {
+
+        x:
+
+          a.state.velocity.x +
+
+          (
+
+            b.state.velocity.x -
+
+            a.state.velocity.x
+
+          ) *
+
+            u,
+
+        y:
+
+          a.state.velocity.y +
+
+          (
+
+            b.state.velocity.y -
+
+            a.state.velocity.y
+
+          ) *
+
+            u,
+
+      },
+
+      elapsedS:
+
+        a.state.elapsedS +
+
+        (
+
+          b.state.elapsedS -
+
+          a.state.elapsedS
+
+        ) *
+
+          u,
+
+    },
+
+    altitudeM:
+
+      a.altitudeM +
+
+      (
+
+        b.altitudeM -
+
+        a.altitudeM
+
+      ) *
+
+        u,
+
+    screenHeadingRad:
+
+      a.screenHeadingRad +
+
+      (
+
+        b.screenHeadingRad -
+
+        a.screenHeadingRad
+
+      ) *
+
+        u,
+
+  };
+
+}
+
+
+
 export function maxHeadingJumpDeg(
 
   points: SpaceApproachPoint[],

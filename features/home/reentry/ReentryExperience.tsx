@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ReentryFullscreenPortal } from "./ReentryFullscreenPortal";
 import { ReentryHybridStage } from "./ReentryHybridStage";
 import { ReentryLaunchControls } from "./ReentryLaunchControls";
@@ -50,6 +56,11 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const [expanded, setExpanded] = useState(() =>
     typeof window !== "undefined" && devPresetRequiresExpand(),
   );
+  const [clearAssist, setClearAssist] = useState(false);
+  const clearAssistTapRef = useRef({
+    count: 0,
+    lastAt: 0,
+  });
   const [showFsHint, setShowFsHint] = useState(() => {
     if (typeof window === "undefined" || !devPresetRequiresExpand()) {
       return false;
@@ -95,7 +106,10 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     launch,
     nudgeAngle,
     retry,
-  } = useReentryGame({ onFlightStart });
+  } = useReentryGame({
+    onFlightStart,
+    guaranteedClear: clearAssist,
+  });
 
   const nearbySuccess = useNearbySuccess({
     enabled:
@@ -158,9 +172,33 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     }
   }, []);
 
+  const handleClearAssistTap = useCallback(() => {
+    const now =
+      performance.now();
+
+    const tap =
+      clearAssistTapRef.current;
+
+    if (
+      now - tap.lastAt >
+      850
+    ) {
+      tap.count = 0;
+    }
+
+    tap.lastAt = now;
+    tap.count += 1;
+
+    if (tap.count >= 3) {
+      tap.count = 0;
+      setClearAssist((value) => !value);
+    }
+  }, []);
+
   const closeSession = useCallback(() => {
     stopReentryAudio();
     retry();
+    setClearAssist(false);
     setExpanded(false);
   }, [retry]);
 
@@ -217,6 +255,13 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
           >
             MIAV-922228
           </button>
+          <button
+            type="button"
+            onClick={handleClearAssistTap}
+            className="absolute left-5 top-[4.65rem] z-[51] h-11 w-32 touch-manipulation bg-transparent"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
           <ReentryAudioControl />
           <div
             ref={surfaceRef}
@@ -231,6 +276,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               showGuides
               showStars
               showIntroPulse={showIntroPulse && phase === "power"}
+              assistMode={clearAssist}
             />
 
             <ReentryLaunchControls

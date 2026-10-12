@@ -564,51 +564,221 @@ export function missPlaybackToPathT(
 
   const t = clamp01(spaceT);
 
-  const last = Math.max(1, pointCount - 1);
+  /*
+   * Miss playback is one continuous ease-out curve.
+   *
+   * The old piecewise curve changed slope around closest approach and,
+   * combined with denser stored points near Earth, looked like a sudden
+   * slowdown followed by an acceleration. Misses are now sampled by elapsed
+   * physical time, so this value is a smooth time fraction.
+   */
 
-  const periT = periIndex / last;
+  void periIndex;
+
+  void pointCount;
+
+  return (
+
+    1 -
+
+    Math.pow(
+
+      1 - t,
+
+      1.42,
+
+    )
+
+  );
+
+}
 
 
 
-  if (periT < 0.08 || periT > 0.92) {
+export function gravitationalFlybyScreenPose({
 
-    return 1 - Math.pow(1 - t, 1.72);
+  pose,
+
+  launchPoint,
+
+  earthCenter,
+
+  launchHeading,
+
+  spaceT,
+
+}: {
+
+  pose: {
+
+    x: number;
+
+    y: number;
+
+    angle: number;
+
+  };
+
+  launchPoint: Vec2;
+
+  earthCenter: Vec2;
+
+  launchHeading: number;
+
+  spaceT: number;
+
+}): {
+
+  x: number;
+
+  y: number;
+
+  angle: number;
+
+} {
+
+  /*
+   * Presentation-only gravitational assist.
+   *
+   * The player's launch heading is untouched on the inbound leg. After the
+   * spacecraft has passed Earth, its outbound track bends only a few degrees
+   * toward Earth, as a distant hyperbolic flyby would appear from this
+   * camera. This does not change hit/miss classification or reentry physics.
+   */
+
+  const bend =
+
+    smoothstep01(
+
+      (
+
+        clamp01(spaceT) -
+
+        0.46
+
+      ) /
+
+        0.54,
+
+    );
+
+  if (bend <= 0) {
+
+    return pose;
 
   }
 
+  const dx =
 
+    earthCenter.x -
 
-  const periPlayback = 0.54;
+    launchPoint.x;
 
+  const dy =
 
+    earthCenter.y -
 
-  if (t < periPlayback) {
+    launchPoint.y;
 
-    const u = t / periPlayback;
+  const dirX =
 
-    const eased = 1 - Math.pow(1 - u, 1.85);
+    Math.cos(
 
-    return periT * eased;
+      launchHeading,
 
-  }
+    );
 
+  const dirY =
 
+    Math.sin(
 
-  const u =
+      launchHeading,
 
-    (t - periPlayback) /
+    );
 
-    (1 - periPlayback);
+  const normalX =
 
+    -dirY;
 
+  const normalY =
 
-  const eased =
+    dirX;
 
-    1 - Math.pow(1 - u, 2.15);
+  const towardEarthSide =
 
+    Math.sign(
 
+      dirX * dy -
 
-  return periT + (1 - periT) * eased;
+      dirY * dx,
+
+    ) || 1;
+
+  const earthDistancePx =
+
+    Math.max(
+
+      1,
+
+      Math.hypot(
+
+        dx,
+
+        dy,
+
+      ),
+
+    );
+
+  const lateralPx =
+
+    earthDistancePx *
+
+    0.105 *
+
+    bend *
+
+    bend;
+
+  const maxTurnRad =
+
+    (4.25 * Math.PI) /
+
+    180;
+
+  return {
+
+    x:
+
+      pose.x +
+
+      normalX *
+
+        towardEarthSide *
+
+        lateralPx,
+
+    y:
+
+      pose.y +
+
+      normalY *
+
+        towardEarthSide *
+
+        lateralPx,
+
+    angle:
+
+      launchHeading +
+
+      towardEarthSide *
+
+        maxTurnRad *
+
+        bend,
+
+  };
 
 }
 
