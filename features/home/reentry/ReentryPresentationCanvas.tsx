@@ -3777,7 +3777,24 @@ function drawCraft(
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.globalAlpha = alpha;
+
+  const assistBlink =
+    assistMode
+      ? (
+          Math.floor(
+            performance.now() /
+              260,
+          ) %
+            2 ===
+          0
+            ? 1
+            : 0.28
+        )
+      : 1;
+
+  ctx.globalAlpha =
+    alpha *
+    assistBlink;
 
   // Deep heat-shield shadow gives the craft thickness without a photo asset.
   ctx.save();
@@ -3785,11 +3802,9 @@ function drawCraft(
   craftOutline(ctx, length, width);
   ctx.fillStyle = "#070b0e";
   ctx.shadowColor =
-    assistMode
-      ? `rgba(65,224,238,${0.22 + heat * 0.22})`
-      : heat > 0.14
-        ? `rgba(255,88,18,${0.18 + heat * 0.34})`
-        : "rgba(0,0,0,0.78)";
+    heat > 0.14
+      ? `rgba(255,88,18,${0.18 + heat * 0.34})`
+      : "rgba(0,0,0,0.78)";
   ctx.shadowBlur = heat > 0.14 ? 8 + heat * 18 : 7;
   ctx.fill();
   ctx.restore();
@@ -3802,23 +3817,13 @@ function drawCraft(
     length * 0.62,
     width * 0.22,
   );
-  if (assistMode) {
-    hull.addColorStop(0, "#06262c");
-    hull.addColorStop(0.16, "#0b5963");
-    hull.addColorStop(0.36, "#29a9b6");
-    hull.addColorStop(0.52, "#bdeff0");
-    hull.addColorStop(0.67, "#61cbd2");
-    hull.addColorStop(0.84, "#177982");
-    hull.addColorStop(1, "#073941");
-  } else {
-    hull.addColorStop(0, "#252b2f");
-    hull.addColorStop(0.16, "#596166");
-    hull.addColorStop(0.36, "#8f9697");
-    hull.addColorStop(0.52, "#c8cac7");
-    hull.addColorStop(0.67, "#a5aaa9");
-    hull.addColorStop(0.84, "#636b6f");
-    hull.addColorStop(1, "#2d3438");
-  }
+  hull.addColorStop(0, "#252b2f");
+  hull.addColorStop(0.16, "#596166");
+  hull.addColorStop(0.36, "#8f9697");
+  hull.addColorStop(0.52, "#c8cac7");
+  hull.addColorStop(0.67, "#a5aaa9");
+  hull.addColorStop(0.84, "#636b6f");
+  hull.addColorStop(1, "#2d3438");
   ctx.fillStyle = hull;
   ctx.fill();
 
@@ -3911,9 +3916,7 @@ function drawCraft(
   ctx.stroke();
 
   ctx.strokeStyle =
-    assistMode
-      ? "rgba(155,247,255,0.72)"
-      : "rgba(218,226,228,0.30)";
+    "rgba(218,226,228,0.30)";
   ctx.lineWidth = Math.max(0.7, length * 0.0065);
   craftOutline(ctx, length, width);
   ctx.stroke();

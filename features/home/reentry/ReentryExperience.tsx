@@ -25,11 +25,20 @@ import { ReentryAudioControl } from "./ReentryAudioControl";
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
 
-function headingDegrees(angleNorm: number): number {
+function headingDegrees(angleNorm: number): string {
   const wrapped =
     ((angleNorm % 1) + 1) % 1;
 
-  return Math.round(wrapped * 360) % 360;
+  const deg =
+    Math.round(
+      wrapped * 3600,
+    ) / 10;
+
+  return (
+    deg >= 360
+      ? 0
+      : deg
+  ).toFixed(1);
 }
 
 function resultTitle(outcome: ReentryOutcome): string {
@@ -57,9 +66,14 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     typeof window !== "undefined" && devPresetRequiresExpand(),
   );
   const [clearAssist, setClearAssist] = useState(false);
-  const clearAssistTapRef = useRef({
+  const miavTitleTapRef = useRef<{
+    count: number;
+    lastAt: number;
+    closeTimer: number | null;
+  }>({
     count: 0,
     lastAt: 0,
+    closeTimer: null,
   });
   const [showFsHint, setShowFsHint] = useState(() => {
     if (typeof window === "undefined" || !devPresetRequiresExpand()) {
@@ -172,16 +186,23 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     }
   }, []);
 
-  const handleClearAssistTap = useCallback(() => {
+  const closeSession = useCallback(() => {
+    stopReentryAudio();
+    retry();
+    setClearAssist(false);
+    setExpanded(false);
+  }, [retry]);
+
+  const handleMiavTitleTap = useCallback(() => {
     const now =
       performance.now();
 
     const tap =
-      clearAssistTapRef.current;
+      miavTitleTapRef.current;
 
     if (
       now - tap.lastAt >
-      850
+      700
     ) {
       tap.count = 0;
     }
@@ -189,18 +210,47 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     tap.lastAt = now;
     tap.count += 1;
 
+    if (
+      tap.closeTimer !== null
+    ) {
+      window.clearTimeout(
+        tap.closeTimer,
+      );
+      tap.closeTimer = null;
+    }
+
     if (tap.count >= 3) {
       tap.count = 0;
-      setClearAssist((value) => !value);
-    }
-  }, []);
 
-  const closeSession = useCallback(() => {
-    stopReentryAudio();
-    retry();
-    setClearAssist(false);
-    setExpanded(false);
-  }, [retry]);
+      setClearAssist(
+        (value) => !value,
+      );
+
+      return;
+    }
+
+    tap.closeTimer =
+      window.setTimeout(() => {
+        tap.count = 0;
+        tap.closeTimer = null;
+        closeSession();
+      }, 700);
+  }, [closeSession]);
+
+  useEffect(
+    () => () => {
+      const timer =
+        miavTitleTapRef.current
+          .closeTimer;
+
+      if (timer !== null) {
+        window.clearTimeout(
+          timer,
+        );
+      }
+    },
+    [],
+  );
 
   return (
     <ReentryShellProvider openStage={openExpanded}>
@@ -249,19 +299,12 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
         >
           <button
             type="button"
-            onClick={closeSession}
+            onClick={handleMiavTitleTap}
             className="absolute left-5 top-5 z-50 rounded-sm border border-white/15 bg-black/35 px-4 py-2 text-[0.72rem] font-medium tracking-[0.20em] text-white/85 backdrop-blur-sm transition-colors hover:bg-black/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
-            aria-label="Return to MIAV-922228 home"
+            aria-label="Return to MIAV-922228 home. Triple tap toggles hidden clear assist."
           >
             MIAV-922228
           </button>
-          <button
-            type="button"
-            onClick={handleClearAssistTap}
-            className="absolute left-5 top-[4.65rem] z-[51] h-11 w-32 touch-manipulation bg-transparent"
-            aria-hidden="true"
-            tabIndex={-1}
-          />
           <ReentryAudioControl />
           <div
             ref={surfaceRef}
@@ -326,9 +369,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
                 <div className="mt-1 text-cyan-50/55">
                   HEADING{" "}
-                  {String(
-                    headingDegrees(angleNorm),
-                  ).padStart(3, "0")}
+                  {headingDegrees(
+                    angleNorm,
+                  ).padStart(5, "0")}
                   °
                 </div>
 

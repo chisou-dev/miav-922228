@@ -16,12 +16,17 @@ const btnClass =
   "rounded-sm border border-[var(--line)]/60 bg-[#070b10]/88 px-5 py-2.5 text-[0.7rem] tracking-[0.15em] text-[var(--foreground)] transition-colors hover:border-[var(--foreground-muted)] hover:bg-[#0c1218] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground-muted)] disabled:opacity-40";
 
 const rotateBtnClass =
-  "flex h-12 w-16 items-center justify-center rounded-full border border-[var(--line)]/75 bg-[#070b10]/90 text-[1.7rem] text-[var(--foreground)] transition-colors active:scale-[0.98] hover:border-[var(--foreground-muted)] hover:bg-[#0c1218] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground-muted)]";
+  "flex h-14 w-20 touch-manipulation flex-col items-center justify-center rounded-full border border-[var(--line)]/75 bg-[#070b10]/90 text-[var(--foreground)] transition-colors active:scale-[0.98] hover:border-[var(--foreground-muted)] hover:bg-[#0c1218] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--foreground-muted)]";
 
-const TAP_STEP = 2 / 360; // 2 degrees per tap: fine enough for the success corridor.
-const HOLD_STEP = 6 / 360; // long press visibly rotates the craft.
-const HOLD_DELAY_MS = 280;
-const HOLD_REPEAT_MS = 58;
+const COARSE_TAP_DEG = 5;
+const COARSE_HOLD_DEG_PER_S = 128;
+const FINE_TAP_DEG = 0.1;
+const FINE_HOLD_MIN_DEG_PER_S = 0.1;
+const FINE_HOLD_MAX_DEG_PER_S = 1;
+const FINE_ACCEL_S = 3;
+const HOLD_DELAY_MS = 180;
+
+type HoldMode = "coarse" | "fine";
 
 function headingDeg(
   angleNorm: number,
@@ -29,9 +34,12 @@ function headingDeg(
   const wrapped =
     ((angleNorm % 1) + 1) % 1;
 
-  return Math.round(
-    wrapped * 360,
-  ) % 360;
+  const deg =
+    Math.round(
+      wrapped * 3600,
+    ) / 10;
+
+  return deg >= 360 ? 0 : deg;
 }
 
 export function ReentryLaunchControls({
@@ -51,24 +59,42 @@ export function ReentryLaunchControls({
   onLaunch: () => void;
   onNudgeAngle: (delta: number) => void;
 }) {
-  const holdTimeoutRef = useRef<number | null>(null);
-  const holdIntervalRef = useRef<number | null>(null);
+  const holdTimeoutRef =
+    useRef<number | null>(null);
+  const holdRafRef =
+    useRef<number | null>(null);
+  const holdModeRef =
+    useRef<HoldMode | null>(null);
+  const holdStartedRef =
+    useRef(false);
 
   const stopHold = useCallback(() => {
     if (holdTimeoutRef.current !== null) {
-      window.clearTimeout(holdTimeoutRef.current);
+      window.clearTimeout(
+        holdTimeoutRef.current,
+      );
       holdTimeoutRef.current = null;
     }
 
-    if (holdIntervalRef.current !== null) {
-      window.clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
+    if (holdRafRef.current !== null) {
+      window.cancelAnimationFrame(
+        holdRafRef.current,
+      );
+      holdRafRef.current = null;
     }
+
+    holdStartedRef.current = false;
+    holdModeRef.current = null;
   }, []);
 
   useEffect(() => stopHold, [stopHold]);
 
-  if (phase === "flight" || phase === "result") return null;
+  if (
+    phase === "flight" ||
+    phase === "result"
+  ) {
+    return null;
+  }
 
   const stopPropagation = (
     event: ReactPointerEvent<HTMLElement>,
@@ -77,7 +103,10 @@ export function ReentryLaunchControls({
   };
 
   if (phase === "power") {
-    const pct = Math.round(powerOscillator * 100);
+    const pct =
+      Math.round(
+        powerOscillator * 100,
+      );
 
     const lock = () => {
       playPowerLockTone();
@@ -164,28 +193,140 @@ export function ReentryLaunchControls({
   }
 
   const startHold = (
-    direction: -1 | 1,
+    mode: HoldMode,
     event: ReactPointerEvent<HTMLButtonElement>,
   ) => {
     event.stopPropagation();
-    event.currentTarget.setPointerCapture(event.pointerId);
+
+    try {
+      event.currentTarget.setPointerCapture(
+        event.pointerId,
+      );
+    } catch {
+      /* Pointer capture is optional. */
+    }
 
     stopHold();
 
-    // One tap = one small, precise movement.
-    onNudgeAngle(direction * TAP_STEP);
-    playDirectionTick(direction);
+    holdModeRef.current = mode;
+    holdStartedRef.current = false;
 
-    // Hold = continuous rotation.
-    holdTimeoutRef.current = window.setTimeout(() => {
-      holdIntervalRef.current = window.setInterval(() => {
-        onNudgeAngle(direction * HOLD_STEP);
-      }, HOLD_REPEAT_MS);
-    }, HOLD_DELAY_MS);
+    holdTimeoutRef.current =
+      window.setTimeout(() => {
+        holdStartedRef.current = true;
+
+        playDirectionTick(1);
+
+        const startedAt =
+          performance.now();
+
+        let previous =
+          startedAt;
+
+        const tick = (
+          now: number,
+        ) => {
+          const dtS =
+            Math.min(
+              0.05,
+              Math.max(
+                0,
+                (
+                  now -
+                  previous
+                ) /
+                  1000,
+              ),
+            );
+
+          previous = now;
+
+          let rateDegPerS =
+            COARSE_HOLD_DEG_PER_S;
+
+          if (mode === "fine") {
+            const heldS =
+              Math.max(
+                0,
+                (
+                  now -
+                  startedAt
+                ) /
+                  1000,
+              );
+
+            const accel =
+              Math.min(
+                1,
+                heldS /
+                  FINE_ACCEL_S,
+              );
+
+            rateDegPerS =
+              FINE_HOLD_MIN_DEG_PER_S +
+              (
+                FINE_HOLD_MAX_DEG_PER_S -
+                FINE_HOLD_MIN_DEG_PER_S
+              ) *
+                accel;
+          }
+
+          onNudgeAngle(
+            (
+              rateDegPerS *
+              dtS
+            ) /
+              360,
+          );
+
+          holdRafRef.current =
+            window.requestAnimationFrame(
+              tick,
+            );
+        };
+
+        holdRafRef.current =
+          window.requestAnimationFrame(
+            tick,
+          );
+      }, HOLD_DELAY_MS);
   };
 
-  const launch = () => {
-    onLaunch();
+  const finishHold = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
+
+    const mode =
+      holdModeRef.current;
+
+    const wasHolding =
+      holdStartedRef.current;
+
+    stopHold();
+
+    if (
+      mode &&
+      !wasHolding
+    ) {
+      const tapDeg =
+        mode === "coarse"
+          ? COARSE_TAP_DEG
+          : FINE_TAP_DEG;
+
+      onNudgeAngle(
+        tapDeg / 360,
+      );
+
+      playDirectionTick(1);
+    }
+  };
+
+  const cancelHold = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
+    stopHold();
   };
 
   return (
@@ -203,48 +344,65 @@ export function ReentryLaunchControls({
         <p className="mt-1 text-[0.58rem] tabular-nums tracking-[0.13em] text-white/55">
           POWER {Math.round((lockedPowerNorm ?? 0) * 100)}%
           <span className="mx-2 text-white/25">·</span>
-          {headingDeg(angleNorm)}°
+          {headingDeg(angleNorm).toFixed(1)}°
         </p>
       </div>
 
-      <div className="flex items-center gap-6">
-        <button
-          type="button"
-          className={rotateBtnClass}
-          aria-label="Rotate direction left"
-          title="Rotate left"
-          onPointerDown={(event) =>
-            startHold(-1, event)
-          }
-          onPointerUp={stopHold}
-          onPointerCancel={stopHold}
-          onPointerLeave={stopHold}
-        >
-          ↺
-        </button>
+      <div className="flex items-start gap-6">
+        <div className="flex flex-col items-center gap-1.5">
+          <button
+            type="button"
+            className={rotateBtnClass}
+            aria-label="Rotate clockwise by 5 degrees. Hold for fast clockwise rotation."
+            title="Clockwise · 5° tap · about one turn in 3 seconds when held"
+            onPointerDown={(event) =>
+              startHold(
+                "coarse",
+                event,
+              )
+            }
+            onPointerUp={finishHold}
+            onPointerCancel={cancelHold}
+            onPointerLeave={cancelHold}
+          >
+            <span className="text-[1.35rem] leading-none">
+              ↻↻
+            </span>
+            <span className="mt-1 text-[0.48rem] tabular-nums tracking-[0.08em] text-white/45">
+              5°
+            </span>
+          </button>
+        </div>
 
-        <span
-          className="text-[0.66rem] tracking-[0.14em] text-[var(--foreground-muted)]"
-          aria-hidden
-        >
-          HOLD
-        </span>
-
-        <button
-          type="button"
-          className={rotateBtnClass}
-          aria-label="Rotate direction right"
-          title="Rotate right"
-          onPointerDown={(event) =>
-            startHold(1, event)
-          }
-          onPointerUp={stopHold}
-          onPointerCancel={stopHold}
-          onPointerLeave={stopHold}
-        >
-          ↻
-        </button>
+        <div className="flex flex-col items-center gap-1.5">
+          <button
+            type="button"
+            className={rotateBtnClass}
+            aria-label="Rotate clockwise by 0.1 degrees. Hold for very slow fine clockwise rotation."
+            title="Clockwise fine · 0.1° tap · 0.1–1° per second when held"
+            onPointerDown={(event) =>
+              startHold(
+                "fine",
+                event,
+              )
+            }
+            onPointerUp={finishHold}
+            onPointerCancel={cancelHold}
+            onPointerLeave={cancelHold}
+          >
+            <span className="text-[1.55rem] leading-none">
+              ↻
+            </span>
+            <span className="mt-1 text-[0.48rem] tabular-nums tracking-[0.08em] text-white/45">
+              0.1°
+            </span>
+          </button>
+        </div>
       </div>
+
+      <p className="text-[0.48rem] tracking-[0.10em] text-white/30">
+        CLOCKWISE ONLY · HOLD FOR CONTINUOUS ROTATION
+      </p>
 
       <button
         type="button"
@@ -253,11 +411,10 @@ export function ReentryLaunchControls({
         onPointerDown={(event) => {
           event.stopPropagation();
         }}
-        onClick={launch}
+        onClick={onLaunch}
       >
         3 · LAUNCH
       </button>
     </div>
   );
 }
-

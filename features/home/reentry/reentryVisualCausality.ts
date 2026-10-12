@@ -577,19 +577,13 @@ export function missPlaybackToPathT(
 
   void pointCount;
 
-  return (
+  /*
+   * Use the physical elapsed-time fraction directly.
+   * This removes the remaining visual acceleration/deceleration around the
+   * flyby. The tiny gravity curve below supplies the only departure change.
+   */
 
-    1 -
-
-    Math.pow(
-
-      1 - t,
-
-      1.42,
-
-    )
-
-  );
+  return t;
 
 }
 
@@ -654,11 +648,11 @@ export function gravitationalFlybyScreenPose({
 
         clamp01(spaceT) -
 
-        0.46
+        0.50
 
       ) /
 
-        0.54,
+        0.50,
 
     );
 
@@ -734,15 +728,13 @@ export function gravitationalFlybyScreenPose({
 
     earthDistancePx *
 
-    0.105 *
-
-    bend *
+    0.025 *
 
     bend;
 
   const maxTurnRad =
 
-    (4.25 * Math.PI) /
+    (2.25 * Math.PI) /
 
     180;
 
