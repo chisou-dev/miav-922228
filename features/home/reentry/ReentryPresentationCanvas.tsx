@@ -59,6 +59,10 @@ import {
 import { STAGE1_CLEAR_PHOTO_DAY } from "./reentryClearPhotoAssets";
 
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
+const STAGE1_CLEAR_HATCH_SOURCE =
+  "/reentry/clear/stage1-clear-hatch.webp";
+const STAGE1_CLEAR_DEPART_SOURCE =
+  "/reentry/clear/stage1-clear-depart.webp";
 
 /*
  * NASA Blue Marble global texture.
@@ -1692,15 +1696,17 @@ function drawStage1PhotoClearSequence(
   w: number,
   h: number,
   timeSinceVisualS: number,
-  photo: HTMLImageElement | null,
+  landingPhoto: HTMLImageElement | null,
+  hatchPhoto: HTMLImageElement | null,
+  departPhoto: HTMLImageElement | null,
 ): boolean {
   const CLEAR_START_S = 14.25;
 
   if (
     timeSinceVisualS < CLEAR_START_S ||
-    !photo ||
-    photo.naturalWidth <= 0 ||
-    photo.naturalHeight <= 0
+    !landingPhoto ||
+    landingPhoto.naturalWidth <= 0 ||
+    landingPhoto.naturalHeight <= 0
   ) {
     return false;
   }
@@ -1709,315 +1715,482 @@ function drawStage1PhotoClearSequence(
     timeSinceVisualS -
     CLEAR_START_S;
 
-  const sceneIn =
-    smoothstep(
-      clearS / 0.72,
-    );
-
   const clockS =
     typeof performance !== "undefined"
       ? performance.now() / 1000
       : timeSinceVisualS;
 
-  /*
-   * Keep the generated photographic plate intact.
-   *
-   * The previous version mixed this photo with canvas-drawn cartoon alien,
-   * capsule and hover-skiff layers. That visual-language mismatch is what
-   * made the clear scene look strange. This path now stays photographic.
-   */
-  const sourceY =
-    photo.naturalHeight * 0.115;
-
-  const sourceH =
-    photo.naturalHeight * 0.72;
-
-  const targetAspect =
-    w / Math.max(1, h);
-
-  const sourceW =
-    Math.min(
-      photo.naturalWidth * 0.74,
-      sourceH * targetAspect,
+  const sceneIn =
+    smoothstep(
+      clearS / 0.65,
     );
 
-  const sourceX =
-    (
-      photo.naturalWidth -
-      sourceW
-    ) *
-    0.5;
-
-  const bobY =
-    Math.sin(
-      clockS * 0.70,
-    ) *
-    1.25;
-
-  const breathe =
-    1 +
-    Math.sin(
-      clockS * 0.32,
-    ) *
-    0.0025;
-
-  ctx.save();
-
-  ctx.globalAlpha =
-    sceneIn;
-
-  ctx.imageSmoothingEnabled =
-    true;
-
-  ctx.imageSmoothingQuality =
-    "high";
-
   /*
-   * Very small camera breathing only. Do not distort the craft.
+   * Three photographic plates:
+   * 0–4.5 s   landed capsule / quiet ocean
+   * 4.5–8.5 s hatch open / creature emerging
+   * 8.5–15 s  creature away on the matching vehicle / clear
+   *
+   * Crucially, there are no canvas-drawn cartoon creature or hovercraft
+   * overlays. The visual language stays photographic from beginning to end.
    */
-  const dw =
-    w * breathe;
+  const hatchMix =
+    hatchPhoto
+      ? smoothstep(
+          (clearS - 4.15) /
+            1.25,
+        )
+      : 0;
 
-  const dh =
-    h * breathe;
+  const departMix =
+    departPhoto
+      ? smoothstep(
+          (clearS - 8.35) /
+            1.35,
+        )
+      : 0;
 
-  ctx.drawImage(
-    photo,
-    sourceX,
-    sourceY,
-    sourceW,
-    sourceH,
-    (w - dw) * 0.5,
-    (h - dh) * 0.5 + bobY,
-    dw,
-    dh,
-  );
+  const drawPlate = (
+    image: HTMLImageElement,
+    alpha: number,
+    phaseOffset: number,
+  ) => {
+    if (alpha <= 0.001) return;
 
-  /*
-   * Animate only the foreground water in thin translucent strips.
-   * The photo remains the source, so the sea keeps photographic texture.
-   */
-  const oceanTop =
-    h * 0.69;
+    const sourceY =
+      image.naturalHeight *
+      0.105;
 
-  for (
-    let band = 0;
-    band < 7;
-    band++
-  ) {
-    const t =
-      band / 6;
+    const sourceH =
+      image.naturalHeight *
+      0.765;
 
-    const bandY =
-      oceanTop +
+    const targetAspect =
+      w /
+      Math.max(
+        1,
+        h,
+      );
+
+    const sourceW =
+      Math.min(
+        image.naturalWidth *
+          0.80,
+        sourceH *
+          targetAspect,
+      );
+
+    const sourceX =
+      (
+        image.naturalWidth -
+        sourceW
+      ) *
+      0.5;
+
+    const cameraBob =
+      Math.sin(
+        clockS *
+          0.62 +
+        phaseOffset,
+      ) *
+      1.15;
+
+    const cameraSway =
+      Math.sin(
+        clockS *
+          0.34 +
+        phaseOffset *
+          1.7,
+      ) *
+      1.25;
+
+    const scale =
+      1.008 +
+      Math.sin(
+        clockS *
+          0.24 +
+        phaseOffset,
+      ) *
+        0.0025;
+
+    const dw =
+      w *
+      scale;
+
+    const dh =
+      h *
+      scale;
+
+    ctx.save();
+
+    ctx.globalAlpha =
+      alpha *
+      sceneIn;
+
+    ctx.imageSmoothingEnabled =
+      true;
+
+    ctx.imageSmoothingQuality =
+      "high";
+
+    ctx.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      sourceW,
+      sourceH,
+      (
+        w -
+        dw
+      ) *
+        0.5 +
+        cameraSway,
       (
         h -
-        oceanTop
+        dh
       ) *
-        t;
+        0.5 +
+        cameraBob,
+      dw,
+      dh,
+    );
 
-    const bandH =
-      Math.max(
-        10,
+    /*
+     * Re-sample only the lower photographic water in narrow strips.
+     * This creates live surface movement while preserving the actual photo
+     * texture and specular highlights.
+     */
+    const oceanTop =
+      h * 0.66;
+
+    for (
+      let band = 0;
+      band < 9;
+      band++
+    ) {
+      const t =
+        band / 8;
+
+      const bandY =
+        oceanTop +
         (
           h -
           oceanTop
-        ) /
-          6 +
-          4,
-      );
+        ) *
+          t;
 
-    const srcBandY =
-      sourceY +
-      sourceH *
-        (
-          0.69 +
-          0.31 * t
+      const bandH =
+        Math.max(
+          8,
+          (
+            h -
+            oceanTop
+          ) /
+            8 +
+            3,
         );
 
-    const srcBandH =
-      sourceH *
-      (
-        bandH /
-        h
-      );
-
-    const shiftX =
-      Math.sin(
-        clockS *
+      const sourceBandY =
+        sourceY +
+        sourceH *
           (
-            0.70 +
-            t * 1.10
-          ) +
-        band * 0.85,
-      ) *
-      mix(
-        0.35,
-        2.8,
-        t,
+            0.66 +
+            0.34 *
+              t
+          );
+
+      const sourceBandH =
+        sourceH *
+        (
+          bandH /
+          h
+        );
+
+      const shiftX =
+        Math.sin(
+          clockS *
+            (
+              0.70 +
+              t *
+                1.40
+            ) +
+          band *
+            0.91 +
+          phaseOffset
+        ) *
+        mix(
+          0.25,
+          2.8,
+          t,
+        );
+
+      const shiftY =
+        Math.cos(
+          clockS *
+            (
+              0.58 +
+              t *
+                1.18
+            ) +
+          band *
+            1.21 +
+          phaseOffset
+        ) *
+        mix(
+          0.15,
+          1.30,
+          t,
+        );
+
+      ctx.save();
+
+      ctx.beginPath();
+
+      ctx.rect(
+        0,
+        bandY,
+        w,
+        bandH,
       );
 
-    const shiftY =
-      Math.cos(
-        clockS *
-          (
-            0.56 +
-            t * 0.95
-          ) +
-        band * 1.15,
-      ) *
-      mix(
-        0.20,
-        1.35,
-        t,
+      ctx.clip();
+
+      ctx.globalAlpha =
+        alpha *
+        sceneIn *
+        mix(
+          0.045,
+          0.12,
+          t,
+        );
+
+      ctx.drawImage(
+        image,
+        sourceX,
+        sourceBandY,
+        sourceW,
+        sourceBandH,
+        shiftX,
+        bandY +
+          shiftY,
+        w,
+        bandH +
+          3,
       );
 
-    ctx.save();
-
-    ctx.beginPath();
-    ctx.rect(
-      0,
-      bandY,
-      w,
-      bandH,
-    );
-    ctx.clip();
-
-    ctx.globalAlpha =
-      sceneIn *
-      mix(
-        0.055,
-        0.13,
-        t,
-      );
-
-    ctx.drawImage(
-      photo,
-      sourceX,
-      srcBandY,
-      sourceW,
-      srcBandH,
-      shiftX,
-      bandY +
-        shiftY,
-      w,
-      bandH + 3,
-    );
+      ctx.restore();
+    }
 
     ctx.restore();
+  };
+
+  /*
+   * Cross-fades are deliberately slow enough to feel like a cinematic cut,
+   * not a slideshow flash.
+   */
+  const landingAlpha =
+    1 -
+    hatchMix;
+
+  const hatchAlpha =
+    hatchPhoto
+      ? hatchMix *
+        (
+          1 -
+          departMix
+        )
+      : 0;
+
+  const departAlpha =
+    departPhoto
+      ? departMix
+      : 0;
+
+  drawPlate(
+    landingPhoto,
+    landingAlpha,
+    0,
+  );
+
+  if (
+    hatchPhoto
+  ) {
+    drawPlate(
+      hatchPhoto,
+      hatchAlpha,
+      1.7,
+    );
+  }
+
+  if (
+    departPhoto
+  ) {
+    drawPlate(
+      departPhoto,
+      departAlpha,
+      3.2,
+    );
   }
 
   /*
-   * Clear title appears only after the player has had time to look at the
-   * landing photograph. No cartoon overlays are drawn over the scene.
+   * A small splash pulse masks the midpoint of each photo transition.
+   * It is light on water, not a drawn spacecraft / character.
    */
-  const clearIn =
-    smoothstep(
-      (
-        clearS -
-        10.5
-      ) /
-        0.85,
-    );
-
-  const clearOut =
-    1 -
-    smoothstep(
-      (
-        clearS -
-        14.7
-      ) /
-        0.50,
-    );
-
-  const clearAlpha =
-    clearIn *
-    clearOut;
-
-  if (
-    clearAlpha >
-    0.001
-  ) {
-    ctx.save();
-
-    ctx.globalAlpha =
-      clearAlpha;
-
-    ctx.textAlign =
-      "center";
-
-    ctx.textBaseline =
-      "middle";
-
-    ctx.fillStyle =
-      "rgba(248,252,255,0.97)";
-
-    ctx.shadowColor =
-      "rgba(6,35,72,0.56)";
-
-    ctx.shadowBlur =
-      20;
-
-    const small =
-      Math.max(
-        13,
-        Math.min(
-          25,
-          w * 0.031,
-        ),
+  for (const transition of [
+    4.65,
+    8.85,
+  ]) {
+    const pulse =
+      1 -
+      Math.min(
+        1,
+        Math.abs(
+          clearS -
+          transition
+        ) /
+          0.55,
       );
 
-    const large =
-      Math.max(
-        44,
-        Math.min(
-          94,
-          w * 0.098,
-        ),
+    if (
+      pulse >
+      0
+    ) {
+      const splash =
+        ctx.createRadialGradient(
+          w * 0.50,
+          h * 0.68,
+          0,
+          w * 0.50,
+          h * 0.68,
+          Math.min(
+            w,
+            h,
+          ) *
+            0.20,
+        );
+
+      splash.addColorStop(
+        0,
+        `rgba(236,250,255,${0.12 * pulse})`,
       );
 
-    ctx.font =
-      \`500 \${small}px Georgia, "Times New Roman", serif\`;
+      splash.addColorStop(
+        0.45,
+        `rgba(196,233,247,${0.07 * pulse})`,
+      );
 
-    ctx.fillText(
-      "S T A G E  1",
-      w * 0.50,
-      h * 0.18,
-    );
+      splash.addColorStop(
+        1,
+        "rgba(180,225,245,0)",
+      );
 
-    ctx.font =
-      \`500 \${large}px Georgia, "Times New Roman", serif\`;
+      ctx.fillStyle =
+        splash;
 
-    ctx.fillText(
-      "C L E A R",
-      w * 0.50,
-      h * 0.255,
-    );
-
-    ctx.strokeStyle =
-      "rgba(238,249,255,0.62)";
-
-    ctx.lineWidth =
-      1;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      w * 0.31,
-      h * 0.300,
-    );
-
-    ctx.lineTo(
-      w * 0.69,
-      h * 0.300,
-    );
-
-    ctx.stroke();
-
-    ctx.restore();
+      ctx.fillRect(
+        0,
+        h * 0.52,
+        w,
+        h * 0.32,
+      );
+    }
   }
 
-  ctx.restore();
+  /*
+   * If the final photographic plate is missing, retain the normal game
+   * title so the success state still finishes cleanly.
+   */
+  if (
+    !departPhoto
+  ) {
+    const clearIn =
+      smoothstep(
+        (
+          clearS -
+          11.1
+        ) /
+          0.8,
+      );
+
+    const clearOut =
+      1 -
+      smoothstep(
+        (
+          clearS -
+          14.7
+        ) /
+          0.5,
+      );
+
+    const clearAlpha =
+      clearIn *
+      clearOut;
+
+    if (
+      clearAlpha >
+      0.001
+    ) {
+      ctx.save();
+
+      ctx.globalAlpha =
+        clearAlpha;
+
+      ctx.textAlign =
+        "center";
+
+      ctx.textBaseline =
+        "middle";
+
+      ctx.fillStyle =
+        "rgba(248,252,255,0.97)";
+
+      ctx.shadowColor =
+        "rgba(6,35,72,0.56)";
+
+      ctx.shadowBlur =
+        20;
+
+      const small =
+        Math.max(
+          13,
+          Math.min(
+            25,
+            w *
+              0.031,
+          ),
+        );
+
+      const large =
+        Math.max(
+          44,
+          Math.min(
+            94,
+            w *
+              0.098,
+          ),
+        );
+
+      ctx.font =
+        `500 ${small}px Georgia, "Times New Roman", serif`;
+
+      ctx.fillText(
+        "S T A G E  1",
+        w * 0.50,
+        h * 0.18,
+      );
+
+      ctx.font =
+        `500 ${large}px Georgia, "Times New Roman", serif`;
+
+      ctx.fillText(
+        "C L E A R",
+        w * 0.50,
+        h * 0.255,
+      );
+
+      ctx.restore();
+    }
+  }
 
   return true;
 }
@@ -5021,6 +5194,8 @@ export function ReentryPresentationCanvas({
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
   const clearPhotoRef = useRef<HTMLImageElement | null>(null);
+  const clearHatchRef = useRef<HTMLImageElement | null>(null);
+  const clearDepartRef = useRef<HTMLImageElement | null>(null);
   const resultSoundRef = useRef<string | null>(null);
   const stage1ClearSoundRef = useRef<string | null>(null);
   const visualLatchPlaybackRef = useRef<number | null>(null);
@@ -5067,6 +5242,38 @@ export function ReentryPresentationCanvas({
       .catch(() => {
         if (live) {
           clearPhotoRef.current =
+            null;
+        }
+      });
+
+    void loadImage(
+      STAGE1_CLEAR_HATCH_SOURCE,
+    )
+      .then((img) => {
+        if (live) {
+          clearHatchRef.current =
+            img;
+        }
+      })
+      .catch(() => {
+        if (live) {
+          clearHatchRef.current =
+            null;
+        }
+      });
+
+    void loadImage(
+      STAGE1_CLEAR_DEPART_SOURCE,
+    )
+      .then((img) => {
+        if (live) {
+          clearDepartRef.current =
+            img;
+        }
+      })
+      .catch(() => {
+        if (live) {
+          clearDepartRef.current =
             null;
         }
       });
@@ -5990,6 +6197,8 @@ const failureTravelT =
             h,
             timeSinceVisualAtmosphereEntryS,
             clearPhotoRef.current,
+            clearHatchRef.current,
+            clearDepartRef.current,
           );
 
         if (!photoClearDrawn) {
