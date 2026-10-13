@@ -6,6 +6,7 @@ export interface ReentryOceanWebGLRenderer {
     width: number;
     height: number;
     timeS: number;
+    sceneSeed: number;
   }): HTMLCanvasElement | null;
   destroy(): void;
 }
@@ -31,6 +32,7 @@ uniform float u_daylight;
 uniform float u_twilight;
 uniform float u_light_x;
 uniform float u_moon_strength;
+uniform float u_scene_seed;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -158,12 +160,12 @@ vec4 waveField(vec2 p) {
   float q5 = dot(p, d5) * 6.20 + u_time * 1.62;
   float q6 = dot(p, d6) * 9.10 + u_time * 2.08;
 
-  float a1 = 0.53;
-  float a2 = 0.31;
-  float a3 = 0.18;
-  float a4 = 0.095;
-  float a5 = 0.040;
-  float a6 = 0.018;
+  float a1 = 0.64;
+  float a2 = 0.38;
+  float a3 = 0.22;
+  float a4 = 0.110;
+  float a5 = 0.046;
+  float a6 = 0.020;
 
   h += sin(q1) * a1;
   h += sin(q2) * a2;
@@ -279,27 +281,60 @@ vec3 renderNightSky(
     return base;
   }
 
+  float seedA =
+    fract(
+      sin(
+        u_scene_seed *
+        12.9898
+      ) *
+      43758.5453
+    );
+
+  float seedB =
+    fract(
+      sin(
+        (
+          u_scene_seed +
+          17.0
+        ) *
+        78.233
+      ) *
+      43758.5453
+    );
+
   vec2 starUv =
     vec2(
       (uv.x - 0.5) *
         aspect +
         0.5,
       uv.y
+    ) +
+    vec2(
+      seedA * 0.83,
+      seedB * 0.61
     );
 
   float starsA =
     starField(
       starUv,
-      118.0,
-      0.985
+      112.0,
+      0.970
     );
 
   float starsB =
     starField(
       starUv +
         vec2(0.071, 0.029),
-      205.0,
-      0.992
+      196.0,
+      0.985
+    );
+
+  float starsC =
+    starField(
+      starUv +
+        vec2(0.137, 0.091),
+      286.0,
+      0.993
     );
 
   float twinkle =
@@ -318,8 +353,9 @@ vec3 renderNightSky(
       1.00
     ) *
     (
-      starsA * 0.92 +
-      starsB * 0.62
+      starsA * 1.18 +
+      starsB * 0.84 +
+      starsC * 0.54
     ) *
     twinkle;
 
@@ -377,7 +413,7 @@ vec3 renderNightSky(
     galaxyColor *
     galaxy *
     night *
-    0.50;
+    0.78;
 
   return base;
 }
@@ -393,10 +429,36 @@ vec3 renderClouds(
       uv.y * 2.45
     );
 
+  float cloudSeedA =
+    fract(
+      sin(
+        (
+          u_scene_seed +
+          31.0
+        ) *
+        19.19
+      ) *
+      9173.31
+    );
+
+  float cloudSeedB =
+    fract(
+      sin(
+        (
+          u_scene_seed +
+          73.0
+        ) *
+        43.71
+      ) *
+      17231.71
+    );
+
   p +=
     vec2(
-      u_time * 0.007,
-      -u_time * 0.0012
+      u_time * 0.007 +
+        cloudSeedA * 4.8,
+      -u_time * 0.0012 +
+        cloudSeedB * 3.6
     );
 
   float low =
@@ -449,12 +511,13 @@ vec3 renderClouds(
 
   float density =
     smoothstep(
-      0.56,
-      0.79,
-      low * 0.72 +
-      detail * 0.34 +
-      horizonBanks * 0.17 +
-      overhead * 0.06
+      0.62,
+      0.84,
+      low * 0.66 +
+      detail * 0.24 +
+      horizonBanks * 0.11 +
+      overhead * 0.025 -
+      carve * 0.10
     );
 
   density *=
@@ -509,8 +572,8 @@ vec3 renderClouds(
   float cloudAlpha =
     density *
     mix(
-      0.76,
-      0.88,
+      0.46,
+      0.70,
       u_daylight
     );
 
@@ -696,7 +759,7 @@ void main() {
         vec3(
           -wf.x -
             microX,
-          2.18,
+          1.90,
           -wf.y -
             microZ
         )
@@ -1580,6 +1643,12 @@ export function createReentryOceanWebGLRenderer():
       "u_moon_strength",
     );
 
+  const sceneSeedUniform =
+    gl.getUniformLocation(
+      program,
+      "u_scene_seed",
+    );
+
   let destroyed = false;
 
   const renderer:
@@ -1590,6 +1659,7 @@ export function createReentryOceanWebGLRenderer():
         width,
         height,
         timeS,
+        sceneSeed,
       }) {
         if (destroyed) {
           return null;
@@ -1773,6 +1843,13 @@ export function createReentryOceanWebGLRenderer():
           gl.uniform1f(
             moonStrength,
             moon.strength,
+          );
+        }
+
+        if (sceneSeedUniform) {
+          gl.uniform1f(
+            sceneSeedUniform,
+            sceneSeed,
           );
         }
 
