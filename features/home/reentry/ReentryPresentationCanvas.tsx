@@ -56,6 +56,10 @@ import {
   startReentryAmbience,
   startStage1ClearAudio,
 } from "./reentryAudio";
+import {
+  createReentryOceanWebGLRenderer,
+  type ReentryOceanWebGLRenderer,
+} from "./reentryOceanWebGL";
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
 
 /*
@@ -1779,6 +1783,7 @@ function drawSurfaceApproach(
   h: number,
   surfaceMix: number,
   timeSinceVisualS: number,
+  webglSurface: HTMLCanvasElement | null = null,
 ): void {
   if (surfaceMix <= 0.001) return;
 
@@ -1790,6 +1795,37 @@ function drawSurfaceApproach(
   const daylight = clamp01(Math.sin(((hour - 5.5) / 13) * Math.PI));
   const minDim = Math.min(w, h);
   const horizonY = h * 0.635;
+
+  if (webglSurface) {
+    ctx.save();
+    ctx.globalAlpha = surfaceMix;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(
+      webglSurface,
+      0,
+      0,
+      w,
+      h,
+    );
+    ctx.restore();
+
+    /*
+     * Moon is kept as the existing deterministic lunar overlay so phase and
+     * visibility stay consistent with the rest of Stage 1.
+     */
+    if (daylight < 0.42) {
+      drawAtmosphericMoon(
+        ctx,
+        w,
+        horizonY,
+        surfaceMix,
+        Date.now(),
+      );
+    }
+
+    return;
+  }
 
   ctx.save();
   ctx.globalAlpha = surfaceMix;
@@ -3107,6 +3143,8 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
+  const oceanWebGLRef =
+    useRef<ReentryOceanWebGLRenderer | null>(null);
   const resultSoundRef = useRef<string | null>(null);
   const stage1ClearSoundRef = useRef<string | null>(null);
   const visualLatchPlaybackRef = useRef<number | null>(null);
@@ -3145,6 +3183,30 @@ export function ReentryPresentationCanvas({
       live = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (variant !== "stage") {
+      return;
+    }
+
+    const renderer =
+      createReentryOceanWebGLRenderer();
+
+    oceanWebGLRef.current =
+      renderer;
+
+    return () => {
+      renderer?.destroy();
+
+      if (
+        oceanWebGLRef.current ===
+        renderer
+      ) {
+        oceanWebGLRef.current =
+          null;
+      }
+    };
+  }, [variant]);
 
   useEffect(() => {
     if (variant !== "stage") return;
@@ -3823,6 +3885,15 @@ const failureTravelT =
         if (
           showSurfaceApproach
         ) {
+          const oceanSurface =
+            oceanWebGLRef.current?.render({
+              width: w,
+              height: h,
+              timeS:
+                timeSinceVisualAtmosphereEntryS,
+            }) ??
+            null;
+
           drawSurfaceApproach(
             ctx,
             w,
@@ -3835,6 +3906,7 @@ const failureTravelT =
                 2.2,
             ),
             timeSinceVisualAtmosphereEntryS,
+            oceanSurface,
           );
         }
 
