@@ -318,7 +318,7 @@ vec3 renderNightSky(
     starField(
       starUv,
       112.0,
-      0.970
+      0.955
     );
 
   float starsB =
@@ -326,7 +326,7 @@ vec3 renderNightSky(
       starUv +
         vec2(0.071, 0.029),
       196.0,
-      0.985
+      0.976
     );
 
   float starsC =
@@ -334,7 +334,7 @@ vec3 renderNightSky(
       starUv +
         vec2(0.137, 0.091),
       286.0,
-      0.993
+      0.988
     );
 
   float twinkle =
@@ -511,13 +511,24 @@ vec3 renderClouds(
 
   float density =
     smoothstep(
-      0.62,
-      0.84,
-      low * 0.66 +
-      detail * 0.24 +
-      horizonBanks * 0.11 +
-      overhead * 0.025 -
-      carve * 0.10
+      0.68,
+      0.90,
+      low * 0.58 +
+      detail * 0.19 +
+      horizonBanks * 0.12 +
+      overhead * 0.012 -
+      carve * 0.16
+    );
+
+  const float OPEN_SKY_BASE = 0.18;
+
+  float cloudPlacement =
+    clamp(
+      OPEN_SKY_BASE +
+      horizonBanks * 0.82 +
+      overhead * 0.10,
+      0.0,
+      1.0
     );
 
   density *=
@@ -525,7 +536,8 @@ vec3 renderClouds(
       0.02,
       0.16,
       uv.y
-    );
+    ) *
+    cloudPlacement;
 
   float edge =
     smoothstep(
@@ -572,8 +584,8 @@ vec3 renderClouds(
   float cloudAlpha =
     density *
     mix(
-      0.46,
-      0.70,
+      0.30,
+      0.60,
       u_daylight
     );
 
@@ -1106,77 +1118,90 @@ void main() {
       );
 
     /*
-     * The hot re-entry nose reflects as an unstable orange ribbon below the
-     * craft during the final seconds, matching the reference look.
+     * Local hot-hull reflection.
+     *
+     * A hot capsule can warm and brighten the immediate disturbed water, but
+     * it should not paint a long vertical orange stripe toward the camera.
      */
-    float landingReveal =
+    float impactIn =
       smoothstep(
-        12.6,
-        15.0,
+        12.9,
+        14.35,
         u_time
       );
 
-    float heatWidth =
-      0.010 +
-      depth * 0.050;
+    float impactOut =
+      1.0 -
+      smoothstep(
+        15.2,
+        21.0,
+        u_time
+      );
 
-    float heatPath =
-      exp(
-        -abs(
+    vec2 impactDelta =
+      vec2(
+        (
           uv.x -
           0.48
-        ) /
-        heatWidth
+        ) *
+          aspect *
+          1.25,
+        (
+          uv.y -
+          0.79
+        ) *
+          1.75
       );
 
-    heatPath *=
-      smoothstep(
-        0.32,
-        0.60,
-        depth
+    float impactDist =
+      dot(
+        impactDelta,
+        impactDelta
       );
 
-    float heatFlicker =
-      0.50 +
-      0.50 *
-      noise2(
-        vec2(
-          p.x * 2.8 +
-            u_time * 0.45,
-          p.y * 1.6 -
-            u_time * 0.20
-        )
+    float localHeat =
+      exp(
+        -impactDist *
+        82.0
       );
+
+    float localBreakup =
+      0.62 +
+      0.38 *
+        noise2(
+          p * 2.5 +
+          vec2(
+            u_time * 0.20,
+            -u_time * 0.11
+          )
+        );
 
     float orangeReflection =
-      landingReveal *
-      heatPath *
-      heatFlicker *
-      (
-        0.32 +
-        directSpec * 0.80
-      );
+      impactIn *
+      impactOut *
+      localHeat *
+      localBreakup;
 
     color +=
       vec3(
         1.0,
-        0.23,
-        0.035
+        0.24,
+        0.045
       ) *
       orangeReflection *
-      1.45;
+      0.62;
 
     color +=
       vec3(
         1.0,
-        0.63,
-        0.18
+        0.70,
+        0.26
       ) *
       orangeReflection *
       orangeReflection *
-      1.10;
+      0.52;
 
-    float horizonHaze =
+    float horizonHaze =    float horizonHaze =
       1.0 -
       smoothstep(
         0.0,

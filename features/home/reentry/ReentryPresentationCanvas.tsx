@@ -1696,6 +1696,7 @@ function drawStage1ClearSequence(
   w: number,
   h: number,
   timeSinceVisualS: number,
+  seed: number,
 ): void {
   const splashStartS = 14.15;
 
@@ -1728,14 +1729,17 @@ function drawStage1ClearSequence(
     );
 
   /*
-   * Impact wall + spray. The droplets accelerate and fall instead of
-   * appearing as static white ovals.
+   * Impact crown + sheets + droplets.
+   *
+   * The old splash was too evenly distributed. This version deliberately
+   * separates the impact into unequal left/right water sheets plus many
+   * droplets with different launch delays, heights and widths.
    */
   const impactPulse =
     1 -
     smoothstep(
       splashAge /
-        2.55,
+        3.2,
     );
 
   if (
@@ -1743,162 +1747,399 @@ function drawStage1ClearSequence(
     0.001
   ) {
     ctx.save();
-
     ctx.globalCompositeOperation =
       "screen";
 
-    const wall =
-      ctx.createRadialGradient(
-        craftX,
-        waterY,
-        minDim * 0.010,
-        craftX,
-        waterY,
-        minDim * 0.19,
+    const impactSeed =
+      seed ^
+      0x6ab3d91f;
+
+    const sheetLife =
+      clamp01(
+        splashAge /
+          1.75,
       );
 
-    wall.addColorStop(
-      0,
-      "rgba(255,255,255,0.55)",
-    );
-
-    wall.addColorStop(
-      0.26,
-      "rgba(218,244,252,0.22)",
-    );
-
-    wall.addColorStop(
-      1,
-      "rgba(180,225,243,0)",
-    );
-
-    ctx.globalAlpha =
-      impactPulse * 0.68;
-
-    ctx.fillStyle =
-      wall;
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-      craftX,
-      waterY +
-        minDim * 0.012,
-      minDim *
+    const sheetFade =
+      1 -
+      smoothstep(
         (
-          0.055 +
-          splashAge *
-            0.085
-        ),
-      minDim *
+          splashAge -
+          0.72
+        ) /
+          1.55,
+      );
+
+    /*
+     * Two broad sheets. They are intentionally different heights and widths
+     * so the splash does not look like a symmetric icon.
+     */
+    for (
+      let sideIndex = 0;
+      sideIndex < 2;
+      sideIndex++
+    ) {
+      const side =
+        sideIndex === 0
+          ? -1
+          : 1;
+
+      const a =
+        hash01(
+          impactSeed,
+          17 +
+            sideIndex * 31,
+        );
+
+      const b =
+        hash01(
+          impactSeed ^
+            0x51e2a77b,
+          29 +
+            sideIndex * 47,
+        );
+
+      const height =
+        minDim *
         (
-          0.018 +
-          splashAge *
-            0.015
-        ),
-      0,
-      0,
-      Math.PI * 2,
-    );
+          0.11 +
+          a * 0.13
+        ) *
+        Math.sin(
+          Math.min(
+            1,
+            sheetLife
+          ) *
+            Math.PI,
+        );
 
-    ctx.fill();
+      const width =
+        minDim *
+        (
+          0.085 +
+          b * 0.085
+        ) *
+        (
+          0.55 +
+          sheetLife * 0.65
+        );
 
+      const innerX =
+        craftX +
+        side *
+          minDim *
+          0.014;
+
+      const outerX =
+        craftX +
+        side *
+          width;
+
+      const topX =
+        craftX +
+        side *
+          width *
+          (
+            0.36 +
+            a * 0.22
+          );
+
+      const topY =
+        waterY -
+        height;
+
+      const sheet =
+        ctx.createLinearGradient(
+          craftX,
+          waterY,
+          topX,
+          topY,
+        );
+
+      sheet.addColorStop(
+        0,
+        "rgba(255,255,255,0.76)",
+      );
+      sheet.addColorStop(
+        0.22,
+        "rgba(218,242,252,0.52)",
+      );
+      sheet.addColorStop(
+        0.62,
+        "rgba(158,213,236,0.19)",
+      );
+      sheet.addColorStop(
+        1,
+        "rgba(132,195,224,0)",
+      );
+
+      ctx.globalAlpha =
+        sheetFade *
+        (
+          0.46 +
+          a * 0.31
+        );
+
+      ctx.fillStyle =
+        sheet;
+
+      ctx.beginPath();
+      ctx.moveTo(
+        innerX,
+        waterY +
+          minDim * 0.012,
+      );
+      ctx.bezierCurveTo(
+        craftX +
+          side *
+            width *
+            0.12,
+        waterY -
+          height * 0.44,
+        topX -
+          side *
+            width *
+            0.08,
+        topY +
+          height * 0.10,
+        topX,
+        topY,
+      );
+      ctx.bezierCurveTo(
+        topX +
+          side *
+            width *
+            (
+              0.12 +
+              b * 0.14
+            ),
+        topY +
+          height *
+            (
+              0.18 +
+              a * 0.18
+            ),
+        outerX,
+        waterY -
+          height * 0.10,
+        outerX,
+        waterY +
+          minDim * 0.020,
+      );
+      ctx.bezierCurveTo(
+        craftX +
+          side *
+            width *
+            0.52,
+        waterY +
+          minDim * 0.037,
+        craftX +
+          side *
+            width *
+            0.22,
+        waterY +
+          minDim * 0.024,
+        innerX,
+        waterY +
+          minDim * 0.012,
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    /*
+     * Irregular droplets: more numerous than before, but not uniformly
+     * spaced. Gravity brings them back into the sea.
+     */
     for (
       let i = 0;
-      i < 44;
+      i < 92;
       i++
     ) {
       const a =
         hash01(
-          0x5eaf13,
+          impactSeed ^
+            0x5eaf13,
           i * 19 + 3,
         );
 
       const b =
         hash01(
-          0x91c33d,
+          impactSeed ^
+            0x91c33d,
           i * 29 + 7,
         );
 
       const c =
         hash01(
-          0x62a17b,
+          impactSeed ^
+            0x62a17b,
           i * 37 + 11,
+        );
+
+      const d =
+        hash01(
+          impactSeed ^
+            0x2139c5a1,
+          i * 43 + 17,
+        );
+
+      const launchDelay =
+        c *
+        (
+          0.16 +
+          d * 0.46
         );
 
       const launchAge =
         Math.max(
           0,
           splashAge -
-            c * 0.26,
+            launchDelay,
         );
 
-      const sideVelocity =
+      if (
+        launchAge <= 0
+      ) {
+        continue;
+      }
+
+      const side =
+        a < 0.47
+          ? -1
+          : 1;
+
+      const sideSpeed =
+        minDim *
         (
-          a -
-          0.5
+          0.045 +
+          Math.pow(
+            b,
+            0.62,
+          ) *
+            0.25
         ) *
-        minDim *
-        (
-          0.20 +
-          b * 0.18
-        );
+        side;
 
-      const riseVelocity =
+      const riseSpeed =
         minDim *
         (
-          0.10 +
-          b * 0.18
+          0.13 +
+          Math.pow(
+            d,
+            0.72,
+          ) *
+            0.31
         );
 
       const px =
         craftX +
-        sideVelocity *
-          launchAge;
+        sideSpeed *
+          launchAge +
+        Math.sin(
+          i * 1.91 +
+          clockS * 0.43,
+        ) *
+          minDim *
+          0.004;
 
       const py =
         waterY -
-        riseVelocity *
+        riseSpeed *
           launchAge +
         minDim *
-          0.085 *
+          (
+            0.090 +
+            c * 0.025
+          ) *
           launchAge *
           launchAge;
+
+      const lifeFade =
+        1 -
+        smoothstep(
+          (
+            launchAge -
+            (
+              0.52 +
+              b * 0.62
+            )
+          ) /
+            (
+              0.72 +
+              d * 0.42
+            ),
+        );
+
+      if (
+        lifeFade <= 0.002
+      ) {
+        continue;
+      }
 
       const rr =
         minDim *
         (
-          0.0025 +
-          b * 0.0065
-        ) *
-        impactPulse;
+          0.0014 +
+          b * 0.0062
+        );
 
       ctx.globalAlpha =
         impactPulse *
+        lifeFade *
         (
-          0.18 +
-          b * 0.58
+          0.17 +
+          d * 0.73
         );
 
+      const drop =
+        ctx.createRadialGradient(
+          px,
+          py,
+          0,
+          px,
+          py,
+          rr * 2.2,
+        );
+
+      drop.addColorStop(
+        0,
+        "rgba(255,255,255,0.96)",
+      );
+      drop.addColorStop(
+        0.44,
+        "rgba(218,242,252,0.66)",
+      );
+      drop.addColorStop(
+        1,
+        "rgba(164,210,232,0)",
+      );
+
       ctx.fillStyle =
-        "rgba(236,250,255,0.95)";
+        drop;
 
       ctx.beginPath();
-
       ctx.ellipse(
         px,
         py,
-        rr * 0.62,
-        rr * 1.85,
+        rr *
+          (
+            0.55 +
+            c * 0.55
+          ),
+        rr *
+          (
+            1.25 +
+            d * 2.15
+          ),
         (
           a -
           0.5
         ) *
-          1.2,
+          1.05,
         0,
         Math.PI * 2,
       );
-
       ctx.fill();
     }
 
@@ -2035,203 +2276,291 @@ function drawStage1ClearSequence(
   }
 
   /*
-   * Steam is generated by the still-hot hull flashing seawater to vapor.
-   * Several low-opacity wisps rise at different rates so it reads as vapor,
-   * not as one painted cloud.
+   * Long-lived steam from a still-hot hull.
+   *
+   * Steam now continues almost through the CLEAR hold. New wisps start at
+   * different times, rise at different rates and gradually thin out instead
+   * of disappearing together.
    */
   const steamIn =
     smoothstep(
-      splashAge / 0.45,
+      splashAge / 0.38,
     );
 
-  const steamOut =
-    1 -
-    smoothstep(
-      (
-        splashAge -
-        5.0
-      ) /
-        4.0,
-    );
-
-  const steamAlpha =
+  const steamEnvelope =
     steamIn *
-    steamOut;
+    (
+      1 -
+      smoothstep(
+        (
+          splashAge -
+          4.0
+        ) /
+          11.5,
+      )
+    );
 
   if (
-    steamAlpha >
-    0.002
+    steamEnvelope >
+    0.001
   ) {
     ctx.save();
     ctx.globalCompositeOperation =
       "screen";
-    ctx.filter =
-      "blur(" +
-      Math.max(
-        2,
-        minDim * 0.006,
-      ) +
-      "px)";
+
+    const steamSeed =
+      seed ^
+      0x17d4c3ab;
 
     for (
       let i = 0;
-      i < 18;
+      i < 34;
       i++
     ) {
       const a =
         hash01(
-          0x7310a9,
+          steamSeed,
           i * 19 + 3,
         );
+
       const b =
         hash01(
-          0x3f9d27,
+          steamSeed ^
+            0x3f9d27,
           i * 29 + 7,
         );
+
       const c =
         hash01(
-          0x1b7a41,
+          steamSeed ^
+            0x1b7a41,
           i * 37 + 13,
         );
 
+      const d =
+        hash01(
+          steamSeed ^
+            0x55c401e9,
+          i * 43 + 23,
+        );
+
+      /*
+       * Some vapor appears immediately, some continues to be produced several
+       * seconds later while the hull is still hot.
+       */
       const delay =
-        c * 1.25;
+        c *
+        (
+          0.70 +
+          d * 6.1
+        );
 
       const age =
-        Math.max(
-          0,
-          splashAge -
-            delay,
-        );
+        splashAge -
+          delay;
+
+      if (
+        age <= 0
+      ) {
+        continue;
+      }
+
+      const lifetime =
+        5.8 +
+        b * 7.6;
 
       const life =
         clamp01(
           age /
-            (
-              3.2 +
-              b * 2.5
-            ),
+            lifetime,
         );
 
       if (
-        age <= 0 ||
         life >= 1
       ) {
         continue;
       }
 
-      const drift =
+      const fadeIn =
+        smoothstep(
+          life / 0.12,
+        );
+
+      const fadeOut =
+        1 -
+        smoothstep(
+          (
+            life -
+            0.46
+          ) /
+            0.54,
+        );
+
+      const localAlpha =
+        steamEnvelope *
+        fadeIn *
+        fadeOut;
+
+      if (
+        localAlpha <= 0.001
+      ) {
+        continue;
+      }
+
+      const sideBias =
         (
           a -
           0.5
         ) *
         minDim *
         (
-          0.05 +
-          life * 0.11
+          0.020 +
+          d * 0.060
+        );
+
+      const windDrift =
+        (
+          a -
+          0.5
+        ) *
+        minDim *
+        life *
+        (
+          0.045 +
+          b * 0.055
+        );
+
+      const curl =
+        Math.sin(
+          clockS *
+            (
+              0.28 +
+              b * 0.24
+            ) +
+          i * 1.37
+        ) *
+        minDim *
+        (
+          0.007 +
+          life * 0.014
         );
 
       const px =
         craftX +
-        drift +
-        Math.sin(
-          clockS *
-            (
-              0.35 +
-              b * 0.18
-            ) +
-          i
-        ) *
-          minDim *
-          0.012;
+        sideBias +
+        windDrift +
+        curl;
 
       const py =
         waterY -
         minDim *
           (
-            0.025 +
+            0.018 +
             life *
               (
-                0.12 +
-                b * 0.10
+                0.13 +
+                d * 0.16
               )
           );
 
       const rx =
         minDim *
         (
-          0.018 +
-          life * 0.045 +
-          b * 0.018
+          0.012 +
+          b * 0.018 +
+          life * 0.050
         );
 
       const ry =
         rx *
         (
-          1.10 +
-          life * 1.7
+          1.15 +
+          life * 2.15 +
+          c * 0.35
         );
+
+      ctx.save();
+
+      ctx.filter =
+        "blur(" +
+        Math.max(
+          1.5,
+          minDim *
+            (
+              0.0035 +
+              life * 0.004
+            ),
+        ) +
+        "px)";
 
       const wisp =
         ctx.createRadialGradient(
           px,
           py,
-          0,
+          rx * 0.04,
           px,
           py,
           ry,
         );
 
+      const coreAlpha =
+        (
+          0.045 +
+          b * 0.10
+        ) *
+        localAlpha;
+
       wisp.addColorStop(
         0,
-        "rgba(242,248,250," +
-          (
-            0.10 +
-            b * 0.09
-          ) *
-          steamAlpha *
-          (
-            1 -
-            life
-          ) +
+        "rgba(248,251,252," +
+          coreAlpha +
           ")",
       );
+
       wisp.addColorStop(
-        0.42,
-        "rgba(190,209,219," +
-          (
-            0.05 +
-            b * 0.05
-          ) *
-          steamAlpha *
-          (
-            1 -
-            life
-          ) +
+        0.28,
+        "rgba(220,231,236," +
+          coreAlpha * 0.72 +
           ")",
       );
+
+      wisp.addColorStop(
+        0.62,
+        "rgba(175,195,205," +
+          coreAlpha * 0.34 +
+          ")",
+      );
+
       wisp.addColorStop(
         1,
-        "rgba(140,167,180,0)",
+        "rgba(130,154,166,0)",
       );
 
       ctx.fillStyle =
         wisp;
+
       ctx.beginPath();
+
       ctx.ellipse(
         px,
         py,
-        rx,
+        rx *
+          (
+            0.82 +
+            c * 0.35
+          ),
         ry,
         (
           a -
           0.5
         ) *
-          0.28,
+          0.34,
         0,
         Math.PI * 2,
       );
+
       ctx.fill();
+      ctx.restore();
     }
 
     ctx.restore();
@@ -2249,13 +2578,13 @@ function drawStage1ClearSequence(
   ) {
     const a =
       hash01(
-        0x7814ef,
+        seed ^ 0x7814ef,
         i * 13 + 1,
       );
 
     const b =
       hash01(
-        0x5ac83d,
+        seed ^ 0x5ac83d,
         i * 23 + 9,
       );
 
@@ -4849,19 +5178,19 @@ const failureTravelT =
             result?.seed ?? 1,
             entrySteepness,
           );
-        }
 
-        drawPlasma(
-          ctx,
-          pose.x,
-          pose.y,
-          pose.angle,
-          craftLength,
-          heat,
-          result?.seed ?? 1,
-          playback,
-          entrySteepness,
-        );
+          drawPlasma(
+            ctx,
+            pose.x,
+            pose.y,
+            pose.angle,
+            craftLength,
+            heat,
+            result?.seed ?? 1,
+            playback,
+            entrySteepness,
+          );
+        }
       }
 
       if (craftAlpha > 0.015 && !burnGone) {
@@ -4921,6 +5250,8 @@ const failureTravelT =
           w,
           h,
           timeSinceVisualAtmosphereEntryS,
+          result?.seed ??
+            1,
         );
       }
 
