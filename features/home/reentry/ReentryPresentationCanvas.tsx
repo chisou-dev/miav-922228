@@ -1691,6 +1691,178 @@ function drawEscapeSkiff(
 
 
 
+function drawLandingWaterOcclusion(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  x: number,
+  y: number,
+  craftLength: number,
+  landingAgeS: number,
+): void {
+  if (
+    landingAgeS <= 0
+  ) {
+    return;
+  }
+
+  const waterY =
+    h * 0.78;
+
+  const minDim =
+    Math.min(
+      w,
+      h,
+    );
+
+  const submerge =
+    smoothstep(
+      landingAgeS /
+        1.25,
+    );
+
+  ctx.save();
+
+  /*
+   * Cover the part of the vehicle below the surface with moving water,
+   * rather than simply lowering the craft opacity.
+   */
+  const coverTop =
+    waterY -
+    craftLength *
+      (
+        0.05 +
+        submerge * 0.09
+      );
+
+  const water =
+    ctx.createLinearGradient(
+      0,
+      coverTop,
+      0,
+      coverTop +
+        craftLength * 0.85,
+    );
+
+  water.addColorStop(
+    0,
+    "rgba(24,66,92,0.10)",
+  );
+  water.addColorStop(
+    0.16,
+    "rgba(11,48,73,0.46)",
+  );
+  water.addColorStop(
+    0.46,
+    "rgba(5,31,53,0.82)",
+  );
+  water.addColorStop(
+    1,
+    "rgba(2,18,36,0.97)",
+  );
+
+  ctx.fillStyle =
+    water;
+
+  ctx.beginPath();
+  ctx.rect(
+    0,
+    coverTop,
+    w,
+    h -
+      coverTop,
+  );
+  ctx.fill();
+
+  /*
+   * A broken surface rim hides the exact clipping boundary.
+   */
+  ctx.globalCompositeOperation =
+    "screen";
+
+  for (
+    let i = 0;
+    i < 18;
+    i++
+  ) {
+    const phase =
+      i /
+      17;
+
+    const px =
+      x +
+      (
+        phase -
+        0.5
+      ) *
+        craftLength *
+        1.55;
+
+    const py =
+      coverTop +
+      Math.sin(
+        phase *
+          Math.PI *
+          3.2 +
+        landingAgeS *
+          2.1
+      ) *
+        minDim *
+        0.004;
+
+    const rr =
+      craftLength *
+      (
+        0.018 +
+        (
+          i %
+          4
+        ) *
+          0.004
+      );
+
+    const rim =
+      ctx.createRadialGradient(
+        px,
+        py,
+        0,
+        px,
+        py,
+        rr * 3.6,
+      );
+
+    rim.addColorStop(
+      0,
+      "rgba(235,249,255,0.34)",
+    );
+    rim.addColorStop(
+      0.42,
+      "rgba(165,215,236,0.14)",
+    );
+    rim.addColorStop(
+      1,
+      "rgba(135,190,218,0)",
+    );
+
+    ctx.fillStyle =
+      rim;
+
+    ctx.beginPath();
+    ctx.ellipse(
+      px,
+      py,
+      rr * 3.6,
+      rr * 0.82,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 function drawStage1ClearSequence(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -1771,8 +1943,11 @@ function drawStage1ClearSequence(
       );
 
     /*
-     * Two broad sheets. They are intentionally different heights and widths
-     * so the splash does not look like a symmetric icon.
+     * Soft impact crown.
+     *
+     * Do not draw filled polygonal water sheets: on a phone they read as
+     * transparent triangles. Build the crown from overlapping translucent
+     * spray masses instead.
      */
     for (
       let sideIndex = 0;
@@ -1784,14 +1959,7 @@ function drawStage1ClearSequence(
           ? -1
           : 1;
 
-      const a =
-        hash01(
-          impactSeed,
-          17 +
-            sideIndex * 31,
-        );
-
-      const b =
+      const sideBias =
         hash01(
           impactSeed ^
             0x51e2a77b,
@@ -1799,155 +1967,218 @@ function drawStage1ClearSequence(
             sideIndex * 47,
         );
 
-      const height =
-        minDim *
-        (
-          0.11 +
-          a * 0.13
-        ) *
-        Math.sin(
-          Math.min(
-            1,
-            sheetLife
-          ) *
-            Math.PI,
-        );
-
-      const width =
-        minDim *
-        (
-          0.085 +
-          b * 0.085
-        ) *
-        (
-          0.55 +
-          sheetLife * 0.65
-        );
-
-      const innerX =
-        craftX +
-        side *
-          minDim *
-          0.014;
-
-      const outerX =
-        craftX +
-        side *
-          width;
-
-      const topX =
-        craftX +
-        side *
-          width *
-          (
-            0.36 +
-            a * 0.22
+      for (
+        let plume = 0;
+        plume < 11;
+        plume++
+      ) {
+        const a =
+          hash01(
+            impactSeed ^
+              0x2468b9d1,
+            sideIndex * 101 +
+              plume * 17 +
+              3,
           );
 
-      const topY =
-        waterY -
-        height;
+        const b =
+          hash01(
+            impactSeed ^
+              0x71c3e05b,
+            sideIndex * 127 +
+              plume * 23 +
+              7,
+          );
 
-      const sheet =
-        ctx.createLinearGradient(
-          craftX,
-          waterY,
-          topX,
-          topY,
+        const c =
+          hash01(
+            impactSeed ^
+              0x9d12ab43,
+            sideIndex * 149 +
+              plume * 31 +
+              11,
+          );
+
+        const plumeDelay =
+          plume *
+          (
+            0.018 +
+            a * 0.026
+          );
+
+        const plumeAge =
+          Math.max(
+            0,
+            splashAge -
+              plumeDelay,
+          );
+
+        if (
+          plumeAge <= 0
+        ) {
+          continue;
+        }
+
+        const plumeLife =
+          0.70 +
+          b * 0.85;
+
+        const t =
+          clamp01(
+            plumeAge /
+              plumeLife,
+          );
+
+        if (
+          t >= 1
+        ) {
+          continue;
+        }
+
+        const rise =
+          minDim *
+          (
+            0.020 +
+            (
+              0.13 +
+              c * 0.15
+            ) *
+              Math.sin(
+                Math.PI *
+                  Math.min(
+                    1,
+                    t * 1.05,
+                  ),
+              )
+          );
+
+        const outward =
+          minDim *
+          (
+            0.014 +
+            (
+              0.040 +
+              sideBias * 0.080 +
+              b * 0.065
+            ) *
+              t
+          );
+
+        const px =
+          craftX +
+          side *
+            outward +
+          Math.sin(
+            clockS * 0.61 +
+            plume * 1.7
+          ) *
+            minDim *
+            0.004;
+
+        const py =
+          waterY -
+          rise +
+          minDim *
+            0.018 *
+            t *
+            t;
+
+        const rx =
+          minDim *
+          (
+            0.008 +
+            b * 0.012 +
+            t * 0.010
+          );
+
+        const ry =
+          rx *
+          (
+            1.6 +
+            a * 1.3
+          );
+
+        const alpha =
+          (
+            1 -
+            smoothstep(
+              (
+                t -
+                0.42
+              ) /
+                0.58,
+            )
+          ) *
+          (
+            0.12 +
+            c * 0.22
+          ) *
+          impactPulse;
+
+        if (
+          alpha <= 0.002
+        ) {
+          continue;
+        }
+
+        const plumeGradient =
+          ctx.createRadialGradient(
+            px,
+            py,
+            0,
+            px,
+            py,
+            ry,
+          );
+
+        plumeGradient.addColorStop(
+          0,
+          "rgba(246,252,255," +
+            alpha +
+            ")",
+        );
+        plumeGradient.addColorStop(
+          0.36,
+          "rgba(209,237,249," +
+            alpha * 0.68 +
+            ")",
+        );
+        plumeGradient.addColorStop(
+          0.74,
+          "rgba(160,210,232," +
+            alpha * 0.22 +
+            ")",
+        );
+        plumeGradient.addColorStop(
+          1,
+          "rgba(142,197,222,0)",
         );
 
-      sheet.addColorStop(
-        0,
-        "rgba(255,255,255,0.76)",
-      );
-      sheet.addColorStop(
-        0.22,
-        "rgba(218,242,252,0.52)",
-      );
-      sheet.addColorStop(
-        0.62,
-        "rgba(158,213,236,0.19)",
-      );
-      sheet.addColorStop(
-        1,
-        "rgba(132,195,224,0)",
-      );
+        ctx.fillStyle =
+          plumeGradient;
 
-      ctx.globalAlpha =
-        sheetFade *
-        (
-          0.46 +
-          a * 0.31
+        ctx.beginPath();
+        ctx.ellipse(
+          px,
+          py,
+          rx,
+          ry,
+          side *
+            (
+              -0.20 +
+              a * 0.22
+            ),
+          0,
+          Math.PI * 2,
         );
-
-      ctx.fillStyle =
-        sheet;
-
-      ctx.beginPath();
-      ctx.moveTo(
-        innerX,
-        waterY +
-          minDim * 0.012,
-      );
-      ctx.bezierCurveTo(
-        craftX +
-          side *
-            width *
-            0.12,
-        waterY -
-          height * 0.44,
-        topX -
-          side *
-            width *
-            0.08,
-        topY +
-          height * 0.10,
-        topX,
-        topY,
-      );
-      ctx.bezierCurveTo(
-        topX +
-          side *
-            width *
-            (
-              0.12 +
-              b * 0.14
-            ),
-        topY +
-          height *
-            (
-              0.18 +
-              a * 0.18
-            ),
-        outerX,
-        waterY -
-          height * 0.10,
-        outerX,
-        waterY +
-          minDim * 0.020,
-      );
-      ctx.bezierCurveTo(
-        craftX +
-          side *
-            width *
-            0.52,
-        waterY +
-          minDim * 0.037,
-        craftX +
-          side *
-            width *
-            0.22,
-        waterY +
-          minDim * 0.024,
-        innerX,
-        waterY +
-          minDim * 0.012,
-      );
-      ctx.closePath();
-      ctx.fill();
+        ctx.fill();
+      }
     }
 
     /*
+     * Irregular droplets: more numerous than before, but not uniformly
+     * spaced. Gravity brings them back into the sea.
+     */    /*
      * Irregular droplets: more numerous than before, but not uniformly
      * spaced. Gravity brings them back into the sea.
      */
@@ -2294,9 +2525,9 @@ function drawStage1ClearSequence(
       smoothstep(
         (
           splashAge -
-          4.0
+          5.5
         ) /
-          11.5,
+          14.5,
       )
     );
 
@@ -2366,8 +2597,8 @@ function drawStage1ClearSequence(
       }
 
       const lifetime =
-        5.8 +
-        b * 7.6;
+        7.0 +
+        b * 9.0;
 
       const life =
         clamp01(
@@ -5204,6 +5435,26 @@ const failureTravelT =
           heat,
           assistMode,
         );
+
+        if (
+          outcome ===
+            "EARTH_REACHED" &&
+          latched &&
+          !miss &&
+          timeSinceVisualAtmosphereEntryS >
+            14.15
+        ) {
+          drawLandingWaterOcclusion(
+            ctx,
+            w,
+            h,
+            pose.x,
+            pose.y,
+            craftLength,
+            timeSinceVisualAtmosphereEntryS -
+              14.15,
+          );
+        }
       }
 
       if (

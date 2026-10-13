@@ -1201,7 +1201,7 @@ void main() {
       orangeReflection *
       0.52;
 
-    float horizonHaze =    float horizonHaze =
+    float horizonHaze =
       1.0 -
       smoothstep(
         0.0,
