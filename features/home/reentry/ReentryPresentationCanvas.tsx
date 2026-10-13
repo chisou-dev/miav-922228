@@ -1709,34 +1709,22 @@ function drawStage1PhotoClearSequence(
     timeSinceVisualS -
     CLEAR_START_S;
 
-  const minDim =
-    Math.min(w, h);
+  const sceneIn =
+    smoothstep(
+      clearS / 0.72,
+    );
 
   const clockS =
     typeof performance !== "undefined"
       ? performance.now() / 1000
       : timeSinceVisualS;
 
-  const now = new Date();
-
-  const localHour =
-    now.getHours() +
-    now.getMinutes() / 60;
-
-  const daylight =
-    clamp01(
-      Math.sin(
-        ((localHour - 5.5) / 13) *
-          Math.PI,
-      ),
-    );
-
-  const sceneIn =
-    smoothstep(clearS / 0.72);
-
   /*
-   * Use the generated photographic reference as the visual plate.
-   * Crop away its baked top/bottom UI so the real game UI remains live.
+   * Keep the generated photographic plate intact.
+   *
+   * The previous version mixed this photo with canvas-drawn cartoon alien,
+   * capsule and hover-skiff layers. That visual-language mismatch is what
+   * made the clear scene look strange. This path now stays photographic.
    */
   const sourceY =
     photo.naturalHeight * 0.115;
@@ -1754,26 +1742,44 @@ function drawStage1PhotoClearSequence(
     );
 
   const sourceX =
-    (photo.naturalWidth - sourceW) * 0.5;
+    (
+      photo.naturalWidth -
+      sourceW
+    ) *
+    0.5;
 
   const bobY =
-    Math.sin(clockS * 0.78) * 1.8;
+    Math.sin(
+      clockS * 0.70,
+    ) *
+    1.25;
+
+  const breathe =
+    1 +
+    Math.sin(
+      clockS * 0.32,
+    ) *
+    0.0025;
 
   ctx.save();
-  ctx.globalAlpha = sceneIn;
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
 
-  if (daylight > 0.46) {
-    ctx.filter =
-      "saturate(1.04) contrast(1.03)";
-  } else if (daylight > 0.12) {
-    ctx.filter =
-      "brightness(0.72) saturate(0.88) sepia(0.12)";
-  } else {
-    ctx.filter =
-      "brightness(0.28) saturate(0.72) hue-rotate(8deg) contrast(1.08)";
-  }
+  ctx.globalAlpha =
+    sceneIn;
+
+  ctx.imageSmoothingEnabled =
+    true;
+
+  ctx.imageSmoothingQuality =
+    "high";
+
+  /*
+   * Very small camera breathing only. Do not distort the craft.
+   */
+  const dw =
+    w * breathe;
+
+  const dh =
+    h * breathe;
 
   ctx.drawImage(
     photo,
@@ -1781,49 +1787,55 @@ function drawStage1PhotoClearSequence(
     sourceY,
     sourceW,
     sourceH,
-    0,
-    -2 + bobY,
-    w,
-    h + 4,
+    (w - dw) * 0.5,
+    (h - dh) * 0.5 + bobY,
+    dw,
+    dh,
   );
 
-  ctx.filter = "none";
-
   /*
-   * Re-draw small ocean strips with different offsets.
-   * This preserves photographic detail while making the water visibly alive.
+   * Animate only the foreground water in thin translucent strips.
+   * The photo remains the source, so the sea keeps photographic texture.
    */
   const oceanTop =
-    h * 0.585;
+    h * 0.69;
 
   for (
     let band = 0;
-    band < 9;
+    band < 7;
     band++
   ) {
     const t =
-      band / 8;
+      band / 6;
 
     const bandY =
       oceanTop +
-      (h - oceanTop) *
+      (
+        h -
+        oceanTop
+      ) *
         t;
 
     const bandH =
       Math.max(
-        8,
-        (h - oceanTop) / 8 + 3,
+        10,
+        (
+          h -
+          oceanTop
+        ) /
+          6 +
+          4,
       );
 
-    const sourceBandY =
+    const srcBandY =
       sourceY +
       sourceH *
         (
-          0.58 +
-          0.42 * t
+          0.69 +
+          0.31 * t
         );
 
-    const sourceBandH =
+    const srcBandH =
       sourceH *
       (
         bandH /
@@ -1834,14 +1846,14 @@ function drawStage1PhotoClearSequence(
       Math.sin(
         clockS *
           (
-            0.75 +
-            t * 1.65
+            0.70 +
+            t * 1.10
           ) +
-        band * 0.9,
+        band * 0.85,
       ) *
       mix(
-        0.6,
-        4.2,
+        0.35,
+        2.8,
         t,
       );
 
@@ -1849,18 +1861,19 @@ function drawStage1PhotoClearSequence(
       Math.cos(
         clockS *
           (
-            0.62 +
-            t * 1.45
+            0.56 +
+            t * 0.95
           ) +
-        band * 1.2,
+        band * 1.15,
       ) *
       mix(
-        0.3,
-        2.2,
+        0.20,
+        1.35,
         t,
       );
 
     ctx.save();
+
     ctx.beginPath();
     ctx.rect(
       0,
@@ -1873,19 +1886,20 @@ function drawStage1PhotoClearSequence(
     ctx.globalAlpha =
       sceneIn *
       mix(
-        0.12,
-        0.30,
+        0.055,
+        0.13,
         t,
       );
 
     ctx.drawImage(
       photo,
       sourceX,
-      sourceBandY,
+      srcBandY,
       sourceW,
-      sourceBandH,
+      srcBandH,
       shiftX,
-      bandY + shiftY,
+      bandY +
+        shiftY,
       w,
       bandH + 3,
     );
@@ -1894,510 +1908,110 @@ function drawStage1PhotoClearSequence(
   }
 
   /*
-   * Night conversion: the photographic plate supplies texture, while the
-   * live moon/stars restore believable night-sky detail.
+   * Clear title appears only after the player has had time to look at the
+   * landing photograph. No cartoon overlays are drawn over the scene.
    */
-  if (daylight < 0.34) {
-    ctx.save();
-
-    const nightWash =
-      ctx.createLinearGradient(
-        0,
-        0,
-        0,
-        h,
-      );
-
-    nightWash.addColorStop(
-      0,
-      "rgba(0,8,28,0.58)",
-    );
-    nightWash.addColorStop(
-      0.52,
-      "rgba(2,18,42,0.30)",
-    );
-    nightWash.addColorStop(
-      1,
-      "rgba(0,12,27,0.12)",
-    );
-
-    ctx.fillStyle =
-      nightWash;
-    ctx.fillRect(
-      0,
-      0,
-      w,
-      h,
-    );
-
-    drawStars(
-      ctx,
-      w,
-      h * 0.60,
-      timeSinceVisualS,
-      false,
-      0,
-      smoothstep(
-        (0.34 - daylight) /
-          0.34,
-      ),
-    );
-
-    drawAtmosphericMoon(
-      ctx,
-      w,
-      h * 0.60,
-      0.95,
-      Date.now(),
-    );
-
-    ctx.restore();
-  }
-
-  /*
-   * Photo already contains the glossy wreck and real water.
-   * As the creature exits, cover the baked cockpit occupant with a dark
-   * opened-hatch recess, then animate the live creature from that point.
-   */
-  const hatchT =
-    smoothstep(
-      (clearS - 3.15) /
-        1.10,
-    );
-
-  const cockpitX =
-    w * 0.49;
-
-  const cockpitY =
-    h * 0.588;
-
-  if (hatchT > 0.01) {
-    ctx.save();
-    ctx.globalAlpha =
-      hatchT * 0.96;
-
-    const recess =
-      ctx.createRadialGradient(
-        cockpitX,
-        cockpitY,
-        0,
-        cockpitX,
-        cockpitY,
-        minDim * 0.075,
-      );
-
-    recess.addColorStop(
-      0,
-      "rgba(1,5,10,0.98)",
-    );
-    recess.addColorStop(
-      0.62,
-      "rgba(2,12,24,0.94)",
-    );
-    recess.addColorStop(
-      1,
-      "rgba(12,58,112,0)",
-    );
-
-    ctx.fillStyle = recess;
-    ctx.beginPath();
-    ctx.ellipse(
-      cockpitX,
-      cockpitY,
-      minDim * 0.068,
-      minDim * 0.036,
-      -0.14,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    ctx.strokeStyle =
-      "rgba(139,208,255,0.58)";
-    ctx.lineWidth =
-      Math.max(
-        1,
-        minDim * 0.002,
-      );
-
-    ctx.beginPath();
-    ctx.ellipse(
-      cockpitX -
-        minDim * 0.010,
-      cockpitY -
-        minDim * 0.045 *
-          hatchT,
-      minDim * 0.062,
-      minDim * 0.022,
-      -0.24,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  const alienOut =
-    smoothstep(
-      (clearS - 4.15) /
-        1.45,
-    );
-
-  const alienBaseX =
-    cockpitX +
-    minDim *
-      0.025 *
-      alienOut;
-
-  const alienBaseY =
-    cockpitY -
-    minDim *
-      0.115 *
-      alienOut;
-
-  const tossT =
-    clamp01(
-      (clearS - 6.25) /
-        1.35,
-    );
-
-  const deployT =
-    smoothstep(
-      (clearS - 7.55) /
-        1.15,
-    );
-
-  const skiffX =
-    w * 0.70;
-
-  const skiffY =
-    h * 0.610 +
-    Math.sin(
-      clockS * 1.45,
-    ) *
-      minDim * 0.010;
-
-  const podStartX =
-    alienBaseX +
-    minDim * 0.020;
-
-  const podStartY =
-    alienBaseY -
-    minDim * 0.030;
-
-  const arc =
-    Math.sin(
-      Math.PI * tossT,
-    ) *
-    minDim * 0.18;
-
-  const podX =
-    mix(
-      podStartX,
-      skiffX,
-      tossT,
-    );
-
-  const podY =
-    mix(
-      podStartY,
-      skiffY,
-      tossT,
-    ) -
-    arc;
-
-  if (
-    tossT > 0 &&
-    deployT < 0.94
-  ) {
-    const podGlow =
-      ctx.createRadialGradient(
-        podX,
-        podY,
-        0,
-        podX,
-        podY,
-        minDim * 0.028,
-      );
-
-    podGlow.addColorStop(
-      0,
-      "rgba(255,255,232,0.98)",
-    );
-    podGlow.addColorStop(
-      0.26,
-      "rgba(255,221,66,0.96)",
-    );
-    podGlow.addColorStop(
-      1,
-      "rgba(212,137,0,0)",
-    );
-
-    ctx.fillStyle = podGlow;
-    ctx.beginPath();
-    ctx.arc(
-      podX,
-      podY,
-      minDim * 0.028,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    ctx.fillStyle =
-      "rgba(238,178,20,0.98)";
-    ctx.beginPath();
-    ctx.ellipse(
-      podX,
-      podY,
-      minDim * 0.011,
-      minDim * 0.007,
-      -0.28,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
-
-  if (
-    deployT > 0.01 &&
-    deployT < 0.98
-  ) {
-    const puff =
-      Math.sin(
-        Math.PI *
-          clamp01(deployT),
-      );
-
-    ctx.save();
-    ctx.globalAlpha =
-      puff * 0.46;
-
-    ctx.strokeStyle =
-      "rgba(224,247,255,0.92)";
-    ctx.lineWidth =
-      Math.max(
-        1,
-        minDim * 0.0022,
-      );
-
-    for (
-      let ring = 0;
-      ring < 3;
-      ring++
-    ) {
-      ctx.beginPath();
-      ctx.arc(
-        skiffX,
-        skiffY,
-        minDim *
-          (
-            0.030 +
-            deployT *
-              (
-                0.055 +
-                ring * 0.022
-              )
-          ),
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-
-  const boardT =
-    smoothstep(
-      (clearS - 8.90) /
-        2.05,
-    );
-
-  const departT =
-    smoothstep(
-      (clearS - 11.35) /
-        3.15,
-    );
-
-  const departX =
-    w * 0.36 *
-    departT;
-
-  const departY =
-    h * 0.27 *
-    departT;
-
-  const vehicleAlpha =
-    deployT *
-    (
-      1 -
-      smoothstep(
-        (departT - 0.91) /
-          0.09,
-      )
-    );
-
-  if (deployT > 0.02) {
-    drawEscapeSkiff(
-      ctx,
-      skiffX +
-        departX,
-      skiffY -
-        departY,
-      minDim *
-        mix(
-          0.060,
-          0.285,
-          deployT,
-        ) *
-        mix(
-          1,
-          0.52,
-          departT,
-        ),
-      vehicleAlpha,
-      -0.055 -
-        departT * 0.19,
-    );
-  }
-
-  const alienTravelX =
-    mix(
-      alienBaseX,
-      skiffX,
-      boardT,
-    ) +
-    departX;
-
-  const alienTravelY =
-    mix(
-      alienBaseY,
-      skiffY -
-        minDim * 0.070,
-      boardT,
-    ) -
-    departY;
-
-  const alienScale =
-    minDim *
-    0.115 *
-    mix(
-      1,
-      0.56,
-      departT,
-    );
-
-  if (
-    alienOut > 0.02 &&
-    departT < 0.98
-  ) {
-    drawLiquidAlien(
-      ctx,
-      alienTravelX,
-      alienTravelY,
-      alienScale,
-      alienOut *
-        (
-          1 -
-          smoothstep(
-            (departT - 0.91) /
-              0.09,
-          )
-        ),
-      boardT < 0.88
-        ? 0.14
-        : 0.03,
-    );
-  }
-
   const clearIn =
     smoothstep(
-      (clearS - 11.65) /
-        0.80,
+      (
+        clearS -
+        10.5
+      ) /
+        0.85,
     );
 
   const clearOut =
     1 -
     smoothstep(
-      (clearS - 14.75) /
-        0.45,
+      (
+        clearS -
+        14.7
+      ) /
+        0.50,
     );
 
   const clearAlpha =
     clearIn *
     clearOut;
 
-  if (clearAlpha > 0.001) {
+  if (
+    clearAlpha >
+    0.001
+  ) {
     ctx.save();
+
     ctx.globalAlpha =
       clearAlpha;
 
     ctx.textAlign =
       "center";
+
     ctx.textBaseline =
       "middle";
 
-    ctx.shadowColor =
-      daylight > 0.20
-        ? "rgba(15,67,110,0.46)"
-        : "rgba(0,0,0,0.90)";
+    ctx.fillStyle =
+      "rgba(248,252,255,0.97)";
 
-    ctx.shadowBlur = 22;
+    ctx.shadowColor =
+      "rgba(6,35,72,0.56)";
+
+    ctx.shadowBlur =
+      20;
 
     const small =
       Math.max(
-        12,
+        13,
         Math.min(
-          24,
-          w * 0.030,
+          25,
+          w * 0.031,
         ),
       );
 
     const large =
       Math.max(
-        42,
+        44,
         Math.min(
-          92,
-          w * 0.095,
+          94,
+          w * 0.098,
         ),
       );
 
-    ctx.fillStyle =
-      "rgba(247,252,255,0.97)";
-
     ctx.font =
-      `500 ${small}px Georgia, "Times New Roman", serif`;
+      \`500 \${small}px Georgia, "Times New Roman", serif\`;
 
     ctx.fillText(
       "S T A G E  1",
       w * 0.50,
-      h * 0.20,
+      h * 0.18,
     );
 
     ctx.font =
-      `500 ${large}px Georgia, "Times New Roman", serif`;
+      \`500 \${large}px Georgia, "Times New Roman", serif\`;
 
     ctx.fillText(
       "C L E A R",
       w * 0.50,
-      h * 0.275,
+      h * 0.255,
     );
 
     ctx.strokeStyle =
-      "rgba(238,249,255,0.64)";
-    ctx.lineWidth = 1;
+      "rgba(238,249,255,0.62)";
+
+    ctx.lineWidth =
+      1;
 
     ctx.beginPath();
+
     ctx.moveTo(
       w * 0.31,
-      h * 0.318,
+      h * 0.300,
     );
+
     ctx.lineTo(
       w * 0.69,
-      h * 0.318,
+      h * 0.300,
     );
+
     ctx.stroke();
 
     ctx.restore();
