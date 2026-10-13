@@ -1699,81 +1699,522 @@ function drawStage1ClearSequence(
 ): void {
   const splashStartS = 14.15;
 
-  if (timeSinceVisualS < splashStartS) return;
+  if (
+    timeSinceVisualS <
+    splashStartS
+  ) {
+    return;
+  }
 
   const clockS =
     typeof performance !== "undefined"
       ? performance.now() / 1000
       : timeSinceVisualS;
-  const minDim = Math.min(w, h);
-  const craftX = w * 0.48;
-  const waterY = h * 0.78;
-  const splashAge = Math.max(0, timeSinceVisualS - splashStartS);
 
-  // Impact spray. The underlying sea and craft remain the same live scene.
-  const impactPulse = 1 - smoothstep(splashAge / 2.4);
-  if (impactPulse > 0.001) {
+  const minDim =
+    Math.min(w, h);
+
+  const craftX =
+    w * 0.48;
+
+  const waterY =
+    h * 0.78;
+
+  const splashAge =
+    Math.max(
+      0,
+      timeSinceVisualS -
+        splashStartS,
+    );
+
+  /*
+   * Impact wall + spray. The droplets accelerate and fall instead of
+   * appearing as static white ovals.
+   */
+  const impactPulse =
+    1 -
+    smoothstep(
+      splashAge /
+        2.55,
+    );
+
+  if (
+    impactPulse >
+    0.001
+  ) {
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    for (let i = 0; i < 22; i++) {
-      const a = hash01(0x5eaf13, i * 19 + Math.floor(splashAge * 18));
-      const b = hash01(0x91c33d, i * 29 + 7);
-      const side = (a - 0.5) * minDim * 0.34;
-      const rise = splashAge * minDim * (0.020 + b * 0.070);
-      const fall = splashAge * splashAge * minDim * 0.020;
-      const px = craftX + side;
-      const py = waterY - rise + fall;
-      const rr = minDim * (0.006 + b * 0.010) * impactPulse;
-      ctx.fillStyle = "rgba(239,251,255," + (0.18 + b * 0.42) + ")";
+
+    ctx.globalCompositeOperation =
+      "screen";
+
+    const wall =
+      ctx.createRadialGradient(
+        craftX,
+        waterY,
+        minDim * 0.010,
+        craftX,
+        waterY,
+        minDim * 0.19,
+      );
+
+    wall.addColorStop(
+      0,
+      "rgba(255,255,255,0.55)",
+    );
+
+    wall.addColorStop(
+      0.26,
+      "rgba(218,244,252,0.22)",
+    );
+
+    wall.addColorStop(
+      1,
+      "rgba(180,225,243,0)",
+    );
+
+    ctx.globalAlpha =
+      impactPulse * 0.68;
+
+    ctx.fillStyle =
+      wall;
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      craftX,
+      waterY +
+        minDim * 0.012,
+      minDim *
+        (
+          0.055 +
+          splashAge *
+            0.085
+        ),
+      minDim *
+        (
+          0.018 +
+          splashAge *
+            0.015
+        ),
+      0,
+      0,
+      Math.PI * 2,
+    );
+
+    ctx.fill();
+
+    for (
+      let i = 0;
+      i < 44;
+      i++
+    ) {
+      const a =
+        hash01(
+          0x5eaf13,
+          i * 19 + 3,
+        );
+
+      const b =
+        hash01(
+          0x91c33d,
+          i * 29 + 7,
+        );
+
+      const c =
+        hash01(
+          0x62a17b,
+          i * 37 + 11,
+        );
+
+      const launchAge =
+        Math.max(
+          0,
+          splashAge -
+            c * 0.26,
+        );
+
+      const sideVelocity =
+        (
+          a -
+          0.5
+        ) *
+        minDim *
+        (
+          0.20 +
+          b * 0.18
+        );
+
+      const riseVelocity =
+        minDim *
+        (
+          0.10 +
+          b * 0.18
+        );
+
+      const px =
+        craftX +
+        sideVelocity *
+          launchAge;
+
+      const py =
+        waterY -
+        riseVelocity *
+          launchAge +
+        minDim *
+          0.085 *
+          launchAge *
+          launchAge;
+
+      const rr =
+        minDim *
+        (
+          0.0025 +
+          b * 0.0065
+        ) *
+        impactPulse;
+
+      ctx.globalAlpha =
+        impactPulse *
+        (
+          0.18 +
+          b * 0.58
+        );
+
+      ctx.fillStyle =
+        "rgba(236,250,255,0.95)";
+
       ctx.beginPath();
-      ctx.ellipse(px, py, rr * 0.72, rr * 1.85, (a - 0.5) * 0.9, 0, Math.PI * 2);
+
+      ctx.ellipse(
+        px,
+        py,
+        rr * 0.62,
+        rr * 1.85,
+        (
+          a -
+          0.5
+        ) *
+          1.2,
+        0,
+        Math.PI * 2,
+      );
+
       ctx.fill();
     }
+
     ctx.restore();
   }
 
-  // Ring waves continue after touchdown.
+  /*
+   * Broken, irregular wake rings. No perfect concentric circles.
+   */
   ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  for (let ring = 0; ring < 5; ring++) {
-    const phase = (clockS * (0.12 + ring * 0.013) + ring * 0.18) % 1;
-    const radius = minDim * (0.055 + phase * 0.23);
-    ctx.globalAlpha = (1 - phase) * 0.22;
-    ctx.strokeStyle = ring % 2 === 0
-      ? "rgba(238,252,255,0.92)"
-      : "rgba(155,221,244,0.76)";
-    ctx.lineWidth = Math.max(0.75, minDim * (0.0014 + phase * 0.0012));
-    ctx.beginPath();
-    ctx.ellipse(craftX, waterY + minDim * 0.018, radius, radius * 0.24, Math.sin(clockS * 0.16) * 0.03, 0, Math.PI * 2);
-    ctx.stroke();
+
+  ctx.globalCompositeOperation =
+    "screen";
+
+  for (
+    let ring = 0;
+    ring < 4;
+    ring++
+  ) {
+    const phase =
+      (
+        clockS *
+          (
+            0.105 +
+            ring * 0.011
+          ) +
+        ring * 0.21
+      ) %
+      1;
+
+    const radius =
+      minDim *
+      (
+        0.050 +
+        phase * 0.25
+      );
+
+    const baseAlpha =
+      (
+        1 -
+        phase
+      ) *
+      0.18;
+
+    for (
+      let segment = 0;
+      segment < 14;
+      segment++
+    ) {
+      const gate =
+        hash01(
+          0x8d12ac + ring,
+          segment * 31 + ring * 7,
+        );
+
+      if (
+        gate <
+        0.28
+      ) {
+        continue;
+      }
+
+      const start =
+        (
+          segment /
+          14
+        ) *
+        Math.PI *
+        2 +
+        Math.sin(
+          clockS *
+            0.17 +
+          segment
+        ) *
+          0.025;
+
+      const span =
+        (
+          0.16 +
+          gate * 0.18
+        ) *
+        Math.PI;
+
+      ctx.globalAlpha =
+        baseAlpha *
+        (
+          0.45 +
+          gate * 0.55
+        );
+
+      ctx.strokeStyle =
+        ring % 2 === 0
+          ? "rgba(235,250,255,0.88)"
+          : "rgba(154,216,239,0.70)";
+
+      ctx.lineWidth =
+        Math.max(
+          0.65,
+          minDim *
+            (
+              0.0008 +
+              phase * 0.0011
+            ),
+        );
+
+      ctx.beginPath();
+
+      ctx.ellipse(
+        craftX,
+        waterY +
+          minDim * 0.016,
+        radius,
+        radius *
+          (
+            0.20 +
+            gate * 0.035
+          ),
+        Math.sin(
+          clockS * 0.13
+        ) *
+          0.025,
+        start,
+        start + span,
+      );
+
+      ctx.stroke();
+    }
   }
+
+  /*
+   * Foam fragments stay near the capsule and drift with the surface.
+   */
+  for (
+    let i = 0;
+    i < 22;
+    i++
+  ) {
+    const a =
+      hash01(
+        0x7814ef,
+        i * 13 + 1,
+      );
+
+    const b =
+      hash01(
+        0x5ac83d,
+        i * 23 + 9,
+      );
+
+    const angle =
+      a *
+      Math.PI *
+      2 +
+      clockS *
+        (
+          0.03 +
+          b * 0.02
+        );
+
+    const radius =
+      minDim *
+      (
+        0.035 +
+        b * 0.11
+      );
+
+    const fx =
+      craftX +
+      Math.cos(angle) *
+        radius;
+
+    const fy =
+      waterY +
+      minDim * 0.015 +
+      Math.sin(angle) *
+        radius * 0.23;
+
+    const fr =
+      minDim *
+      (
+        0.002 +
+        b * 0.006
+      );
+
+    ctx.globalAlpha =
+      0.09 +
+      b * 0.15;
+
+    ctx.fillStyle =
+      "rgba(235,250,255,0.85)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      fx,
+      fy,
+      fr * 2.6,
+      fr * 0.75,
+      angle * 0.18,
+      0,
+      Math.PI * 2,
+    );
+
+    ctx.fill();
+  }
+
   ctx.restore();
 
-  // Let the landing breathe before CLEAR appears.
-  const clearIn = smoothstep((timeSinceVisualS - 21.8) / 0.90);
-  const clearOut = 1 - smoothstep((timeSinceVisualS - 29.0) / 0.80);
-  const clearAlpha = clearIn * clearOut;
-  if (clearAlpha <= 0.001) return;
+  const clearIn =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        21.8
+      ) /
+        0.90,
+    );
+
+  const clearOut =
+    1 -
+    smoothstep(
+      (
+        timeSinceVisualS -
+        29.0
+      ) /
+        0.80,
+    );
+
+  const clearAlpha =
+    clearIn *
+    clearOut;
+
+  if (
+    clearAlpha <=
+    0.001
+  ) {
+    return;
+  }
 
   ctx.save();
-  ctx.globalAlpha = clearAlpha;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgba(248,252,255,0.98)";
-  ctx.shadowColor = "rgba(4,28,58,0.52)";
-  ctx.shadowBlur = 22;
-  const small = Math.max(13, Math.min(25, w * 0.031));
-  const large = Math.max(42, Math.min(90, w * 0.096));
-  ctx.font = "500 " + small + "px Georgia, Times New Roman, serif";
-  ctx.fillText("S T A G E  1", w * 0.50, h * 0.18);
-  ctx.font = "500 " + large + "px Georgia, Times New Roman, serif";
-  ctx.fillText("C L E A R", w * 0.50, h * 0.255);
-  ctx.strokeStyle = "rgba(238,249,255,0.62)";
+
+  ctx.globalAlpha =
+    clearAlpha;
+
+  ctx.textAlign =
+    "center";
+
+  ctx.textBaseline =
+    "middle";
+
+  ctx.fillStyle =
+    "rgba(248,252,255,0.98)";
+
+  ctx.shadowColor =
+    "rgba(3,14,31,0.68)";
+
+  ctx.shadowBlur = 24;
+
+  const small =
+    Math.max(
+      13,
+      Math.min(
+        25,
+        w * 0.031,
+      ),
+    );
+
+  const large =
+    Math.max(
+      42,
+      Math.min(
+        90,
+        w * 0.096,
+      ),
+    );
+
+  ctx.font =
+    "500 " +
+    small +
+    "px Georgia, Times New Roman, serif";
+
+  ctx.fillText(
+    "S T A G E  1",
+    w * 0.50,
+    h * 0.18,
+  );
+
+  ctx.font =
+    "500 " +
+    large +
+    "px Georgia, Times New Roman, serif";
+
+  ctx.fillText(
+    "C L E A R",
+    w * 0.50,
+    h * 0.255,
+  );
+
+  ctx.strokeStyle =
+    "rgba(238,249,255,0.62)";
+
   ctx.lineWidth = 1;
+
   ctx.beginPath();
-  ctx.moveTo(w * 0.31, h * 0.305);
-  ctx.lineTo(w * 0.69, h * 0.305);
+
+  ctx.moveTo(
+    w * 0.31,
+    h * 0.305,
+  );
+
+  ctx.lineTo(
+    w * 0.69,
+    h * 0.305,
+  );
+
   ctx.stroke();
+
   ctx.restore();
 }
 
