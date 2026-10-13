@@ -1893,46 +1893,207 @@ function drawSurfaceApproach(
   ctx.clip();
   ctx.lineCap = "round";
 
-  // Perspective moving wave field.
-  for (let row = 0; row < 46; row++) {
-    const depth = (row + 1) / 47;
+  /*
+   * Filled swell ribbons instead of parallel stroke lines.
+   *
+   * The old version read like a wireframe because every depth row was a
+   * continuous bright line. Here each swell has a dark trough and a soft,
+   * broken crest, so the water reads as volume rather than a grid.
+   */
+  for (let row = 0; row < 24; row++) {
+    const depth = (row + 1) / 25;
     const perspective = depth * depth;
     const baseY = horizonY + perspective * (h - horizonY);
-    const amp = mix(0.55, minDim * 0.024, perspective);
-    const speed = mix(0.42, 2.65, perspective);
-    const phase = t * speed + row * 0.83;
-    ctx.strokeStyle = daylight > 0.35
-      ? (row % 6 === 0 ? "rgba(229,249,255,0.40)" : "rgba(112,201,229,0.18)")
-      : (row % 6 === 0 ? "rgba(173,218,244,0.24)" : "rgba(69,126,174,0.13)");
-    ctx.lineWidth = mix(0.38, 2.45, perspective);
+    const amp = mix(0.45, minDim * 0.030, perspective);
+    const speed = mix(0.24, 1.55, perspective);
+    const phase = t * speed + row * 0.91;
+    const ribbonH = mix(1.2, minDim * 0.030, perspective);
+
     ctx.beginPath();
-    for (let seg = 0; seg <= 12; seg++) {
-      const xx = (seg / 12) * w;
-      const wave = Math.sin(phase + seg * 1.12 + row * 0.15) * amp * 0.72
-        + Math.sin(phase * 0.61 + seg * 2.07 + row * 0.43) * amp * 0.28;
-      const yy = baseY + wave;
-      if (seg === 0) ctx.moveTo(xx, yy);
-      else ctx.lineTo(xx, yy);
+
+    for (let seg = 0; seg <= 14; seg++) {
+      const xx = (seg / 14) * w;
+      const crest =
+        Math.sin(phase + seg * 1.06 + row * 0.17) * amp * 0.66 +
+        Math.sin(phase * 0.53 + seg * 2.11 + row * 0.39) * amp * 0.34;
+      const yy = baseY + crest;
+
+      if (seg === 0) ctx.moveTo(xx, yy - ribbonH * 0.35);
+      else ctx.lineTo(xx, yy - ribbonH * 0.35);
     }
+
+    for (let seg = 14; seg >= 0; seg--) {
+      const xx = (seg / 14) * w;
+      const trough =
+        Math.sin(phase + seg * 1.06 + row * 0.17) * amp * 0.66 +
+        Math.sin(phase * 0.53 + seg * 2.11 + row * 0.39) * amp * 0.34;
+      const yy = baseY + trough;
+      ctx.lineTo(xx, yy + ribbonH);
+    }
+
+    ctx.closePath();
+
+    const band = ctx.createLinearGradient(
+      0,
+      baseY - amp - ribbonH,
+      0,
+      baseY + amp + ribbonH,
+    );
+
+    if (daylight > 0.35) {
+      band.addColorStop(0, "rgba(102,188,214,0.10)");
+      band.addColorStop(0.30, "rgba(47,127,161,0.08)");
+      band.addColorStop(0.62, "rgba(5,54,82,0.18)");
+      band.addColorStop(1, "rgba(1,24,43,0.30)");
+    } else {
+      band.addColorStop(0, "rgba(86,142,181,0.07)");
+      band.addColorStop(0.34, "rgba(25,71,109,0.08)");
+      band.addColorStop(0.68, "rgba(3,29,55,0.20)");
+      band.addColorStop(1, "rgba(0,12,28,0.34)");
+    }
+
+    ctx.fillStyle = band;
+    ctx.fill();
+  }
+
+  /*
+   * Broken crest fragments. No continuous horizon-to-horizon strokes.
+   * Near crests are wider and brighter; distant crests stay tiny.
+   */
+  ctx.lineCap = "round";
+
+  for (let i = 0; i < 118; i++) {
+    const seedA = hash01(0x6512ad, i * 17 + 3);
+    const seedB = hash01(0x28e5c1, i * 31 + 11);
+    const seedC = hash01(0x7b11f3, i * 43 + 5);
+
+    const depth = Math.pow(seedA, 0.72);
+    const yyBase = horizonY + depth * depth * (h - horizonY);
+    const perspective = depth * depth;
+    const speed = mix(0.35, 2.20, perspective);
+    const travel =
+      (seedB * 1.25 + t * speed * (0.010 + seedC * 0.020)) % 1.25;
+    const xx = (travel - 0.12) * w;
+    const amp = mix(0.5, minDim * 0.018, perspective);
+    const yy =
+      yyBase +
+      Math.sin(
+        t * speed +
+        seedB * Math.PI * 2 +
+        xx * 0.010,
+      ) *
+        amp;
+
+    const crestW = mix(2.5, minDim * 0.090, perspective) * (0.35 + seedC * 0.65);
+    const crestH = mix(0.35, minDim * 0.0055, perspective);
+
+    ctx.strokeStyle =
+      daylight > 0.30
+        ? "rgba(226,247,253," + (0.055 + perspective * 0.24) + ")"
+        : "rgba(169,210,239," + (0.040 + perspective * 0.16) + ")";
+
+    ctx.lineWidth = Math.max(0.45, crestH);
+
+    ctx.beginPath();
+    ctx.moveTo(
+      xx - crestW * 0.5,
+      yy,
+    );
+    ctx.bezierCurveTo(
+      xx - crestW * 0.15,
+      yy - crestH * 1.4,
+      xx + crestW * 0.15,
+      yy + crestH * 0.8,
+      xx + crestW * 0.5,
+      yy,
+    );
     ctx.stroke();
   }
 
-  // Broken sunlight/moonlight glitter on the moving sea.
+  /*
+   * Broken sunlight/moonlight glitter. Use many small irregular fragments
+   * rather than a dotted vertical lane.
+   */
   ctx.globalCompositeOperation = "screen";
-  for (let i = 0; i < 62; i++) {
-    const depth = i / 61;
+
+  for (let i = 0; i < 96; i++) {
+    const depth = hash01(0x4d911f, i * 19 + 7);
     const yy = horizonY + depth * depth * (h - horizonY);
-    const width = mix(w * 0.010, w * 0.26, depth);
-    const jitter = (hash01(0x4d911f, i * 17 + Math.floor(t * 5)) - 0.5) * width;
+    const width = mix(w * 0.014, w * 0.30, depth);
+    const jitter =
+      (hash01(0x91af33, i * 23 + Math.floor(t * 4)) - 0.5) *
+      width;
     const xx = lightX + jitter;
-    const rr = mix(0.7, 4.8, depth);
-    ctx.fillStyle = daylight > 0.15
-      ? "rgba(255,244,211," + (0.045 + depth * 0.22) + ")"
-      : "rgba(193,225,255," + (0.035 + depth * 0.15) + ")";
+    const glint = hash01(0xa1349d, i * 37 + Math.floor(t * 7));
+    const rr = mix(0.45, 3.8, depth) * (0.45 + glint * 0.85);
+
+    ctx.fillStyle =
+      daylight > 0.15
+        ? "rgba(255,246,218," + (0.025 + depth * 0.18) + ")"
+        : "rgba(194,226,255," + (0.020 + depth * 0.12) + ")";
+
     ctx.beginPath();
-    ctx.ellipse(xx, yy, rr * (1.6 + depth * 2.8), rr * 0.40, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      xx,
+      yy,
+      rr * (1.4 + depth * 3.2),
+      rr * (0.16 + glint * 0.28),
+      (glint - 0.5) * 0.24,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
+
+  /*
+   * Foreground dark troughs give the near water photographic depth.
+   */
+  ctx.globalCompositeOperation = "source-over";
+
+  for (let i = 0; i < 14; i++) {
+    const depth = (i + 1) / 14;
+    const y =
+      horizonY +
+      mix(
+        0.48,
+        1,
+        depth,
+      ) *
+        (h - horizonY);
+    const offset =
+      Math.sin(
+        t * (0.38 + depth * 0.62) +
+        i * 1.71,
+      ) *
+      w *
+      0.08;
+
+    const trough = ctx.createRadialGradient(
+      w * 0.5 + offset,
+      y,
+      0,
+      w * 0.5 + offset,
+      y,
+      w * mix(0.16, 0.42, depth),
+    );
+
+    trough.addColorStop(0, "rgba(0,10,25," + (0.045 + depth * 0.075) + ")");
+    trough.addColorStop(1, "rgba(0,10,25,0)");
+
+    ctx.fillStyle = trough;
+    ctx.beginPath();
+    ctx.ellipse(
+      w * 0.5 + offset,
+      y,
+      w * mix(0.16, 0.42, depth),
+      minDim * mix(0.012, 0.050, depth),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
   ctx.restore();
 
   const haze = ctx.createLinearGradient(0, horizonY - h * 0.040, 0, horizonY + h * 0.050);
