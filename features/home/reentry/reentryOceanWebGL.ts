@@ -10,7 +10,7 @@ export interface ReentryOceanWebGLRenderer {
   destroy(): void;
 }
 
-const VERTEX_SHADER = \`
+const VERTEX_SHADER = `
 attribute vec2 a_position;
 varying vec2 v_uv;
 
@@ -18,9 +18,9 @@ void main() {
   v_uv = a_position * 0.5 + 0.5;
   gl_Position = vec4(a_position, 0.0, 1.0);
 }
-\`;
+`;
 
-const FRAGMENT_SHADER = \`
+const FRAGMENT_SHADER = `
 precision highp float;
 
 varying vec2 v_uv;
@@ -1197,7 +1197,7 @@ void main() {
       1.0
     );
 }
-\`;
+`;
 
 function compileShader(
   gl: WebGLRenderingContext,
