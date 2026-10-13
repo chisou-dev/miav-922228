@@ -56,6 +56,7 @@ import {
   startReentryAmbience,
   startStage1ClearAudio,
 } from "./reentryAudio";
+import { STAGE1_CLEAR_PHOTO_DAY } from "./reentryClearPhotoAssets";
 
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
 
@@ -1682,6 +1683,729 @@ function drawEscapeSkiff(
 
   ctx.restore();
 
+}
+
+
+
+function drawStage1PhotoClearSequence(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  timeSinceVisualS: number,
+  photo: HTMLImageElement | null,
+): boolean {
+  const CLEAR_START_S = 14.25;
+
+  if (
+    timeSinceVisualS < CLEAR_START_S ||
+    !photo ||
+    photo.naturalWidth <= 0 ||
+    photo.naturalHeight <= 0
+  ) {
+    return false;
+  }
+
+  const clearS =
+    timeSinceVisualS -
+    CLEAR_START_S;
+
+  const minDim =
+    Math.min(w, h);
+
+  const clockS =
+    typeof performance !== "undefined"
+      ? performance.now() / 1000
+      : timeSinceVisualS;
+
+  const now = new Date();
+
+  const localHour =
+    now.getHours() +
+    now.getMinutes() / 60;
+
+  const daylight =
+    clamp01(
+      Math.sin(
+        ((localHour - 5.5) / 13) *
+          Math.PI,
+      ),
+    );
+
+  const sceneIn =
+    smoothstep(clearS / 0.72);
+
+  /*
+   * Use the generated photographic reference as the visual plate.
+   * Crop away its baked top/bottom UI so the real game UI remains live.
+   */
+  const sourceY =
+    photo.naturalHeight * 0.115;
+
+  const sourceH =
+    photo.naturalHeight * 0.72;
+
+  const targetAspect =
+    w / Math.max(1, h);
+
+  const sourceW =
+    Math.min(
+      photo.naturalWidth * 0.74,
+      sourceH * targetAspect,
+    );
+
+  const sourceX =
+    (photo.naturalWidth - sourceW) * 0.5;
+
+  const bobY =
+    Math.sin(clockS * 0.78) * 1.8;
+
+  ctx.save();
+  ctx.globalAlpha = sceneIn;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  if (daylight > 0.46) {
+    ctx.filter =
+      "saturate(1.04) contrast(1.03)";
+  } else if (daylight > 0.12) {
+    ctx.filter =
+      "brightness(0.72) saturate(0.88) sepia(0.12)";
+  } else {
+    ctx.filter =
+      "brightness(0.28) saturate(0.72) hue-rotate(8deg) contrast(1.08)";
+  }
+
+  ctx.drawImage(
+    photo,
+    sourceX,
+    sourceY,
+    sourceW,
+    sourceH,
+    0,
+    -2 + bobY,
+    w,
+    h + 4,
+  );
+
+  ctx.filter = "none";
+
+  /*
+   * Re-draw small ocean strips with different offsets.
+   * This preserves photographic detail while making the water visibly alive.
+   */
+  const oceanTop =
+    h * 0.585;
+
+  for (
+    let band = 0;
+    band < 9;
+    band++
+  ) {
+    const t =
+      band / 8;
+
+    const bandY =
+      oceanTop +
+      (h - oceanTop) *
+        t;
+
+    const bandH =
+      Math.max(
+        8,
+        (h - oceanTop) / 8 + 3,
+      );
+
+    const sourceBandY =
+      sourceY +
+      sourceH *
+        (
+          0.58 +
+          0.42 * t
+        );
+
+    const sourceBandH =
+      sourceH *
+      (
+        bandH /
+        h
+      );
+
+    const shiftX =
+      Math.sin(
+        clockS *
+          (
+            0.75 +
+            t * 1.65
+          ) +
+        band * 0.9,
+      ) *
+      mix(
+        0.6,
+        4.2,
+        t,
+      );
+
+    const shiftY =
+      Math.cos(
+        clockS *
+          (
+            0.62 +
+            t * 1.45
+          ) +
+        band * 1.2,
+      ) *
+      mix(
+        0.3,
+        2.2,
+        t,
+      );
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(
+      0,
+      bandY,
+      w,
+      bandH,
+    );
+    ctx.clip();
+
+    ctx.globalAlpha =
+      sceneIn *
+      mix(
+        0.12,
+        0.30,
+        t,
+      );
+
+    ctx.drawImage(
+      photo,
+      sourceX,
+      sourceBandY,
+      sourceW,
+      sourceBandH,
+      shiftX,
+      bandY + shiftY,
+      w,
+      bandH + 3,
+    );
+
+    ctx.restore();
+  }
+
+  /*
+   * Night conversion: the photographic plate supplies texture, while the
+   * live moon/stars restore believable night-sky detail.
+   */
+  if (daylight < 0.34) {
+    ctx.save();
+
+    const nightWash =
+      ctx.createLinearGradient(
+        0,
+        0,
+        0,
+        h,
+      );
+
+    nightWash.addColorStop(
+      0,
+      "rgba(0,8,28,0.58)",
+    );
+    nightWash.addColorStop(
+      0.52,
+      "rgba(2,18,42,0.30)",
+    );
+    nightWash.addColorStop(
+      1,
+      "rgba(0,12,27,0.12)",
+    );
+
+    ctx.fillStyle =
+      nightWash;
+    ctx.fillRect(
+      0,
+      0,
+      w,
+      h,
+    );
+
+    drawStars(
+      ctx,
+      w,
+      h * 0.60,
+      timeSinceVisualS,
+      false,
+      0,
+      smoothstep(
+        (0.34 - daylight) /
+          0.34,
+      ),
+    );
+
+    drawAtmosphericMoon(
+      ctx,
+      w,
+      h * 0.60,
+      0.95,
+      Date.now(),
+    );
+
+    ctx.restore();
+  }
+
+  /*
+   * Photo already contains the glossy wreck and real water.
+   * As the creature exits, cover the baked cockpit occupant with a dark
+   * opened-hatch recess, then animate the live creature from that point.
+   */
+  const hatchT =
+    smoothstep(
+      (clearS - 3.15) /
+        1.10,
+    );
+
+  const cockpitX =
+    w * 0.49;
+
+  const cockpitY =
+    h * 0.588;
+
+  if (hatchT > 0.01) {
+    ctx.save();
+    ctx.globalAlpha =
+      hatchT * 0.96;
+
+    const recess =
+      ctx.createRadialGradient(
+        cockpitX,
+        cockpitY,
+        0,
+        cockpitX,
+        cockpitY,
+        minDim * 0.075,
+      );
+
+    recess.addColorStop(
+      0,
+      "rgba(1,5,10,0.98)",
+    );
+    recess.addColorStop(
+      0.62,
+      "rgba(2,12,24,0.94)",
+    );
+    recess.addColorStop(
+      1,
+      "rgba(12,58,112,0)",
+    );
+
+    ctx.fillStyle = recess;
+    ctx.beginPath();
+    ctx.ellipse(
+      cockpitX,
+      cockpitY,
+      minDim * 0.068,
+      minDim * 0.036,
+      -0.14,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.strokeStyle =
+      "rgba(139,208,255,0.58)";
+    ctx.lineWidth =
+      Math.max(
+        1,
+        minDim * 0.002,
+      );
+
+    ctx.beginPath();
+    ctx.ellipse(
+      cockpitX -
+        minDim * 0.010,
+      cockpitY -
+        minDim * 0.045 *
+          hatchT,
+      minDim * 0.062,
+      minDim * 0.022,
+      -0.24,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  const alienOut =
+    smoothstep(
+      (clearS - 4.15) /
+        1.45,
+    );
+
+  const alienBaseX =
+    cockpitX +
+    minDim *
+      0.025 *
+      alienOut;
+
+  const alienBaseY =
+    cockpitY -
+    minDim *
+      0.115 *
+      alienOut;
+
+  const tossT =
+    clamp01(
+      (clearS - 6.25) /
+        1.35,
+    );
+
+  const deployT =
+    smoothstep(
+      (clearS - 7.55) /
+        1.15,
+    );
+
+  const skiffX =
+    w * 0.70;
+
+  const skiffY =
+    h * 0.610 +
+    Math.sin(
+      clockS * 1.45,
+    ) *
+      minDim * 0.010;
+
+  const podStartX =
+    alienBaseX +
+    minDim * 0.020;
+
+  const podStartY =
+    alienBaseY -
+    minDim * 0.030;
+
+  const arc =
+    Math.sin(
+      Math.PI * tossT,
+    ) *
+    minDim * 0.18;
+
+  const podX =
+    mix(
+      podStartX,
+      skiffX,
+      tossT,
+    );
+
+  const podY =
+    mix(
+      podStartY,
+      skiffY,
+      tossT,
+    ) -
+    arc;
+
+  if (
+    tossT > 0 &&
+    deployT < 0.94
+  ) {
+    const podGlow =
+      ctx.createRadialGradient(
+        podX,
+        podY,
+        0,
+        podX,
+        podY,
+        minDim * 0.028,
+      );
+
+    podGlow.addColorStop(
+      0,
+      "rgba(255,255,232,0.98)",
+    );
+    podGlow.addColorStop(
+      0.26,
+      "rgba(255,221,66,0.96)",
+    );
+    podGlow.addColorStop(
+      1,
+      "rgba(212,137,0,0)",
+    );
+
+    ctx.fillStyle = podGlow;
+    ctx.beginPath();
+    ctx.arc(
+      podX,
+      podY,
+      minDim * 0.028,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.fillStyle =
+      "rgba(238,178,20,0.98)";
+    ctx.beginPath();
+    ctx.ellipse(
+      podX,
+      podY,
+      minDim * 0.011,
+      minDim * 0.007,
+      -0.28,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  if (
+    deployT > 0.01 &&
+    deployT < 0.98
+  ) {
+    const puff =
+      Math.sin(
+        Math.PI *
+          clamp01(deployT),
+      );
+
+    ctx.save();
+    ctx.globalAlpha =
+      puff * 0.46;
+
+    ctx.strokeStyle =
+      "rgba(224,247,255,0.92)";
+    ctx.lineWidth =
+      Math.max(
+        1,
+        minDim * 0.0022,
+      );
+
+    for (
+      let ring = 0;
+      ring < 3;
+      ring++
+    ) {
+      ctx.beginPath();
+      ctx.arc(
+        skiffX,
+        skiffY,
+        minDim *
+          (
+            0.030 +
+            deployT *
+              (
+                0.055 +
+                ring * 0.022
+              )
+          ),
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  const boardT =
+    smoothstep(
+      (clearS - 8.90) /
+        2.05,
+    );
+
+  const departT =
+    smoothstep(
+      (clearS - 11.35) /
+        3.15,
+    );
+
+  const departX =
+    w * 0.36 *
+    departT;
+
+  const departY =
+    h * 0.27 *
+    departT;
+
+  const vehicleAlpha =
+    deployT *
+    (
+      1 -
+      smoothstep(
+        (departT - 0.91) /
+          0.09,
+      )
+    );
+
+  if (deployT > 0.02) {
+    drawEscapeSkiff(
+      ctx,
+      skiffX +
+        departX,
+      skiffY -
+        departY,
+      minDim *
+        mix(
+          0.060,
+          0.285,
+          deployT,
+        ) *
+        mix(
+          1,
+          0.52,
+          departT,
+        ),
+      vehicleAlpha,
+      -0.055 -
+        departT * 0.19,
+    );
+  }
+
+  const alienTravelX =
+    mix(
+      alienBaseX,
+      skiffX,
+      boardT,
+    ) +
+    departX;
+
+  const alienTravelY =
+    mix(
+      alienBaseY,
+      skiffY -
+        minDim * 0.070,
+      boardT,
+    ) -
+    departY;
+
+  const alienScale =
+    minDim *
+    0.115 *
+    mix(
+      1,
+      0.56,
+      departT,
+    );
+
+  if (
+    alienOut > 0.02 &&
+    departT < 0.98
+  ) {
+    drawLiquidAlien(
+      ctx,
+      alienTravelX,
+      alienTravelY,
+      alienScale,
+      alienOut *
+        (
+          1 -
+          smoothstep(
+            (departT - 0.91) /
+              0.09,
+          )
+        ),
+      boardT < 0.88
+        ? 0.14
+        : 0.03,
+    );
+  }
+
+  const clearIn =
+    smoothstep(
+      (clearS - 11.65) /
+        0.80,
+    );
+
+  const clearOut =
+    1 -
+    smoothstep(
+      (clearS - 14.75) /
+        0.45,
+    );
+
+  const clearAlpha =
+    clearIn *
+    clearOut;
+
+  if (clearAlpha > 0.001) {
+    ctx.save();
+    ctx.globalAlpha =
+      clearAlpha;
+
+    ctx.textAlign =
+      "center";
+    ctx.textBaseline =
+      "middle";
+
+    ctx.shadowColor =
+      daylight > 0.20
+        ? "rgba(15,67,110,0.46)"
+        : "rgba(0,0,0,0.90)";
+
+    ctx.shadowBlur = 22;
+
+    const small =
+      Math.max(
+        12,
+        Math.min(
+          24,
+          w * 0.030,
+        ),
+      );
+
+    const large =
+      Math.max(
+        42,
+        Math.min(
+          92,
+          w * 0.095,
+        ),
+      );
+
+    ctx.fillStyle =
+      "rgba(247,252,255,0.97)";
+
+    ctx.font =
+      `500 ${small}px Georgia, "Times New Roman", serif`;
+
+    ctx.fillText(
+      "S T A G E  1",
+      w * 0.50,
+      h * 0.20,
+    );
+
+    ctx.font =
+      `500 ${large}px Georgia, "Times New Roman", serif`;
+
+    ctx.fillText(
+      "C L E A R",
+      w * 0.50,
+      h * 0.275,
+    );
+
+    ctx.strokeStyle =
+      "rgba(238,249,255,0.64)";
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+    ctx.moveTo(
+      w * 0.31,
+      h * 0.318,
+    );
+    ctx.lineTo(
+      w * 0.69,
+      h * 0.318,
+    );
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  return true;
 }
 
 
@@ -4682,6 +5406,7 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
+  const clearPhotoRef = useRef<HTMLImageElement | null>(null);
   const resultSoundRef = useRef<string | null>(null);
   const stage1ClearSoundRef = useRef<string | null>(null);
   const visualLatchPlaybackRef = useRef<number | null>(null);
@@ -4712,6 +5437,22 @@ export function ReentryPresentationCanvas({
       .catch(() => {
         if (live) {
           earthSurfaceRef.current =
+            null;
+        }
+      });
+
+    void loadImage(
+      STAGE1_CLEAR_PHOTO_DAY,
+    )
+      .then((img) => {
+        if (live) {
+          clearPhotoRef.current =
+            img;
+        }
+      })
+      .catch(() => {
+        if (live) {
+          clearPhotoRef.current =
             null;
         }
       });
@@ -5628,12 +6369,23 @@ const failureTravelT =
         latched &&
         !miss
       ) {
-        drawStage1ClearSequence(
-          ctx,
-          w,
-          h,
-          timeSinceVisualAtmosphereEntryS,
-        );
+        const photoClearDrawn =
+          drawStage1PhotoClearSequence(
+            ctx,
+            w,
+            h,
+            timeSinceVisualAtmosphereEntryS,
+            clearPhotoRef.current,
+          );
+
+        if (!photoClearDrawn) {
+          drawStage1ClearSequence(
+            ctx,
+            w,
+            h,
+            timeSinceVisualAtmosphereEntryS,
+          );
+        }
       }
 
       if (
