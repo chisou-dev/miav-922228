@@ -17,7 +17,7 @@ export const SPACE_MISS_DURATION_MS =
 
 
 
-export const ATMOSPHERE_SUCCESS_MS = 28_000;
+export const ATMOSPHERE_SUCCESS_MS = 31_000;
 
 export const ATMOSPHERE_FAILURE_MS = 14_000;
 

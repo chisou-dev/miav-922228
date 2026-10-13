@@ -32,6 +32,7 @@ import {
 } from "./reentryEarthCamera";
 import {
   atmosphereTransitionDurationS,
+  DESTRUCTION_BURST_S,
   destructionAmountFromEntryS,
   failureDestructionStartS,
   failureVisualDepth01,
@@ -1059,6 +1060,11 @@ function drawLiquidAlien(
 
 
 
+  const clockS =
+    typeof performance !== "undefined"
+      ? performance.now() / 1000
+      : 0;
+
   ctx.save();
 
   ctx.translate(x, y);
@@ -1195,7 +1201,7 @@ function drawLiquidAlien(
 
     0,
 
-    "rgba(255,82,54,0.95)",
+    "rgba(255,242,92,0.99)",
 
   );
 
@@ -1205,7 +1211,7 @@ function drawLiquidAlien(
 
     0.48,
 
-    "rgba(222,33,50,0.88)",
+    "rgba(238,178,17,0.98)",
 
   );
 
@@ -1215,7 +1221,7 @@ function drawLiquidAlien(
 
     1,
 
-    "rgba(150,15,44,0.04)",
+    "rgba(115,66,0,0.16)",
 
   );
 
@@ -1297,6 +1303,121 @@ function drawLiquidAlien(
 
 
 
+  ctx.shadowBlur = 0;
+
+  for (const side of [-1, 1]) {
+    const eyeX =
+      side * scale * 0.105;
+
+    const eyeY =
+      -scale * 0.59;
+
+    ctx.fillStyle =
+      "rgba(4,7,8,0.98)";
+
+    ctx.beginPath();
+    ctx.ellipse(
+      eyeX,
+      eyeY,
+      scale * 0.052,
+      scale * 0.062,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.fillStyle =
+      "rgba(255,255,255,0.88)";
+
+    ctx.beginPath();
+    ctx.arc(
+      eyeX - scale * 0.018,
+      eyeY - scale * 0.022,
+      scale * 0.010,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  ctx.lineCap = "round";
+
+  for (let i = 0; i < 5; i++) {
+    const startX =
+      (i - 2) *
+      scale *
+      0.09;
+
+    const wave =
+      Math.sin(
+        clockS * (1.2 + i * 0.08) +
+        i * 1.4,
+      );
+
+    ctx.strokeStyle =
+      i % 2 === 0
+        ? "rgba(251,213,50,0.98)"
+        : "rgba(226,157,8,0.98)";
+
+    ctx.lineWidth =
+      scale * 0.085;
+
+    ctx.beginPath();
+    ctx.moveTo(
+      startX,
+      -scale * 0.16,
+    );
+    ctx.bezierCurveTo(
+      startX +
+        wave * scale * 0.15,
+      scale * 0.16,
+      startX -
+        wave * scale * 0.21,
+      scale * 0.50,
+      startX +
+        wave * scale * 0.10,
+      scale * (0.78 + stretch),
+    );
+    ctx.stroke();
+  }
+
+  const shine =
+    ctx.createRadialGradient(
+      -scale * 0.13,
+      -scale * 0.72,
+      0,
+      -scale * 0.13,
+      -scale * 0.72,
+      scale * 0.22,
+    );
+
+  shine.addColorStop(
+    0,
+    "rgba(255,255,255,0.82)",
+  );
+  shine.addColorStop(
+    0.20,
+    "rgba(255,255,255,0.24)",
+  );
+  shine.addColorStop(
+    1,
+    "rgba(255,255,255,0)",
+  );
+
+  ctx.fillStyle = shine;
+  ctx.beginPath();
+  ctx.arc(
+    -scale * 0.13,
+    -scale * 0.72,
+    scale * 0.22,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+
+
   ctx.restore();
 
 }
@@ -1365,7 +1486,7 @@ function drawEscapeSkiff(
 
     0,
 
-    "#25333a",
+    "#010713",
 
   );
 
@@ -1373,19 +1494,9 @@ function drawEscapeSkiff(
 
   body.addColorStop(
 
-    0.32,
+    0.24,
 
-    "#8a999d",
-
-  );
-
-
-
-  body.addColorStop(
-
-    0.55,
-
-    "#d5d9d6",
+    "#042b67",
 
   );
 
@@ -1393,9 +1504,29 @@ function drawEscapeSkiff(
 
   body.addColorStop(
 
-    0.78,
+    0.48,
 
-    "#647178",
+    "#0a6fd5",
+
+  );
+
+
+
+  body.addColorStop(
+
+    0.58,
+
+    "#b7e7ff",
+
+  );
+
+
+
+  body.addColorStop(
+
+    0.70,
+
+    "#0b64be",
 
   );
 
@@ -1405,7 +1536,7 @@ function drawEscapeSkiff(
 
     1,
 
-    "#1b252b",
+    "#010916",
 
   );
 
@@ -1587,6 +1718,27 @@ function drawStage1ClearSequence(
 
 
 
+  const clockS =
+    typeof performance !== "undefined"
+      ? performance.now() / 1000
+      : timeSinceVisualS;
+
+  const now = new Date();
+
+  const localHour =
+    now.getHours() +
+    now.getMinutes() / 60;
+
+  const daylight =
+    clamp01(
+      Math.sin(
+        ((localHour - 5.5) / 13) *
+          Math.PI,
+      ),
+    );
+
+
+
   const sceneIn =
 
     smoothstep(
@@ -1643,43 +1795,22 @@ function drawStage1ClearSequence(
 
 
 
-  sky.addColorStop(
-
-    0,
-
-    "#1f73b2",
-
-  );
-
-
-
-  sky.addColorStop(
-
-    0.48,
-
-    "#67acd5",
-
-  );
-
-
-
-  sky.addColorStop(
-
-    0.83,
-
-    "#b7d9e8",
-
-  );
-
-
-
-  sky.addColorStop(
-
-    1,
-
-    "#d9e9ef",
-
-  );
+  if (daylight > 0.50) {
+    sky.addColorStop(0, "#0877d5");
+    sky.addColorStop(0.42, "#2d9ce8");
+    sky.addColorStop(0.80, "#9bd4f1");
+    sky.addColorStop(1, "#e4f1f6");
+  } else if (daylight > 0.10) {
+    sky.addColorStop(0, "#071a3b");
+    sky.addColorStop(0.42, "#285d91");
+    sky.addColorStop(0.80, "#b27370");
+    sky.addColorStop(1, "#e2b58d");
+  } else {
+    sky.addColorStop(0, "#01050d");
+    sky.addColorStop(0.42, "#04142c");
+    sky.addColorStop(0.80, "#0a2c50");
+    sky.addColorStop(1, "#174261");
+  }
 
 
 
@@ -1700,6 +1831,86 @@ function drawStage1ClearSequence(
     oceanY,
 
   );
+
+  if (daylight < 0.46) {
+    drawStars(
+      ctx,
+      w,
+      oceanY,
+      timeSinceVisualS,
+      false,
+      0,
+      smoothstep((0.46 - daylight) / 0.46),
+    );
+
+    drawAtmosphericMoon(
+      ctx,
+      w,
+      oceanY,
+      0.95,
+      Date.now(),
+    );
+  }
+
+  if (daylight > 0.12) {
+    const sunProgress =
+      clamp01((localHour - 5.5) / 13);
+
+    const sunX =
+      mix(w * 0.08, w * 0.92, sunProgress);
+
+    const sunY =
+      oceanY *
+      (
+        0.69 -
+        Math.sin(sunProgress * Math.PI) *
+          0.56
+      );
+
+    const sunR =
+      minDim * mix(0.020, 0.036, daylight);
+
+    const halo =
+      ctx.createRadialGradient(
+        sunX,
+        sunY,
+        0,
+        sunX,
+        sunY,
+        sunR * 7,
+      );
+
+    halo.addColorStop(
+      0,
+      "rgba(255,255,245,0.96)",
+    );
+    halo.addColorStop(
+      0.10,
+      "rgba(255,243,198,0.68)",
+    );
+    halo.addColorStop(
+      0.34,
+      "rgba(255,218,142,0.18)",
+    );
+    halo.addColorStop(
+      1,
+      "rgba(255,205,126,0)",
+    );
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(
+      sunX,
+      sunY,
+      sunR * 7,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.restore();
+  }
 
 
 
@@ -1725,43 +1936,17 @@ function drawStage1ClearSequence(
 
 
 
-  sea.addColorStop(
-
-    0,
-
-    "#4d879f",
-
-  );
-
-
-
-  sea.addColorStop(
-
-    0.18,
-
-    "#2d6a83",
-
-  );
-
-
-
-  sea.addColorStop(
-
-    0.56,
-
-    "#174a64",
-
-  );
-
-
-
-  sea.addColorStop(
-
-    1,
-
-    "#08293d",
-
-  );
+  if (daylight > 0.45) {
+    sea.addColorStop(0, "#2d88ad");
+    sea.addColorStop(0.18, "#176c94");
+    sea.addColorStop(0.56, "#075071");
+    sea.addColorStop(1, "#02233c");
+  } else {
+    sea.addColorStop(0, "#153e5c");
+    sea.addColorStop(0.22, "#0a2b47");
+    sea.addColorStop(0.58, "#041a31");
+    sea.addColorStop(1, "#010b18");
+  }
 
 
 
@@ -1794,148 +1979,80 @@ function drawStage1ClearSequence(
    */
 
   ctx.save();
-
-  ctx.globalAlpha =
-
-    0.16;
-
-
-
-  ctx.lineCap =
-
-    "round";
-
-
+  ctx.lineCap = "round";
 
   for (
-
     let i = 0;
-
-    i < 19;
-
+    i < 34;
     i++
-
   ) {
+    const depth =
+      (i + 1) / 35;
+
+    const perspective =
+      depth * depth;
 
     const yy =
-
       oceanY +
+      perspective *
+        (h - oceanY);
 
-      (
-
-        (i + 1) /
-
-        20
-
-      ) *
-
-        (
-
-          h -
-
-          oceanY
-
-        );
-
-
+    const amplitude =
+      mix(
+        0.7,
+        minDim * 0.020,
+        perspective,
+      );
 
     const phase =
-
-      timeSinceVisualS *
-
-        (
-
-          0.12 +
-
-          (i % 5) *
-
-            0.019
-
-        );
-
-
+      clockS *
+        mix(0.55, 2.7, perspective) +
+      i * 0.81;
 
     ctx.strokeStyle =
-
-      i % 4 === 0
-
-        ? "rgba(224,242,248,0.28)"
-
-        : "rgba(129,188,209,0.17)";
-
-
+      daylight > 0.40
+        ? (
+            i % 5 === 0
+              ? "rgba(229,248,255,0.34)"
+              : "rgba(107,194,222,0.18)"
+          )
+        : (
+            i % 5 === 0
+              ? "rgba(174,217,244,0.22)"
+              : "rgba(69,128,176,0.13)"
+          );
 
     ctx.lineWidth =
-
-      i % 5 === 0
-
-        ? 1.25
-
-        : 0.7;
-
-
+      mix(0.45, 2.2, perspective);
 
     ctx.beginPath();
 
+    for (
+      let segment = 0;
+      segment <= 8;
+      segment++
+    ) {
+      const xx =
+        (segment / 8) * w;
 
-
-    ctx.moveTo(
-
-      -w * 0.08,
-
-      yy,
-
-    );
-
-
-
-    ctx.bezierCurveTo(
-
-      w * 0.23,
-
-      yy +
-
+      const waveY =
+        yy +
         Math.sin(
-
-          phase + i,
-
+          phase +
+          segment * 1.31 +
+          i * 0.17,
         ) *
+          amplitude;
 
-          3,
-
-      w * 0.61,
-
-      yy +
-
-        Math.cos(
-
-          phase * 1.4 + i,
-
-        ) *
-
-          4,
-
-      w * 1.08,
-
-      yy +
-
-        Math.sin(
-
-          phase * 0.7 + i,
-
-        ) *
-
-          3,
-
-    );
-
-
+      if (segment === 0) {
+        ctx.moveTo(xx, waveY);
+      } else {
+        ctx.lineTo(xx, waveY);
+      }
+    }
 
     ctx.stroke();
-
   }
-
-
 
   ctx.restore();
 
@@ -2027,7 +2144,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        23.15
+        27.20
 
       ) /
 
@@ -2037,9 +2154,18 @@ function drawStage1ClearSequence(
 
 
 
+  const swell =
+    Math.sin(clockS * 1.12);
+
+  const shortWave =
+    Math.sin(clockS * 2.25 + 1.1);
+
   const craftX =
 
-    w * 0.43;
+    w * 0.43 +
+    shortWave *
+      craftLength *
+      0.015;
 
 
 
@@ -2055,7 +2181,15 @@ function drawStage1ClearSequence(
 
         sink * 0.30
 
-      );
+      ) +
+
+    swell *
+      craftLength *
+      0.035 +
+
+    shortWave *
+      craftLength *
+      0.010;
 
 
 
@@ -2063,7 +2197,11 @@ function drawStage1ClearSequence(
 
     1.10 +
 
-    sink * 0.08;
+    sink * 0.08 +
+
+    swell * 0.050 +
+
+    shortWave * 0.016;
 
 
 
@@ -2090,6 +2228,70 @@ function drawStage1ClearSequence(
     0,
 
   );
+
+  ctx.save();
+  ctx.translate(craftX, craftY);
+  ctx.rotate(craftAngle);
+
+  const clearCraftWidth =
+    craftLength * 0.62;
+
+  craftOutline(
+    ctx,
+    craftLength,
+    clearCraftWidth,
+  );
+  ctx.clip();
+
+  const enamel =
+    ctx.createLinearGradient(
+      -craftLength * 0.58,
+      -clearCraftWidth * 0.42,
+      craftLength * 0.62,
+      clearCraftWidth * 0.36,
+    );
+
+  enamel.addColorStop(0, "rgba(0,9,24,0.92)");
+  enamel.addColorStop(0.18, "rgba(3,42,101,0.94)");
+  enamel.addColorStop(0.38, "rgba(6,91,196,0.94)");
+  enamel.addColorStop(0.52, "rgba(25,139,245,0.94)");
+  enamel.addColorStop(0.67, "rgba(5,73,160,0.94)");
+  enamel.addColorStop(0.84, "rgba(1,27,70,0.95)");
+  enamel.addColorStop(1, "rgba(0,6,17,0.97)");
+
+  ctx.fillStyle = enamel;
+  ctx.fillRect(
+    -craftLength,
+    -clearCraftWidth,
+    craftLength * 2,
+    clearCraftWidth * 2,
+  );
+
+  ctx.globalCompositeOperation = "screen";
+
+  const gloss =
+    ctx.createLinearGradient(
+      -craftLength * 0.35,
+      -clearCraftWidth * 0.48,
+      craftLength * 0.42,
+      clearCraftWidth * 0.28,
+    );
+
+  gloss.addColorStop(0, "rgba(255,255,255,0)");
+  gloss.addColorStop(0.46, "rgba(145,215,255,0.06)");
+  gloss.addColorStop(0.51, "rgba(255,255,255,0.78)");
+  gloss.addColorStop(0.56, "rgba(84,177,255,0.08)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+
+  ctx.fillStyle = gloss;
+  ctx.fillRect(
+    -craftLength,
+    -clearCraftWidth,
+    craftLength * 2,
+    clearCraftWidth * 2,
+  );
+
+  ctx.restore();
 
 
 
@@ -2303,7 +2505,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        24.4
+        29.10
 
       ) /
 
@@ -2499,7 +2701,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        15.55
+        17.20
 
       ) /
 
@@ -2661,7 +2863,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        16.55
+        18.70
 
       ) /
 
@@ -2711,7 +2913,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        18.05
+        21.00
 
       ) /
 
@@ -2723,7 +2925,7 @@ function drawStage1ClearSequence(
 
   const deployStart =
 
-    19.05;
+    22.20;
 
 
 
@@ -3003,7 +3205,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        20.00
+        23.60
 
       ) /
 
@@ -3021,11 +3223,11 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        21.00
+        25.00
 
       ) /
 
-        2.45,
+        3.25,
 
     );
 
@@ -3257,7 +3459,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        21.35
+        25.55
 
       ) /
 
@@ -3277,7 +3479,7 @@ function drawStage1ClearSequence(
 
         timeSinceVisualS -
 
-        24.05
+        28.80
 
       ) /
 
@@ -4857,7 +5059,11 @@ const failureTravelT =
   outcome === "BREAK"
     ? smoothstep(
         timeSinceVisualAtmosphereEntryS /
-          Math.max(5.5, failureStartS),
+          Math.max(
+            6.75,
+            failureStartS +
+              DESTRUCTION_BURST_S,
+          ),
       )
     : 0;
 
