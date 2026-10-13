@@ -56,13 +56,7 @@ import {
   startReentryAmbience,
   startStage1ClearAudio,
 } from "./reentryAudio";
-import { STAGE1_CLEAR_PHOTO_DAY } from "./reentryClearPhotoAssets";
-
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
-const STAGE1_CLEAR_HATCH_SOURCE =
-  "/reentry/clear/stage1-clear-hatch.webp";
-const STAGE1_CLEAR_DEPART_SOURCE =
-  "/reentry/clear/stage1-clear-depart.webp";
 
 /*
  * NASA Blue Marble global texture.
@@ -1691,2435 +1685,92 @@ function drawEscapeSkiff(
 
 
 
-function drawStage1PhotoClearSequence(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  timeSinceVisualS: number,
-  landingPhoto: HTMLImageElement | null,
-  hatchPhoto: HTMLImageElement | null,
-  departPhoto: HTMLImageElement | null,
-): boolean {
-  const CLEAR_START_S = 14.25;
-
-  if (
-    timeSinceVisualS < CLEAR_START_S ||
-    !landingPhoto ||
-    landingPhoto.naturalWidth <= 0 ||
-    landingPhoto.naturalHeight <= 0
-  ) {
-    return false;
-  }
-
-  const clearS =
-    timeSinceVisualS -
-    CLEAR_START_S;
-
-  const clockS =
-    typeof performance !== "undefined"
-      ? performance.now() / 1000
-      : timeSinceVisualS;
-
-  const sceneIn =
-    smoothstep(
-      clearS / 0.65,
-    );
-
-  /*
-   * Three photographic plates:
-   * 0–4.5 s   landed capsule / quiet ocean
-   * 4.5–8.5 s hatch open / creature emerging
-   * 8.5–15 s  creature away on the matching vehicle / clear
-   *
-   * Crucially, there are no canvas-drawn cartoon creature or hovercraft
-   * overlays. The visual language stays photographic from beginning to end.
-   */
-  const hatchMix =
-    hatchPhoto
-      ? smoothstep(
-          (clearS - 4.15) /
-            1.25,
-        )
-      : 0;
-
-  const departMix =
-    departPhoto
-      ? smoothstep(
-          (clearS - 8.35) /
-            1.35,
-        )
-      : 0;
-
-  const drawPlate = (
-    image: HTMLImageElement,
-    alpha: number,
-    phaseOffset: number,
-  ) => {
-    if (alpha <= 0.001) return;
-
-    const sourceY =
-      image.naturalHeight *
-      0.105;
-
-    const sourceH =
-      image.naturalHeight *
-      0.765;
-
-    const targetAspect =
-      w /
-      Math.max(
-        1,
-        h,
-      );
-
-    const sourceW =
-      Math.min(
-        image.naturalWidth *
-          0.80,
-        sourceH *
-          targetAspect,
-      );
-
-    const sourceX =
-      (
-        image.naturalWidth -
-        sourceW
-      ) *
-      0.5;
-
-    const cameraBob =
-      Math.sin(
-        clockS *
-          0.62 +
-        phaseOffset,
-      ) *
-      1.15;
-
-    const cameraSway =
-      Math.sin(
-        clockS *
-          0.34 +
-        phaseOffset *
-          1.7,
-      ) *
-      1.25;
-
-    const scale =
-      1.008 +
-      Math.sin(
-        clockS *
-          0.24 +
-        phaseOffset,
-      ) *
-        0.0025;
-
-    const dw =
-      w *
-      scale;
-
-    const dh =
-      h *
-      scale;
-
-    ctx.save();
-
-    ctx.globalAlpha =
-      alpha *
-      sceneIn;
-
-    ctx.imageSmoothingEnabled =
-      true;
-
-    ctx.imageSmoothingQuality =
-      "high";
-
-    ctx.drawImage(
-      image,
-      sourceX,
-      sourceY,
-      sourceW,
-      sourceH,
-      (
-        w -
-        dw
-      ) *
-        0.5 +
-        cameraSway,
-      (
-        h -
-        dh
-      ) *
-        0.5 +
-        cameraBob,
-      dw,
-      dh,
-    );
-
-    /*
-     * Re-sample only the lower photographic water in narrow strips.
-     * This creates live surface movement while preserving the actual photo
-     * texture and specular highlights.
-     */
-    const oceanTop =
-      h * 0.66;
-
-    for (
-      let band = 0;
-      band < 9;
-      band++
-    ) {
-      const t =
-        band / 8;
-
-      const bandY =
-        oceanTop +
-        (
-          h -
-          oceanTop
-        ) *
-          t;
-
-      const bandH =
-        Math.max(
-          8,
-          (
-            h -
-            oceanTop
-          ) /
-            8 +
-            3,
-        );
-
-      const sourceBandY =
-        sourceY +
-        sourceH *
-          (
-            0.66 +
-            0.34 *
-              t
-          );
-
-      const sourceBandH =
-        sourceH *
-        (
-          bandH /
-          h
-        );
-
-      const shiftX =
-        Math.sin(
-          clockS *
-            (
-              0.70 +
-              t *
-                1.40
-            ) +
-          band *
-            0.91 +
-          phaseOffset
-        ) *
-        mix(
-          0.25,
-          2.8,
-          t,
-        );
-
-      const shiftY =
-        Math.cos(
-          clockS *
-            (
-              0.58 +
-              t *
-                1.18
-            ) +
-          band *
-            1.21 +
-          phaseOffset
-        ) *
-        mix(
-          0.15,
-          1.30,
-          t,
-        );
-
-      ctx.save();
-
-      ctx.beginPath();
-
-      ctx.rect(
-        0,
-        bandY,
-        w,
-        bandH,
-      );
-
-      ctx.clip();
-
-      ctx.globalAlpha =
-        alpha *
-        sceneIn *
-        mix(
-          0.045,
-          0.12,
-          t,
-        );
-
-      ctx.drawImage(
-        image,
-        sourceX,
-        sourceBandY,
-        sourceW,
-        sourceBandH,
-        shiftX,
-        bandY +
-          shiftY,
-        w,
-        bandH +
-          3,
-      );
-
-      ctx.restore();
-    }
-
-    ctx.restore();
-  };
-
-  /*
-   * Cross-fades are deliberately slow enough to feel like a cinematic cut,
-   * not a slideshow flash.
-   */
-  const landingAlpha =
-    1 -
-    hatchMix;
-
-  const hatchAlpha =
-    hatchPhoto
-      ? hatchMix *
-        (
-          1 -
-          departMix
-        )
-      : 0;
-
-  const departAlpha =
-    departPhoto
-      ? departMix
-      : 0;
-
-  drawPlate(
-    landingPhoto,
-    landingAlpha,
-    0,
-  );
-
-  if (
-    hatchPhoto
-  ) {
-    drawPlate(
-      hatchPhoto,
-      hatchAlpha,
-      1.7,
-    );
-  }
-
-  if (
-    departPhoto
-  ) {
-    drawPlate(
-      departPhoto,
-      departAlpha,
-      3.2,
-    );
-  }
-
-  /*
-   * A small splash pulse masks the midpoint of each photo transition.
-   * It is light on water, not a drawn spacecraft / character.
-   */
-  for (const transition of [
-    4.65,
-    8.85,
-  ]) {
-    const pulse =
-      1 -
-      Math.min(
-        1,
-        Math.abs(
-          clearS -
-          transition
-        ) /
-          0.55,
-      );
-
-    if (
-      pulse >
-      0
-    ) {
-      const splash =
-        ctx.createRadialGradient(
-          w * 0.50,
-          h * 0.68,
-          0,
-          w * 0.50,
-          h * 0.68,
-          Math.min(
-            w,
-            h,
-          ) *
-            0.20,
-        );
-
-      splash.addColorStop(
-        0,
-        `rgba(236,250,255,${0.12 * pulse})`,
-      );
-
-      splash.addColorStop(
-        0.45,
-        `rgba(196,233,247,${0.07 * pulse})`,
-      );
-
-      splash.addColorStop(
-        1,
-        "rgba(180,225,245,0)",
-      );
-
-      ctx.fillStyle =
-        splash;
-
-      ctx.fillRect(
-        0,
-        h * 0.52,
-        w,
-        h * 0.32,
-      );
-    }
-  }
-
-  /*
-   * If the final photographic plate is missing, retain the normal game
-   * title so the success state still finishes cleanly.
-   */
-  if (
-    !departPhoto
-  ) {
-    const clearIn =
-      smoothstep(
-        (
-          clearS -
-          11.1
-        ) /
-          0.8,
-      );
-
-    const clearOut =
-      1 -
-      smoothstep(
-        (
-          clearS -
-          14.7
-        ) /
-          0.5,
-      );
-
-    const clearAlpha =
-      clearIn *
-      clearOut;
-
-    if (
-      clearAlpha >
-      0.001
-    ) {
-      ctx.save();
-
-      ctx.globalAlpha =
-        clearAlpha;
-
-      ctx.textAlign =
-        "center";
-
-      ctx.textBaseline =
-        "middle";
-
-      ctx.fillStyle =
-        "rgba(248,252,255,0.97)";
-
-      ctx.shadowColor =
-        "rgba(6,35,72,0.56)";
-
-      ctx.shadowBlur =
-        20;
-
-      const small =
-        Math.max(
-          13,
-          Math.min(
-            25,
-            w *
-              0.031,
-          ),
-        );
-
-      const large =
-        Math.max(
-          44,
-          Math.min(
-            94,
-            w *
-              0.098,
-          ),
-        );
-
-      ctx.font =
-        `500 ${small}px Georgia, "Times New Roman", serif`;
-
-      ctx.fillText(
-        "S T A G E  1",
-        w * 0.50,
-        h * 0.18,
-      );
-
-      ctx.font =
-        `500 ${large}px Georgia, "Times New Roman", serif`;
-
-      ctx.fillText(
-        "C L E A R",
-        w * 0.50,
-        h * 0.255,
-      );
-
-      ctx.restore();
-    }
-  }
-
-  return true;
-}
-
 
 
 function drawStage1ClearSequence(
-
   ctx: CanvasRenderingContext2D,
-
   w: number,
-
   h: number,
-
   timeSinceVisualS: number,
-
 ): void {
+  const splashStartS = 14.15;
 
-  if (
-
-    timeSinceVisualS <
-
-    14.25
-
-  ) {
-
-    return;
-
-  }
-
-
-
-  const minDim =
-
-    Math.min(w, h);
-
-
+  if (timeSinceVisualS < splashStartS) return;
 
   const clockS =
     typeof performance !== "undefined"
       ? performance.now() / 1000
       : timeSinceVisualS;
+  const minDim = Math.min(w, h);
+  const craftX = w * 0.48;
+  const waterY = h * 0.78;
+  const splashAge = Math.max(0, timeSinceVisualS - splashStartS);
 
-  const now = new Date();
-
-  const localHour =
-    now.getHours() +
-    now.getMinutes() / 60;
-
-  const daylight =
-    clamp01(
-      Math.sin(
-        ((localHour - 5.5) / 13) *
-          Math.PI,
-      ),
-    );
-
-
-
-  const sceneIn =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        14.25
-
-      ) /
-
-        0.85,
-
-    );
-
-
-
-  const oceanY =
-
-    h * 0.63;
-
-
-
-  ctx.save();
-
-  ctx.globalAlpha =
-
-    sceneIn;
-
-
-
-  /*
-
-   * Quiet real-world blue sky.
-
-   * No sci-fi horizon grid and no atmosphere bands.
-
-   */
-
-  const sky =
-
-    ctx.createLinearGradient(
-
-      0,
-
-      0,
-
-      0,
-
-      oceanY,
-
-    );
-
-
-
-  if (daylight > 0.50) {
-    sky.addColorStop(0, "#0877d5");
-    sky.addColorStop(0.42, "#2d9ce8");
-    sky.addColorStop(0.80, "#9bd4f1");
-    sky.addColorStop(1, "#e4f1f6");
-  } else if (daylight > 0.10) {
-    sky.addColorStop(0, "#071a3b");
-    sky.addColorStop(0.42, "#285d91");
-    sky.addColorStop(0.80, "#b27370");
-    sky.addColorStop(1, "#e2b58d");
-  } else {
-    sky.addColorStop(0, "#01050d");
-    sky.addColorStop(0.42, "#04142c");
-    sky.addColorStop(0.80, "#0a2c50");
-    sky.addColorStop(1, "#174261");
-  }
-
-
-
-  ctx.fillStyle =
-
-    sky;
-
-
-
-  ctx.fillRect(
-
-    0,
-
-    0,
-
-    w,
-
-    oceanY,
-
-  );
-
-  if (daylight < 0.46) {
-    drawStars(
-      ctx,
-      w,
-      oceanY,
-      timeSinceVisualS,
-      false,
-      0,
-      smoothstep((0.46 - daylight) / 0.46),
-    );
-
-    drawAtmosphericMoon(
-      ctx,
-      w,
-      oceanY,
-      0.95,
-      Date.now(),
-    );
-  }
-
-  if (daylight > 0.12) {
-    const sunProgress =
-      clamp01((localHour - 5.5) / 13);
-
-    const sunX =
-      mix(w * 0.08, w * 0.92, sunProgress);
-
-    const sunY =
-      oceanY *
-      (
-        0.69 -
-        Math.sin(sunProgress * Math.PI) *
-          0.56
-      );
-
-    const sunR =
-      minDim * mix(0.020, 0.036, daylight);
-
-    const halo =
-      ctx.createRadialGradient(
-        sunX,
-        sunY,
-        0,
-        sunX,
-        sunY,
-        sunR * 7,
-      );
-
-    halo.addColorStop(
-      0,
-      "rgba(255,255,245,0.96)",
-    );
-    halo.addColorStop(
-      0.10,
-      "rgba(255,243,198,0.68)",
-    );
-    halo.addColorStop(
-      0.34,
-      "rgba(255,218,142,0.18)",
-    );
-    halo.addColorStop(
-      1,
-      "rgba(255,205,126,0)",
-    );
-
+  // Impact spray. The underlying sea and craft remain the same live scene.
+  const impactPulse = 1 - smoothstep(splashAge / 2.4);
+  if (impactPulse > 0.001) {
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(
-      sunX,
-      sunY,
-      sunR * 7,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.restore();
-  }
-
-
-
-  /*
-
-   * Wide open sea.
-
-   */
-
-  const sea =
-
-    ctx.createLinearGradient(
-
-      0,
-
-      oceanY,
-
-      0,
-
-      h,
-
-    );
-
-
-
-  if (daylight > 0.45) {
-    sea.addColorStop(0, "#2d88ad");
-    sea.addColorStop(0.18, "#176c94");
-    sea.addColorStop(0.56, "#075071");
-    sea.addColorStop(1, "#02233c");
-  } else {
-    sea.addColorStop(0, "#153e5c");
-    sea.addColorStop(0.22, "#0a2b47");
-    sea.addColorStop(0.58, "#041a31");
-    sea.addColorStop(1, "#010b18");
-  }
-
-
-
-  ctx.fillStyle =
-
-    sea;
-
-
-
-  ctx.fillRect(
-
-    0,
-
-    oceanY,
-
-    w,
-
-    h - oceanY,
-
-  );
-
-
-
-  /*
-
-   * Fine irregular water texture. Keep it subtle so it reads as water rather
-
-   * than horizontal HUD lines.
-
-   */
-
-  ctx.save();
-  ctx.lineCap = "round";
-
-  for (
-    let i = 0;
-    i < 34;
-    i++
-  ) {
-    const depth =
-      (i + 1) / 35;
-
-    const perspective =
-      depth * depth;
-
-    const yy =
-      oceanY +
-      perspective *
-        (h - oceanY);
-
-    const amplitude =
-      mix(
-        0.7,
-        minDim * 0.020,
-        perspective,
-      );
-
-    const phase =
-      clockS *
-        mix(0.55, 2.7, perspective) +
-      i * 0.81;
-
-    ctx.strokeStyle =
-      daylight > 0.40
-        ? (
-            i % 5 === 0
-              ? "rgba(229,248,255,0.34)"
-              : "rgba(107,194,222,0.18)"
-          )
-        : (
-            i % 5 === 0
-              ? "rgba(174,217,244,0.22)"
-              : "rgba(69,128,176,0.13)"
-          );
-
-    ctx.lineWidth =
-      mix(0.45, 2.2, perspective);
-
-    ctx.beginPath();
-
-    for (
-      let segment = 0;
-      segment <= 8;
-      segment++
-    ) {
-      const xx =
-        (segment / 8) * w;
-
-      const waveY =
-        yy +
-        Math.sin(
-          phase +
-          segment * 1.31 +
-          i * 0.17,
-        ) *
-          amplitude;
-
-      if (segment === 0) {
-        ctx.moveTo(xx, waveY);
-      } else {
-        ctx.lineTo(xx, waveY);
-      }
+    for (let i = 0; i < 22; i++) {
+      const a = hash01(0x5eaf13, i * 19 + Math.floor(splashAge * 18));
+      const b = hash01(0x91c33d, i * 29 + 7);
+      const side = (a - 0.5) * minDim * 0.34;
+      const rise = splashAge * minDim * (0.020 + b * 0.070);
+      const fall = splashAge * splashAge * minDim * 0.020;
+      const px = craftX + side;
+      const py = waterY - rise + fall;
+      const rr = minDim * (0.006 + b * 0.010) * impactPulse;
+      ctx.fillStyle = "rgba(239,251,255," + (0.18 + b * 0.42) + ")";
+      ctx.beginPath();
+      ctx.ellipse(px, py, rr * 0.72, rr * 1.85, (a - 0.5) * 0.9, 0, Math.PI * 2);
+      ctx.fill();
     }
-
-    ctx.stroke();
+    ctx.restore();
   }
 
-  ctx.restore();
-
-
-
-  /*
-
-   * Very soft distance haze at the horizon.
-
-   */
-
-  const haze =
-
-    ctx.createLinearGradient(
-
-      0,
-
-      oceanY - h * 0.08,
-
-      0,
-
-      oceanY + h * 0.05,
-
-    );
-
-
-
-  haze.addColorStop(
-
-    0,
-
-    "rgba(255,255,255,0)",
-
-  );
-
-
-
-  haze.addColorStop(
-
-    0.58,
-
-    "rgba(232,246,250,0.22)",
-
-  );
-
-
-
-  haze.addColorStop(
-
-    1,
-
-    "rgba(232,246,250,0)",
-
-  );
-
-
-
-  ctx.fillStyle =
-
-    haze;
-
-
-
-  ctx.fillRect(
-
-    0,
-
-    oceanY - h * 0.08,
-
-    w,
-
-    h * 0.13,
-
-  );
-
-
-
-  const craftLength =
-
-    minDim * 0.19;
-
-
-
-  const sink =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        27.20
-
-      ) /
-
-        3.7,
-
-    );
-
-
-
-  const swell =
-    Math.sin(clockS * 1.12);
-
-  const shortWave =
-    Math.sin(clockS * 2.25 + 1.1);
-
-  const craftX =
-
-    w * 0.43 +
-    shortWave *
-      craftLength *
-      0.015;
-
-
-
-  const craftY =
-
-    oceanY +
-
-    craftLength *
-
-      (
-
-        0.08 +
-
-        sink * 0.30
-
-      ) +
-
-    swell *
-      craftLength *
-      0.035 +
-
-    shortWave *
-      craftLength *
-      0.010;
-
-
-
-  const craftAngle =
-
-    1.10 +
-
-    sink * 0.08 +
-
-    swell * 0.050 +
-
-    shortWave * 0.016;
-
-
-
-  /*
-
-   * Original Stage 1 craft. Nose points down into the sea.
-
-   */
-
-  drawCraft(
-
-    ctx,
-
-    craftX,
-
-    craftY,
-
-    craftAngle,
-
-    craftLength,
-
-    0.96,
-
-    0,
-
-  );
-
+  // Ring waves continue after touchdown.
   ctx.save();
-  ctx.translate(craftX, craftY);
-  ctx.rotate(craftAngle);
-
-  const clearCraftWidth =
-    craftLength * 0.62;
-
-  craftOutline(
-    ctx,
-    craftLength,
-    clearCraftWidth,
-  );
-  ctx.clip();
-
-  const enamel =
-    ctx.createLinearGradient(
-      -craftLength * 0.58,
-      -clearCraftWidth * 0.42,
-      craftLength * 0.62,
-      clearCraftWidth * 0.36,
-    );
-
-  enamel.addColorStop(0, "rgba(0,9,24,0.92)");
-  enamel.addColorStop(0.18, "rgba(3,42,101,0.94)");
-  enamel.addColorStop(0.38, "rgba(6,91,196,0.94)");
-  enamel.addColorStop(0.52, "rgba(25,139,245,0.94)");
-  enamel.addColorStop(0.67, "rgba(5,73,160,0.94)");
-  enamel.addColorStop(0.84, "rgba(1,27,70,0.95)");
-  enamel.addColorStop(1, "rgba(0,6,17,0.97)");
-
-  ctx.fillStyle = enamel;
-  ctx.fillRect(
-    -craftLength,
-    -clearCraftWidth,
-    craftLength * 2,
-    clearCraftWidth * 2,
-  );
-
   ctx.globalCompositeOperation = "screen";
-
-  const gloss =
-    ctx.createLinearGradient(
-      -craftLength * 0.35,
-      -clearCraftWidth * 0.48,
-      craftLength * 0.42,
-      clearCraftWidth * 0.28,
-    );
-
-  gloss.addColorStop(0, "rgba(255,255,255,0)");
-  gloss.addColorStop(0.46, "rgba(145,215,255,0.06)");
-  gloss.addColorStop(0.51, "rgba(255,255,255,0.78)");
-  gloss.addColorStop(0.56, "rgba(84,177,255,0.08)");
-  gloss.addColorStop(1, "rgba(255,255,255,0)");
-
-  ctx.fillStyle = gloss;
-  ctx.fillRect(
-    -craftLength,
-    -clearCraftWidth,
-    craftLength * 2,
-    clearCraftWidth * 2,
-  );
-
+  for (let ring = 0; ring < 5; ring++) {
+    const phase = (clockS * (0.12 + ring * 0.013) + ring * 0.18) % 1;
+    const radius = minDim * (0.055 + phase * 0.23);
+    ctx.globalAlpha = (1 - phase) * 0.22;
+    ctx.strokeStyle = ring % 2 === 0
+      ? "rgba(238,252,255,0.92)"
+      : "rgba(155,221,244,0.76)";
+    ctx.lineWidth = Math.max(0.75, minDim * (0.0014 + phase * 0.0012));
+    ctx.beginPath();
+    ctx.ellipse(craftX, waterY + minDim * 0.018, radius, radius * 0.24, Math.sin(clockS * 0.16) * 0.03, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   ctx.restore();
 
-
-
-  /*
-
-   * Water layer over the nose gives the impression that the front section is
-
-   * already submerged while the upper/aft hull still floats.
-
-   */
-
-  const waterCover =
-
-    ctx.createLinearGradient(
-
-      0,
-
-      oceanY - 3,
-
-      0,
-
-      oceanY +
-
-        craftLength * 0.70,
-
-    );
-
-
-
-  waterCover.addColorStop(
-
-    0,
-
-    "rgba(44,111,139,0.28)",
-
-  );
-
-
-
-  waterCover.addColorStop(
-
-    0.16,
-
-    "rgba(28,87,113,0.74)",
-
-  );
-
-
-
-  waterCover.addColorStop(
-
-    1,
-
-    "rgba(8,41,61,0.96)",
-
-  );
-
-
-
-  ctx.fillStyle =
-
-    waterCover;
-
-
-
-  ctx.fillRect(
-
-    0,
-
-    oceanY,
-
-    w,
-
-    h - oceanY,
-
-  );
-
-
-
-  /*
-
-   * Waterline / gentle ripples around the wreck.
-
-   */
-
-  const ripple =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        14.45
-
-      ) /
-
-        1.2,
-
-    );
-
-
+  // Let the landing breathe before CLEAR appears.
+  const clearIn = smoothstep((timeSinceVisualS - 21.8) / 0.90);
+  const clearOut = 1 - smoothstep((timeSinceVisualS - 29.0) / 0.80);
+  const clearAlpha = clearIn * clearOut;
+  if (clearAlpha <= 0.001) return;
 
   ctx.save();
-
-
-
-  ctx.globalAlpha =
-
-    0.34 *
-
-    ripple;
-
-
-
-  ctx.strokeStyle =
-
-    "rgba(226,245,250,0.82)";
-
-
-
-  ctx.lineWidth =
-
-    Math.max(
-
-      1,
-
-      minDim * 0.0018,
-
-    );
-
-
-
-  for (
-
-    let i = 0;
-
-    i < 3;
-
-    i++
-
-  ) {
-
-    ctx.beginPath();
-
-
-
-    ctx.ellipse(
-
-      craftX +
-
-        craftLength * 0.03,
-
-      oceanY +
-
-        craftLength * 0.02,
-
-      craftLength *
-
-        (
-
-          0.72 +
-
-          i * 0.46
-
-        ),
-
-      craftLength *
-
-        (
-
-          0.055 +
-
-          i * 0.022
-
-        ),
-
-      -0.03,
-
-      0,
-
-      Math.PI * 2,
-
-    );
-
-
-
-    ctx.stroke();
-
-  }
-
-
-
+  ctx.globalAlpha = clearAlpha;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(248,252,255,0.98)";
+  ctx.shadowColor = "rgba(4,28,58,0.52)";
+  ctx.shadowBlur = 22;
+  const small = Math.max(13, Math.min(25, w * 0.031));
+  const large = Math.max(42, Math.min(90, w * 0.096));
+  ctx.font = "500 " + small + "px Georgia, Times New Roman, serif";
+  ctx.fillText("S T A G E  1", w * 0.50, h * 0.18);
+  ctx.font = "500 " + large + "px Georgia, Times New Roman, serif";
+  ctx.fillText("C L E A R", w * 0.50, h * 0.255);
+  ctx.strokeStyle = "rgba(238,249,255,0.62)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.31, h * 0.305);
+  ctx.lineTo(w * 0.69, h * 0.305);
+  ctx.stroke();
   ctx.restore();
-
-
-
-  /*
-
-   * Thin smoke from the exposed rear section.
-
-   */
-
-  const smokeFade =
-
-    1 -
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        29.10
-
-      ) /
-
-        2.2,
-
-    );
-
-
-
-  const rearX =
-
-    craftX -
-
-    Math.cos(
-
-      craftAngle,
-
-    ) *
-
-      craftLength *
-
-      0.38;
-
-
-
-  const rearY =
-
-    craftY -
-
-    Math.sin(
-
-      craftAngle,
-
-    ) *
-
-      craftLength *
-
-      0.38;
-
-
-
-  ctx.save();
-
-
-
-  ctx.globalAlpha =
-
-    0.28 *
-
-    smokeFade;
-
-
-
-  for (
-
-    let i = 0;
-
-    i < 7;
-
-    i++
-
-  ) {
-
-    const drift =
-
-      (
-
-        timeSinceVisualS *
-
-          7 +
-
-        i * 13
-
-      ) %
-
-      46;
-
-
-
-    const rr =
-
-      craftLength *
-
-      (
-
-        0.07 +
-
-        i * 0.010
-
-      );
-
-
-
-    const smoke =
-
-      ctx.createRadialGradient(
-
-        rearX -
-
-          drift * 0.30,
-
-        rearY -
-
-          drift * 1.08,
-
-        rr * 0.12,
-
-        rearX -
-
-          drift * 0.30,
-
-        rearY -
-
-          drift * 1.08,
-
-        rr,
-
-      );
-
-
-
-    smoke.addColorStop(
-
-      0,
-
-      "rgba(135,146,151,0.52)",
-
-    );
-
-
-
-    smoke.addColorStop(
-
-      1,
-
-      "rgba(90,105,112,0)",
-
-    );
-
-
-
-    ctx.fillStyle =
-
-      smoke;
-
-
-
-    ctx.beginPath();
-
-
-
-    ctx.arc(
-
-      rearX -
-
-        drift * 0.30,
-
-      rearY -
-
-        drift * 1.08,
-
-      rr,
-
-      0,
-
-      Math.PI * 2,
-
-    );
-
-
-
-    ctx.fill();
-
-  }
-
-
-
-  ctx.restore();
-
-
-
-  /*
-
-   * Front hatch is near the waterline on the forward upper hull.
-
-   */
-
-  const hatchT =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        17.20
-
-      ) /
-
-        1.10,
-
-    );
-
-
-
-  const hatchX =
-
-    craftX +
-
-    Math.cos(
-
-      craftAngle,
-
-    ) *
-
-      craftLength *
-
-      0.08 -
-
-    Math.sin(
-
-      craftAngle,
-
-    ) *
-
-      craftLength *
-
-      0.18;
-
-
-
-  const hatchY =
-
-    oceanY -
-
-    craftLength *
-
-      0.095;
-
-
-
-  if (
-
-    hatchT >
-
-    0.01
-
-  ) {
-
-    ctx.save();
-
-
-
-    ctx.globalAlpha =
-
-      hatchT;
-
-
-
-    ctx.fillStyle =
-
-      "rgba(4,8,11,0.94)";
-
-
-
-    ctx.beginPath();
-
-
-
-    ctx.ellipse(
-
-      hatchX,
-
-      hatchY,
-
-      craftLength * 0.085,
-
-      craftLength * 0.040,
-
-      craftAngle -
-
-        0.38,
-
-      0,
-
-      Math.PI * 2,
-
-    );
-
-
-
-    ctx.fill();
-
-
-
-    ctx.fillStyle =
-
-      "rgba(111,124,129,0.94)";
-
-
-
-    ctx.beginPath();
-
-
-
-    ctx.ellipse(
-
-      hatchX -
-
-        craftLength *
-
-          0.040 *
-
-          hatchT,
-
-      hatchY -
-
-        craftLength *
-
-          0.090 *
-
-          hatchT,
-
-      craftLength * 0.072,
-
-      craftLength * 0.027,
-
-      craftAngle -
-
-        0.58,
-
-      0,
-
-      Math.PI * 2,
-
-    );
-
-
-
-    ctx.fill();
-
-
-
-    ctx.restore();
-
-  }
-
-
-
-  const alienOut =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        18.70
-
-      ) /
-
-        1.30,
-
-    );
-
-
-
-  const alienBaseX =
-
-    hatchX +
-
-    craftLength *
-
-      0.10 *
-
-      alienOut;
-
-
-
-  const alienBaseY =
-
-    hatchY -
-
-    craftLength *
-
-      0.25 *
-
-      alienOut;
-
-
-
-  /*
-
-   * Capsule leaves the alien without an arm/hand animation.
-
-   * The creature has no limbs.
-
-   */
-
-  const tossT =
-
-    clamp01(
-
-      (
-
-        timeSinceVisualS -
-
-        21.00
-
-      ) /
-
-        1.00,
-
-    );
-
-
-
-  const deployStart =
-
-    22.20;
-
-
-
-  const deployT =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        deployStart
-
-      ) /
-
-        1.15,
-
-    );
-
-
-
-  const podStartX =
-
-    alienBaseX +
-
-    craftLength *
-
-      0.06;
-
-
-
-  const podStartY =
-
-    alienBaseY -
-
-    craftLength *
-
-      0.08;
-
-
-
-  const skiffX =
-
-    w * 0.64;
-
-
-
-  const skiffY =
-
-    oceanY -
-
-    craftLength *
-
-      0.20;
-
-
-
-  const arc =
-
-    Math.sin(
-
-      Math.PI * tossT,
-
-    ) *
-
-    craftLength *
-
-    0.72;
-
-
-
-  const podX =
-
-    mix(
-
-      podStartX,
-
-      skiffX,
-
-      tossT,
-
-    );
-
-
-
-  const podY =
-
-    mix(
-
-      podStartY,
-
-      skiffY,
-
-      tossT,
-
-    ) -
-
-    arc;
-
-
-
-  if (
-
-    tossT > 0 &&
-
-    deployT <
-
-      0.95
-
-  ) {
-
-    ctx.save();
-
-
-
-    ctx.globalAlpha =
-
-      1 - deployT;
-
-
-
-    ctx.shadowColor =
-
-      "rgba(255,221,113,0.80)";
-
-
-
-    ctx.shadowBlur =
-
-      12;
-
-
-
-    ctx.fillStyle =
-
-      "#f1c85d";
-
-
-
-    ctx.beginPath();
-
-
-
-    ctx.ellipse(
-
-      podX,
-
-      podY,
-
-      craftLength * 0.025,
-
-      craftLength * 0.016,
-
-      -0.3,
-
-      0,
-
-      Math.PI * 2,
-
-    );
-
-
-
-    ctx.fill();
-
-
-
-    ctx.restore();
-
-  }
-
-
-
-  if (
-
-    deployT >
-
-    0.01 &&
-
-    deployT <
-
-      0.96
-
-  ) {
-
-    const puff =
-
-      Math.sin(
-
-        Math.PI *
-
-          clamp01(
-
-            deployT,
-
-          ),
-
-      );
-
-
-
-    ctx.save();
-
-
-
-    ctx.globalAlpha =
-
-      puff * 0.42;
-
-
-
-    ctx.strokeStyle =
-
-      "rgba(235,248,250,0.92)";
-
-
-
-    ctx.lineWidth =
-
-      Math.max(
-
-        1.2,
-
-        minDim *
-
-          0.0023,
-
-      );
-
-
-
-    ctx.beginPath();
-
-
-
-    ctx.arc(
-
-      skiffX,
-
-      skiffY,
-
-      craftLength *
-
-        (
-
-          0.11 +
-
-          deployT *
-
-            0.55
-
-        ),
-
-      0,
-
-      Math.PI * 2,
-
-    );
-
-
-
-    ctx.stroke();
-
-
-
-    ctx.restore();
-
-  }
-
-
-
-  const boardT =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        23.60
-
-      ) /
-
-        1.05,
-
-    );
-
-
-
-  const departT =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        25.00
-
-      ) /
-
-        3.25,
-
-    );
-
-
-
-  const departX =
-
-    w * 0.34 *
-
-    departT;
-
-
-
-  const departY =
-
-    h * 0.28 *
-
-    departT;
-
-
-
-  const vehicleAlpha =
-
-    deployT *
-
-    (
-
-      1 -
-
-      smoothstep(
-
-        (
-
-          departT -
-
-          0.84
-
-        ) /
-
-          0.16,
-
-      )
-
-    );
-
-
-
-  if (
-
-    deployT >
-
-    0.02
-
-  ) {
-
-    drawEscapeSkiff(
-
-      ctx,
-
-      skiffX +
-
-        departX,
-
-      skiffY -
-
-        departY,
-
-      craftLength *
-
-        mix(
-
-          0.10,
-
-          0.38,
-
-          deployT,
-
-        ) *
-
-        mix(
-
-          1,
-
-          0.44,
-
-          departT,
-
-        ),
-
-      vehicleAlpha,
-
-      -0.08 -
-
-        departT *
-
-          0.22,
-
-    );
-
-  }
-
-
-
-  const alienTravelX =
-
-    mix(
-
-      alienBaseX,
-
-      skiffX,
-
-      boardT,
-
-    ) +
-
-    departX;
-
-
-
-  const alienTravelY =
-
-    mix(
-
-      alienBaseY,
-
-      skiffY -
-
-        craftLength *
-
-          0.16,
-
-      boardT,
-
-    ) -
-
-    departY;
-
-
-
-  const alienScale =
-
-    craftLength *
-
-    0.15 *
-
-    mix(
-
-      1,
-
-      0.46,
-
-      departT,
-
-    );
-
-
-
-  if (
-
-    alienOut >
-
-    0.02 &&
-
-    departT <
-
-      0.97
-
-  ) {
-
-    drawLiquidAlien(
-
-      ctx,
-
-      alienTravelX,
-
-      alienTravelY,
-
-      alienScale,
-
-      alienOut *
-
-        (
-
-          1 -
-
-          smoothstep(
-
-            (
-
-              departT -
-
-              0.86
-
-            ) /
-
-              0.14,
-
-          )
-
-        ),
-
-      boardT <
-
-        0.9
-
-        ? 0.14
-
-        : 0.04,
-
-    );
-
-  }
-
-
-
-  /*
-
-   * STAGE 1 CLEAR lives in the sky, not in a black result footer.
-
-   * It deliberately arrives while the strange creature is escaping.
-
-   */
-
-  const clearIn =
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        25.55
-
-      ) /
-
-        0.75,
-
-    );
-
-
-
-  const clearOut =
-
-    1 -
-
-    smoothstep(
-
-      (
-
-        timeSinceVisualS -
-
-        28.80
-
-      ) /
-
-        0.85,
-
-    );
-
-
-
-  const clearAlpha =
-
-    clearIn *
-
-    clearOut;
-
-
-
-  if (
-
-    clearAlpha >
-
-    0.001
-
-  ) {
-
-    ctx.save();
-
-
-
-    ctx.globalAlpha =
-
-      clearAlpha;
-
-
-
-    ctx.textAlign =
-
-      "center";
-
-
-
-    ctx.textBaseline =
-
-      "middle";
-
-
-
-    ctx.fillStyle =
-
-      "rgba(247,250,250,0.94)";
-
-
-
-    ctx.shadowColor =
-
-      "rgba(15,51,75,0.34)";
-
-
-
-    ctx.shadowBlur =
-
-      18;
-
-
-
-    const size =
-
-      Math.max(
-
-        26,
-
-        Math.min(
-
-          72,
-
-          w * 0.071,
-
-        ),
-
-      );
-
-
-
-    ctx.font =
-
-      `500 ${size}px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-
-
-
-    ctx.fillText(
-
-      "STAGE 1 CLEAR",
-
-      w * 0.50,
-
-      h * 0.25,
-
-    );
-
-
-
-    ctx.restore();
-
-  }
-
-
-
-  /*
-
-   * By the end:
-
-   * - alien is gone
-
-   * - escape craft is gone
-
-   * - title has faded
-
-   * - smoke is fading
-
-   * - original craft continues to sink
-
-   * - only sky + sea + wreck remain
-
-   */
-
-
-
-  ctx.restore();
-
 }
 
 function drawSurfaceApproach(
@@ -4127,65 +1778,169 @@ function drawSurfaceApproach(
   w: number,
   h: number,
   surfaceMix: number,
+  timeSinceVisualS: number,
 ): void {
   if (surfaceMix <= 0.001) return;
+
+  const t = typeof performance !== "undefined"
+    ? performance.now() / 1000
+    : timeSinceVisualS;
+  const now = new Date();
+  const hour = now.getHours() + now.getMinutes() / 60;
+  const daylight = clamp01(Math.sin(((hour - 5.5) / 13) * Math.PI));
+  const minDim = Math.min(w, h);
+  const horizonY = h * 0.635;
 
   ctx.save();
   ctx.globalAlpha = surfaceMix;
 
-  const sky = ctx.createLinearGradient(
-    0,
-    0,
-    0,
-    h * 0.72,
-  );
-
-  sky.addColorStop(
-    0,
-    "#1b5f9d",
-  );
-  sky.addColorStop(
-    0.56,
-    "#5ba3d2",
-  );
-  sky.addColorStop(
-    1,
-    "#b8d9ea",
-  );
-
+  const sky = ctx.createLinearGradient(0, 0, 0, horizonY);
+  if (daylight > 0.55) {
+    sky.addColorStop(0, "#086fc5");
+    sky.addColorStop(0.46, "#2896e0");
+    sky.addColorStop(0.80, "#8bcbed");
+    sky.addColorStop(1, "#d9edf6");
+  } else if (daylight > 0.08) {
+    sky.addColorStop(0, "#06152e");
+    sky.addColorStop(0.42, "#2a5f91");
+    sky.addColorStop(0.78, "#c78172");
+    sky.addColorStop(1, "#efd0a9");
+  } else {
+    sky.addColorStop(0, "#01040c");
+    sky.addColorStop(0.46, "#04152c");
+    sky.addColorStop(0.82, "#0a3054");
+    sky.addColorStop(1, "#194a68");
+  }
   ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillRect(0, 0, w, horizonY);
 
-  const oceanY = h * 0.63;
+  if (daylight < 0.42) {
+    drawStars(ctx, w, horizonY, timeSinceVisualS, false, 0, smoothstep((0.42 - daylight) / 0.42));
+    drawAtmosphericMoon(ctx, w, horizonY, 0.95, Date.now());
+  }
 
-  const ocean = ctx.createLinearGradient(
-    0,
-    oceanY,
-    0,
-    h,
-  );
+  let lightX = w * 0.80;
+  if (daylight > 0.06) {
+    const dayT = clamp01((hour - 5.5) / 13);
+    lightX = mix(w * 0.08, w * 0.92, dayT);
+    const sunY = horizonY * (0.72 - Math.sin(dayT * Math.PI) * 0.60);
+    const sunR = minDim * mix(0.022, 0.040, daylight);
+    const sun = ctx.createRadialGradient(lightX, sunY, 0, lightX, sunY, sunR * 7);
+    sun.addColorStop(0, "rgba(255,255,246,0.98)");
+    sun.addColorStop(0.09, "rgba(255,244,207,0.80)");
+    sun.addColorStop(0.32, "rgba(255,220,150,0.23)");
+    sun.addColorStop(1, "rgba(255,205,132,0)");
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = sun;
+    ctx.beginPath();
+    ctx.arc(lightX, sunY, sunR * 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
-  ocean.addColorStop(
-    0,
-    "#457e9e",
-  );
-  ocean.addColorStop(
-    0.38,
-    "#245775",
-  );
-  ocean.addColorStop(
-    1,
-    "#0c2a3d",
-  );
+  // Drifting cloud banks.
+  for (let cloud = 0; cloud < 9; cloud++) {
+    const a = hash01(0x8ac31d, cloud * 17 + 3);
+    const b = hash01(0x72e91f, cloud * 31 + 11);
+    const scale = minDim * (0.045 + a * 0.070);
+    const drift = (t * (1.5 + b * 1.5) + a * w * 1.7) % (w * 1.45);
+    const cx = -w * 0.22 + drift;
+    const cy = horizonY * (0.26 + b * 0.60);
+    ctx.save();
+    ctx.globalAlpha = surfaceMix * (0.20 + daylight * 0.38) * (0.45 + b * 0.45);
+    for (let lobe = 0; lobe < 6; lobe++) {
+      const ox = (lobe - 2.5) * scale * 0.35;
+      const oy = Math.sin(lobe * 1.51 + a * 7.2) * scale * 0.13;
+      const rr = scale * (0.40 + hash01(cloud * 83 + 9, lobe * 23 + 5) * 0.28);
+      const g = ctx.createRadialGradient(cx + ox - rr * 0.22, cy + oy - rr * 0.22, rr * 0.06, cx + ox, cy + oy, rr);
+      if (daylight > 0.28) {
+        g.addColorStop(0, "rgba(255,255,255,0.96)");
+        g.addColorStop(0.48, "rgba(245,250,252,0.74)");
+        g.addColorStop(0.77, "rgba(166,193,213,0.24)");
+      } else {
+        g.addColorStop(0, "rgba(169,192,214,0.46)");
+        g.addColorStop(0.56, "rgba(76,105,135,0.26)");
+        g.addColorStop(0.82, "rgba(17,37,58,0.16)");
+      }
+      g.addColorStop(1, "rgba(30,50,66,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx + ox, cy + oy, rr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
+  const ocean = ctx.createLinearGradient(0, horizonY, 0, h);
+  if (daylight > 0.42) {
+    ocean.addColorStop(0, "#2b82a8");
+    ocean.addColorStop(0.20, "#17698f");
+    ocean.addColorStop(0.56, "#07506f");
+    ocean.addColorStop(1, "#02243d");
+  } else {
+    ocean.addColorStop(0, "#153e5c");
+    ocean.addColorStop(0.24, "#092c48");
+    ocean.addColorStop(0.60, "#04192f");
+    ocean.addColorStop(1, "#010b18");
+  }
   ctx.fillStyle = ocean;
-  ctx.fillRect(
-    0,
-    oceanY,
-    w,
-    h - oceanY,
-  );
+  ctx.fillRect(0, horizonY, w, h - horizonY);
 
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, horizonY, w, h - horizonY);
+  ctx.clip();
+  ctx.lineCap = "round";
+
+  // Perspective moving wave field.
+  for (let row = 0; row < 46; row++) {
+    const depth = (row + 1) / 47;
+    const perspective = depth * depth;
+    const baseY = horizonY + perspective * (h - horizonY);
+    const amp = mix(0.55, minDim * 0.024, perspective);
+    const speed = mix(0.42, 2.65, perspective);
+    const phase = t * speed + row * 0.83;
+    ctx.strokeStyle = daylight > 0.35
+      ? (row % 6 === 0 ? "rgba(229,249,255,0.40)" : "rgba(112,201,229,0.18)")
+      : (row % 6 === 0 ? "rgba(173,218,244,0.24)" : "rgba(69,126,174,0.13)");
+    ctx.lineWidth = mix(0.38, 2.45, perspective);
+    ctx.beginPath();
+    for (let seg = 0; seg <= 12; seg++) {
+      const xx = (seg / 12) * w;
+      const wave = Math.sin(phase + seg * 1.12 + row * 0.15) * amp * 0.72
+        + Math.sin(phase * 0.61 + seg * 2.07 + row * 0.43) * amp * 0.28;
+      const yy = baseY + wave;
+      if (seg === 0) ctx.moveTo(xx, yy);
+      else ctx.lineTo(xx, yy);
+    }
+    ctx.stroke();
+  }
+
+  // Broken sunlight/moonlight glitter on the moving sea.
+  ctx.globalCompositeOperation = "screen";
+  for (let i = 0; i < 62; i++) {
+    const depth = i / 61;
+    const yy = horizonY + depth * depth * (h - horizonY);
+    const width = mix(w * 0.010, w * 0.26, depth);
+    const jitter = (hash01(0x4d911f, i * 17 + Math.floor(t * 5)) - 0.5) * width;
+    const xx = lightX + jitter;
+    const rr = mix(0.7, 4.8, depth);
+    ctx.fillStyle = daylight > 0.15
+      ? "rgba(255,244,211," + (0.045 + depth * 0.22) + ")"
+      : "rgba(193,225,255," + (0.035 + depth * 0.15) + ")";
+    ctx.beginPath();
+    ctx.ellipse(xx, yy, rr * (1.6 + depth * 2.8), rr * 0.40, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const haze = ctx.createLinearGradient(0, horizonY - h * 0.040, 0, horizonY + h * 0.050);
+  haze.addColorStop(0, "rgba(255,255,255,0)");
+  haze.addColorStop(0.48, daylight > 0.20 ? "rgba(230,246,252,0.32)" : "rgba(104,151,188,0.14)");
+  haze.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = haze;
+  ctx.fillRect(0, horizonY - h * 0.05, w, h * 0.11);
   ctx.restore();
 }
 
@@ -4445,17 +2200,9 @@ function craftOutline(
   length: number,
   width: number,
 ): void {
-  // Compact lifting-body silhouette with a broad heat-shielded aft section.
   ctx.beginPath();
-  ctx.moveTo(length * 0.62, 0);
-  ctx.bezierCurveTo(
-    length * 0.48,
-    -width * 0.11,
-    length * 0.30,
-    -width * 0.18,
-    length * 0.10,
-    -width * 0.22,
-  );
+  ctx.moveTo(length * 0.74, 0);
+  ctx.bezierCurveTo(length * 0.61, -width * 0.055, length * 0.39, -width * 0.14, length * 0.12, -width * 0.22);
   ctx.lineTo(-length * 0.12, -width * 0.46);
   ctx.lineTo(-length * 0.40, -width * 0.52);
   ctx.lineTo(-length * 0.56, -width * 0.30);
@@ -4463,15 +2210,8 @@ function craftOutline(
   ctx.lineTo(-length * 0.56, width * 0.30);
   ctx.lineTo(-length * 0.40, width * 0.52);
   ctx.lineTo(-length * 0.12, width * 0.46);
-  ctx.lineTo(length * 0.10, width * 0.22);
-  ctx.bezierCurveTo(
-    length * 0.30,
-    width * 0.18,
-    length * 0.48,
-    width * 0.11,
-    length * 0.62,
-    0,
-  );
+  ctx.lineTo(length * 0.12, width * 0.22);
+  ctx.bezierCurveTo(length * 0.39, width * 0.14, length * 0.61, width * 0.055, length * 0.74, 0);
   ctx.closePath();
 }
 
@@ -4522,23 +2262,36 @@ function drawCraft(
   ctx.fill();
   ctx.restore();
 
-  // Main upper body.
+  // Deep blue enamel body. Reflections move continuously with time and attitude.
   craftOutline(ctx, length, width);
-  const hull = ctx.createLinearGradient(
-    -length * 0.52,
-    -width * 0.28,
-    length * 0.62,
-    width * 0.22,
-  );
-  hull.addColorStop(0, "#252b2f");
-  hull.addColorStop(0.16, "#596166");
-  hull.addColorStop(0.36, "#8f9697");
-  hull.addColorStop(0.52, "#c8cac7");
-  hull.addColorStop(0.67, "#a5aaa9");
-  hull.addColorStop(0.84, "#636b6f");
-  hull.addColorStop(1, "#2d3438");
+  const enamelClock = typeof performance !== "undefined" ? performance.now() / 1000 : 0;
+  const enamelPulse = 0.5 + 0.5 * Math.sin(enamelClock * 1.35);
+  const reflectionSweep = 0.5 + 0.5 * Math.sin(enamelClock * 0.74 + angle * 1.7);
+  const hull = ctx.createLinearGradient(-length * 0.56, -width * 0.34, length * 0.74, width * 0.26);
+  hull.addColorStop(0, "rgb(" + (2 + Math.round(enamelPulse * 4)) + ",10," + (28 + Math.round(enamelPulse * 18)) + ")");
+  hull.addColorStop(0.16, "rgb(3," + (42 + Math.round(enamelPulse * 18)) + "," + (103 + Math.round(enamelPulse * 28)) + ")");
+  hull.addColorStop(0.34, "rgb(" + (6 + Math.round(reflectionSweep * 8)) + "," + (92 + Math.round(enamelPulse * 32)) + "," + (188 + Math.round(reflectionSweep * 44)) + ")");
+  hull.addColorStop(0.50, "rgb(" + (22 + Math.round(reflectionSweep * 42)) + "," + (134 + Math.round(reflectionSweep * 54)) + "," + (226 + Math.round(enamelPulse * 28)) + ")");
+  hull.addColorStop(0.62, "rgb(" + (7 + Math.round(enamelPulse * 11)) + "," + (74 + Math.round(reflectionSweep * 30)) + "," + (165 + Math.round(enamelPulse * 44)) + ")");
+  hull.addColorStop(0.82, "rgb(2," + (27 + Math.round(enamelPulse * 12)) + "," + (74 + Math.round(reflectionSweep * 25)) + ")");
+  hull.addColorStop(1, "rgb(0,7,20)");
   ctx.fillStyle = hull;
   ctx.fill();
+
+  ctx.save();
+  craftOutline(ctx, length, width);
+  ctx.clip();
+  ctx.globalCompositeOperation = "screen";
+  const sweepX = mix(-length * 0.50, length * 0.54, reflectionSweep);
+  const gloss = ctx.createLinearGradient(sweepX - length * 0.20, -width * 0.48, sweepX + length * 0.18, width * 0.42);
+  gloss.addColorStop(0, "rgba(255,255,255,0)");
+  gloss.addColorStop(0.42, "rgba(116,201,255,0.05)");
+  gloss.addColorStop(0.50, "rgba(255,255,255," + (0.34 + enamelPulse * 0.34) + ")");
+  gloss.addColorStop(0.58, "rgba(97,173,255,0.07)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(-length, -width, length * 2, width * 2);
+  ctx.restore();
 
   ctx.save();
   craftOutline(ctx, length, width);
@@ -4559,7 +2312,7 @@ function drawCraft(
   ctx.fillRect(-length, -width, length * 2, width * 2);
 
   // Side facets create a more three-dimensional lifting-body form.
-  ctx.fillStyle = "rgba(80,90,97,0.28)";
+  ctx.fillStyle = "rgba(32,91,151,0.30)";
   ctx.beginPath();
   ctx.moveTo(-length * 0.50, -width * 0.30);
   ctx.lineTo(-length * 0.12, -width * 0.46);
@@ -5193,9 +2946,6 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
-  const clearPhotoRef = useRef<HTMLImageElement | null>(null);
-  const clearHatchRef = useRef<HTMLImageElement | null>(null);
-  const clearDepartRef = useRef<HTMLImageElement | null>(null);
   const resultSoundRef = useRef<string | null>(null);
   const stage1ClearSoundRef = useRef<string | null>(null);
   const visualLatchPlaybackRef = useRef<number | null>(null);
@@ -5226,54 +2976,6 @@ export function ReentryPresentationCanvas({
       .catch(() => {
         if (live) {
           earthSurfaceRef.current =
-            null;
-        }
-      });
-
-    void loadImage(
-      STAGE1_CLEAR_PHOTO_DAY,
-    )
-      .then((img) => {
-        if (live) {
-          clearPhotoRef.current =
-            img;
-        }
-      })
-      .catch(() => {
-        if (live) {
-          clearPhotoRef.current =
-            null;
-        }
-      });
-
-    void loadImage(
-      STAGE1_CLEAR_HATCH_SOURCE,
-    )
-      .then((img) => {
-        if (live) {
-          clearHatchRef.current =
-            img;
-        }
-      })
-      .catch(() => {
-        if (live) {
-          clearHatchRef.current =
-            null;
-        }
-      });
-
-    void loadImage(
-      STAGE1_CLEAR_DEPART_SOURCE,
-    )
-      .then((img) => {
-        if (live) {
-          clearDepartRef.current =
-            img;
-        }
-      })
-      .catch(() => {
-        if (live) {
-          clearDepartRef.current =
             null;
         }
       });
@@ -5709,14 +3411,20 @@ const failureTravelT =
             : 0;
 
         if (landing > 0) {
-          const ocean = { x: w * 0.48, y: h * 0.78 };
+          const settle = smoothstep((landing - 0.72) / 0.28);
+          const oceanClock = typeof performance !== "undefined"
+            ? performance.now() / 1000
+            : timeSinceVisualAtmosphereEntryS;
+          const longSwell = Math.sin(oceanClock * 1.10);
+          const shortSwell = Math.sin(oceanClock * 2.18 + 1.3);
+          const ocean = {
+            x: w * 0.48 + settle * (longSwell * Math.min(w, h) * 0.007 + shortSwell * Math.min(w, h) * 0.002),
+            y: h * 0.78 + settle * (longSwell * Math.min(w, h) * 0.017 + shortSwell * Math.min(w, h) * 0.006),
+          };
           trackedX = mix(trackedX, ocean.x, landing);
           trackedY = mix(trackedY, ocean.y, landing);
-          trackedAngle = lerpAngle(
-            trackedAngle,
-            Math.PI / 2,
-            smoothstep(landing) * 0.72,
-          );
+          const floatedAngle = Math.PI / 2 + settle * (longSwell * 0.055 + shortSwell * 0.018);
+          trackedAngle = lerpAngle(trackedAngle, floatedAngle, smoothstep(landing) * 0.72);
         }
 
         pose = {
@@ -5965,6 +3673,7 @@ const failureTravelT =
               ) /
                 2.2,
             ),
+            timeSinceVisualAtmosphereEntryS,
           );
         }
 
@@ -6190,25 +3899,12 @@ const failureTravelT =
         latched &&
         !miss
       ) {
-        const photoClearDrawn =
-          drawStage1PhotoClearSequence(
-            ctx,
-            w,
-            h,
-            timeSinceVisualAtmosphereEntryS,
-            clearPhotoRef.current,
-            clearHatchRef.current,
-            clearDepartRef.current,
-          );
-
-        if (!photoClearDrawn) {
-          drawStage1ClearSequence(
-            ctx,
-            w,
-            h,
-            timeSinceVisualAtmosphereEntryS,
-          );
-        }
+        drawStage1ClearSequence(
+          ctx,
+          w,
+          h,
+          timeSinceVisualAtmosphereEntryS,
+        );
       }
 
       if (
