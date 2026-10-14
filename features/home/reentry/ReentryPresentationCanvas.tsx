@@ -2709,16 +2709,11 @@ function drawStage1ClearSequence(
           plumeGradient;
 
         ctx.beginPath();
-        ctx.ellipse(
+        // The radial fade supplies spray volume; no visible spinning oval.
+        ctx.arc(
           px,
           py,
-          rx,
-          ry,
-          side *
-            (
-              -0.20 +
-              a * 0.22
-            ),
+          ry * 0.84,
           0,
           Math.PI * 2,
         );
@@ -2727,9 +2722,6 @@ function drawStage1ClearSequence(
     }
 
     /*
-     * Irregular droplets: more numerous than before, but not uniformly
-     * spaced. Gravity brings them back into the sea.
-     */    /*
      * Irregular droplets: more numerous than before, but not uniformly
      * spaced. Gravity brings them back into the sea.
      */
@@ -3058,7 +3050,7 @@ function drawStage1ClearSequence(
         0,
         px,
         py,
-        size * 3.2,
+        size * 2.2,
       );
 
     foam.addColorStop(
@@ -3076,12 +3068,11 @@ function drawStage1ClearSequence(
 
     ctx.fillStyle = foam;
     ctx.beginPath();
-    ctx.ellipse(
+    // Circular microfoam with a soft edge, not a tilted white plate.
+    ctx.arc(
       px,
       py,
-      size * 3.2,
-      size * (0.65 + b * 0.55),
-      angle * 0.08,
+      size * 2.2,
       0,
       Math.PI * 2,
     );
@@ -3383,7 +3374,9 @@ function drawStage1ClearSequence(
 
   /*
    * Foam fragments stay near the capsule and drift with the surface.
+   * Keep this state isolated from the following alien/skiff animation.
    */
+  ctx.save();
   for (
     let i = 0;
     i < 22;
@@ -3401,15 +3394,11 @@ function drawStage1ClearSequence(
         i * 23 + 9,
       );
 
+    // Fixed seeded direction: the bubbles drift, they do not orbit.
     const angle =
       a *
       Math.PI *
-      2 +
-      clockS *
-        (
-          0.03 +
-          b * 0.02
-        );
+      2;
 
     const radius =
       minDim *
@@ -3437,8 +3426,16 @@ function drawStage1ClearSequence(
       );
 
     ctx.globalAlpha =
-      0.09 +
-      b * 0.15;
+      (
+        0.09 +
+        b * 0.15
+      ) *
+      (
+        1 -
+        smoothstep(
+          (splashAge - 16) / 9,
+        )
+      );
 
     ctx.fillStyle =
       "rgba(235,250,255,0.85)";
