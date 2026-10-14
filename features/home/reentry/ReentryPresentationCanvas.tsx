@@ -1863,6 +1863,557 @@ function drawLandingWaterOcclusion(
   ctx.restore();
 }
 
+function drawAlienRaisedTentacle(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  side: -1 | 1,
+  progress: number,
+  targetX: number,
+  targetY: number,
+  alpha: number,
+): { x: number; y: number } {
+  const p =
+    smoothstep(
+      progress,
+    );
+
+  const startX =
+    x +
+    side *
+      scale *
+      0.18;
+
+  const startY =
+    y -
+    scale *
+      0.10;
+
+  const relaxedX =
+    x +
+    side *
+      scale *
+      0.40;
+
+  const relaxedY =
+    y +
+    scale *
+      0.22;
+
+  const endX =
+    mix(
+      relaxedX,
+      targetX,
+      p,
+    );
+
+  const endY =
+    mix(
+      relaxedY,
+      targetY,
+      p,
+    );
+
+  ctx.save();
+  ctx.globalAlpha =
+    alpha;
+  ctx.lineCap =
+    "round";
+  ctx.lineJoin =
+    "round";
+
+  const arm =
+    ctx.createLinearGradient(
+      startX,
+      startY,
+      endX,
+      endY,
+    );
+
+  arm.addColorStop(
+    0,
+    "rgba(255,238,75,0.96)",
+  );
+  arm.addColorStop(
+    0.46,
+    "rgba(242,188,19,0.98)",
+  );
+  arm.addColorStop(
+    0.76,
+    "rgba(255,224,64,0.98)",
+  );
+  arm.addColorStop(
+    1,
+    "rgba(255,249,173,0.95)",
+  );
+
+  ctx.strokeStyle =
+    arm;
+  ctx.shadowColor =
+    "rgba(255,218,42,0.50)";
+  ctx.shadowBlur =
+    scale * 0.16;
+  ctx.lineWidth =
+    scale * 0.105;
+
+  ctx.beginPath();
+  ctx.moveTo(
+    startX,
+    startY,
+  );
+  ctx.bezierCurveTo(
+    startX +
+      side *
+        scale *
+        0.16,
+    startY -
+      scale *
+        0.20 *
+        p,
+    endX -
+      side *
+        scale *
+        0.20,
+    endY +
+      scale *
+        0.15,
+    endX,
+    endY,
+  );
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle =
+    "rgba(255,250,185,0.95)";
+  ctx.beginPath();
+  ctx.arc(
+    endX,
+    endY,
+    scale *
+      0.045,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  ctx.restore();
+
+  return {
+    x: endX,
+    y: endY,
+  };
+}
+
+function drawAlienFluidVehicleFormation(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  startY: number,
+  targetX: number,
+  targetY: number,
+  progress: number,
+  alpha: number,
+  scale: number,
+  seed: number,
+): void {
+  const p =
+    clamp01(
+      progress,
+    );
+
+  if (
+    p <= 0 ||
+    alpha <= 0.001
+  ) {
+    return;
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation =
+    "screen";
+  ctx.globalAlpha =
+    alpha;
+
+  /*
+   * The material leaves the raised tentacle as a thin liquid filament.
+   * It thickens only close to the destination and then condenses into the
+   * escape skiff.
+   */
+  const streamT =
+    Math.min(
+      1,
+      p * 1.32,
+    );
+
+  const endX =
+    mix(
+      startX,
+      targetX,
+      streamT,
+    );
+
+  const endY =
+    mix(
+      startY,
+      targetY,
+      streamT,
+    );
+
+  const liquid =
+    ctx.createLinearGradient(
+      startX,
+      startY,
+      endX,
+      endY,
+    );
+
+  liquid.addColorStop(
+    0,
+    "rgba(255,246,122,0.90)",
+  );
+  liquid.addColorStop(
+    0.36,
+    "rgba(83,205,219,0.58)",
+  );
+  liquid.addColorStop(
+    0.72,
+    "rgba(54,122,232,0.62)",
+  );
+  liquid.addColorStop(
+    1,
+    "rgba(185,235,255,0.22)",
+  );
+
+  ctx.strokeStyle =
+    liquid;
+  ctx.lineCap =
+    "round";
+  ctx.lineWidth =
+    Math.max(
+      1.0,
+      scale *
+        (
+          0.030 +
+          p * 0.018
+        ),
+    );
+  ctx.shadowColor =
+    "rgba(87,184,255,0.45)";
+  ctx.shadowBlur =
+    scale * 0.12;
+
+  ctx.beginPath();
+  ctx.moveTo(
+    startX,
+    startY,
+  );
+  ctx.bezierCurveTo(
+    mix(
+      startX,
+      targetX,
+      0.30,
+    ),
+    startY -
+      scale *
+        0.32,
+    mix(
+      startX,
+      targetX,
+      0.72,
+    ),
+    targetY -
+      scale *
+        0.18,
+    endX,
+    endY,
+  );
+  ctx.stroke();
+
+  for (
+    let i = 0;
+    i < 12;
+    i++
+  ) {
+    const a =
+      hash01(
+        seed ^
+          0x4c71b2a9,
+        i * 17 + 3,
+      );
+
+    const b =
+      hash01(
+        seed ^
+          0x173adfe1,
+        i * 29 + 11,
+      );
+
+    const t =
+      clamp01(
+        streamT -
+          a * 0.28,
+      );
+
+    if (
+      t <= 0 ||
+      t >= 1
+    ) {
+      continue;
+    }
+
+    const px =
+      mix(
+        startX,
+        targetX,
+        t,
+      ) +
+      Math.sin(
+        t *
+          Math.PI *
+          3 +
+        b * 6.28,
+      ) *
+        scale *
+        0.035;
+
+    const py =
+      mix(
+        startY,
+        targetY,
+        t,
+      ) -
+      Math.sin(
+        t *
+          Math.PI,
+      ) *
+        scale *
+        (
+          0.14 +
+          b * 0.12
+        );
+
+    const rr =
+      scale *
+      (
+        0.010 +
+        b * 0.015
+      );
+
+    ctx.fillStyle =
+      b > 0.5
+        ? "rgba(115,215,237,0.68)"
+        : "rgba(255,229,70,0.70)";
+    ctx.beginPath();
+    ctx.arc(
+      px,
+      py,
+      rr,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawCraftAbsorption(
+  ctx: CanvasRenderingContext2D,
+  craftX: number,
+  craftY: number,
+  targetX: number,
+  targetY: number,
+  scale: number,
+  progress: number,
+  seed: number,
+): void {
+  const p =
+    smoothstep(
+      progress,
+    );
+
+  if (
+    p <= 0
+  ) {
+    return;
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation =
+    "screen";
+
+  const halo =
+    ctx.createRadialGradient(
+      craftX,
+      craftY,
+      0,
+      craftX,
+      craftY,
+      scale *
+        (
+          0.34 +
+          p * 0.26
+        ),
+    );
+
+  halo.addColorStop(
+    0,
+    "rgba(132,214,255," +
+      (
+        0.18 +
+        p * 0.24
+      ) +
+      ")",
+  );
+  halo.addColorStop(
+    0.52,
+    "rgba(50,116,226," +
+      (
+        0.10 +
+        p * 0.16
+      ) +
+      ")",
+  );
+  halo.addColorStop(
+    1,
+    "rgba(20,75,190,0)",
+  );
+
+  ctx.fillStyle =
+    halo;
+  ctx.beginPath();
+  ctx.arc(
+    craftX,
+    craftY,
+    scale *
+      (
+        0.34 +
+        p * 0.26
+      ),
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  for (
+    let i = 0;
+    i < 24;
+    i++
+  ) {
+    const a =
+      hash01(
+        seed ^
+          0x64da9b13,
+        i * 23 + 5,
+      );
+
+    const b =
+      hash01(
+        seed ^
+          0xb1492e71,
+        i * 37 + 13,
+      );
+
+    const local =
+      clamp01(
+        p *
+          (
+            1.12 +
+            b * 0.34
+          ) -
+        a * 0.42,
+      );
+
+    if (
+      local <= 0
+    ) {
+      continue;
+    }
+
+    const sx =
+      craftX +
+      (
+        a -
+        0.5
+      ) *
+        scale *
+        0.76;
+
+    const sy =
+      craftY +
+      (
+        b -
+        0.5
+      ) *
+        scale *
+        0.46;
+
+    const px =
+      mix(
+        sx,
+        targetX,
+        local,
+      ) +
+      Math.sin(
+        local *
+          Math.PI *
+          2 +
+        i,
+      ) *
+        scale *
+        0.035 *
+        (
+          1 -
+          local
+        );
+
+    const py =
+      mix(
+        sy,
+        targetY,
+        local,
+      ) -
+      Math.sin(
+        local *
+          Math.PI,
+      ) *
+        scale *
+        0.16;
+
+    const rr =
+      scale *
+      (
+        0.008 +
+        b * 0.014
+      ) *
+      (
+        1 -
+        local * 0.60
+      );
+
+    ctx.fillStyle =
+      a > 0.66
+        ? "rgba(217,238,244,0.72)"
+        : b > 0.42
+          ? "rgba(39,128,239,0.70)"
+          : "rgba(47,190,155,0.64)";
+
+    ctx.beginPath();
+    ctx.arc(
+      px,
+      py,
+      rr,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+
+
 function drawStage1ClearSequence(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -2349,29 +2900,60 @@ function drawStage1ClearSequence(
       ctx.fillStyle =
         drop;
 
+      /*
+       * A water droplet should read as a bead with motion, not as a rotating
+       * capsule-shaped oval.
+       */
       ctx.beginPath();
-      ctx.ellipse(
+      ctx.arc(
         px,
         py,
         rr *
           (
-            0.55 +
-            c * 0.55
+            0.52 +
+            c * 0.48
           ),
-        rr *
-          (
-            1.25 +
-            d * 2.15
-          ),
-        (
-          a -
-          0.5
-        ) *
-          1.05,
         0,
         Math.PI * 2,
       );
       ctx.fill();
+
+      ctx.strokeStyle =
+        "rgba(214,240,250," +
+        (
+          0.10 +
+          d * 0.22
+        ) *
+          impactPulse *
+          lifeFade +
+        ")";
+      ctx.lineWidth =
+        Math.max(
+          0.55,
+          rr * 0.34,
+        );
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(
+        px -
+          side *
+            rr *
+            (
+              0.8 +
+              b * 1.2
+            ),
+        py +
+          rr *
+            (
+              0.8 +
+              c
+            ),
+      );
+      ctx.lineTo(
+        px,
+        py,
+      );
+      ctx.stroke();
     }
 
     ctx.restore();
@@ -2861,28 +3443,455 @@ function drawStage1ClearSequence(
     ctx.fillStyle =
       "rgba(235,250,255,0.85)";
 
-    ctx.beginPath();
+    /*
+     * Foam is a broken cluster of bubbles, not a spinning oval.
+     */
+    for (
+      let bubble = 0;
+      bubble < 4;
+      bubble++
+    ) {
+      const bubbleSeed =
+        hash01(
+          seed ^
+            0x42f9ac1d,
+          i * 71 +
+            bubble * 13 +
+            5,
+        );
 
-    ctx.ellipse(
-      fx,
-      fy,
-      fr * 2.6,
-      fr * 0.75,
-      angle * 0.18,
-      0,
-      Math.PI * 2,
-    );
+      const bubbleAngle =
+        bubbleSeed *
+        Math.PI *
+        2;
 
-    ctx.fill();
+      const bubbleRadius =
+        fr *
+        (
+          0.48 +
+          bubbleSeed * 0.72
+        );
+
+      const bx =
+        fx +
+        Math.cos(
+          bubbleAngle,
+        ) *
+          fr *
+          (
+            0.65 +
+            bubble * 0.42
+          );
+
+      const by =
+        fy +
+        Math.sin(
+          bubbleAngle,
+        ) *
+          fr *
+          (
+            0.20 +
+            bubble * 0.12
+          );
+
+      ctx.beginPath();
+      ctx.arc(
+        bx,
+        by,
+        bubbleRadius,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
   }
 
   ctx.restore();
+
+  /*
+   * Stage 1 epilogue:
+   *  1) alien rises from the half-submerged craft;
+   *  2) one tentacle points and ejects a thin liquid filament;
+   *  3) the filament condenses into the small escape skiff;
+   *  4) another tentacle absorbs the original craft;
+   *  5) the alien boards and the skiff departs.
+   *
+   * Everything stays in the same ocean shot; there is no cut to a still image.
+   */
+  const alienRise =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        17.0
+      ) /
+        2.2,
+    );
+
+  const pointGesture =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        19.1
+      ) /
+        1.25,
+    ) *
+    (
+      1 -
+      smoothstep(
+        (
+          timeSinceVisualS -
+          23.2
+        ) /
+          0.8,
+      )
+    );
+
+  const vehicleFormation =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        20.4
+      ) /
+        3.0,
+    );
+
+  const absorbGesture =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        24.0
+      ) /
+        1.15,
+    ) *
+    (
+      1 -
+      smoothstep(
+        (
+          timeSinceVisualS -
+          28.5
+        ) /
+          0.9,
+      )
+    );
+
+  const absorbCraft =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        25.1
+      ) /
+        3.2,
+    );
+
+  const boardSkiff =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        28.2
+      ) /
+        2.2,
+    );
+
+  const departSkiff =
+    smoothstep(
+      (
+        timeSinceVisualS -
+        30.5
+      ) /
+        5.0,
+    );
+
+  const alienScale =
+    minDim *
+    0.050;
+
+  const sourceAlienX =
+    craftX +
+    minDim *
+      0.055;
+
+  const sourceAlienY =
+    waterY -
+    minDim *
+      mix(
+        0.015,
+        0.080,
+        alienRise,
+      );
+
+  const skiffRestX =
+    craftX +
+    minDim *
+      0.245;
+
+  const skiffRestY =
+    waterY -
+    minDim *
+      0.038;
+
+  const skiffX =
+    skiffRestX +
+    departSkiff *
+      w *
+      0.40;
+
+  const skiffY =
+    skiffRestY -
+    departSkiff *
+      h *
+      0.47;
+
+  const boardX =
+    mix(
+      sourceAlienX,
+      skiffX -
+        minDim *
+        0.018,
+      boardSkiff,
+    );
+
+  const boardY =
+    mix(
+      sourceAlienY,
+      skiffY -
+        minDim *
+        0.038,
+      boardSkiff,
+    );
+
+  const alienAlpha =
+    alienRise *
+    (
+      1 -
+      smoothstep(
+        (
+          departSkiff -
+          0.90
+        ) /
+          0.10,
+      )
+    );
+
+  if (
+    alienAlpha >
+    0.001
+  ) {
+    drawLiquidAlien(
+      ctx,
+      boardX,
+      boardY,
+      alienScale,
+      alienAlpha,
+      mix(
+        0.12,
+        -0.06,
+        boardSkiff,
+      ),
+    );
+
+    if (
+      pointGesture >
+      0.001 &&
+      boardSkiff <
+        0.18
+    ) {
+      const pointerTip =
+        drawAlienRaisedTentacle(
+          ctx,
+          boardX,
+          boardY,
+          alienScale,
+          1,
+          pointGesture,
+          boardX +
+            minDim *
+            0.075,
+          boardY -
+            minDim *
+            0.080,
+          alienAlpha,
+        );
+
+      drawAlienFluidVehicleFormation(
+        ctx,
+        pointerTip.x,
+        pointerTip.y,
+        skiffRestX,
+        skiffRestY,
+        vehicleFormation,
+        alienAlpha,
+        alienScale,
+        seed,
+      );
+    }
+
+    if (
+      absorbGesture >
+      0.001 &&
+      boardSkiff <
+        0.22
+    ) {
+      const absorbTip =
+        drawAlienRaisedTentacle(
+          ctx,
+          boardX,
+          boardY,
+          alienScale,
+          -1,
+          absorbGesture,
+          craftX +
+            minDim *
+            0.008,
+          waterY -
+            minDim *
+            0.035,
+          alienAlpha,
+        );
+
+      drawCraftAbsorption(
+        ctx,
+        craftX,
+        waterY -
+          minDim *
+          0.015,
+        absorbTip.x,
+        absorbTip.y,
+        minDim *
+          0.12,
+        absorbCraft,
+        seed,
+      );
+    }
+  }
+
+  const skiffAppear =
+    smoothstep(
+      (
+        vehicleFormation -
+        0.42
+      ) /
+        0.58,
+    );
+
+  if (
+    skiffAppear >
+    0.001
+  ) {
+    const skiffScale =
+      minDim *
+      mix(
+        0.030,
+        0.075,
+        skiffAppear,
+      ) *
+      mix(
+        1,
+        0.72,
+        departSkiff,
+      );
+
+    drawEscapeSkiff(
+      ctx,
+      skiffX,
+      skiffY,
+      skiffScale,
+      skiffAppear *
+        (
+          1 -
+          smoothstep(
+            (
+              departSkiff -
+              0.94
+            ) /
+              0.06,
+          )
+        ),
+      mix(
+        -0.08,
+        -0.28,
+        departSkiff,
+      ),
+    );
+
+    if (
+      departSkiff >
+      0.02
+    ) {
+      ctx.save();
+      ctx.globalCompositeOperation =
+        "screen";
+
+      const wake =
+        ctx.createLinearGradient(
+          skiffX -
+            skiffScale *
+            2.3,
+          skiffY +
+            skiffScale *
+            0.20,
+          skiffX,
+          skiffY,
+        );
+
+      wake.addColorStop(
+        0,
+        "rgba(47,132,225,0)",
+      );
+      wake.addColorStop(
+        0.50,
+        "rgba(78,173,245," +
+          (
+            0.10 +
+            departSkiff * 0.12
+          ) +
+          ")",
+      );
+      wake.addColorStop(
+        1,
+        "rgba(205,241,255,0.34)",
+      );
+
+      ctx.strokeStyle =
+        wake;
+      ctx.lineCap =
+        "round";
+      ctx.lineWidth =
+        Math.max(
+          1,
+          skiffScale * 0.08,
+        );
+      ctx.beginPath();
+      ctx.moveTo(
+        skiffX -
+          skiffScale *
+          2.0,
+        skiffY +
+          skiffScale *
+          0.28,
+      );
+      ctx.quadraticCurveTo(
+        skiffX -
+          skiffScale *
+          0.85,
+        skiffY +
+          skiffScale *
+          0.13,
+        skiffX,
+        skiffY,
+      );
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
+
 
   const clearIn =
     smoothstep(
       (
         timeSinceVisualS -
-        21.8
+        21.2
       ) /
         0.90,
     );
@@ -2892,7 +3901,7 @@ function drawStage1ClearSequence(
     smoothstep(
       (
         timeSinceVisualS -
-        29.0
+        36.2
       ) /
         0.80,
     );
@@ -5332,13 +6341,32 @@ const failureTravelT =
               )
             : 0;
 
+        const epilogueClose =
+          outcome ===
+            "EARTH_REACHED"
+            ? smoothstep(
+                (
+                  timeSinceVisualAtmosphereEntryS -
+                  15.0
+                ) /
+                  3.0,
+              )
+            : 0;
+
+        const successCloseScale =
+          mix(
+            0.58,
+            1.02,
+            epilogueClose,
+          );
+
         craftLength =
           baseCraft *
           mix(
             0.16,
             mix(
               0.48,
-              0.58,
+              successCloseScale,
               landingClose,
             ),
             atmosphereClose,
@@ -5346,6 +6374,34 @@ const failureTravelT =
       }
 
       let craftAlpha = 1;
+
+      if (
+        outcome ===
+          "EARTH_REACHED" &&
+        latched &&
+        !miss
+      ) {
+        const absorbOriginalCraft =
+          smoothstep(
+            (
+              timeSinceVisualAtmosphereEntryS -
+              25.1
+            ) /
+              3.2,
+          );
+
+        craftAlpha *=
+          1 -
+          absorbOriginalCraft;
+
+        craftLength *=
+          mix(
+            1,
+            0.30,
+            absorbOriginalCraft,
+          );
+      }
+
       if (miss) {
         craftAlpha =
           1 -
@@ -5442,7 +6498,9 @@ const failureTravelT =
           latched &&
           !miss &&
           timeSinceVisualAtmosphereEntryS >
-            14.15
+            14.15 &&
+          timeSinceVisualAtmosphereEntryS <
+            28.6
         ) {
           drawLandingWaterOcclusion(
             ctx,
