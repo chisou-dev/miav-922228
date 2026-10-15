@@ -63,17 +63,16 @@ import {
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
 
 /*
- * NASA Blue Marble: cloud-free land/ocean/ice underneath a small amount of
- * cloud composite. Never apply a white veil to the entire close Earth.
- * The 8K source is only requested on desktop; 2K loads first everywhere.
- * The distant SPACE photograph is untouched.
+ * Genuine Apollo 17 Earth photograph from NASA SVS. Lightweight 1024px
+ * preview on phones; enhanced 3600px photo on desktops. Not AI-generated.
+ * The real satellite imagery below remains the loading-error fallback.
  */
 const EARTH_SURFACE_SOURCE =
   "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_2048.jpg";
-const EARTH_SURFACE_HD_SOURCE =
-  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png";
-const EARTH_SURFACE_CLOUD_SOURCE =
-  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57735/land_ocean_ice_cloud_2048.jpg";
+const EARTH_SURFACE_PHOTO_SOURCE =
+  "https://svs.gsfc.nasa.gov/vis/a030000/a030600/a030613/blue_marble_apollo_17_19721207_print.jpg";
+const EARTH_SURFACE_PHOTO_HD_SOURCE =
+  "https://svs.gsfc.nasa.gov/vis/a030000/a030600/a030613/blue_marble_apollo_17_19721207.png";
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -872,7 +871,7 @@ function drawAtmosphericHorizon(
 function drawAtmosphereVolume(
   ctx: CanvasRenderingContext2D,
   earth: HTMLImageElement | null,
-  cloudEarth: HTMLImageElement | null,
+  earthPhoto: HTMLImageElement | null,
   w: number,
   h: number,
   atmosphereSceneMix: number,
@@ -945,34 +944,34 @@ function drawAtmosphereVolume(
   ctx.globalAlpha = mixIn * mix(0.08, 0.98, surfaceReveal);
 
 
-  if (earth && earth.naturalWidth > 0) {
-    // Share the same crop for the cloud-free map and cloud composite, so the
-    // occasional clouds follow the terrain instead of sliding across it.
-    const cropX01 = clamp01(0.50 + Math.sin(phaseAngle) * 0.46);
-    const cropY01 = clamp01(0.50 + Math.cos(phaseAngle * 0.73) * 0.28);
-    const drawMap = (image: HTMLImageElement, opacity: number): void => {
-      const cropSize = Math.min(image.naturalWidth * 0.48, image.naturalHeight * 0.92);
-      const sx = Math.max(0, image.naturalWidth - cropSize) * cropX01;
-      const sy = Math.max(0, image.naturalHeight - cropSize) * cropY01;
-      ctx.globalAlpha = opacity;
-      ctx.drawImage(
-        image, sx, sy, cropSize, cropSize,
-        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2
-      );
-    };
+  if ((earthPhoto && earthPhoto.naturalWidth > 0) || (earth && earth.naturalWidth > 0)) {
+    const intensity = mixIn * mix(0.08, 0.98, surfaceReveal);
+    ctx.globalAlpha = intensity;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    const baseOpacity = mixIn * mix(0.08, 0.98, surfaceReveal);
-    ctx.filter = "saturate(1.16) contrast(1.13)";
-    drawMap(earth, baseOpacity);
-    // Sparse cloud veil (about 16% of the original composite), so seas and
-    // land remain visible. The already textured Earth supplies the detail.
-    if (cloudEarth && cloudEarth.naturalWidth > 0) {
-      ctx.filter = "saturate(0.80) contrast(0.95)";
-      drawMap(cloudEarth, baseOpacity * 0.16);
+    if (earthPhoto && earthPhoto.naturalWidth > 0) {
+      // Preserve the existing curved Earth boundary and atmosphere. The
+      // photograph is the only visual surface; no white cloud overlay.
+      ctx.filter = "saturate(1.07) contrast(1.045)";
+      ctx.drawImage(
+        earthPhoto, 0, 0, earthPhoto.naturalWidth, earthPhoto.naturalHeight,
+        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2,
+      );
+    } else if (earth) {
+      // Keep a real equatorial satellite crop, never the polar ice caps.
+      const cropSize = Math.min(earth.naturalHeight * 0.43, earth.naturalWidth * 0.30);
+      const cropX01 = clamp01(0.69 + Math.sin(phaseAngle) * 0.045);
+      const cropY01 = 0.50;
+      const sx = Math.max(0, earth.naturalWidth - cropSize) * cropX01;
+      const sy = Math.max(0, earth.naturalHeight - cropSize) * cropY01;
+      ctx.filter = "saturate(1.10) contrast(1.06)";
+      ctx.drawImage(
+        earth, sx, sy, cropSize, cropSize,
+        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2,
+      );
     }
     ctx.filter = "none";
-    ctx.globalAlpha = baseOpacity;
+    ctx.globalAlpha = intensity;
   } else {
     const ocean = ctx.createLinearGradient(0, horizonTop, 0, h);
     ocean.addColorStop(0, "#567f9c");
@@ -4952,7 +4951,7 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
-  const earthSurfaceCloudRef = useRef<HTMLImageElement | null>(null);
+  const earthSurfacePhotoRef = useRef<HTMLImageElement | null>(null);
   const oceanWebGLRef =
     useRef<ReentryOceanWebGLRenderer | null>(null);
   const resultSoundRef = useRef<string | null>(null);
@@ -4983,24 +4982,23 @@ export function ReentryPresentationCanvas({
         if (live) earthSurfaceRef.current = null;
       });
 
-    // 8192px cloud-free detail on desktop; retain the 2048px map on mobile.
-    if (typeof window !== "undefined" && window.innerWidth >= 1200) {
-      void loadImage(EARTH_SURFACE_HD_SOURCE)
-        .then((img) => {
-          if (live) earthSurfaceRef.current = img;
-        })
-        .catch(() => {
-          // The already loaded 2K map remains usable.
-        });
-    }
-
-    void loadImage(EARTH_SURFACE_CLOUD_SOURCE)
+    void loadImage(EARTH_SURFACE_PHOTO_SOURCE)
       .then((img) => {
-        if (live) earthSurfaceCloudRef.current = img;
+        if (live) earthSurfacePhotoRef.current = img;
       })
       .catch(() => {
-        if (live) earthSurfaceCloudRef.current = null;
+        if (live) earthSurfacePhotoRef.current = null;
       });
+
+    if (typeof window !== "undefined" && window.innerWidth >= 1200) {
+      void loadImage(EARTH_SURFACE_PHOTO_HD_SOURCE)
+        .then((img) => {
+          if (live) earthSurfacePhotoRef.current = img;
+        })
+        .catch(() => {
+          // Keep 1024px photographic preview or satellite fallback.
+        });
+    }
 
     return () => {
       live = false;
@@ -5690,7 +5688,7 @@ const failureTravelT =
           ctx,
           earthSurfaceRef.current ??
             earthRef.current,
-          earthSurfaceCloudRef.current,
+          earthSurfacePhotoRef.current,
           w,
           h,
           atmosphereSceneMix,
