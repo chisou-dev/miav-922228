@@ -1043,6 +1043,7 @@ function drawAtmosphereVolume(
 }
 
 
+
 function drawLiquidAlien(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1052,148 +1053,154 @@ function drawLiquidAlien(
   stretch = 0,
 ): void {
   if (alpha <= 0.001) return;
-  const clockS = typeof performance !== "undefined"
-    ? performance.now() / 1000
-    : 0;
-
+  const time = typeof performance !== "undefined" ? performance.now() / 1000 : 0;
+  const breath = Math.sin(time * 0.94) * 0.018;
   ctx.save();
   ctx.translate(x, y);
   ctx.globalAlpha = alpha;
+  ctx.lineCap = "round";
 
-  // A wet, soft-bodied yellow cephalopod: layered tentacles, no suckers.
-  // Silhouette and shadow are deliberately asymmetrical, never icon-flat.
-  for (let i = 0; i < 5; i++) {
-    const offset = (i - 2) * 0.112;
-    const sway = Math.sin(clockS * (0.66 + i * 0.07) + i * 1.44);
-    const rootX = scale * offset;
-    const tipX = scale * (offset * 1.48 + sway * 0.18);
-    const tipY = scale * (0.63 + stretch + (i % 2) * 0.10);
-    const rootY = scale * -0.14;
-    const rootW = scale * (0.066 + (i % 2) * 0.008);
-    const tipW = scale * 0.010;
-
-    const limb = ctx.createLinearGradient(
-      rootX - rootW, rootY, rootX + rootW, tipY
+  // Organic tapered bodies with independent motion, no suckers or outlines.
+  const drawTentacle = (i: number): void => {
+    const side = (i - 2.5) / 2.5;
+    const wave = Math.sin(time * (0.72 + i * 0.07) + i * 1.19);
+    const rootX = scale * side * 0.28;
+    const rootY = -scale * (0.17 + (i % 3) * 0.015);
+    const tipX = scale * (side * 0.51 + wave * (0.095 + (i % 2) * 0.028));
+    const tipY = scale * (0.57 + (i % 3) * 0.085 + stretch * 0.65);
+    const rootW = scale * (0.070 + (i % 3) * 0.010);
+    const endW = scale * 0.010;
+    const tentacle = new Path2D();
+    tentacle.moveTo(rootX - rootW, rootY);
+    tentacle.bezierCurveTo(
+      rootX - rootW * 1.65, scale * 0.16,
+      tipX - scale * (0.085 + (i % 2) * 0.018), scale * 0.39,
+      tipX - endW, tipY
     );
-    limb.addColorStop(0, "#80501c");
-    limb.addColorStop(0.25, "#e4a51e");
-    limb.addColorStop(0.55, i === 1 || i === 4 ? "#77bad0" : "#ffdb47");
-    limb.addColorStop(0.78, "#eeb520");
-    limb.addColorStop(1, "#94591d");
-
-    ctx.fillStyle = limb;
-    ctx.beginPath();
-    ctx.moveTo(rootX - rootW, rootY);
-    ctx.bezierCurveTo(
-      rootX - rootW * 1.6, scale * 0.14,
-      tipX - scale * 0.12, scale * 0.40,
-      tipX - tipW, tipY
-    );
-    ctx.quadraticCurveTo(tipX, tipY + scale * 0.016, tipX + tipW, tipY);
-    ctx.bezierCurveTo(
-      tipX + scale * 0.09, scale * 0.37,
-      rootX + rootW * 1.6, scale * 0.08,
+    tentacle.quadraticCurveTo(tipX, tipY + endW * 0.7, tipX + endW, tipY);
+    tentacle.bezierCurveTo(
+      tipX + scale * 0.075, scale * 0.36,
+      rootX + rootW * 1.2, scale * 0.075,
       rootX + rootW, rootY
     );
-    ctx.closePath();
-    ctx.fill();
+    tentacle.closePath();
 
-    // Narrow, soft specular streak follows the curved body, not a wire.
-    ctx.save();
-    ctx.globalAlpha *= 0.30;
-    ctx.strokeStyle = "#fff5a2";
-    ctx.lineWidth = Math.max(0.5, scale * 0.018);
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(rootX - rootW * 0.24, rootY + scale * 0.05);
-    ctx.quadraticCurveTo(
-      rootX - scale * 0.06, scale * 0.22,
-      tipX - scale * 0.038, tipY - scale * 0.14
+    const limbLight = ctx.createLinearGradient(
+      rootX - rootW * 1.6, rootY,
+      rootX + rootW * 1.7, rootY + scale * 0.18
     );
-    ctx.stroke();
+    limbLight.addColorStop(0, "#614221");
+    limbLight.addColorStop(0.24, "#c58924");
+    limbLight.addColorStop(0.51, "#ffe05a");
+    limbLight.addColorStop(0.76, "#de9f2c");
+    limbLight.addColorStop(1, "#805022");
+    ctx.fillStyle = limbLight;
+    ctx.fill(tentacle);
+
+    ctx.save();
+    ctx.clip(tentacle);
+    const blue = ctx.createRadialGradient(
+      tipX - scale * 0.025, scale * 0.24, 0,
+      tipX - scale * 0.025, scale * 0.24, scale * 0.23
+    );
+    blue.addColorStop(0, i % 3 === 0 ? "rgba(31,147,207,0.47)" : "rgba(38,147,205,0.22)");
+    blue.addColorStop(0.48, "rgba(76,188,221,0.13)");
+    blue.addColorStop(1, "rgba(76,188,221,0)");
+    ctx.fillStyle = blue;
+    ctx.fillRect(-scale, -scale, 2 * scale, 2 * scale);
+    const sheen = ctx.createRadialGradient(
+      rootX - rootW * 0.55, scale * 0.13, 0,
+      rootX - rootW * 0.55, scale * 0.13, scale * 0.18
+    );
+    sheen.addColorStop(0, "rgba(255,254,219,0.28)");
+    sheen.addColorStop(1, "rgba(255,254,219,0)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(-scale, -scale, 2 * scale, 2 * scale);
     ctx.restore();
-  }
-
-  // Mantle sits on top of the tentacle roots, with a shaded rounded volume.
-  const mantle = new Path2D();
-  mantle.moveTo(-scale * 0.27, -scale * 0.29);
-  mantle.bezierCurveTo(
-    -scale * 0.40, -scale * 0.53,
-    -scale * 0.29, -scale * 0.83,
-    -scale * 0.035, -scale * 0.84
-  );
-  mantle.bezierCurveTo(
-    scale * 0.24, -scale * 0.89,
-    scale * 0.39, -scale * 0.62,
-    scale * 0.29, -scale * 0.36
-  );
-  mantle.quadraticCurveTo(scale * 0.20, -scale * 0.17, 0, -scale * 0.18);
-  mantle.quadraticCurveTo(-scale * 0.20, -scale * 0.16, -scale * 0.27, -scale * 0.29);
-  mantle.closePath();
-
-  const skin = ctx.createRadialGradient(
-    -scale * 0.13, -scale * 0.70, scale * 0.02,
-    scale * 0.10, -scale * 0.44, scale * 0.48
-  );
-  skin.addColorStop(0, "#fff6ac");
-  skin.addColorStop(0.25, "#ffe65a");
-  skin.addColorStop(0.55, "#e8af25");
-  skin.addColorStop(0.78, "#ac6c20");
-  skin.addColorStop(1, "#56351f");
-  ctx.fillStyle = skin;
-  ctx.fill(mantle);
+  };
+  for (const i of [0, 2, 5]) drawTentacle(i);
 
   ctx.save();
+  ctx.translate(0, -scale * 0.49);
+  ctx.scale(1 + breath, 1 - breath * 0.65);
+  const mantle = new Path2D();
+  mantle.moveTo(-scale * 0.255, scale * 0.28);
+  mantle.bezierCurveTo(-scale * 0.42, scale * 0.14, -scale * 0.39, -scale * 0.19, -scale * 0.23, -scale * 0.34);
+  mantle.bezierCurveTo(-scale * 0.055, -scale * 0.47, scale * 0.20, -scale * 0.43, scale * 0.34, -scale * 0.18);
+  mantle.bezierCurveTo(scale * 0.42, scale * 0.045, scale * 0.29, scale * 0.26, scale * 0.15, scale * 0.31);
+  mantle.quadraticCurveTo(-scale * 0.015, scale * 0.365, -scale * 0.255, scale * 0.28);
+  mantle.closePath();
+  const skin = ctx.createRadialGradient(
+    -scale * 0.14, -scale * 0.17, scale * 0.015,
+    scale * 0.17, scale * 0.21, scale * 0.61
+  );
+  skin.addColorStop(0, "#fff6b0");
+  skin.addColorStop(0.17, "#ffe764");
+  skin.addColorStop(0.42, "#eebb37");
+  skin.addColorStop(0.68, "#ba7b29");
+  skin.addColorStop(0.88, "#704921");
+  skin.addColorStop(1, "#2e251e");
+  ctx.fillStyle = skin;
+  ctx.fill(mantle);
+  ctx.save();
   ctx.clip(mantle);
-  // Blue is a translucent patch INSIDE the yellow surface, not an outline.
-  for (const [px, py, radius, strength] of [
-    [0.20, -0.54, 0.28, 0.36],
-    [-0.25, -0.35, 0.19, 0.23],
+  for (const patch of [
+    { x: 0.25, y: -0.045, r: 0.29, a: 0.45 },
+    { x: -0.31, y: 0.18, r: 0.22, a: 0.28 },
   ]) {
-    const bleed = ctx.createRadialGradient(
-      scale * px, scale * py, 0,
-      scale * px, scale * py, scale * radius
+    const grad = ctx.createRadialGradient(
+      patch.x * scale, patch.y * scale, 0,
+      patch.x * scale, patch.y * scale, patch.r * scale
     );
-    bleed.addColorStop(0, "rgba(42,141,230," + strength + ")");
-    bleed.addColorStop(0.43, "rgba(68,178,219," + strength * 0.51 + ")");
-    bleed.addColorStop(1, "rgba(68,178,219,0)");
-    ctx.fillStyle = bleed;
+    grad.addColorStop(0, "rgba(29,119,211," + patch.a + ")");
+    grad.addColorStop(0.48, "rgba(63,191,221," + (patch.a * 0.38) + ")");
+    grad.addColorStop(1, "rgba(63,191,221,0)");
+    ctx.fillStyle = grad;
     ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
   }
-  const gloss = ctx.createRadialGradient(
-    -scale * 0.16, -scale * 0.73, 0,
-    -scale * 0.16, -scale * 0.73, scale * 0.27
-  );
-  gloss.addColorStop(0, "rgba(255,255,240,0.66)");
-  gloss.addColorStop(0.33, "rgba(255,249,181,0.20)");
-  gloss.addColorStop(1, "rgba(255,249,181,0)");
-  ctx.fillStyle = gloss;
-  ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
+  for (const [px, py, rr, a] of [
+    [-0.21, -0.22, 0.21, 0.75],
+    [0.24, 0.09, 0.10, 0.22],
+  ]) {
+    const sheen = ctx.createRadialGradient(
+      scale * px, scale * py, 0, scale * px, scale * py, scale * rr
+    );
+    sheen.addColorStop(0, "rgba(255,255,243," + a + ")");
+    sheen.addColorStop(0.28, "rgba(255,248,211," + (a * 0.22) + ")");
+    sheen.addColorStop(1, "rgba(255,248,211,0)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(-scale, -scale, 2 * scale, 2 * scale);
+  }
   ctx.restore();
 
-  // Recessed glossy eyes, smaller than the mantle highlights.
   for (const side of [-1, 1]) {
-    const ex = side * scale * 0.10;
-    const ey = -scale * 0.50;
-    const iris = ctx.createRadialGradient(
-      ex - scale * 0.012, ey - scale * 0.017, scale * 0.001,
-      ex, ey, scale * 0.065
-    );
-    iris.addColorStop(0, "#273039");
-    iris.addColorStop(0.48, "#060b13");
-    iris.addColorStop(1, "#01040b");
-    ctx.fillStyle = iris;
+    const ex = side * scale * 0.122;
+    const ey = scale * 0.08;
+    ctx.fillStyle = "rgba(110,68,24,0.55)";
     ctx.beginPath();
-    ctx.ellipse(ex, ey, scale * 0.045, scale * 0.061, 0, 0, Math.PI * 2);
+    ctx.ellipse(ex, ey, scale * 0.070, scale * 0.085, -side * 0.17, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(255,255,245,0.78)";
+    const eye = ctx.createRadialGradient(
+      ex - scale * 0.012, ey - scale * 0.019, 0,
+      ex + scale * 0.01, ey + scale * 0.012, scale * 0.067
+    );
+    eye.addColorStop(0, "#26374a");
+    eye.addColorStop(0.38, "#090f1b");
+    eye.addColorStop(0.80, "#01040b");
+    eye.addColorStop(1, "#513f2a");
+    ctx.fillStyle = eye;
     ctx.beginPath();
-    ctx.arc(ex - scale * 0.015, ey - scale * 0.021, scale * 0.011, 0, Math.PI * 2);
+    ctx.ellipse(ex, ey, scale * 0.046, scale * 0.061, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,242,0.84)";
+    ctx.beginPath();
+    ctx.arc(ex - scale * 0.017, ey - scale * 0.025, scale * 0.010, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
+  for (const i of [1, 3, 4]) drawTentacle(i);
+  ctx.restore();
 }
-
 function drawEscapeSkiff(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1307,6 +1314,7 @@ function clipLandingCraftAboveWater(
   ctx.clip();
 }
 
+
 function drawAlienRaisedTentacle(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1318,137 +1326,59 @@ function drawAlienRaisedTentacle(
   targetY: number,
   alpha: number,
 ): { x: number; y: number } {
-  const p =
-    smoothstep(
-      progress,
-    );
+  const p = smoothstep(progress);
+  const rootX = x + side * scale * 0.20;
+  const rootY = y - scale * 0.13;
+  const endX = mix(x + side * scale * 0.43, targetX, p);
+  const endY = mix(y + scale * 0.20, targetY, p);
+  const rootR = scale * 0.084;
+  const bendX = rootX + (endX - rootX) * 0.40 - side * scale * 0.13;
+  const bendY = rootY + (endY - rootY) * 0.38 + scale * 0.18;
 
-  const startX =
-    x +
-    side *
-      scale *
-      0.18;
-
-  const startY =
-    y -
-    scale *
-      0.10;
-
-  const relaxedX =
-    x +
-    side *
-      scale *
-      0.40;
-
-  const relaxedY =
-    y +
-    scale *
-      0.22;
-
-  const endX =
-    mix(
-      relaxedX,
-      targetX,
-      p,
-    );
-
-  const endY =
-    mix(
-      relaxedY,
-      targetY,
-      p,
-    );
-
+  // Tapered soft arm, not a straight yellow line.
+  const arm = new Path2D();
+  arm.moveTo(rootX - rootR, rootY);
+  arm.bezierCurveTo(
+    rootX - rootR * 1.25, rootY - scale * 0.14 * p,
+    bendX - rootR * 0.65, bendY,
+    endX, endY
+  );
+  arm.bezierCurveTo(
+    bendX + rootR * 0.36, bendY + scale * 0.045,
+    rootX + rootR * 1.26, rootY + scale * 0.11,
+    rootX + rootR, rootY
+  );
+  arm.closePath();
   ctx.save();
-  ctx.globalAlpha =
-    alpha;
-  ctx.lineCap =
-    "round";
-  ctx.lineJoin =
-    "round";
-
-  const arm =
-    ctx.createLinearGradient(
-      startX,
-      startY,
-      endX,
-      endY,
-    );
-
-  arm.addColorStop(
-    0,
-    "rgba(255,238,75,0.96)",
+  ctx.globalAlpha = alpha;
+  const skin = ctx.createLinearGradient(rootX - rootR, rootY, endX + rootR, endY);
+  skin.addColorStop(0, "#805020");
+  skin.addColorStop(0.20, "#d49326");
+  skin.addColorStop(0.53, "#ffe16c");
+  skin.addColorStop(0.78, "#e9b33b");
+  skin.addColorStop(1, "#7d704e");
+  ctx.fillStyle = skin;
+  ctx.fill(arm);
+  ctx.save();
+  ctx.clip(arm);
+  const wet = ctx.createRadialGradient(
+    bendX - side * scale * 0.045, bendY - scale * 0.035, 0,
+    bendX - side * scale * 0.045, bendY - scale * 0.035, scale * 0.23
   );
-  arm.addColorStop(
-    0.46,
-    "rgba(242,188,19,0.98)",
+  wet.addColorStop(0, "rgba(255,255,229,0.49)");
+  wet.addColorStop(0.30, "rgba(77,182,228,0.20)");
+  wet.addColorStop(1, "rgba(77,182,228,0)");
+  ctx.fillStyle = wet;
+  ctx.fillRect(
+    Math.min(rootX, endX) - scale,
+    Math.min(rootY, endY) - scale,
+    Math.abs(endX - rootX) + scale * 2,
+    Math.abs(endY - rootY) + scale * 2
   );
-  arm.addColorStop(
-    0.76,
-    "rgba(255,224,64,0.98)",
-  );
-  arm.addColorStop(
-    1,
-    "rgba(255,249,173,0.95)",
-  );
-
-  ctx.strokeStyle =
-    arm;
-  ctx.shadowColor =
-    "rgba(255,218,42,0.50)";
-  ctx.shadowBlur =
-    scale * 0.16;
-  ctx.lineWidth =
-    scale * 0.105;
-
-  ctx.beginPath();
-  ctx.moveTo(
-    startX,
-    startY,
-  );
-  ctx.bezierCurveTo(
-    startX +
-      side *
-        scale *
-        0.16,
-    startY -
-      scale *
-        0.20 *
-        p,
-    endX -
-      side *
-        scale *
-        0.20,
-    endY +
-      scale *
-        0.15,
-    endX,
-    endY,
-  );
-  ctx.stroke();
-
-  ctx.shadowBlur = 0;
-  ctx.fillStyle =
-    "rgba(255,250,185,0.95)";
-  ctx.beginPath();
-  ctx.arc(
-    endX,
-    endY,
-    scale *
-      0.045,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
   ctx.restore();
-
-  return {
-    x: endX,
-    y: endY,
-  };
+  ctx.restore();
+  return { x: endX, y: endY };
 }
-
 function drawAlienFluidVehicleFormation(
   ctx: CanvasRenderingContext2D,
   startX: number,
