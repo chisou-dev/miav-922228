@@ -385,7 +385,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               </div>
             )}
 
-          {phase === "result" && result && (
+          {/* The flight reaches result only at the escape timeline endpoint. */}
+          {phase === "result" && result &&
+            (result.outcome !== "EARTH_REACHED" || flightProgress >= 1) && (
             result.outcome === "EARTH_REACHED" ? (
               <div
                 className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] flex flex-col items-center gap-3 px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-5 text-center"

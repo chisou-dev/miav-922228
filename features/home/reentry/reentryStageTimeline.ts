@@ -17,10 +17,14 @@ export const SPACE_MISS_DURATION_MS =
 
 
 
-// 14.15s to splash + 15s to departure and STAGE 2 controls.
-// Visual timeline only; Physics v1.1 values and outcomes are unchanged.
+// Stage 1 cinematic visual clock, measured from water contact.
+// CLEAR follows boarding; Stage 2 follows the craft completely leaving frame.
+// Physics v1.1 and the 120km handoff remain unchanged.
 export const STAGE1_SPLASH_S = 14.15;
-export const STAGE1_EPILOGUE_DURATION_S = 15;
+export const STAGE1_BOARD_COMPLETE_S = 11.5;
+export const STAGE1_TURN_END_S = 13.2;
+export const STAGE1_ESCAPE_EXIT_S = 15;
+export const STAGE1_EPILOGUE_DURATION_S = STAGE1_ESCAPE_EXIT_S;
 export const ATMOSPHERE_SUCCESS_MS = Math.round(
   (STAGE1_SPLASH_S + STAGE1_EPILOGUE_DURATION_S) * 1000,
 );

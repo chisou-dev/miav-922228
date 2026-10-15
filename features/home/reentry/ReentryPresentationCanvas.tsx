@@ -39,6 +39,9 @@ import {
   spaceInboundDurationMs,
   successLandingT,
   STAGE1_SPLASH_S,
+  STAGE1_BOARD_COMPLETE_S,
+  STAGE1_TURN_END_S,
+  STAGE1_ESCAPE_EXIT_S,
 } from "./reentryStageTimeline";
 import {
   atmosphereThicknessPx,
@@ -64,17 +67,15 @@ import {
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
 
 /*
- * NASA Blue Marble 2002 equirectangular maps (real satellite observations).
- * An Apollo whole-disc photo is NEVER a close-surface texture: its black
- * background caused the missing-Earth regression in the previous release.
- * Load the lighter map first and upgrade it on desktop when available.
+ * Real NASA/JSC astronaut ISS photos, not an equirectangular map.
+ * ISS068-E-8010 (2022-10-03) / ISS073-E-28418 (2025-05-04).
+ * Source and credit: NASA / ISS Crew Earth Observations, eol.jsc.nasa.gov.
+ * No NASA endorsement is implied.
  */
-const EARTH_SURFACE_SOURCE =
-  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_2048.jpg";
-const EARTH_SURFACE_HD_SOURCE =
-  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png";
-const EARTH_SURFACE_CLOUD_SOURCE =
-  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57735/land_ocean_ice_cloud_2048.jpg";
+const ISS_EARTH_PHOTOS = [
+  "https://eol.jsc.nasa.gov/DatabaseImages/ESC/large/ISS068/ISS068-E-8010.JPG",
+  "https://eol.jsc.nasa.gov/DatabaseImages/ESC/large/ISS073/ISS073-E-28418.JPG",
+] as const;
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -142,36 +143,23 @@ function hash01(seed: number, n: number): number {
 }
 
 
-// Regions of the actual NASA equirectangular map, picked per launch.
-// The game simulates a 2D trajectory, not physical geographic coordinates;
-// these regions are cinematic camera views, not asserted impact locations.
-const ENTRY_EARTH_REGIONS = [
-  { lon: -104, lat: 40 }, // North America
-  { lon: -63, lat: -12 }, // South America
-  { lon: 12, lat: 12 }, // Africa
-  { lon: 25, lat: 45 }, // Europe
-  { lon: 107, lat: 30 }, // East Asia
-  { lon: 135, lat: -25 }, // Australia
-] as const;
-
-function entrySurfaceRegion(
-  power: number,
-  aim: number,
-  seed: number,
-  utcHour: number,
-): { lon: number; lat: number; clouds: number } {
-  const count = ENTRY_EARTH_REGIONS.length;
-  const powerSector = Math.min(count - 1, Math.floor(clamp01(power) * count));
-  const headingSector = Math.floor((((aim % 1) + 1) % 1) * count);
-  const runSector = Math.floor(hash01(seed, 93) * count);
-  const clockSector = Math.floor(utcHour / 4);
-  const region = ENTRY_EARTH_REGIONS[
-    (powerSector + headingSector + runSector + clockSector) % count
-  ];
+// Cinematic camera; no computed geographic impact coordinates.
+interface EarthPhotoCamera {
+  photoIndex: number;
+  pan: number;
+  zoom: number;
+  shift: number;
+  bank: number;
+}
+function entrySurfaceRegion(power: number, aim: number, seed: number, utcHour: number): EarthPhotoCamera {
+  const a = ((aim % 1) + 1) % 1;
+  const photoIndex = Math.floor(hash01(seed ^ Math.imul(Math.floor(utcHour / 4) + 1, 991), 93) * 2) % 2;
   return {
-    lon: region.lon + (hash01(seed, 67) - 0.5) * 14 + (power - 0.5) * 5,
-    lat: region.lat + (hash01(seed, 117) - 0.5) * 9,
-    clouds: 0.11 + hash01(seed, 207) * 0.10,
+    photoIndex,
+    pan: (hash01(seed, 67) - 0.5) * 0.85 + (power - 0.5) * 0.28 + (a - 0.5) * 0.35,
+    zoom: (hash01(seed, 117) - 0.5) * 0.10 + power * 0.07,
+    shift: (hash01(seed, 207) - 0.5) * 0.055 + (power - 0.5) * 0.035,
+    bank: (a - 0.5) * 0.085,
   };
 }
 
@@ -907,10 +895,8 @@ function drawAtmosphericHorizon(
 function drawAtmosphereVolume(
   ctx: CanvasRenderingContext2D,
   earth: HTMLImageElement | null,
-  cloudEarth: HTMLImageElement | null,
-  region: { lon: number; lat: number; clouds: number },
-  w: number,
-  h: number,
+  region: EarthPhotoCamera,
+  w: number, h: number,
   atmosphereSceneMix: number,
   timeSinceEntryS: number,
   horizonAngle: number,
@@ -918,147 +904,77 @@ function drawAtmosphereVolume(
   entrySteepness: number,
 ): void {
   if (atmosphereSceneMix <= 0.001) return;
-
-  const mixIn = clamp01(atmosphereSceneMix);
+  const alpha = clamp01(atmosphereSceneMix);
   const deep = smoothstep((timeSinceEntryS - 1.0) / 8.2);
-  const surfaceReveal = smoothstep((timeSinceEntryS - 1.2) / 5.8);
-
-  /*
-   * Screen-space atmosphere field.
-   *
-   * Keep the top of the phone visually in space even when the local
-   * horizon is tilted. The previous version rotated this gradient together
-   * with the horizon, which could move the bright lower-atmosphere colors
-   * into the upper part of the screen.
-   */
+  const reveal = smoothstep((timeSinceEntryS - 0.4) / 4.5);
   const sky = ctx.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, "rgba(0,2,8,1)");
-  sky.addColorStop(0.28, "rgba(1,6,16,1)");
-  sky.addColorStop(0.58, "rgba(4,18,42,1)");
-  sky.addColorStop(0.80, "rgba(12,47,86,1)");
-  sky.addColorStop(1, "rgba(44,96,138,1)");
-
+  sky.addColorStop(0, "#000208");
+  sky.addColorStop(0.30, "#010610");
+  sky.addColorStop(0.67, "#061b35");
+  sky.addColorStop(1, "#194a6d");
   ctx.save();
-  ctx.globalAlpha = mixIn;
+  ctx.globalAlpha = alpha;
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
+  drawAtmosphericMoon(ctx, w, h, alpha, Date.now());
 
-  drawAtmosphericMoon(
-    ctx,
-    w,
-    h,
-    mixIn,
-    Date.now(),
-  );
-
-  /*
-   * Rotate only the curved Earth / atmosphere geometry.
-   * This preserves the physical-looking tilted horizon while the upper
-   * screen remains dark.
-   */
   ctx.save();
-  const cx = w * 0.5;
-  const cy = h * 0.5;
-  ctx.translate(cx, cy);
-  ctx.rotate(horizonAngle);
-  ctx.translate(-cx, -cy);
-
-  const pad = Math.max(w, h) * 0.75;
-  const maxDim = Math.max(w, h);
+  ctx.translate(w * 0.5, h * 0.5);
+  ctx.rotate(horizonAngle + region.bank);
+  ctx.translate(-w * 0.5, -h * 0.5);
   const steep = clamp01(entrySteepness);
-  // Resemble a low-Earth-orbit photograph: visible curvature, bright blue
-  // atmosphere and a legible continental surface in the lower half.
-  const startHorizon = h * mix(0.75, 0.64, steep);
-  const horizonTop = mix(startHorizon, h * mix(0.45, 0.36, steep), deep);
-  const earthR = maxDim * mix(0.98, 1.32, deep);
-  const phaseAngle = surfacePhase * Math.PI * 2;
-  const earthX = w * (0.50 + Math.sin(phaseAngle) * 0.055);
-  const earthY = horizonTop + earthR;
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(earthX, earthY, earthR, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.globalAlpha = mixIn * mix(0.08, 0.98, surfaceReveal);
-
-
-  if (earth && earth.naturalWidth > 0) {
-    // In the panorama the visible patch is the shallow curved slice near
-    // the top of the planet disc. Put the selected continent just inside
-    // that slice, not at the crop's centre or near the polar ice.
-    const cropOf = (image: HTMLImageElement) => {
-      const sw = image.naturalWidth;
-      const sh = image.naturalHeight;
-      const side = Math.min(sh * 0.53, sw * 0.35);
-      const longitude = ((region.lon + 180) / 360) * sw;
-      const latitude = ((90 - region.lat) / 180) * sh;
-      const travel = smoothstep(timeSinceEntryS / 9.5);
-      const sx = Math.max(0, Math.min(sw - side, longitude - side * 0.5 + travel * side * 0.045));
-      const sy = Math.max(0, Math.min(sh - side, latitude - side * 0.085));
-      return { sx, sy, side };
-    };
-    const drawMap = (image: HTMLImageElement, opacity: number) => {
-      const { sx, sy, side } = cropOf(image);
-      ctx.globalAlpha = opacity;
-      ctx.drawImage(
-        image, sx, sy, side, side,
-        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2,
-      );
-    };
-    const baseOpacity = mixIn * mix(0.10, 1, surfaceReveal);
+  const horizonY = mix(
+    h * mix(0.75, 0.64, steep),
+    h * mix(0.45, 0.36, steep), deep,
+  ) + region.shift * h;
+  if (earth && earth.naturalWidth > 0 && earth.naturalHeight > 0) {
+    // Preserve actual photographic curvature, depth, clouds and coastlines.
+    // Crops move within a single ISS exposure; no map stretched onto a disc.
+    const iw = earth.naturalWidth, ih = earth.naturalHeight;
+    const sx = iw * 0.075, sy = ih * 0.075;
+    const sw = iw * 0.85, sh = ih * 0.85;
+    const dw = Math.max(w * 1.55, h * 2.2) * (1 + region.zoom);
+    const dh = dw * sh / sw;
+    const limb = region.photoIndex === 0 ? 0.21 : 0.19;
+    const travel = smoothstep(timeSinceEntryS / 9.5);
+    const dx = (w - dw) * (0.5 + region.pan * 0.16 + (surfacePhase - 0.5) * 0.035) - travel * w * 0.022;
+    const dy = horizonY - ((limb * ih - sy) / sh) * dh + travel * h * 0.018;
+    ctx.save();
+    ctx.globalAlpha = alpha * reveal;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    // Natural-color satellite land and oceans. No black surrounding a disc.
-    ctx.filter = "saturate(1.10) contrast(1.07) brightness(1.06)";
-    drawMap(earth, baseOpacity);
-    // A little real weather texture, the same geographic crop, not a full
-    // opaque white veil. Ice caps cannot enter the equatorial crop.
-    if (cloudEarth && cloudEarth.naturalWidth > 0) {
-      ctx.filter = "saturate(0.96) contrast(1.06)";
-      drawMap(cloudEarth, baseOpacity * region.clouds);
-    }
-    ctx.filter = "none";
-    ctx.globalAlpha = baseOpacity;
+    ctx.filter = "saturate(1.08) contrast(1.04)";
+    ctx.drawImage(earth, sx, sy, sw, sh, dx, dy, dw, dh);
+    ctx.restore();
   } else {
-    const ocean = ctx.createLinearGradient(0, horizonTop, 0, h);
-    ocean.addColorStop(0, "#567f9c");
-    ocean.addColorStop(0.35, "#255674");
-    ocean.addColorStop(1, "#071d31");
-    ctx.fillStyle = ocean;
-    ctx.fillRect(-pad, horizonTop, w + pad * 2, h + pad);
+    // Safe photo-load fallback: a curved, illuminated blue ocean.
+    // Never render the black margins of an Apollo photo as terrain.
+    const r = Math.max(w, h) * mix(0.98, 1.32, deep);
+    const ex = w * 0.5, ey = horizonY + r;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(ex, ey, r, 0, Math.PI * 2);
+    ctx.clip();
+    const sea = ctx.createLinearGradient(0, horizonY, 0, h);
+    sea.addColorStop(0, "#6da3cc");
+    sea.addColorStop(0.24, "#286c9b");
+    sea.addColorStop(1, "#092b4c");
+    ctx.fillStyle = sea;
+    ctx.globalAlpha = alpha * mix(0.15, 1, reveal);
+    ctx.fillRect(-w, horizonY, w * 3, h * 2);
+    ctx.restore();
+    const rim = ctx.createRadialGradient(ex, ey, r * 0.995, ex, ey, r * 1.02);
+    rim.addColorStop(0, "rgba(80,162,245,0)");
+    rim.addColorStop(0.52, "rgba(112,199,255,0.34)");
+    rim.addColorStop(1, "rgba(95,167,246,0)");
+    ctx.fillStyle = rim;
+    ctx.beginPath();
+    ctx.arc(ex, ey, r * 1.02, 0, Math.PI * 2);
+    ctx.fill();
   }
-
-  const blueCast = ctx.createLinearGradient(0, horizonTop, 0, h);
-  blueCast.addColorStop(0, `rgba(42,112,180,${mix(0.26, 0.08, surfaceReveal)})`);
-  blueCast.addColorStop(0.34, `rgba(20,73,128,${mix(0.20, 0.06, surfaceReveal)})`);
-  blueCast.addColorStop(1, "rgba(6,24,45,0.08)");
-  ctx.globalCompositeOperation = "source-over";
-  ctx.fillStyle = blueCast;
-  ctx.fillRect(-pad, horizonTop, w + pad * 2, h + pad);
-  ctx.restore();
-
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  const haze = ctx.createRadialGradient(
-    earthX, earthY, earthR * 0.995,
-    earthX, earthY, earthR * 1.020,
-  );
-  haze.addColorStop(0, "rgba(100,190,255,0)");
-  haze.addColorStop(0.42, `rgba(115,205,255,${0.055 + mixIn * 0.10})`);
-  haze.addColorStop(0.70, `rgba(205,238,255,${0.070 + mixIn * 0.12})`);
-  haze.addColorStop(1, "rgba(60,135,235,0)");
-  ctx.fillStyle = haze;
-  ctx.beginPath();
-  ctx.arc(earthX, earthY, earthR * 1.021, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
   ctx.restore();
 }
-
-
-
 
 function drawLiquidAlien(
   ctx: CanvasRenderingContext2D,
@@ -2967,81 +2883,56 @@ function drawStage1ClearSequence(
    *
    * Everything stays in the same ocean shot; there is no cut to a still image.
    */
-  // Fifteen-second epilogue, timed from the actual water contact.
+  // Playback-driven staging: boarding, left turn, rightward acceleration.
   const alienRise = smoothstep((splashAge - 0.6) / 4.4);
-  const pointGesture = smoothstep((splashAge - 5.0) / 0.85)
-    * (1 - smoothstep((splashAge - 8.7) / 0.65));
-  const vehicleFormation = smoothstep((splashAge - 6.0) / 2.8);
-  const absorbGesture = smoothstep((splashAge - 8.6) / 0.75)
-    * (1 - smoothstep((splashAge - 11.9) / 0.65));
-  const absorbCraft = smoothstep((splashAge - 9.2) / 2.4);
-  const boardSkiff = smoothstep((splashAge - 11.8) / 1.7);
-  const departSkiff = smoothstep((splashAge - 13.8) / 1.2);
-  // One shared roll source: the physical visual pose of the floating craft.
-  const parentTilt = Math.max(-0.16, Math.min(
+  const pointGesture = smoothstep((splashAge - 5.0) / 0.75)
+    * (1 - smoothstep((splashAge - 8.1) / 0.45));
+  const vehicleFormation = smoothstep((splashAge - 5.6) / 2.9);
+  const absorbGesture = smoothstep((splashAge - 8.35) / 0.55)
+    * (1 - smoothstep((splashAge - 10.2) / 0.30));
+  const absorbCraft = smoothstep((splashAge - 8.5) / 2.0);
+  const boardSkiff = smoothstep((splashAge - 10.5) /
+    (STAGE1_BOARD_COMPLETE_S - 10.5));
+  const turnT = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) /
+    (STAGE1_TURN_END_S - STAGE1_BOARD_COMPLETE_S));
+  const dashT = clamp01((splashAge - STAGE1_TURN_END_S) /
+    (STAGE1_ESCAPE_EXIT_S - STAGE1_TURN_END_S));
+  const dash = dashT * dashT * dashT;
+  const landedTilt = Math.max(-0.16, Math.min(
     0.16, (landedCraftPose.angle - Math.PI / 2) * 0.80,
-  )) * (1 - boardSkiff);
-
-  const alienScale =
-    minDim *
-    0.034;
-
-  const sourceAlienX = landedCraftPose.x + minDim * 0.032;
-  const sourceAlienY =
-    landedCraftPose.y - minDim * mix(0.006, 0.043, alienRise);
-
-  const skiffRestX =
-    craftX +
-    minDim *
-      0.245;
-
-  const skiffRestY =
-    waterY -
-    minDim *
-      0.038;
-
-  const skiffX =
-    skiffRestX +
-    departSkiff *
-      w *
-      0.40;
-
-  const skiffY =
-    skiffRestY -
-    departSkiff *
-      h *
-      0.47;
-
-  const boardX =
-    mix(
-      sourceAlienX,
-      skiffX -
-        minDim *
-        0.018,
-      boardSkiff,
-    );
-
-  const boardY =
-    mix(
-      sourceAlienY,
-      skiffY -
-        minDim *
-        0.038,
-      boardSkiff,
-    );
-
-  const alienAlpha =
-    alienRise *
-    (
-      1 -
-      smoothstep(
-        (
-          departSkiff -
-          0.90
-        ) /
-          0.10,
-      )
-    );
+  ));
+  const skiffRoll = -0.08 - Math.sin(turnT * Math.PI) * 0.23
+    + smoothstep((splashAge - 12.65) / 0.55) * 0.12 - dash * 0.20;
+  const parentTilt = mix(landedTilt, skiffRoll, boardSkiff);
+  const flightScale = mix(1, 0.82, dash);
+  const alienScale = minDim * 0.034 * flightScale;
+  // Before boarding, the alien inherits both the floating craft's roll and bob.
+  const riseX = minDim * 0.032;
+  const riseY = -minDim * mix(0.006, 0.043, alienRise);
+  const sourceAlienX = landedCraftPose.x +
+    riseX * Math.cos(landedTilt) - riseY * Math.sin(landedTilt);
+  const sourceAlienY = landedCraftPose.y +
+    riseX * Math.sin(landedTilt) + riseY * Math.cos(landedTilt);
+  const skiffRestX = craftX + minDim * 0.245;
+  const skiffRestY = waterY - minDim * 0.038 +
+    Math.sin(splashAge * 2.2 + seed * 0.002) * minDim * 0.004;
+  // Arc left with a slowdown, then accelerate in a cubic rightward dash.
+  const turnX = skiffRestX - minDim * 0.20 * turnT;
+  const turnY = skiffRestY - minDim * 0.065 *
+    Math.sin(turnT * Math.PI * 0.85);
+  const exitTravel = Math.max(w * 1.15, w - turnX + minDim * 0.38);
+  const skiffX = turnX + dash * exitTravel;
+  const skiffY = turnY - dash * h * 0.04;
+  const socketDX = -minDim * 0.018 * flightScale;
+  const socketDY = -minDim * 0.038 * flightScale;
+  const aboardX = skiffX +
+    socketDX * Math.cos(skiffRoll) - socketDY * Math.sin(skiffRoll);
+  const aboardY = skiffY +
+    socketDX * Math.sin(skiffRoll) + socketDY * Math.cos(skiffRoll);
+  const boardX = mix(sourceAlienX, aboardX, boardSkiff);
+  const boardY = mix(sourceAlienY, aboardY, boardSkiff);
+  // Never hide the rider before the whole vessel leaves the viewport.
+  const alienAlpha = alienRise;
 
   // Apply the same craft roll to the pointing/absorbing arms and their tips.
   const raisedTentacleOnBoat = (
@@ -3170,13 +3061,13 @@ function drawStage1ClearSequence(
       ) *
       mix(
         1,
-        0.72,
-        departSkiff,
+        0.82,
+        dash,
       );
 
-if (departSkiff < 0.16) {
+if (dashT < 0.16) {
       // A tiny shadow on the actual water; no artificial dark foreground.
-      const amount = skiffAppear * (1 - smoothstep(departSkiff / 0.16));
+      const amount = skiffAppear * (1 - smoothstep(dashT / 0.16));
       ctx.save();
       const shade = ctx.createRadialGradient(
         skiffRestX, waterY + minDim * 0.013, 0,
@@ -3194,35 +3085,32 @@ if (departSkiff < 0.16) {
       ctx.fill();
       ctx.restore();
     }
-    drawEscapeSkiff(
-      ctx,
-      skiffX,
-      skiffY,
-      skiffScale,
-      skiffAppear *
-        (
-          1 -
-          smoothstep(
-            (
-              departSkiff -
-              0.94
-            ) /
-              0.06,
-          )
-        ),
-      mix(
-        -0.08,
-        -0.28,
-        departSkiff,
-      ),
-    );
+    drawEscapeSkiff(ctx, skiffX, skiffY, skiffScale, skiffAppear, skiffRoll);
+    if (dashT > 0.04 && dashT < 0.92) {
+      // Short metallic reflection during acceleration, not a light beam.
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 0.20 * Math.sin(Math.PI * dashT);
+      ctx.translate(skiffX, skiffY);
+      ctx.rotate(skiffRoll);
+      const chrome = ctx.createLinearGradient(-skiffScale, 0, skiffScale, 0);
+      chrome.addColorStop(0, "rgba(160,225,253,0)");
+      chrome.addColorStop(0.6, "rgba(215,248,255,0.86)");
+      chrome.addColorStop(1, "rgba(160,225,253,0)");
+      ctx.strokeStyle = chrome;
+      ctx.lineWidth = Math.max(0.7, skiffScale * 0.09);
+      ctx.beginPath();
+      ctx.moveTo(-skiffScale * 0.45, -skiffScale * 0.14);
+      ctx.lineTo(skiffScale * 0.46, -skiffScale * 0.10);
+      ctx.stroke();
+      ctx.restore();
+    }
 
-
-    if (departSkiff > 0.02 && departSkiff < 0.87) {
+    if (dashT > 0.12 && dashT < 0.96) {
       // Broad and short displaced-air wake, never a straight light ray.
       ctx.save();
       ctx.globalCompositeOperation = "screen";
-      const amount = 1 - smoothstep((departSkiff - 0.60) / 0.27);
+      const amount = Math.sin(Math.PI * dashT) * 0.95;
       const wx = skiffX - skiffScale * 0.85;
       const wy = skiffY + skiffScale * 0.14;
       const wake = ctx.createRadialGradient(
@@ -3244,13 +3132,8 @@ if (departSkiff < 0.16) {
 
 
 
-  // CLEAR appears at splash + 13s and remains visible with STAGE 2.
-  const clearIn = smoothstep((splashAge - 13.0) / 0.65);
-  const clearOut = 1;
-
-  const clearAlpha =
-    clearIn *
-    clearOut;
+  // CLEAR begins immediately after boarding and never fades out.
+  const clearAlpha = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) / 0.45);
 
   if (
     clearAlpha <=
@@ -4898,8 +4781,8 @@ export function ReentryPresentationCanvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
-  const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
-  const earthSurfaceCloudRef = useRef<HTMLImageElement | null>(null);
+  const issPhotoRefs = useRef<(HTMLImageElement | null)[]>([null, null]);
+  const flightUtcHourRef = useRef(new Date().getUTCHours());
   const oceanWebGLRef =
     useRef<ReentryOceanWebGLRenderer | null>(null);
   const resultSoundRef = useRef<string | null>(null);
@@ -4912,6 +4795,10 @@ export function ReentryPresentationCanvas({
   const prevHeadingRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (phase === "flight") flightUtcHourRef.current = new Date().getUTCHours();
+  }, [phase, result?.seed]);
+
+  useEffect(() => {
     let live = true;
 
     void loadImage(EARTH_SOURCE)
@@ -4922,36 +4809,13 @@ export function ReentryPresentationCanvas({
         if (live) earthRef.current = null;
       });
 
-    void loadImage(EARTH_SURFACE_SOURCE)
-      .then((img) => {
-        if (live) earthSurfaceRef.current = img;
-      })
-      .catch(() => {
-        if (live) earthSurfaceRef.current = null;
+    ISS_EARTH_PHOTOS.forEach((src, index) => {
+      void loadImage(src).then((img) => {
+        if (live) issPhotoRefs.current[index] = img;
+      }).catch(() => {
+        if (live) issPhotoRefs.current[index] = null;
       });
-
-    // Always keep the highest-resolution real surface map that finishes.
-    const acceptSurface = (img: HTMLImageElement): void => {
-      if (
-        live &&
-        (!earthSurfaceRef.current ||
-          img.naturalWidth > earthSurfaceRef.current.naturalWidth)
-      ) {
-        earthSurfaceRef.current = img;
-      }
-    };
-    if (typeof window !== "undefined" && window.innerWidth >= 1200) {
-      void loadImage(EARTH_SURFACE_HD_SOURCE).then(acceptSurface).catch(() => {
-        // The 2K map remains valid, even on desktop.
-      });
-    }
-    void loadImage(EARTH_SURFACE_CLOUD_SOURCE)
-      .then((img) => {
-        if (live) earthSurfaceCloudRef.current = img;
-      })
-      .catch(() => {
-        if (live) earthSurfaceCloudRef.current = null;
-      });
+    });
 
     return () => {
       live = false;
@@ -5257,7 +5121,7 @@ export function ReentryPresentationCanvas({
         variant === "stage" &&
         phase === "flight" &&
         outcome === "EARTH_REACHED" &&
-        timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S + 13.0
+        timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S + STAGE1_BOARD_COMPLETE_S
       ) {
         const clearAudioKey =
           `${result?.seed ?? 0}:stage1-clear`;
@@ -5308,7 +5172,7 @@ export function ReentryPresentationCanvas({
         powerNorm,
         angleNorm,
         result?.seed ?? 1,
-        new Date().getUTCHours(),
+        flightUtcHourRef.current,
       );
 
 const failureDepth =
@@ -5655,8 +5519,8 @@ const failureTravelT =
       ) {
         drawAtmosphereVolume(
           ctx,
-          earthSurfaceRef.current,
-          earthSurfaceCloudRef.current,
+          issPhotoRefs.current[earthRegion.photoIndex] ??
+            issPhotoRefs.current.find((img) => img !== null) ?? null,
           earthRegion,
           w,
           h,
@@ -5846,9 +5710,9 @@ const failureTravelT =
           smoothstep(
             (
               timeSinceVisualAtmosphereEntryS -
-              (STAGE1_SPLASH_S + 9.2)
+              (STAGE1_SPLASH_S + 8.5)
             ) /
-              2.4,
+              2.0,
           );
 
         craftAlpha *=
