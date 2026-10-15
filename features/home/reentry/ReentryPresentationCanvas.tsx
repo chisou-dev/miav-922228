@@ -40,7 +40,8 @@ import {
   successLandingT,
   STAGE1_SPLASH_S,
   STAGE1_BOARD_COMPLETE_S,
-  STAGE1_TURN_END_S,
+  STAGE1_CLEAR_HOLD_END_S,
+  STAGE1_GLIDE_END_S,
   STAGE1_ESCAPE_EXIT_S,
 } from "./reentryStageTimeline";
 import {
@@ -246,6 +247,7 @@ function drawStars(
   stars = 1,
 ): void {
   if (stars <= 0.001) return;
+  // Stars stay fixed in the cinematic camera; only luminance changes.
   void playback;
   void moving;
 
@@ -255,16 +257,16 @@ function drawStars(
   ctx.save();
   ctx.globalAlpha = fade;
 
-  for (let i = 0; i < 104; i++) {
+  for (let i = 0; i < 210; i++) {
     const rx = hash01(0x51a2, i * 7 + 1);
     const ry = hash01(0x71c9, i * 11 + 3);
     const rb = hash01(0x91ef, i * 13 + 5);
     const phase = hash01(0xa217, i * 17 + 9) * Math.PI * 2;
     const x = rx * w;
     const y = ry * h;
-    const bright = i % 19 === 0;
-    const cool = i % 31 === 0;
-    const warm = i % 37 === 0;
+    const bright = i % 31 === 0;
+    const cool = i % 43 === 0;
+    const warm = i % 53 === 0;
 
     const shimmer =
       0.88 +
@@ -275,11 +277,11 @@ function drawStars(
         (bright ? 0.022 : 0.006);
 
     const alpha =
-      (bright ? 0.74 : cool || warm ? 0.54 : 0.15 + rb * 0.18) * shimmer;
+      (bright ? 0.88 : cool || warm ? 0.70 : 0.26 + rb * 0.26) * shimmer;
     const sizeJitter =
       1 + Math.sin(clockS * (3.1 + rb * 2.8) + phase) * (bright ? 0.09 : 0.025);
     const radius =
-      (bright ? 1.05 + rb * 0.66 : cool || warm ? 0.72 + rb * 0.34 : 0.32 + rb * 0.36) *
+      (bright ? 1.05 + rb * 0.42 : cool || warm ? 0.72 + rb * 0.25 : 0.43 + rb * 0.33) *
       sizeJitter;
 
     let color = `rgba(234,241,248,${alpha})`;
@@ -292,13 +294,13 @@ function drawStars(
     ctx.fill();
 
     if (bright || cool || warm) {
-      const flare = (bright ? 3.3 + rb * 2.6 : 1.9 + rb * 1.5) * sizeJitter;
+      const flare = (bright ? 1.7 + rb * 0.75 : 1.0 + rb * 0.40) * sizeJitter;
       ctx.strokeStyle = cool
         ? `rgba(160,208,255,${alpha * 0.27})`
         : warm
           ? `rgba(255,190,154,${alpha * 0.22})`
           : `rgba(230,241,250,${alpha * 0.25})`;
-      ctx.lineWidth = 0.46;
+      ctx.lineWidth = 0.32;
       ctx.beginPath();
       ctx.moveTo(x - flare, y);
       ctx.lineTo(x + flare, y);
@@ -974,6 +976,22 @@ function drawAtmosphereVolume(
     ctx.fill();
   }
   ctx.restore();
+
+  // Astronaut photos contain exposed black space. The photographic pixels
+  // obscure the previously drawn stars, so restore only a sparse foreground
+  // field high above the limb. Lower sky and ocean remain star-free.
+  if (earth && timeSinceEntryS < 8) {
+    const spaceStarAlpha = alpha *
+      (1 - smoothstep((timeSinceEntryS - 4) / 4)) * 0.95;
+    if (spaceStarAlpha > 0.001) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w, h * 0.34);
+      ctx.clip();
+      drawStars(ctx, w, h, surfacePhase, false, 0, spaceStarAlpha);
+      ctx.restore();
+    }
+  }
 }
 
 function drawLiquidAlien(
@@ -2883,55 +2901,70 @@ function drawStage1ClearSequence(
    *
    * Everything stays in the same ocean shot; there is no cut to a still image.
    */
-  // Playback-driven staging: boarding, left turn, rightward acceleration.
+  // Arrival stays leisurely enough to see the liquid vehicle forming,
+  // the former craft dissolve, and the alien actually board. All timing
+  // uses the playback-derived seconds, never a real-time interval.
   const alienRise = smoothstep((splashAge - 0.6) / 4.4);
-  const pointGesture = smoothstep((splashAge - 5.0) / 0.75)
-    * (1 - smoothstep((splashAge - 8.1) / 0.45));
-  const vehicleFormation = smoothstep((splashAge - 5.6) / 2.9);
-  const absorbGesture = smoothstep((splashAge - 8.35) / 0.55)
-    * (1 - smoothstep((splashAge - 10.2) / 0.30));
-  const absorbCraft = smoothstep((splashAge - 8.5) / 2.0);
+  const pointGesture = smoothstep((splashAge - 5.05) / 0.90)
+    * (1 - smoothstep((splashAge - 8.30) / 0.60));
+  const vehicleFormation = smoothstep((splashAge - 5.70) / 2.80);
+  const absorbGesture = smoothstep((splashAge - 8.50) / 0.65)
+    * (1 - smoothstep((splashAge - 10.65) / 0.48));
+  const absorbCraft = smoothstep((splashAge - 8.70) / 1.90);
   const boardSkiff = smoothstep((splashAge - 10.5) /
     (STAGE1_BOARD_COMPLETE_S - 10.5));
-  const turnT = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) /
-    (STAGE1_TURN_END_S - STAGE1_BOARD_COMPLETE_S));
-  const dashT = clamp01((splashAge - STAGE1_TURN_END_S) /
-    (STAGE1_ESCAPE_EXIT_S - STAGE1_TURN_END_S));
+
+  // After the landing, breathe for 1.2s before a clear left-to-right exit.
+  // Only a modest leftward glide, not the old busy 180-degree turn.
+  const settleT = smoothstep((splashAge - 12.60) /
+    (STAGE1_CLEAR_HOLD_END_S - 12.60));
+  const glideT = smoothstep((splashAge - STAGE1_CLEAR_HOLD_END_S) /
+    (STAGE1_GLIDE_END_S - STAGE1_CLEAR_HOLD_END_S));
+  const dashT = clamp01((splashAge - STAGE1_GLIDE_END_S) /
+    (STAGE1_ESCAPE_EXIT_S - STAGE1_GLIDE_END_S));
   const dash = dashT * dashT * dashT;
   const landedTilt = Math.max(-0.16, Math.min(
     0.16, (landedCraftPose.angle - Math.PI / 2) * 0.80,
   ));
-  const skiffRoll = -0.08 - Math.sin(turnT * Math.PI) * 0.23
-    + smoothstep((splashAge - 12.65) / 0.55) * 0.12 - dash * 0.20;
+  const skiffRoll = -0.08 - Math.sin(glideT * Math.PI) * 0.07
+    - dash * 0.20;
   const parentTilt = mix(landedTilt, skiffRoll, boardSkiff);
   const flightScale = mix(1, 0.82, dash);
   const alienScale = minDim * 0.034 * flightScale;
-  // Before boarding, the alien inherits both the floating craft's roll and bob.
+
+  // The creature shares the craft's translation and roll before boarding.
   const riseX = minDim * 0.032;
   const riseY = -minDim * mix(0.006, 0.043, alienRise);
   const sourceAlienX = landedCraftPose.x +
     riseX * Math.cos(landedTilt) - riseY * Math.sin(landedTilt);
   const sourceAlienY = landedCraftPose.y +
     riseX * Math.sin(landedTilt) + riseY * Math.cos(landedTilt);
+
   const skiffRestX = craftX + minDim * 0.245;
   const skiffRestY = waterY - minDim * 0.038 +
     Math.sin(splashAge * 2.2 + seed * 0.002) * minDim * 0.004;
-  // Arc left with a slowdown, then accelerate in a cubic rightward dash.
-  const turnX = skiffRestX - minDim * 0.20 * turnT;
-  const turnY = skiffRestY - minDim * 0.065 *
-    Math.sin(turnT * Math.PI * 0.85);
-  const exitTravel = Math.max(w * 1.15, w - turnX + minDim * 0.38);
-  const skiffX = turnX + dash * exitTravel;
-  const skiffY = turnY - dash * h * 0.04;
-  const socketDX = -minDim * 0.018 * flightScale;
-  const socketDY = -minDim * 0.038 * flightScale;
+  // The float moves only a little left after the one-second CLEAR hold.
+  // Glide then carries the occupied boat gently right; the final dash
+  // accelerates all the way beyond the screen edge, for every aspect ratio.
+  const skiffGlideX = skiffRestX -
+    minDim * 0.14 * settleT + minDim * 0.20 * glideT;
+  const skiffGlideY = skiffRestY -
+    minDim * 0.032 * Math.sin(glideT * Math.PI);
+  const exitTravel = Math.max(w * 1.15, w - skiffGlideX + minDim * 0.40);
+  const skiffX = skiffGlideX + dash * exitTravel;
+  const skiffY = skiffGlideY - dash * h * 0.04;
+
+  // A single seat transform is shared by both the metallic skiff and rider.
+  const socketDX = minDim * 0.004 * flightScale;
+  const socketDY = -minDim * 0.026 * flightScale;
   const aboardX = skiffX +
     socketDX * Math.cos(skiffRoll) - socketDY * Math.sin(skiffRoll);
   const aboardY = skiffY +
     socketDX * Math.sin(skiffRoll) + socketDY * Math.cos(skiffRoll);
   const boardX = mix(sourceAlienX, aboardX, boardSkiff);
-  const boardY = mix(sourceAlienY, aboardY, boardSkiff);
-  // Never hide the rider before the whole vessel leaves the viewport.
+  // One restrained leap, landing exactly in the skiff socket at 12s.
+  const jumpArcY = Math.sin(boardSkiff * Math.PI) * minDim * 0.050;
+  const boardY = mix(sourceAlienY, aboardY, boardSkiff) - jumpArcY;
   const alienAlpha = alienRise;
 
   // Apply the same craft roll to the pointing/absorbing arms and their tips.
@@ -3132,7 +3165,7 @@ if (dashT < 0.16) {
 
 
 
-  // CLEAR begins immediately after boarding and never fades out.
+  // CLEAR appears only on completed boarding, and never fades out.
   const clearAlpha = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) / 0.45);
 
   if (
@@ -5710,9 +5743,9 @@ const failureTravelT =
           smoothstep(
             (
               timeSinceVisualAtmosphereEntryS -
-              (STAGE1_SPLASH_S + 8.5)
+              (STAGE1_SPLASH_S + 8.7)
             ) /
-              2.0,
+              1.9,
           );
 
         craftAlpha *=
@@ -5818,7 +5851,7 @@ const failureTravelT =
           outcome === "EARTH_REACHED" &&
           latched && !miss &&
           timeSinceVisualAtmosphereEntryS > 14.15 &&
-          timeSinceVisualAtmosphereEntryS < STAGE1_SPLASH_S + 15;
+          timeSinceVisualAtmosphereEntryS < STAGE1_SPLASH_S + STAGE1_ESCAPE_EXIT_S;
 
         ctx.save();
         if (submerging) {
