@@ -144,9 +144,9 @@ export const seriesOpenings: readonly {
       },
       {
         id: "q20",
-        question: "How does the narrator's response to his friends end?",
-        choices: ["He looks at the screen without giving them a clear answer","He reads his entire settings list aloud","He uninstalls RIS in front of everyone","He asks the teacher for advice"],
-        correctAnswer: "He looks at the screen without giving them a clear answer",
+        question: "What does the device do just as the narrator is about to answer his friends?",
+        choices: ["It gives a small vibration","It switches itself off","It rings loudly across the lounge","It shows a new calendar reminder"],
+        correctAnswer: "It gives a small vibration",
       },
     ],
   },
@@ -190,9 +190,9 @@ export const seriesOpenings: readonly {
       },
       {
         id: "q6",
-        question: "What is the boy hoping to ask at the piano studio?",
-        choices: ["What piece the girl will play at the recital","Whether the teacher will cancel his lesson","How much a new piano costs","Where his friend went after school"],
-        correctAnswer: "What piece the girl will play at the recital",
+        question: "When does the boy expect to reach the piano studio after school?",
+        choices: ["A little before five","Just after midnight","At lunchtime","Before his first class"],
+        correctAnswer: "A little before five",
       },
       {
         id: "q7",
