@@ -250,9 +250,9 @@ export const seriesOpenings: readonly {
       },
       {
         id: "q16",
-        question: "What does the teacher ask the boy to do when he arrives?",
-        choices: ["Sit and give them a minute","Play his recital piece immediately","Leave and come back next week","Help move the piano"],
-        correctAnswer: "Sit and give them a minute",
+        question: "What does the teacher ask when the boy arrives at the studio?",
+        choices: ["To give them a minute before his lesson","To play his recital piece immediately","To leave and come back next week","To help move the piano"],
+        correctAnswer: "To give them a minute before his lesson",
       },
       {
         id: "q17",
