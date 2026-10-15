@@ -17,7 +17,13 @@ export const SPACE_MISS_DURATION_MS =
 
 
 
-export const ATMOSPHERE_SUCCESS_MS = 38_000;
+// 14.15s to splash + 15s to departure and STAGE 2 controls.
+// Visual timeline only; Physics v1.1 values and outcomes are unchanged.
+export const STAGE1_SPLASH_S = 14.15;
+export const STAGE1_EPILOGUE_DURATION_S = 15;
+export const ATMOSPHERE_SUCCESS_MS = Math.round(
+  (STAGE1_SPLASH_S + STAGE1_EPILOGUE_DURATION_S) * 1000,
+);
 
 export const ATMOSPHERE_FAILURE_MS = 14_000;
 
