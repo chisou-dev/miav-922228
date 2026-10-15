@@ -1201,6 +1201,7 @@ function drawLiquidAlien(
   for (const i of [1, 3, 4]) drawTentacle(i);
   ctx.restore();
 }
+
 function drawEscapeSkiff(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1215,70 +1216,104 @@ function drawEscapeSkiff(
   ctx.rotate(tilt);
   ctx.globalAlpha = alpha;
 
-  // Recessed lower hull makes the floating skiff read as a volume.
-  const under = ctx.createLinearGradient(0, 0, 0, scale * 0.25);
-  under.addColorStop(0, "#205686");
-  under.addColorStop(0.35, "#082044");
-  under.addColorStop(1, "#020716");
-  ctx.fillStyle = under;
+  // Escape vessel formed from liquid: organic convex hull, not a flat disc.
+  const keel = new Path2D();
+  keel.moveTo(-scale * 0.73, -scale * 0.045);
+  keel.bezierCurveTo(-scale * 0.69, scale * 0.13, -scale * 0.28, scale * 0.30, scale * 0.07, scale * 0.27);
+  keel.bezierCurveTo(scale * 0.47, scale * 0.23, scale * 0.78, scale * 0.08, scale * 0.86, -scale * 0.055);
+  keel.quadraticCurveTo(scale * 0.17, scale * 0.075, -scale * 0.73, -scale * 0.045);
+  keel.closePath();
+  const underside = ctx.createLinearGradient(0, -scale * 0.035, 0, scale * 0.33);
+  underside.addColorStop(0, "#407bb3");
+  underside.addColorStop(0.28, "#163b71");
+  underside.addColorStop(0.64, "#0a173c");
+  underside.addColorStop(1, "#020612");
+  ctx.fillStyle = underside;
+  ctx.fill(keel);
+
+  const side = ctx.createLinearGradient(
+    -scale * 0.50, scale * 0.01, scale * 0.55, scale * 0.20
+  );
+  side.addColorStop(0, "rgba(9,22,52,0.93)");
+  side.addColorStop(0.48, "rgba(24,76,121,0.86)");
+  side.addColorStop(0.78, "rgba(18,40,80,0.90)");
+  side.addColorStop(1, "rgba(2,10,24,0.98)");
+  ctx.fillStyle = side;
   ctx.beginPath();
-  ctx.moveTo(-scale * 0.63, -scale * 0.02);
-  ctx.quadraticCurveTo(-scale * 0.56, scale * 0.30, scale * 0.09, scale * 0.24);
-  ctx.quadraticCurveTo(scale * 0.59, scale * 0.14, scale * 0.75, -scale * 0.02);
-  ctx.quadraticCurveTo(scale * 0.04, scale * 0.06, -scale * 0.63, -scale * 0.02);
+  ctx.moveTo(-scale * 0.70, -scale * 0.045);
+  ctx.quadraticCurveTo(-scale * 0.20, scale * 0.20, scale * 0.20, scale * 0.17);
+  ctx.quadraticCurveTo(scale * 0.56, scale * 0.115, scale * 0.84, -scale * 0.045);
+  ctx.quadraticCurveTo(scale * 0.12, scale * 0.255, -scale * 0.70, -scale * 0.045);
   ctx.fill();
 
   const deck = new Path2D();
-  deck.moveTo(scale * 0.79, -scale * 0.035);
-  deck.bezierCurveTo(scale * 0.43, -scale * 0.26, -scale * 0.38, -scale * 0.29, -scale * 0.66, -scale * 0.09);
-  deck.quadraticCurveTo(-scale * 0.83, scale * 0.03, -scale * 0.53, scale * 0.12);
-  deck.quadraticCurveTo(scale * 0.24, scale * 0.22, scale * 0.79, -scale * 0.035);
+  deck.moveTo(scale * 0.87, -scale * 0.061);
+  deck.bezierCurveTo(scale * 0.44, -scale * 0.31, -scale * 0.30, -scale * 0.35, -scale * 0.67, -scale * 0.108);
+  deck.quadraticCurveTo(-scale * 0.83, -scale * 0.010, -scale * 0.62, scale * 0.065);
+  deck.bezierCurveTo(-scale * 0.12, scale * 0.165, scale * 0.57, scale * 0.117, scale * 0.87, -scale * 0.061);
   deck.closePath();
-
-  const finish = ctx.createLinearGradient(
-    -scale * 0.46, -scale * 0.22, scale * 0.46, scale * 0.16
+  const enamel = ctx.createLinearGradient(
+    -scale * 0.45, -scale * 0.24, scale * 0.41, scale * 0.19
   );
-  finish.addColorStop(0, "#071633");
-  finish.addColorStop(0.20, "#164684");
-  finish.addColorStop(0.45, "#377fc1");
-  finish.addColorStop(0.62, "#8cc6e8");
-  finish.addColorStop(0.76, "#255b9e");
-  finish.addColorStop(1, "#06152e");
-  ctx.fillStyle = finish;
+  enamel.addColorStop(0, "#040e29");
+  enamel.addColorStop(0.19, "#243e86");
+  enamel.addColorStop(0.34, "#557bc7");
+  enamel.addColorStop(0.50, "#a2cde7");
+  enamel.addColorStop(0.61, "#317bb2");
+  enamel.addColorStop(0.79, "#263c86");
+  enamel.addColorStop(1, "#060b26");
+  ctx.fillStyle = enamel;
   ctx.fill(deck);
 
   ctx.save();
   ctx.clip(deck);
-  const highlight = ctx.createRadialGradient(
-    -scale * 0.19, -scale * 0.15, scale * 0.01,
-    -scale * 0.19, -scale * 0.15, scale * 0.57
+  const violet = ctx.createRadialGradient(
+    -scale * 0.29, -scale * 0.08, 0,
+    -scale * 0.29, -scale * 0.08, scale * 0.49
   );
-  highlight.addColorStop(0, "rgba(221,248,255,0.63)");
-  highlight.addColorStop(0.30, "rgba(108,217,249,0.30)");
-  highlight.addColorStop(1, "rgba(108,217,249,0)");
-  ctx.fillStyle = highlight;
+  violet.addColorStop(0, "rgba(156,102,231,0.42)");
+  violet.addColorStop(0.45, "rgba(98,104,206,0.18)");
+  violet.addColorStop(1, "rgba(98,104,206,0)");
+  ctx.fillStyle = violet;
+  ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
+  const chrome = ctx.createRadialGradient(
+    scale * 0.07, -scale * 0.23, 0,
+    scale * 0.07, -scale * 0.23, scale * 0.48
+  );
+  chrome.addColorStop(0, "rgba(234,255,255,0.65)");
+  chrome.addColorStop(0.36, "rgba(144,233,251,0.15)");
+  chrome.addColorStop(1, "rgba(144,233,251,0)");
+  ctx.fillStyle = chrome;
   ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
   ctx.restore();
 
-  // Black inset with a reflective inner edge.
-  const well = ctx.createRadialGradient(
-    scale * 0.12, -scale * 0.08, 0,
-    scale * 0.12, -scale * 0.08, scale * 0.20
+  const socket = ctx.createRadialGradient(
+    scale * 0.12, -scale * 0.085, scale * 0.012,
+    scale * 0.12, -scale * 0.085, scale * 0.245
   );
-  well.addColorStop(0, "#03070f");
-  well.addColorStop(0.69, "#081c31");
-  well.addColorStop(1, "#4183ab");
-  ctx.fillStyle = well;
+  socket.addColorStop(0, "#010510");
+  socket.addColorStop(0.44, "#071527");
+  socket.addColorStop(0.77, "#143557");
+  socket.addColorStop(1, "#7cbbd2");
+  ctx.fillStyle = socket;
   ctx.beginPath();
-  ctx.ellipse(scale * 0.12, -scale * 0.067, scale * 0.185, scale * 0.085, -0.08, 0, Math.PI * 2);
+  ctx.ellipse(scale * 0.12, -scale * 0.07, scale * 0.194, scale * 0.093, -0.08, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(192,232,246,0.58)";
-  ctx.lineWidth = Math.max(0.6, scale * 0.020);
-  ctx.stroke(deck);
+  // Local chrome glimmer follows the edge and falls off naturally.
+  const lip = ctx.createLinearGradient(-scale * 0.5, scale * 0.04, scale * 0.6, scale * 0.14);
+  lip.addColorStop(0, "rgba(193,242,254,0)");
+  lip.addColorStop(0.38, "rgba(213,251,255,0.48)");
+  lip.addColorStop(0.78, "rgba(165,218,247,0.18)");
+  lip.addColorStop(1, "rgba(165,218,247,0)");
+  ctx.strokeStyle = lip;
+  ctx.lineWidth = Math.max(0.5, scale * 0.016);
+  ctx.beginPath();
+  ctx.moveTo(-scale * 0.56, scale * 0.054);
+  ctx.quadraticCurveTo(scale * 0.12, scale * 0.177, scale * 0.73, -scale * 0.034);
+  ctx.stroke();
   ctx.restore();
 }
-
 function clipLandingCraftAboveWater(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -3161,6 +3196,26 @@ function drawStage1ClearSequence(
         departSkiff,
       );
 
+if (departSkiff < 0.16) {
+      // A tiny shadow on the actual water; no artificial dark foreground.
+      const amount = skiffAppear * (1 - smoothstep(departSkiff / 0.16));
+      ctx.save();
+      const shade = ctx.createRadialGradient(
+        skiffRestX, waterY + minDim * 0.013, 0,
+        skiffRestX, waterY + minDim * 0.013, skiffScale * 1.25
+      );
+      shade.addColorStop(0, "rgba(3,21,37," + (amount * 0.35) + ")");
+      shade.addColorStop(0.53, "rgba(14,78,100," + (amount * 0.13) + ")");
+      shade.addColorStop(1, "rgba(14,78,100,0)");
+      ctx.fillStyle = shade;
+      ctx.beginPath();
+      ctx.ellipse(
+        skiffRestX, waterY + minDim * 0.013,
+        skiffScale * 1.25, skiffScale * 0.17, 0, 0, Math.PI * 2
+      );
+      ctx.fill();
+      ctx.restore();
+    }
     drawEscapeSkiff(
       ctx,
       skiffX,
@@ -3184,74 +3239,27 @@ function drawStage1ClearSequence(
       ),
     );
 
-    if (
-      departSkiff >
-      0.02
-    ) {
+
+    if (departSkiff > 0.02 && departSkiff < 0.87) {
+      // Broad and short displaced-air wake, never a straight light ray.
       ctx.save();
-      ctx.globalCompositeOperation =
-        "screen";
-
-      const wake =
-        ctx.createLinearGradient(
-          skiffX -
-            skiffScale *
-            2.3,
-          skiffY +
-            skiffScale *
-            0.20,
-          skiffX,
-          skiffY,
-        );
-
-      wake.addColorStop(
-        0,
-        "rgba(47,132,225,0)",
+      ctx.globalCompositeOperation = "screen";
+      const amount = 1 - smoothstep((departSkiff - 0.60) / 0.27);
+      const wx = skiffX - skiffScale * 0.85;
+      const wy = skiffY + skiffScale * 0.14;
+      const wake = ctx.createRadialGradient(
+        wx, wy, 0, wx, wy, skiffScale * 1.25
       );
-      wake.addColorStop(
-        0.50,
-        "rgba(78,173,245," +
-          (
-            0.10 +
-            departSkiff * 0.12
-          ) +
-          ")",
-      );
-      wake.addColorStop(
-        1,
-        "rgba(205,241,255,0.34)",
-      );
-
-      ctx.strokeStyle =
-        wake;
-      ctx.lineCap =
-        "round";
-      ctx.lineWidth =
-        Math.max(
-          1,
-          skiffScale * 0.08,
-        );
+      wake.addColorStop(0, "rgba(143,222,243," + (0.15 * amount) + ")");
+      wake.addColorStop(0.40, "rgba(96,171,222," + (0.08 * amount) + ")");
+      wake.addColorStop(1, "rgba(96,171,222,0)");
+      ctx.fillStyle = wake;
       ctx.beginPath();
-      ctx.moveTo(
-        skiffX -
-          skiffScale *
-          2.0,
-        skiffY +
-          skiffScale *
-          0.28,
+      ctx.ellipse(
+        wx, wy, skiffScale * 1.25, skiffScale * 0.28,
+        -0.22, 0, Math.PI * 2
       );
-      ctx.quadraticCurveTo(
-        skiffX -
-          skiffScale *
-          0.85,
-        skiffY +
-          skiffScale *
-          0.13,
-        skiffX,
-        skiffY,
-      );
-      ctx.stroke();
-
+      ctx.fill();
       ctx.restore();
     }
   }
