@@ -66,6 +66,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     typeof window !== "undefined" && devPresetRequiresExpand(),
   );
   const [clearAssist, setClearAssist] = useState(false);
+  const [showStage2Notice, setShowStage2Notice] = useState(false);
   const miavTitleTapRef = useRef<{
     count: number;
     lastAt: number;
@@ -189,6 +190,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const closeSession = useCallback(() => {
     stopReentryAudio();
     retry();
+    setShowStage2Notice(false);
     setClearAssist(false);
     setExpanded(false);
   }, [retry]);
@@ -386,28 +388,46 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
           {phase === "result" && result && (
             result.outcome === "EARTH_REACHED" ? (
               <div
-                className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] flex justify-center gap-8 px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-5 text-center"
+                className="pointer-events-auto absolute inset-x-0 bottom-0 z-[80] flex flex-col items-center gap-3 px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-5 text-center"
                 role="region"
                 aria-label="Stage 1 clear controls"
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    startReentryAmbience();
-                    retry();
-                  }}
-                  className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
-                >
-                  Retry
-                </button>
-
-                <button
-                  type="button"
-                  onClick={closeSession}
-                  className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
-                >
-                  Close
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowStage2Notice((value) => !value)}
+                    className="rounded-sm border border-cyan-100/50 bg-[#061626]/75 px-5 py-2 text-[0.82rem] tracking-[0.20em] text-white shadow-[0_0_18px_rgba(120,208,250,0.13)] backdrop-blur-sm transition-colors hover:border-cyan-50 hover:bg-[#143148] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+                    aria-label="Stage 2 preview"
+                  >
+                    STAGE 2
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowStage2Notice(false);
+                      startReentryAmbience();
+                      retry();
+                    }}
+                    className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeSession}
+                    className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+                {showStage2Notice && (
+                  <p
+                    role="status"
+                    className="rounded-sm border border-white/15 bg-black/70 px-4 py-2 text-[0.72rem] tracking-[0.10em] text-white/90 backdrop-blur-sm"
+                  >
+                    STAGE 2 — COMING SOON
+                  </p>
+                )}
               </div>
             ) : (
               <div
