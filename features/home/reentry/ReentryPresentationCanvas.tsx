@@ -1382,11 +1382,11 @@ function drawAlienRaisedTentacle(
   ctx.save();
   ctx.globalAlpha = alpha;
   const skin = ctx.createLinearGradient(rootX - rootR, rootY, endX + rootR, endY);
-  skin.addColorStop(0, "#805020");
-  skin.addColorStop(0.20, "#d49326");
-  skin.addColorStop(0.53, "#ffe16c");
-  skin.addColorStop(0.78, "#e9b33b");
-  skin.addColorStop(1, "#7d704e");
+  skin.addColorStop(0, "#10172a");
+  skin.addColorStop(0.20, "#64304d");
+  skin.addColorStop(0.53, "#cf6d85");
+  skin.addColorStop(0.78, "#594468");
+  skin.addColorStop(1, "#154963");
   ctx.fillStyle = skin;
   ctx.fill(arm);
   ctx.save();
@@ -1395,9 +1395,9 @@ function drawAlienRaisedTentacle(
     bendX - side * scale * 0.045, bendY - scale * 0.035, 0,
     bendX - side * scale * 0.045, bendY - scale * 0.035, scale * 0.23
   );
-  wet.addColorStop(0, "rgba(255,255,229,0.49)");
-  wet.addColorStop(0.30, "rgba(77,182,228,0.20)");
-  wet.addColorStop(1, "rgba(77,182,228,0)");
+  wet.addColorStop(0, "rgba(255,200,219,0.43)");
+  wet.addColorStop(0.30, "rgba(76,213,245,0.33)");
+  wet.addColorStop(1, "rgba(76,213,245,0)");
   ctx.fillStyle = wet;
   ctx.fillRect(
     Math.min(rootX, endX) - scale,
@@ -1473,7 +1473,7 @@ function drawAlienFluidVehicleFormation(
 
   liquid.addColorStop(
     0,
-    "rgba(255,246,122,0.90)",
+    "rgba(112,239,252,0.90)",
   );
   liquid.addColorStop(
     0.36,
@@ -4115,19 +4115,23 @@ function drawCraft(
     ctx.fillRect(-length, -width, length * 2, width * 2);
 
     ctx.globalCompositeOperation = "screen";
-    for (const [px, py, r, color] of [
-      [-0.28, -0.22, 0.38, "rgba(239,68,93,0.52)"],
-      [0.20, 0.18, 0.30, "rgba(219,46,83,0.37)"],
-      [-0.03, 0.27, 0.28, "rgba(58,216,135,0.45)"],
-      [0.40, -0.18, 0.24, "rgba(71,218,154,0.37)"],
+    for (const [px, py, radius, rr, gg, bb, strength, phase] of [
+      [-0.28, -0.22, 0.36, 242, 51, 83, 0.47, 0.0],
+      [0.22, 0.17, 0.34, 220, 69, 95, 0.35, 1.8],
+      [-0.02, 0.28, 0.29, 36, 210, 160, 0.49, 2.5],
+      [0.37, -0.16, 0.27, 59, 215, 198, 0.42, 3.8],
+      [-0.28, 0.23, 0.32, 49, 131, 233, 0.40, 4.5],
+      [0.16, -0.30, 0.29, 78, 219, 237, 0.39, 5.2],
     ] as const) {
-      const bleed = ctx.createRadialGradient(
-        length * px, width * py, 0,
-        length * px, width * py, length * r
-      );
-      bleed.addColorStop(0, color);
-      bleed.addColorStop(0.42, color.slice(0, color.lastIndexOf(",")) + ",0.12)");
-      bleed.addColorStop(1, "rgba(0,0,0,0)");
+      // Reflections bleed across enamel as soft areas, never stripes.
+      const light = 0.76 + 0.24 * Math.sin(enamelClock * 0.83 + phase);
+      const bx = length * (px + 0.035 * Math.sin(enamelClock * 0.53 + phase));
+      const by = width * py;
+      const bleed = ctx.createRadialGradient(bx, by, 0, bx, by, length * radius);
+      const color = "rgba(" + rr + "," + gg + "," + bb + ",";
+      bleed.addColorStop(0, color + (strength * light) + ")");
+      bleed.addColorStop(0.45, color + (strength * light * 0.21) + ")");
+      bleed.addColorStop(1, color + "0)");
       ctx.fillStyle = bleed;
       ctx.fillRect(-length, -width, length * 2, width * 2);
     }
