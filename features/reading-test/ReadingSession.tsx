@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { QuizForm } from "@/features/learn/QuizForm";
 import { TestResults } from "@/features/learn/TestResults";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
-import { drawQuiz, scoreDrawnQuiz } from "@/features/reading-test/draw";
+import { scoreDrawnQuiz } from "@/features/reading-test/draw";
+import { drawRotatingQuiz } from "@/features/learn/questionRotation";
 import { countEnglishWords } from "@/features/reading-test/measure";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import {
   beginReadingAttempt,
   clearReadingAttempt,
   patchReadingAttempt,
-  recentReadingQuestionIds,
   useReadingAttempt,
 } from "@/features/reading-test/session";
 import {
@@ -108,10 +108,7 @@ export function ReadingSession({
   }, [attempt, slug]);
 
   function start() {
-    const paper = drawQuiz(questions, {
-      channel: "reading",
-      avoidIds: recentReadingQuestionIds(slug),
-    });
+    const paper = drawRotatingQuiz(questions, { slug, channel: "reading" });
     if (paper.length === 0) return;
     beginReadingAttempt(slug, {
       limitMs: mode === "practice" ? null : minutes * 60_000,

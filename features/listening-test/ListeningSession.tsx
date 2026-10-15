@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { QuizForm } from "@/features/learn/QuizForm";
 import { TestResults } from "@/features/learn/TestResults";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
-import { drawQuiz, scoreDrawnQuiz } from "@/features/reading-test/draw";
+import { scoreDrawnQuiz } from "@/features/reading-test/draw";
+import { drawRotatingQuiz } from "@/features/learn/questionRotation";
 import { formatReadingDuration } from "@/features/reading-test/measure";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import type { ReadingQuestion } from "@/features/reading-test/types";
@@ -19,7 +20,6 @@ import {
   beginListeningAttempt,
   clearListeningAttempt,
   patchListeningAttempt,
-  recentListeningQuestionIds,
   useListeningAttempt,
 } from "@/features/listening-test/session";
 
@@ -275,10 +275,7 @@ export function ListeningSession({
       setPlaying(false);
       return;
     }
-    const paper = drawQuiz(questions, {
-      channel: "listening",
-      avoidIds: recentListeningQuestionIds(slug),
-    });
+    const paper = drawRotatingQuiz(questions, { slug, channel: "listening" });
     if (paper.length === 0) return;
     cursorRef.current = 0;
     heardRef.current = false;
