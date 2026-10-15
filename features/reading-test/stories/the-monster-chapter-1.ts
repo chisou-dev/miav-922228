@@ -147,5 +147,35 @@ export const theMonsterChapter1: ReadingStoryInput = {
       choices: ["He mutters 'Move' while paying little attention to individuals","He apologizes to everyone in the crowd","He recognizes every passenger by name","He gives a speech beside the ticket gates"],
       correctAnswer: "He mutters 'Move' while paying little attention to individuals",
     },
+    {
+      id: "q6",
+      question: "Which group blocks part of the walkway during the morning commute?",
+      choices: ["High school students","Office cleaners","Police officers","Store employees"],
+      correctAnswer: "High school students",
+    },
+    {
+      id: "q7",
+      question: "Why does the narrator click his tongue while walking?",
+      choices: ["A woman with a suitcase stops unexpectedly","He misses his train by hours","Someone calls his name","His bag breaks"],
+      correctAnswer: "A woman with a suitcase stops unexpectedly",
+    },
+    {
+      id: "q8",
+      question: "How does the narrator describe his awareness of the commuters?",
+      choices: ["He does not remember their faces or names","He knows almost everyone there","He keeps a list of their names","He recognizes them from school"],
+      correctAnswer: "He does not remember their faces or names",
+    },
+    {
+      id: "q9",
+      question: "What does the friend show the narrator at school?",
+      choices: ["Something on his phone","A photograph on a classroom wall","A letter from the teacher","An envelope from a station"],
+      correctAnswer: "Something on his phone",
+    },
+    {
+      id: "q10",
+      question: "Where does another student point when calling someone an NPC later in the day?",
+      choices: ["Down the hallway","Toward the train","At the teacher's desk","At the school gate"],
+      correctAnswer: "Down the hallway",
+    },
   ],
 };
