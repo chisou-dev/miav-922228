@@ -4172,7 +4172,7 @@ function drawCraft(
         length * px, width * py, length * r
       );
       bleed.addColorStop(0, color);
-      bleed.addColorStop(0.42, color.replace(/,0\.(\d+)\)/, ",0.12)"));
+      bleed.addColorStop(0.42, color.slice(0, color.lastIndexOf(",")) + ",0.12)");
       bleed.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = bleed;
       ctx.fillRect(-length, -width, length * 2, width * 2);
