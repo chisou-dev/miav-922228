@@ -64,5 +64,35 @@ export const rust: ReadingStoryInput = {
       choices: ["It turns to dust and returns to earth","It grows into a new railing","It floats away whole","It turns back into white paint"],
       correctAnswer: "It turns to dust and returns to earth",
     },
+    {
+      id: "q6",
+      question: "What changes the smooth surface into something rough?",
+      choices: ["Brown rust seeping through damaged paint","Sand blowing onto the rail","A new coat of varnish","Wet leaves piling up"],
+      correctAnswer: "Brown rust seeping through damaged paint",
+    },
+    {
+      id: "q7",
+      question: "What happens to some of the dry fragments?",
+      choices: ["They fall and powder drifts away in the wind","They turn into fresh paint","They become attached to a new rail","They float inside the house"],
+      correctAnswer: "They fall and powder drifts away in the wind",
+    },
+    {
+      id: "q8",
+      question: "Where do new fine lines appear even though paint remains?",
+      choices: ["Beneath the white coat","On the window glass","In the soil far away","On the ceiling"],
+      correctAnswer: "Beneath the white coat",
+    },
+    {
+      id: "q9",
+      question: "Which part of the railing breaks first?",
+      choices: ["The corner","The center of the long bar","The lowest support","The handle of the door"],
+      correctAnswer: "The corner",
+    },
+    {
+      id: "q10",
+      question: "What does the closing image keep together?",
+      choices: ["The object still has its shape while becoming dust","The railing becomes stronger with each rain","The rust is washed off entirely","The corner is repaired with new metal"],
+      correctAnswer: "The object still has its shape while becoming dust",
+    },
   ],
 };

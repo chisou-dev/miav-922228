@@ -80,5 +80,35 @@ export const tissue: ReadingStoryInput = {
       choices: ["Another white edge is visible at the opening","The box has been thrown away","The tissue turns brown","The drawer is locked"],
       correctAnswer: "Another white edge is visible at the opening",
     },
+    {
+      id: "q6",
+      question: "How are the tissues arranged inside the box?",
+      choices: ["In a line","In a circle","On a shelf","In separate envelopes"],
+      correctAnswer: "In a line",
+    },
+    {
+      id: "q7",
+      question: "What shape becomes visible after one sheet is pulled?",
+      choices: ["A clean triangle","A rough circle","A square window","A narrow spiral"],
+      correctAnswer: "A clean triangle",
+    },
+    {
+      id: "q8",
+      question: "Compared with the first edge, where does the next one appear?",
+      choices: ["Slightly higher","Beneath the box","On the floor","At the back of a drawer"],
+      correctAnswer: "Slightly higher",
+    },
+    {
+      id: "q9",
+      question: "What follows the faint sliding sound?",
+      choices: ["The next white edge appears","The box is closed","The hand drops a coin","The paper changes color"],
+      correctAnswer: "The next white edge appears",
+    },
+    {
+      id: "q10",
+      question: "What is different about the final visible white edge?",
+      choices: ["It sticks out a little farther than before","It has turned brown","It has been folded inside","It is hidden beneath a book"],
+      correctAnswer: "It sticks out a little farther than before",
+    },
   ],
 };

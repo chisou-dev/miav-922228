@@ -94,5 +94,35 @@ export const layers: ReadingStoryInput = {
       choices: ["It receives what comes and slowly settles flat","It refuses to be moved","It turns into cloth","It keeps the flags standing"],
       correctAnswer: "It receives what comes and slowly settles flat",
     },
+    {
+      id: "q6",
+      question: "What happens to iron, cloth and bones in the poem?",
+      choices: ["They rust, tear or grow light","They become new flags","They remain unchanged forever","They turn into glass"],
+      correctAnswer: "They rust, tear or grow light",
+    },
+    {
+      id: "q7",
+      question: "Which two things does the poem say overlap?",
+      choices: ["Footsteps and layers","Stars and windows","Shadows and letters","Clocks and doors"],
+      correctAnswer: "Footsteps and layers",
+    },
+    {
+      id: "q8",
+      question: "What once existed in each layer, according to the poem?",
+      choices: ["A present moment","A country without borders","A photograph of a family","An empty map"],
+      correctAnswer: "A present moment",
+    },
+    {
+      id: "q9",
+      question: "What might happen beneath the feet of someone who stands there someday?",
+      choices: ["Something may give way","A new flag rises","A river freezes","The ground becomes transparent"],
+      correctAnswer: "Something may give way",
+    },
+    {
+      id: "q10",
+      question: "How does the poem end after the soil receives what comes?",
+      choices: ["It slowly settles flat","It begins to speak","It turns into iron","It becomes a map"],
+      correctAnswer: "It slowly settles flat",
+    },
   ],
 };
