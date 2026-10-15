@@ -63,11 +63,16 @@ import {
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
 
 /*
- * NASA Blue Marble global texture.
- * Used only for the close atmospheric surface view; the distant SPACE globe
- * keeps the original Apollo 17 photograph.
+ * NASA Blue Marble: cloud-free land/ocean/ice underneath a small amount of
+ * cloud composite. Never apply a white veil to the entire close Earth.
+ * The 8K source is only requested on desktop; 2K loads first everywhere.
+ * The distant SPACE photograph is untouched.
  */
 const EARTH_SURFACE_SOURCE =
+  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_2048.jpg";
+const EARTH_SURFACE_HD_SOURCE =
+  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png";
+const EARTH_SURFACE_CLOUD_SOURCE =
   "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57735/land_ocean_ice_cloud_2048.jpg";
 
 function clamp01(value: number): number {
@@ -867,6 +872,7 @@ function drawAtmosphericHorizon(
 function drawAtmosphereVolume(
   ctx: CanvasRenderingContext2D,
   earth: HTMLImageElement | null,
+  cloudEarth: HTMLImageElement | null,
   w: number,
   h: number,
   atmosphereSceneMix: number,
@@ -938,73 +944,35 @@ function drawAtmosphereVolume(
   ctx.clip();
   ctx.globalAlpha = mixIn * mix(0.08, 0.98, surfaceReveal);
 
+
   if (earth && earth.naturalWidth > 0) {
-    /*
-     * Use a square high-resolution crop rather than stretching an entire
-     * globe/equirectangular image into a square. This preserves coastline,
-     * cloud and ocean detail as the camera gets close.
-     */
-    const cropSize =
-      Math.min(
-        earth.naturalWidth * 0.48,
-        earth.naturalHeight * 0.92,
+    // Share the same crop for the cloud-free map and cloud composite, so the
+    // occasional clouds follow the terrain instead of sliding across it.
+    const cropX01 = clamp01(0.50 + Math.sin(phaseAngle) * 0.46);
+    const cropY01 = clamp01(0.50 + Math.cos(phaseAngle * 0.73) * 0.28);
+    const drawMap = (image: HTMLImageElement, opacity: number): void => {
+      const cropSize = Math.min(image.naturalWidth * 0.48, image.naturalHeight * 0.92);
+      const sx = Math.max(0, image.naturalWidth - cropSize) * cropX01;
+      const sy = Math.max(0, image.naturalHeight - cropSize) * cropY01;
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(
+        image, sx, sy, cropSize, cropSize,
+        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2
       );
-
-    const maxSx =
-      Math.max(
-        0,
-        earth.naturalWidth -
-          cropSize,
-      );
-
-    const maxSy =
-      Math.max(
-        0,
-        earth.naturalHeight -
-          cropSize,
-      );
-
-    const cropX01 =
-      clamp01(
-        0.50 +
-          Math.sin(
-            phaseAngle,
-          ) *
-            0.46,
-      );
-
-    const cropY01 =
-      clamp01(
-        0.50 +
-          Math.cos(
-            phaseAngle *
-              0.73,
-          ) *
-            0.28,
-      );
-
-    ctx.imageSmoothingEnabled =
-      true;
-
-    ctx.imageSmoothingQuality =
-      "high";
-
-    ctx.filter =
-      "saturate(1.08) contrast(1.08)";
-
-    ctx.drawImage(
-      earth,
-      maxSx * cropX01,
-      maxSy * cropY01,
-      cropSize,
-      cropSize,
-      earthX - earthR,
-      earthY - earthR,
-      earthR * 2,
-      earthR * 2,
-    );
-
+    };
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    const baseOpacity = mixIn * mix(0.08, 0.98, surfaceReveal);
+    ctx.filter = "saturate(1.16) contrast(1.13)";
+    drawMap(earth, baseOpacity);
+    // Sparse cloud veil (about 16% of the original composite), so seas and
+    // land remain visible. The already textured Earth supplies the detail.
+    if (cloudEarth && cloudEarth.naturalWidth > 0) {
+      ctx.filter = "saturate(0.80) contrast(0.95)";
+      drawMap(cloudEarth, baseOpacity * 0.16);
+    }
     ctx.filter = "none";
+    ctx.globalAlpha = baseOpacity;
   } else {
     const ocean = ctx.createLinearGradient(0, horizonTop, 0, h);
     ocean.addColorStop(0, "#567f9c");
@@ -4953,6 +4921,7 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
+  const earthSurfaceCloudRef = useRef<HTMLImageElement | null>(null);
   const oceanWebGLRef =
     useRef<ReentryOceanWebGLRenderer | null>(null);
   const resultSoundRef = useRef<string | null>(null);
@@ -4977,16 +4946,29 @@ export function ReentryPresentationCanvas({
 
     void loadImage(EARTH_SURFACE_SOURCE)
       .then((img) => {
-        if (live) {
-          earthSurfaceRef.current =
-            img;
-        }
+        if (live) earthSurfaceRef.current = img;
       })
       .catch(() => {
-        if (live) {
-          earthSurfaceRef.current =
-            null;
-        }
+        if (live) earthSurfaceRef.current = null;
+      });
+
+    // 8192px cloud-free detail on desktop; retain the 2048px map on mobile.
+    if (typeof window !== "undefined" && window.innerWidth >= 1200) {
+      void loadImage(EARTH_SURFACE_HD_SOURCE)
+        .then((img) => {
+          if (live) earthSurfaceRef.current = img;
+        })
+        .catch(() => {
+          // The already loaded 2K map remains usable.
+        });
+    }
+
+    void loadImage(EARTH_SURFACE_CLOUD_SOURCE)
+      .then((img) => {
+        if (live) earthSurfaceCloudRef.current = img;
+      })
+      .catch(() => {
+        if (live) earthSurfaceCloudRef.current = null;
       });
 
     return () => {
@@ -5677,6 +5659,7 @@ const failureTravelT =
           ctx,
           earthSurfaceRef.current ??
             earthRef.current,
+          earthSurfaceCloudRef.current,
           w,
           h,
           atmosphereSceneMix,
