@@ -64,16 +64,17 @@ import {
 const EARTH_SOURCE = "/reentry/source/stage1-space-earth-original.jpg";
 
 /*
- * Genuine Apollo 17 Earth photograph from NASA SVS. Lightweight 1024px
- * preview on phones; enhanced 3600px photo on desktops. Not AI-generated.
- * The real satellite imagery below remains the loading-error fallback.
+ * NASA Blue Marble 2002 equirectangular maps (real satellite observations).
+ * An Apollo whole-disc photo is NEVER a close-surface texture: its black
+ * background caused the missing-Earth regression in the previous release.
+ * Load the lighter map first and upgrade it on desktop when available.
  */
 const EARTH_SURFACE_SOURCE =
   "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_2048.jpg";
-const EARTH_SURFACE_PHOTO_SOURCE =
-  "https://svs.gsfc.nasa.gov/vis/a030000/a030600/a030613/blue_marble_apollo_17_19721207_print.jpg";
-const EARTH_SURFACE_PHOTO_HD_SOURCE =
-  "https://svs.gsfc.nasa.gov/vis/a030000/a030600/a030613/blue_marble_apollo_17_19721207.png";
+const EARTH_SURFACE_HD_SOURCE =
+  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png";
+const EARTH_SURFACE_CLOUD_SOURCE =
+  "https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57735/land_ocean_ice_cloud_2048.jpg";
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -138,6 +139,40 @@ function hash01(seed: number, n: number): number {
   x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
   x ^= x >>> 16;
   return (x >>> 0) / 0xffffffff;
+}
+
+
+// Regions of the actual NASA equirectangular map, picked per launch.
+// The game simulates a 2D trajectory, not physical geographic coordinates;
+// these regions are cinematic camera views, not asserted impact locations.
+const ENTRY_EARTH_REGIONS = [
+  { lon: -104, lat: 40 }, // North America
+  { lon: -63, lat: -12 }, // South America
+  { lon: 12, lat: 12 }, // Africa
+  { lon: 25, lat: 45 }, // Europe
+  { lon: 107, lat: 30 }, // East Asia
+  { lon: 135, lat: -25 }, // Australia
+] as const;
+
+function entrySurfaceRegion(
+  power: number,
+  aim: number,
+  seed: number,
+  utcHour: number,
+): { lon: number; lat: number; clouds: number } {
+  const count = ENTRY_EARTH_REGIONS.length;
+  const powerSector = Math.min(count - 1, Math.floor(clamp01(power) * count));
+  const headingSector = Math.floor((((aim % 1) + 1) % 1) * count);
+  const runSector = Math.floor(hash01(seed, 93) * count);
+  const clockSector = Math.floor(utcHour / 4);
+  const region = ENTRY_EARTH_REGIONS[
+    (powerSector + headingSector + runSector + clockSector) % count
+  ];
+  return {
+    lon: region.lon + (hash01(seed, 67) - 0.5) * 14 + (power - 0.5) * 5,
+    lat: region.lat + (hash01(seed, 117) - 0.5) * 9,
+    clouds: 0.11 + hash01(seed, 207) * 0.10,
+  };
 }
 
 interface EarthView {
@@ -872,7 +907,8 @@ function drawAtmosphericHorizon(
 function drawAtmosphereVolume(
   ctx: CanvasRenderingContext2D,
   earth: HTMLImageElement | null,
-  earthPhoto: HTMLImageElement | null,
+  cloudEarth: HTMLImageElement | null,
+  region: { lon: number; lat: number; clouds: number },
   w: number,
   h: number,
   atmosphereSceneMix: number,
@@ -931,9 +967,11 @@ function drawAtmosphereVolume(
   const pad = Math.max(w, h) * 0.75;
   const maxDim = Math.max(w, h);
   const steep = clamp01(entrySteepness);
-  const startHorizon = h * mix(0.72, 0.58, steep);
-  const horizonTop = mix(startHorizon, h * 0.30, deep);
-  const earthR = maxDim * mix(1.02, 1.76, deep);
+  // Resemble a low-Earth-orbit photograph: visible curvature, bright blue
+  // atmosphere and a legible continental surface in the lower half.
+  const startHorizon = h * mix(0.75, 0.64, steep);
+  const horizonTop = mix(startHorizon, h * mix(0.45, 0.36, steep), deep);
+  const earthR = maxDim * mix(0.98, 1.32, deep);
   const phaseAngle = surfacePhase * Math.PI * 2;
   const earthX = w * (0.50 + Math.sin(phaseAngle) * 0.055);
   const earthY = horizonTop + earthR;
@@ -945,34 +983,43 @@ function drawAtmosphereVolume(
   ctx.globalAlpha = mixIn * mix(0.08, 0.98, surfaceReveal);
 
 
-  if ((earthPhoto && earthPhoto.naturalWidth > 0) || (earth && earth.naturalWidth > 0)) {
-    const intensity = mixIn * mix(0.08, 0.98, surfaceReveal);
-    ctx.globalAlpha = intensity;
+  if (earth && earth.naturalWidth > 0) {
+    // In the panorama the visible patch is the shallow curved slice near
+    // the top of the planet disc. Put the selected continent just inside
+    // that slice, not at the crop's centre or near the polar ice.
+    const cropOf = (image: HTMLImageElement) => {
+      const sw = image.naturalWidth;
+      const sh = image.naturalHeight;
+      const side = Math.min(sh * 0.53, sw * 0.35);
+      const longitude = ((region.lon + 180) / 360) * sw;
+      const latitude = ((90 - region.lat) / 180) * sh;
+      const travel = smoothstep(timeSinceEntryS / 9.5);
+      const sx = Math.max(0, Math.min(sw - side, longitude - side * 0.5 + travel * side * 0.045));
+      const sy = Math.max(0, Math.min(sh - side, latitude - side * 0.085));
+      return { sx, sy, side };
+    };
+    const drawMap = (image: HTMLImageElement, opacity: number) => {
+      const { sx, sy, side } = cropOf(image);
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(
+        image, sx, sy, side, side,
+        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2,
+      );
+    };
+    const baseOpacity = mixIn * mix(0.10, 1, surfaceReveal);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    if (earthPhoto && earthPhoto.naturalWidth > 0) {
-      // Preserve the existing curved Earth boundary and atmosphere. The
-      // photograph is the only visual surface; no white cloud overlay.
-      ctx.filter = "saturate(1.07) contrast(1.045)";
-      ctx.drawImage(
-        earthPhoto, 0, 0, earthPhoto.naturalWidth, earthPhoto.naturalHeight,
-        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2,
-      );
-    } else if (earth) {
-      // Keep a real equatorial satellite crop, never the polar ice caps.
-      const cropSize = Math.min(earth.naturalHeight * 0.43, earth.naturalWidth * 0.30);
-      const cropX01 = clamp01(0.69 + Math.sin(phaseAngle) * 0.045);
-      const cropY01 = 0.50;
-      const sx = Math.max(0, earth.naturalWidth - cropSize) * cropX01;
-      const sy = Math.max(0, earth.naturalHeight - cropSize) * cropY01;
-      ctx.filter = "saturate(1.10) contrast(1.06)";
-      ctx.drawImage(
-        earth, sx, sy, cropSize, cropSize,
-        earthX - earthR, earthY - earthR, earthR * 2, earthR * 2,
-      );
+    // Natural-color satellite land and oceans. No black surrounding a disc.
+    ctx.filter = "saturate(1.10) contrast(1.07) brightness(1.06)";
+    drawMap(earth, baseOpacity);
+    // A little real weather texture, the same geographic crop, not a full
+    // opaque white veil. Ice caps cannot enter the equatorial crop.
+    if (cloudEarth && cloudEarth.naturalWidth > 0) {
+      ctx.filter = "saturate(0.96) contrast(1.06)";
+      drawMap(cloudEarth, baseOpacity * region.clouds);
     }
     ctx.filter = "none";
-    ctx.globalAlpha = intensity;
+    ctx.globalAlpha = baseOpacity;
   } else {
     const ocean = ctx.createLinearGradient(0, horizonTop, 0, h);
     ocean.addColorStop(0, "#567f9c");
@@ -4852,7 +4899,7 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const earthSurfaceRef = useRef<HTMLImageElement | null>(null);
-  const earthSurfacePhotoRef = useRef<HTMLImageElement | null>(null);
+  const earthSurfaceCloudRef = useRef<HTMLImageElement | null>(null);
   const oceanWebGLRef =
     useRef<ReentryOceanWebGLRenderer | null>(null);
   const resultSoundRef = useRef<string | null>(null);
@@ -4883,30 +4930,28 @@ export function ReentryPresentationCanvas({
         if (live) earthSurfaceRef.current = null;
       });
 
-    // Image downloads may finish out of order. Never replace a loaded
-    // 3600px photograph with a delayed 1024px preview.
-    const acceptEarthPhoto = (img: HTMLImageElement): void => {
+    // Always keep the highest-resolution real surface map that finishes.
+    const acceptSurface = (img: HTMLImageElement): void => {
       if (
         live &&
-        (!earthSurfacePhotoRef.current ||
-          img.naturalWidth > earthSurfacePhotoRef.current.naturalWidth)
+        (!earthSurfaceRef.current ||
+          img.naturalWidth > earthSurfaceRef.current.naturalWidth)
       ) {
-        earthSurfacePhotoRef.current = img;
+        earthSurfaceRef.current = img;
       }
     };
-    void loadImage(EARTH_SURFACE_PHOTO_SOURCE)
-      .then(acceptEarthPhoto)
-      .catch(() => {
-        // A high-resolution request may still succeed.
-      });
-
     if (typeof window !== "undefined" && window.innerWidth >= 1200) {
-      void loadImage(EARTH_SURFACE_PHOTO_HD_SOURCE)
-        .then(acceptEarthPhoto)
-        .catch(() => {
-          // Keep the preview or real satellite fallback.
-        });
+      void loadImage(EARTH_SURFACE_HD_SOURCE).then(acceptSurface).catch(() => {
+        // The 2K map remains valid, even on desktop.
+      });
     }
+    void loadImage(EARTH_SURFACE_CLOUD_SOURCE)
+      .then((img) => {
+        if (live) earthSurfaceCloudRef.current = img;
+      })
+      .catch(() => {
+        if (live) earthSurfaceCloudRef.current = null;
+      });
 
     return () => {
       live = false;
@@ -5241,7 +5286,13 @@ export function ReentryPresentationCanvas({
           )
         : 0;
 
-      const horizonAngle = lineAngleNearHorizontal(contactPolar + Math.PI / 2);
+      // Camera roll is a presentation effect. Entry gamma and the actual
+      // simulation path remain the authority for flight and success.
+      const horizonAngle = lineAngleNearHorizontal(
+        contactPolar + Math.PI / 2
+        + (powerNorm - 0.5) * 0.38
+        + (angleNorm - 0.5) * 0.14,
+      );
 
       const atmosphereEntryHeading = latchPoseRef.current
         ? descendingCameraHeading(
@@ -5253,6 +5304,12 @@ export function ReentryPresentationCanvas({
 
       const entrySteepness = clamp01((physicalEntryGamma - 0.02) / 0.62);
       const surfacePhase = (((contactPolar / (Math.PI * 2)) % 1) + 1) % 1;
+      const earthRegion = entrySurfaceRegion(
+        powerNorm,
+        angleNorm,
+        result?.seed ?? 1,
+        new Date().getUTCHours(),
+      );
 
 const failureDepth =
   failureVisualDepth01(
@@ -5299,9 +5356,13 @@ const failureTravelT =
           );
         const minSide = Math.min(w, h);
 
+        // Steeper entries read more directly downward, glancing entries
+        // arrive from the side. The relative look also responds to POWER.
+        const approachBias = (powerNorm - 0.5) * 0.12;
         const atmosphericAnchor = {
-          x: w * mix(0.58, 0.66, entrySteepness),
-          y: h * mix(0.28, 0.37, entrySteepness),
+          x: w * (mix(0.56, 0.67, entrySteepness) + approachBias),
+          y: h * (mix(0.25, 0.38, entrySteepness) +
+            (1 - entrySteepness) * (0.5 - powerNorm) * 0.055),
         };
 
         const forwardDrift =
@@ -5594,9 +5655,9 @@ const failureTravelT =
       ) {
         drawAtmosphereVolume(
           ctx,
-          earthSurfaceRef.current ??
-            earthRef.current,
-          earthSurfacePhotoRef.current,
+          earthSurfaceRef.current,
+          earthSurfaceCloudRef.current,
+          earthRegion,
           w,
           h,
           atmosphereSceneMix,
