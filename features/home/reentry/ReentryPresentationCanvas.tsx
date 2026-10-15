@@ -1044,823 +1044,267 @@ function drawAtmosphereVolume(
 
 
 function drawLiquidAlien(
-
   ctx: CanvasRenderingContext2D,
-
   x: number,
-
   y: number,
-
   scale: number,
-
   alpha: number,
-
   stretch = 0,
-
 ): void {
-
   if (alpha <= 0.001) return;
-
-
-
-  const clockS =
-    typeof performance !== "undefined"
-      ? performance.now() / 1000
-      : 0;
+  const clockS = typeof performance !== "undefined"
+    ? performance.now() / 1000
+    : 0;
 
   ctx.save();
-
   ctx.translate(x, y);
-
   ctx.globalAlpha = alpha;
 
-
-
-  const headR =
-
-    scale * 0.34;
-
-
-
-  const glow =
-
-    ctx.createRadialGradient(
-
-      0,
-
-      -scale * 0.58,
-
-      headR * 0.10,
-
-      0,
-
-      -scale * 0.58,
-
-      headR * 1.55,
-
-    );
-
-
-
-  glow.addColorStop(
-
-    0,
-
-    "rgba(255,247,128,0.95)",
-
-  );
-
-
-
-  glow.addColorStop(
-
-    0.46,
-
-    "rgba(250,214,49,0.82)",
-
-  );
-
-
-
-  glow.addColorStop(
-
-    1,
-
-    "rgba(250,196,25,0)",
-
-  );
-
-
-
-  ctx.fillStyle = glow;
-
-  ctx.beginPath();
-
-  ctx.arc(
-
-    0,
-
-    -scale * 0.58,
-
-    headR * 1.55,
-
-    0,
-
-    Math.PI * 2,
-
-  );
-
-  ctx.fill();
-
-
-
-  ctx.fillStyle =
-
-    "rgba(251,222,58,0.96)";
-
-
-
-  ctx.beginPath();
-
-  ctx.ellipse(
-
-    0,
-
-    -scale * 0.58,
-
-    headR,
-
-    headR * 0.88,
-
-    0,
-
-    0,
-
-    Math.PI * 2,
-
-  );
-
-  ctx.fill();
-
-
-
-  const body =
-
-    ctx.createLinearGradient(
-
-      0,
-
-      -scale * 0.20,
-
-      0,
-
-      scale * (0.92 + stretch),
-
-    );
-
-
-
-  body.addColorStop(
-
-    0,
-
-    "rgba(255,242,92,0.99)",
-
-  );
-
-
-
-  body.addColorStop(
-
-    0.48,
-
-    "rgba(238,178,17,0.98)",
-
-  );
-
-
-
-  body.addColorStop(
-
-    1,
-
-    "rgba(115,66,0,0.16)",
-
-  );
-
-
-
-  ctx.fillStyle = body;
-
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-
-    -scale * 0.30,
-
-    -scale * 0.24,
-
-  );
-
-
-
-  ctx.bezierCurveTo(
-
-    -scale * 0.48,
-
-    scale * 0.10,
-
-    -scale * 0.25,
-
-    scale * 0.54,
-
-    -scale * 0.09,
-
-    scale * (0.82 + stretch),
-
-  );
-
-
-
-  ctx.bezierCurveTo(
-
-    -scale * 0.015,
-
-    scale * (0.96 + stretch),
-
-    scale * 0.10,
-
-    scale * (0.82 + stretch),
-
-    scale * 0.16,
-
-    scale * 0.62,
-
-  );
-
-
-
-  ctx.bezierCurveTo(
-
-    scale * 0.32,
-
-    scale * 0.22,
-
-    scale * 0.44,
-
-    0,
-
-    scale * 0.28,
-
-    -scale * 0.24,
-
-  );
-
-
-
-  ctx.closePath();
-
-  ctx.fill();
-
-
-
-  ctx.shadowBlur = 0;
-
-  for (const side of [-1, 1]) {
-    const eyeX =
-      side * scale * 0.105;
-
-    const eyeY =
-      -scale * 0.59;
-
-    ctx.fillStyle =
-      "rgba(4,7,8,0.98)";
-
-    ctx.beginPath();
-    ctx.ellipse(
-      eyeX,
-      eyeY,
-      scale * 0.052,
-      scale * 0.062,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    ctx.fillStyle =
-      "rgba(255,255,255,0.88)";
-
-    ctx.beginPath();
-    ctx.arc(
-      eyeX - scale * 0.018,
-      eyeY - scale * 0.022,
-      scale * 0.010,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
-
-  ctx.lineCap = "round";
-
+  // A wet, soft-bodied yellow cephalopod: layered tentacles, no suckers.
+  // Silhouette and shadow are deliberately asymmetrical, never icon-flat.
   for (let i = 0; i < 5; i++) {
-    const startX =
-      (i - 2) *
-      scale *
-      0.09;
+    const offset = (i - 2) * 0.112;
+    const sway = Math.sin(clockS * (0.66 + i * 0.07) + i * 1.44);
+    const rootX = scale * offset;
+    const tipX = scale * (offset * 1.48 + sway * 0.18);
+    const tipY = scale * (0.63 + stretch + (i % 2) * 0.10);
+    const rootY = scale * -0.14;
+    const rootW = scale * (0.066 + (i % 2) * 0.008);
+    const tipW = scale * 0.010;
 
-    const wave =
-      Math.sin(
-        clockS * (1.2 + i * 0.08) +
-        i * 1.4,
-      );
-
-    ctx.strokeStyle =
-      i % 2 === 0
-        ? "rgba(251,213,50,0.98)"
-        : "rgba(226,157,8,0.98)";
-
-    ctx.lineWidth =
-      scale * 0.085;
-
-    ctx.beginPath();
-    ctx.moveTo(
-      startX,
-      -scale * 0.16,
+    const limb = ctx.createLinearGradient(
+      rootX - rootW, rootY, rootX + rootW, tipY
     );
+    limb.addColorStop(0, "#80501c");
+    limb.addColorStop(0.25, "#e4a51e");
+    limb.addColorStop(0.55, i === 1 || i === 4 ? "#77bad0" : "#ffdb47");
+    limb.addColorStop(0.78, "#eeb520");
+    limb.addColorStop(1, "#94591d");
+
+    ctx.fillStyle = limb;
+    ctx.beginPath();
+    ctx.moveTo(rootX - rootW, rootY);
     ctx.bezierCurveTo(
-      startX +
-        wave * scale * 0.15,
-      scale * 0.16,
-      startX -
-        wave * scale * 0.21,
-      scale * 0.50,
-      startX +
-        wave * scale * 0.10,
-      scale * (0.78 + stretch),
+      rootX - rootW * 1.6, scale * 0.14,
+      tipX - scale * 0.12, scale * 0.40,
+      tipX - tipW, tipY
+    );
+    ctx.quadraticCurveTo(tipX, tipY + scale * 0.016, tipX + tipW, tipY);
+    ctx.bezierCurveTo(
+      tipX + scale * 0.09, scale * 0.37,
+      rootX + rootW * 1.6, scale * 0.08,
+      rootX + rootW, rootY
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Narrow, soft specular streak follows the curved body, not a wire.
+    ctx.save();
+    ctx.globalAlpha *= 0.30;
+    ctx.strokeStyle = "#fff5a2";
+    ctx.lineWidth = Math.max(0.5, scale * 0.018);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(rootX - rootW * 0.24, rootY + scale * 0.05);
+    ctx.quadraticCurveTo(
+      rootX - scale * 0.06, scale * 0.22,
+      tipX - scale * 0.038, tipY - scale * 0.14
     );
     ctx.stroke();
+    ctx.restore();
   }
 
-  const shine =
-    ctx.createRadialGradient(
-      -scale * 0.13,
-      -scale * 0.72,
-      0,
-      -scale * 0.13,
-      -scale * 0.72,
-      scale * 0.22,
-    );
-
-  shine.addColorStop(
-    0,
-    "rgba(255,255,255,0.82)",
+  // Mantle sits on top of the tentacle roots, with a shaded rounded volume.
+  const mantle = new Path2D();
+  mantle.moveTo(-scale * 0.27, -scale * 0.29);
+  mantle.bezierCurveTo(
+    -scale * 0.40, -scale * 0.53,
+    -scale * 0.29, -scale * 0.83,
+    -scale * 0.035, -scale * 0.84
   );
-  shine.addColorStop(
-    0.20,
-    "rgba(255,255,255,0.24)",
+  mantle.bezierCurveTo(
+    scale * 0.24, -scale * 0.89,
+    scale * 0.39, -scale * 0.62,
+    scale * 0.29, -scale * 0.36
   );
-  shine.addColorStop(
-    1,
-    "rgba(255,255,255,0)",
+  mantle.quadraticCurveTo(scale * 0.20, -scale * 0.17, 0, -scale * 0.18);
+  mantle.quadraticCurveTo(-scale * 0.20, -scale * 0.16, -scale * 0.27, -scale * 0.29);
+  mantle.closePath();
+
+  const skin = ctx.createRadialGradient(
+    -scale * 0.13, -scale * 0.70, scale * 0.02,
+    scale * 0.10, -scale * 0.44, scale * 0.48
   );
-
-  ctx.fillStyle = shine;
-  ctx.beginPath();
-  ctx.arc(
-    -scale * 0.13,
-    -scale * 0.72,
-    scale * 0.22,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-
-
-  ctx.restore();
-
-}
-
-
-
-function drawEscapeSkiff(
-
-  ctx: CanvasRenderingContext2D,
-
-  x: number,
-
-  y: number,
-
-  scale: number,
-
-  alpha: number,
-
-  tilt = -0.08,
-
-): void {
-
-  if (alpha <= 0.001) return;
-
-
+  skin.addColorStop(0, "#fff6ac");
+  skin.addColorStop(0.25, "#ffe65a");
+  skin.addColorStop(0.55, "#e8af25");
+  skin.addColorStop(0.78, "#ac6c20");
+  skin.addColorStop(1, "#56351f");
+  ctx.fillStyle = skin;
+  ctx.fill(mantle);
 
   ctx.save();
-
-  ctx.translate(x, y);
-
-  ctx.rotate(tilt);
-
-  ctx.globalAlpha = alpha;
-
-
-
-  ctx.shadowColor =
-
-    "rgba(113,202,255,0.45)";
-
-
-
-  ctx.shadowBlur =
-
-    scale * 0.22;
-
-
-
-  const body =
-
-    ctx.createLinearGradient(
-
-      -scale,
-
-      0,
-
-      scale,
-
-      0,
-
+  ctx.clip(mantle);
+  // Blue is a translucent patch INSIDE the yellow surface, not an outline.
+  for (const [px, py, radius, strength] of [
+    [0.20, -0.54, 0.28, 0.36],
+    [-0.25, -0.35, 0.19, 0.23],
+  ]) {
+    const bleed = ctx.createRadialGradient(
+      scale * px, scale * py, 0,
+      scale * px, scale * py, scale * radius
     );
-
-
-
-  body.addColorStop(
-
-    0,
-
-    "#010713",
-
+    bleed.addColorStop(0, "rgba(42,141,230," + strength + ")");
+    bleed.addColorStop(0.43, "rgba(68,178,219," + strength * 0.51 + ")");
+    bleed.addColorStop(1, "rgba(68,178,219,0)");
+    ctx.fillStyle = bleed;
+    ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
+  }
+  const gloss = ctx.createRadialGradient(
+    -scale * 0.16, -scale * 0.73, 0,
+    -scale * 0.16, -scale * 0.73, scale * 0.27
   );
-
-
-
-  body.addColorStop(
-
-    0.24,
-
-    "#042b67",
-
-  );
-
-
-
-  body.addColorStop(
-
-    0.48,
-
-    "#0a6fd5",
-
-  );
-
-
-
-  body.addColorStop(
-
-    0.58,
-
-    "#b7e7ff",
-
-  );
-
-
-
-  body.addColorStop(
-
-    0.70,
-
-    "#0b64be",
-
-  );
-
-
-
-  body.addColorStop(
-
-    1,
-
-    "#010916",
-
-  );
-
-
-
-  ctx.fillStyle = body;
-
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-
-    scale * 0.72,
-
-    0,
-
-  );
-
-
-
-  ctx.quadraticCurveTo(
-
-    scale * 0.28,
-
-    -scale * 0.24,
-
-    -scale * 0.54,
-
-    -scale * 0.16,
-
-  );
-
-
-
-  ctx.quadraticCurveTo(
-
-    -scale * 0.78,
-
-    0,
-
-    -scale * 0.48,
-
-    scale * 0.15,
-
-  );
-
-
-
-  ctx.quadraticCurveTo(
-
-    scale * 0.20,
-
-    scale * 0.24,
-
-    scale * 0.72,
-
-    0,
-
-  );
-
-
-
-  ctx.fill();
-
-
-
-  ctx.shadowBlur = 0;
-
-
-
-  ctx.fillStyle =
-
-    "rgba(8,16,24,0.92)";
-
-
-
-  ctx.beginPath();
-
-  ctx.ellipse(
-
-    scale * 0.12,
-
-    -scale * 0.08,
-
-    scale * 0.18,
-
-    scale * 0.08,
-
-    -0.08,
-
-    0,
-
-    Math.PI * 2,
-
-  );
-
-  ctx.fill();
-
-
-
-  ctx.strokeStyle =
-
-    "rgba(151,224,255,0.42)";
-
-
-
-  ctx.lineWidth =
-
-    Math.max(
-
-      1,
-
-      scale * 0.026,
-
-    );
-
-
-
-  ctx.beginPath();
-
-  ctx.ellipse(
-
-    0,
-
-    scale * 0.17,
-
-    scale * 0.66,
-
-    scale * 0.075,
-
-    0,
-
-    0,
-
-    Math.PI * 2,
-
-  );
-
-  ctx.stroke();
-
-
-
+  gloss.addColorStop(0, "rgba(255,255,240,0.66)");
+  gloss.addColorStop(0.33, "rgba(255,249,181,0.20)");
+  gloss.addColorStop(1, "rgba(255,249,181,0)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
   ctx.restore();
 
+  // Recessed glossy eyes, smaller than the mantle highlights.
+  for (const side of [-1, 1]) {
+    const ex = side * scale * 0.10;
+    const ey = -scale * 0.50;
+    const iris = ctx.createRadialGradient(
+      ex - scale * 0.012, ey - scale * 0.017, scale * 0.001,
+      ex, ey, scale * 0.065
+    );
+    iris.addColorStop(0, "#273039");
+    iris.addColorStop(0.48, "#060b13");
+    iris.addColorStop(1, "#01040b");
+    ctx.fillStyle = iris;
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, scale * 0.045, scale * 0.061, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,245,0.78)";
+    ctx.beginPath();
+    ctx.arc(ex - scale * 0.015, ey - scale * 0.021, scale * 0.011, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
+function drawEscapeSkiff(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  alpha: number,
+  tilt = -0.08,
+): void {
+  if (alpha <= 0.001) return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(tilt);
+  ctx.globalAlpha = alpha;
 
+  // Recessed lower hull makes the floating skiff read as a volume.
+  const under = ctx.createLinearGradient(0, 0, 0, scale * 0.25);
+  under.addColorStop(0, "#205686");
+  under.addColorStop(0.35, "#082044");
+  under.addColorStop(1, "#020716");
+  ctx.fillStyle = under;
+  ctx.beginPath();
+  ctx.moveTo(-scale * 0.63, -scale * 0.02);
+  ctx.quadraticCurveTo(-scale * 0.56, scale * 0.30, scale * 0.09, scale * 0.24);
+  ctx.quadraticCurveTo(scale * 0.59, scale * 0.14, scale * 0.75, -scale * 0.02);
+  ctx.quadraticCurveTo(scale * 0.04, scale * 0.06, -scale * 0.63, -scale * 0.02);
+  ctx.fill();
 
+  const deck = new Path2D();
+  deck.moveTo(scale * 0.79, -scale * 0.035);
+  deck.bezierCurveTo(scale * 0.43, -scale * 0.26, -scale * 0.38, -scale * 0.29, -scale * 0.66, -scale * 0.09);
+  deck.quadraticCurveTo(-scale * 0.83, scale * 0.03, -scale * 0.53, scale * 0.12);
+  deck.quadraticCurveTo(scale * 0.24, scale * 0.22, scale * 0.79, -scale * 0.035);
+  deck.closePath();
 
+  const finish = ctx.createLinearGradient(
+    -scale * 0.46, -scale * 0.22, scale * 0.46, scale * 0.16
+  );
+  finish.addColorStop(0, "#071633");
+  finish.addColorStop(0.20, "#164684");
+  finish.addColorStop(0.45, "#377fc1");
+  finish.addColorStop(0.62, "#8cc6e8");
+  finish.addColorStop(0.76, "#255b9e");
+  finish.addColorStop(1, "#06152e");
+  ctx.fillStyle = finish;
+  ctx.fill(deck);
 
-function drawLandingWaterOcclusion(
+  ctx.save();
+  ctx.clip(deck);
+  const highlight = ctx.createRadialGradient(
+    -scale * 0.19, -scale * 0.15, scale * 0.01,
+    -scale * 0.19, -scale * 0.15, scale * 0.57
+  );
+  highlight.addColorStop(0, "rgba(221,248,255,0.63)");
+  highlight.addColorStop(0.30, "rgba(108,217,249,0.30)");
+  highlight.addColorStop(1, "rgba(108,217,249,0)");
+  ctx.fillStyle = highlight;
+  ctx.fillRect(-scale, -scale, scale * 2, scale * 2);
+  ctx.restore();
+
+  // Black inset with a reflective inner edge.
+  const well = ctx.createRadialGradient(
+    scale * 0.12, -scale * 0.08, 0,
+    scale * 0.12, -scale * 0.08, scale * 0.20
+  );
+  well.addColorStop(0, "#03070f");
+  well.addColorStop(0.69, "#081c31");
+  well.addColorStop(1, "#4183ab");
+  ctx.fillStyle = well;
+  ctx.beginPath();
+  ctx.ellipse(scale * 0.12, -scale * 0.067, scale * 0.185, scale * 0.085, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(192,232,246,0.58)";
+  ctx.lineWidth = Math.max(0.6, scale * 0.020);
+  ctx.stroke(deck);
+  ctx.restore();
+}
+
+function clipLandingCraftAboveWater(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   x: number,
-  y: number,
   craftLength: number,
   landingAgeS: number,
 ): void {
-  if (
-    landingAgeS <= 0
-  ) {
-    return;
-  }
-
-  const waterY =
-    h * 0.78;
-
-  const minDim =
-    Math.min(
-      w,
-      h,
-    );
-
-  const submerge =
-    smoothstep(
-      landingAgeS /
-        1.25,
-    );
-
-  ctx.save();
-
-  /*
-   * Cover the part of the vehicle below the surface with moving water,
-   * rather than simply lowering the craft opacity.
-   */
-  const coverTop =
-    waterY -
-    craftLength *
-      (
-        0.05 +
-        submerge * 0.09
-      );
-
-  const water =
-    ctx.createLinearGradient(
-      0,
-      coverTop,
-      0,
-      coverTop +
-        craftLength * 0.85,
-    );
-
-  water.addColorStop(
-    0,
-    "rgba(24,66,92,0.10)",
-  );
-  water.addColorStop(
-    0.16,
-    "rgba(11,48,73,0.46)",
-  );
-  water.addColorStop(
-    0.46,
-    "rgba(5,31,53,0.82)",
-  );
-  water.addColorStop(
-    1,
-    "rgba(2,18,36,0.97)",
-  );
-
-  ctx.fillStyle =
-    water;
+  // Clip ONLY the craft while it is drawn. Never overpaint the WebGL sea.
+  // The previous full-width foreground rectangle made the bottom of the
+  // ocean look like a different, flat layer after splashdown.
+  const immersion = smoothstep(landingAgeS / 1.6);
+  const lineY = h * 0.78 - craftLength * (0.015 + immersion * 0.060);
+  const t = typeof performance !== "undefined"
+    ? performance.now() / 1000
+    : landingAgeS;
+  const waveAmp = Math.max(0.7, Math.min(w, h) * 0.0016);
 
   ctx.beginPath();
-  ctx.rect(
-    0,
-    coverTop,
-    w,
-    h -
-      coverTop,
-  );
-  ctx.fill();
-
-  /*
-   * A broken surface rim hides the exact clipping boundary.
-   */
-  ctx.globalCompositeOperation =
-    "screen";
-
-  for (
-    let i = 0;
-    i < 18;
-    i++
-  ) {
-    const phase =
-      i /
-      17;
-
-    const px =
-      x +
-      (
-        phase -
-        0.5
-      ) *
-        craftLength *
-        1.55;
-
-    const py =
-      coverTop +
-      Math.sin(
-        phase *
-          Math.PI *
-          3.2 +
-        landingAgeS *
-          2.1
-      ) *
-        minDim *
-        0.004;
-
-    const rr =
-      craftLength *
-      (
-        0.018 +
-        (
-          i %
-          4
-        ) *
-          0.004
-      );
-
-    const rim =
-      ctx.createRadialGradient(
-        px,
-        py,
-        0,
-        px,
-        py,
-        rr * 3.6,
-      );
-
-    rim.addColorStop(
-      0,
-      "rgba(235,249,255,0.34)",
-    );
-    rim.addColorStop(
-      0.42,
-      "rgba(165,215,236,0.14)",
-    );
-    rim.addColorStop(
-      1,
-      "rgba(135,190,218,0)",
-    );
-
-    ctx.fillStyle =
-      rim;
-
-    ctx.beginPath();
-    ctx.ellipse(
-      px,
-      py,
-      rr * 3.6,
-      rr * 0.82,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(w, 0);
+  ctx.lineTo(w, lineY);
+  for (let i = 36; i >= 0; i--) {
+    const px = w * i / 36;
+    const local = Math.exp(-Math.pow((px - x) / (craftLength * 1.8), 2));
+    const ripple = (
+      Math.sin(px * 0.065 + t * 1.7) * 0.65 +
+      Math.sin(px * 0.12 - t * 1.1) * 0.35
+    ) * waveAmp * local;
+    ctx.lineTo(px, lineY + ripple);
   }
-
-  ctx.restore();
+  ctx.closePath();
+  ctx.clip();
 }
 
 function drawAlienRaisedTentacle(
@@ -3600,19 +3044,19 @@ function drawStage1ClearSequence(
 
   const alienScale =
     minDim *
-    0.050;
+    0.034;
 
   const sourceAlienX =
     craftX +
     minDim *
-      0.055;
+      0.032;
 
   const sourceAlienY =
     waterY -
     minDim *
       mix(
-        0.015,
-        0.080,
+        0.006,
+        0.043,
         alienRise,
       );
 
@@ -4639,6 +4083,7 @@ function drawCraft(
   alpha: number,
   heat: number,
   assistMode = false,
+  landingPalette = 0,
 ): void {
   const width = length * 0.62;
 
@@ -4694,6 +4139,47 @@ function drawCraft(
   ctx.fillStyle = hull;
   ctx.fill();
 
+  // Transition the SAME craft to a violet enamel hull only on final ocean
+  // approach. Deep red and jade reflections bleed softly across the surface.
+  if (landingPalette > 0.001) {
+    ctx.save();
+    craftOutline(ctx, length, width);
+    ctx.clip();
+    ctx.globalAlpha *= landingPalette;
+    const violet = ctx.createLinearGradient(
+      -length * 0.42, -width * 0.42,
+      length * 0.68, width * 0.40
+    );
+    violet.addColorStop(0, "#140c2c");
+    violet.addColorStop(0.19, "#432169");
+    violet.addColorStop(0.39, "#8152bb");
+    violet.addColorStop(0.54, "#442169");
+    violet.addColorStop(0.72, "#4e265f");
+    violet.addColorStop(0.86, "#281446");
+    violet.addColorStop(1, "#080918");
+    ctx.fillStyle = violet;
+    ctx.fillRect(-length, -width, length * 2, width * 2);
+
+    ctx.globalCompositeOperation = "screen";
+    for (const [px, py, r, color] of [
+      [-0.28, -0.22, 0.38, "rgba(239,68,93,0.52)"],
+      [0.20, 0.18, 0.30, "rgba(219,46,83,0.37)"],
+      [-0.03, 0.27, 0.28, "rgba(58,216,135,0.45)"],
+      [0.40, -0.18, 0.24, "rgba(71,218,154,0.37)"],
+    ] as const) {
+      const bleed = ctx.createRadialGradient(
+        length * px, width * py, 0,
+        length * px, width * py, length * r
+      );
+      bleed.addColorStop(0, color);
+      bleed.addColorStop(0.42, color.replace(/,0\.(\d+)\)/, ",0.12)"));
+      bleed.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bleed;
+      ctx.fillRect(-length, -width, length * 2, width * 2);
+    }
+    ctx.restore();
+  }
+
   ctx.save();
   craftOutline(ctx, length, width);
   ctx.clip();
@@ -4728,7 +4214,9 @@ function drawCraft(
   ctx.fillRect(-length, -width, length * 2, width * 2);
 
   // Side facets create a more three-dimensional lifting-body form.
-  ctx.fillStyle = "rgba(32,91,151,0.30)";
+  ctx.fillStyle = landingPalette > 0.5
+    ? "rgba(113,61,148,0.30)"
+    : "rgba(32,91,151,0.30)";
   ctx.beginPath();
   ctx.moveTo(-length * 0.50, -width * 0.30);
   ctx.lineTo(-length * 0.12, -width * 0.46);
@@ -6478,38 +5966,29 @@ const failureTravelT =
       }
 
       if (craftAlpha > 0.015 && !burnGone) {
-        drawCraft(
-          ctx,
-          pose.x,
-          pose.y,
-          pose.angle,
-          craftLength,
-          craftAlpha,
-          heat,
-          assistMode,
-        );
+        const landingPalette =
+          outcome === "EARTH_REACHED" && latched && !miss
+            ? smoothstep((timeSinceVisualAtmosphereEntryS - 10.5) / 3.5)
+            : 0;
+        const submerging =
+          outcome === "EARTH_REACHED" &&
+          latched && !miss &&
+          timeSinceVisualAtmosphereEntryS > 14.15 &&
+          timeSinceVisualAtmosphereEntryS < 28.6;
 
-        if (
-          outcome ===
-            "EARTH_REACHED" &&
-          latched &&
-          !miss &&
-          timeSinceVisualAtmosphereEntryS >
-            14.15 &&
-          timeSinceVisualAtmosphereEntryS <
-            28.6
-        ) {
-          drawLandingWaterOcclusion(
-            ctx,
-            w,
-            h,
-            pose.x,
-            pose.y,
-            craftLength,
-            timeSinceVisualAtmosphereEntryS -
-              14.15,
+        ctx.save();
+        if (submerging) {
+          // Mask the vehicle pixels ONLY; preserve the WebGL water everywhere.
+          clipLandingCraftAboveWater(
+            ctx, w, h, pose.x, craftLength,
+            timeSinceVisualAtmosphereEntryS - 14.15,
           );
         }
+        drawCraft(
+          ctx, pose.x, pose.y, pose.angle,
+          craftLength, craftAlpha, heat, assistMode, landingPalette,
+        );
+        ctx.restore();
       }
 
       if (
