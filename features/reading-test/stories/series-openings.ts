@@ -935,9 +935,9 @@ export const seriesOpenings: readonly {
       },
       {
         id: "q16",
-        question: "What does the woman buy in the supermarket scene?",
-        choices: ["The text lists her coworker's basket, not hers","Only a bicycle","A gold watch","A school uniform"],
-        correctAnswer: "The text lists her coworker's basket, not hers",
+        question: "What does the narrator see in her coworker's shopping basket?",
+        choices: ["Milk, bread and discounted meat","Fresh flowers and books","A camera and envelopes","Coffee and cake"],
+        correctAnswer: "Milk, bread and discounted meat",
       },
       {
         id: "q17",
