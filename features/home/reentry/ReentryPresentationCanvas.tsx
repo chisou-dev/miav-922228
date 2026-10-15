@@ -3082,6 +3082,27 @@ function drawStage1ClearSequence(
     alienAlpha >
     0.001
   ) {
+    // Only a tiny contact shadow where the creature climbs from the sea.
+    // Do not obscure or repaint the underlying WebGL water.
+    if (boardSkiff < 0.18) {
+      const amount = alienAlpha * (1 - smoothstep(boardSkiff / 0.18));
+      ctx.save();
+      const shadow = ctx.createRadialGradient(
+        sourceAlienX, waterY + minDim * 0.012, 0,
+        sourceAlienX, waterY + minDim * 0.012, minDim * 0.05
+      );
+      shadow.addColorStop(0, "rgba(5,24,40," + (amount * 0.24) + ")");
+      shadow.addColorStop(0.60, "rgba(31,105,130," + (amount * 0.09) + ")");
+      shadow.addColorStop(1, "rgba(31,105,130,0)");
+      ctx.fillStyle = shadow;
+      ctx.beginPath();
+      ctx.ellipse(
+        sourceAlienX, waterY + minDim * 0.012,
+        minDim * 0.05, minDim * 0.009, 0, 0, Math.PI * 2
+      );
+      ctx.fill();
+      ctx.restore();
+    }
     drawLiquidAlien(
       ctx,
       boardX,
@@ -4115,6 +4136,17 @@ function drawCraft(
       ctx.fillStyle = bleed;
       ctx.fillRect(-length, -width, length * 2, width * 2);
     }
+    // Violet enamel has curved volume; red and jade reflections stay
+    // localized within the hull instead of becoming decorative stripes.
+    const domeLight = ctx.createRadialGradient(
+      -length * 0.07, -width * 0.17, 0,
+      -length * 0.07, -width * 0.17, length * 0.55
+    );
+    domeLight.addColorStop(0, "rgba(246,205,255,0.31)");
+    domeLight.addColorStop(0.25, "rgba(218,135,246,0.16)");
+    domeLight.addColorStop(1, "rgba(218,135,246,0)");
+    ctx.fillStyle = domeLight;
+    ctx.fillRect(-length, -width, length * 2, width * 2);
     ctx.restore();
   }
 
@@ -4125,9 +4157,9 @@ function drawCraft(
   const sweepX = mix(-length * 0.50, length * 0.54, reflectionSweep);
   const gloss = ctx.createLinearGradient(sweepX - length * 0.20, -width * 0.48, sweepX + length * 0.18, width * 0.42);
   gloss.addColorStop(0, "rgba(255,255,255,0)");
-  gloss.addColorStop(0.42, "rgba(116,201,255,0.05)");
-  gloss.addColorStop(0.50, "rgba(255,255,255," + (0.34 + enamelPulse * 0.34) + ")");
-  gloss.addColorStop(0.58, "rgba(97,173,255,0.07)");
+  gloss.addColorStop(0.42, landingPalette > 0.5 ? "rgba(212,127,232,0.05)" : "rgba(116,201,255,0.05)");
+  gloss.addColorStop(0.50, "rgba(255,255,255," + (0.28 + enamelPulse * 0.28) + ")");
+  gloss.addColorStop(0.58, landingPalette > 0.5 ? "rgba(177,110,205,0.07)" : "rgba(97,173,255,0.07)");
   gloss.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = gloss;
   ctx.fillRect(-length, -width, length * 2, width * 2);
@@ -4171,6 +4203,31 @@ function drawCraft(
   ctx.lineTo(length * 0.12, width * 0.01);
   ctx.closePath();
   ctx.fill();
+
+  if (landingPalette > 0.5) {
+    // Soft facial curvature under the lacquer, no panel outline.
+    const surface = ctx.createLinearGradient(
+      -length * 0.35, -width * 0.32,
+      length * 0.38, width * 0.28
+    );
+    surface.addColorStop(0, "rgba(96,38,128,0.04)");
+    surface.addColorStop(0.40, "rgba(226,111,171,0.17)");
+    surface.addColorStop(0.72, "rgba(28,159,100,0.11)");
+    surface.addColorStop(1, "rgba(24,13,40,0)");
+    ctx.fillStyle = surface;
+    ctx.beginPath();
+    ctx.moveTo(-length * 0.48, -width * 0.22);
+    ctx.bezierCurveTo(
+      -length * 0.12, -width * 0.39,
+      length * 0.35, -width * 0.13,
+      length * 0.47, width * 0.06
+    );
+    ctx.quadraticCurveTo(
+      -length * 0.06, width * 0.31,
+      -length * 0.48, -width * 0.22
+    );
+    ctx.fill();
+  }
 
   // Irregular panel seams: subtle and non-uniform.
   ctx.strokeStyle = "rgba(44,52,57,0.20)";
@@ -5867,15 +5924,19 @@ const failureTravelT =
         if (
           successOceanApproach
         ) {
-          drawSuccessReentryBloom(
-            ctx,
-            pose.x,
-            pose.y,
-            pose.angle,
-            craftLength,
-            heat,
-            playback,
-          );
+          // After the splash the hot trail must vanish; its tapered
+          // translucent sheet was visible behind the resting vessel.
+          if (timeSinceVisualAtmosphereEntryS < 14.15) {
+            drawSuccessReentryBloom(
+              ctx,
+              pose.x,
+              pose.y,
+              pose.angle,
+              craftLength,
+              heat,
+              playback,
+            );
+          }
         } else {
           drawFlowLines(
             ctx,
