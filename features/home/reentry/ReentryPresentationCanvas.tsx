@@ -4883,21 +4883,28 @@ export function ReentryPresentationCanvas({
         if (live) earthSurfaceRef.current = null;
       });
 
+    // Image downloads may finish out of order. Never replace a loaded
+    // 3600px photograph with a delayed 1024px preview.
+    const acceptEarthPhoto = (img: HTMLImageElement): void => {
+      if (
+        live &&
+        (!earthSurfacePhotoRef.current ||
+          img.naturalWidth > earthSurfacePhotoRef.current.naturalWidth)
+      ) {
+        earthSurfacePhotoRef.current = img;
+      }
+    };
     void loadImage(EARTH_SURFACE_PHOTO_SOURCE)
-      .then((img) => {
-        if (live) earthSurfacePhotoRef.current = img;
-      })
+      .then(acceptEarthPhoto)
       .catch(() => {
-        if (live) earthSurfacePhotoRef.current = null;
+        // A high-resolution request may still succeed.
       });
 
     if (typeof window !== "undefined" && window.innerWidth >= 1200) {
       void loadImage(EARTH_SURFACE_PHOTO_HD_SOURCE)
-        .then((img) => {
-          if (live) earthSurfacePhotoRef.current = img;
-        })
+        .then(acceptEarthPhoto)
         .catch(() => {
-          // Keep 1024px photographic preview or satellite fallback.
+          // Keep the preview or real satellite fallback.
         });
     }
 
