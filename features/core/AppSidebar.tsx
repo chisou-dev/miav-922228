@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReaderMemory } from "@/features/core/ReaderMemory";
 import { gamesLibraryUrl } from "@/features/core/gamesUrl";
@@ -39,7 +40,7 @@ type Props = {
 };
 
 /**
- * Site-wide navigation — Home / World Memory / Works / Game / Apps.
+ * Site-wide navigation — Home / World Memory / Works / Game / Apps / LEARN.
  * Game opens the external miav-games project. Apps opens the /apps listing.
  * Language switcher lives in SiteShell only (not duplicated here).
  */
@@ -52,6 +53,9 @@ export function AppSidebar({
   const pathname = usePathname() || "/";
   const gameHref = gamesLibraryUrl();
   const t = useT();
+  const readingActive = pathname === "/reading-test" || pathname.startsWith("/reading-test/");
+  const listeningActive = pathname === "/listening-test" || pathname.startsWith("/listening-test/");
+  const learnActive = pathname === "/learn" || readingActive || listeningActive;
 
   return (
     <aside
@@ -72,13 +76,9 @@ export function AppSidebar({
           >
             <span aria-hidden="true">☰</span>
           </button>
-          <a
-            href="/"
-            className="app-sidebar-title"
-            onClick={onNavigate}
-          >
+          <Link href="/" className="app-sidebar-title" onClick={onNavigate}>
             MIAV-922228
-          </a>
+          </Link>
         </div>
 
         <nav id="app-sidebar-nav" className="app-sidebar-nav" aria-label={t("nav.primaryAria")}>
@@ -124,6 +124,38 @@ export function AppSidebar({
               >
                 {t("nav.apps")}
               </a>
+            </li>
+            <li>
+              <Link
+                href="/learn"
+                className={learnActive ? "app-sidebar-link is-active" : "app-sidebar-link"}
+                aria-current={pathname === "/learn" ? "page" : undefined}
+                onClick={onNavigate}
+              >
+                {t("nav.learn")}
+              </Link>
+              <ul className="app-sidebar-sub">
+                <li>
+                  <Link
+                    href="/reading-test"
+                    className={readingActive ? "app-sidebar-link is-active" : "app-sidebar-link"}
+                    aria-current={readingActive ? "page" : undefined}
+                    onClick={onNavigate}
+                  >
+                    {t("nav.readingTest")}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/listening-test"
+                    className={listeningActive ? "app-sidebar-link is-active" : "app-sidebar-link"}
+                    aria-current={listeningActive ? "page" : undefined}
+                    onClick={onNavigate}
+                  >
+                    {t("nav.listeningTest")}
+                  </Link>
+                </li>
+              </ul>
             </li>
           </ul>
         </nav>

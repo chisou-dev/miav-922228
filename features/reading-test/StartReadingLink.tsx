@@ -14,11 +14,9 @@ export function StartReadingLink({
   slug: string;
   title: string;
 }) {
-  const hrefWithStart = href.includes("?") ? `${href}&start=1` : `${href}?start=1`;
-
   return (
     <a
-      href={hrefWithStart}
+      href={href}
       className={buttonClassName}
       aria-label={`Start reading ${title}`}
       onClick={() => {
