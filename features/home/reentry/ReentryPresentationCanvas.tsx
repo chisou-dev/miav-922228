@@ -38,6 +38,7 @@ import {
   failureVisualDepth01,
   spaceInboundDurationMs,
   successLandingT,
+  STAGE1_SPLASH_S,
 } from "./reentryStageTimeline";
 import {
   atmosphereThicknessPx,
@@ -1823,8 +1824,9 @@ function drawStage1ClearSequence(
   h: number,
   timeSinceVisualS: number,
   seed: number,
+  landedCraftPose: { x: number; y: number; angle: number },
 ): void {
-  const splashStartS = 14.15;
+  const splashStartS = STAGE1_SPLASH_S;
 
   if (
     timeSinceVisualS <
@@ -2918,106 +2920,28 @@ function drawStage1ClearSequence(
    *
    * Everything stays in the same ocean shot; there is no cut to a still image.
    */
-  const alienRise =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        17.0
-      ) /
-        2.2,
-    );
-
-  const pointGesture =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        19.1
-      ) /
-        1.25,
-    ) *
-    (
-      1 -
-      smoothstep(
-        (
-          timeSinceVisualS -
-          23.2
-        ) /
-          0.8,
-      )
-    );
-
-  const vehicleFormation =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        20.4
-      ) /
-        3.0,
-    );
-
-  const absorbGesture =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        24.0
-      ) /
-        1.15,
-    ) *
-    (
-      1 -
-      smoothstep(
-        (
-          timeSinceVisualS -
-          28.5
-        ) /
-          0.9,
-      )
-    );
-
-  const absorbCraft =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        25.1
-      ) /
-        3.2,
-    );
-
-  const boardSkiff =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        28.2
-      ) /
-        2.2,
-    );
-
-  const departSkiff =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        30.5
-      ) /
-        5.0,
-    );
+  // Fifteen-second epilogue, timed from the actual water contact.
+  const alienRise = smoothstep((splashAge - 0.6) / 4.4);
+  const pointGesture = smoothstep((splashAge - 5.0) / 0.85)
+    * (1 - smoothstep((splashAge - 8.7) / 0.65));
+  const vehicleFormation = smoothstep((splashAge - 6.0) / 2.8);
+  const absorbGesture = smoothstep((splashAge - 8.6) / 0.75)
+    * (1 - smoothstep((splashAge - 11.9) / 0.65));
+  const absorbCraft = smoothstep((splashAge - 9.2) / 2.4);
+  const boardSkiff = smoothstep((splashAge - 11.8) / 1.7);
+  const departSkiff = smoothstep((splashAge - 13.8) / 1.2);
+  // One shared roll source: the physical visual pose of the floating craft.
+  const parentTilt = Math.max(-0.16, Math.min(
+    0.16, (landedCraftPose.angle - Math.PI / 2) * 0.80,
+  )) * (1 - boardSkiff);
 
   const alienScale =
     minDim *
     0.034;
 
-  const sourceAlienX =
-    craftX +
-    minDim *
-      0.032;
-
+  const sourceAlienX = landedCraftPose.x + minDim * 0.032;
   const sourceAlienY =
-    waterY -
-    minDim *
-      mix(
-        0.006,
-        0.043,
-        alienRise,
-      );
+    landedCraftPose.y - minDim * mix(0.006, 0.043, alienRise);
 
   const skiffRestX =
     craftX +
@@ -3072,6 +2996,26 @@ function drawStage1ClearSequence(
       )
     );
 
+  // Apply the same craft roll to the pointing/absorbing arms and their tips.
+  const raisedTentacleOnBoat = (
+    side: -1 | 1, progress: number, targetX: number, targetY: number,
+  ): { x: number; y: number } => {
+    const cos = Math.cos(parentTilt);
+    const sin = Math.sin(parentTilt);
+    const dx = targetX - boardX;
+    const dy = targetY - boardY;
+    ctx.save();
+    ctx.translate(boardX, boardY);
+    ctx.rotate(parentTilt);
+    const tip = drawAlienRaisedTentacle(
+      ctx, 0, 0, alienScale, side, progress,
+      dx * cos + dy * sin, -dx * sin + dy * cos, alienAlpha,
+    );
+    ctx.restore();
+    return { x: boardX + tip.x * cos - tip.y * sin,
+      y: boardY + tip.x * sin + tip.y * cos };
+  };
+
   if (
     alienAlpha >
     0.001
@@ -3097,18 +3041,14 @@ function drawStage1ClearSequence(
       ctx.fill();
       ctx.restore();
     }
+    ctx.save();
+    ctx.translate(boardX, boardY);
+    ctx.rotate(parentTilt);
     drawLiquidAlien(
-      ctx,
-      boardX,
-      boardY,
-      alienScale,
-      alienAlpha,
-      mix(
-        0.12,
-        -0.06,
-        boardSkiff,
-      ),
+      ctx, 0, 0, alienScale, alienAlpha,
+      mix(0.12, -0.06, boardSkiff),
     );
+    ctx.restore();
 
     if (
       pointGesture >
@@ -3117,20 +3057,9 @@ function drawStage1ClearSequence(
         0.18
     ) {
       const pointerTip =
-        drawAlienRaisedTentacle(
-          ctx,
-          boardX,
-          boardY,
-          alienScale,
-          1,
-          pointGesture,
-          boardX +
-            minDim *
-            0.075,
-          boardY -
-            minDim *
-            0.080,
-          alienAlpha,
+        raisedTentacleOnBoat(
+          1, pointGesture, boardX + minDim * 0.075,
+          boardY - minDim * 0.080,
         );
 
       drawAlienFluidVehicleFormation(
@@ -3153,28 +3082,15 @@ function drawStage1ClearSequence(
         0.22
     ) {
       const absorbTip =
-        drawAlienRaisedTentacle(
-          ctx,
-          boardX,
-          boardY,
-          alienScale,
-          -1,
-          absorbGesture,
-          craftX +
-            minDim *
-            0.008,
-          waterY -
-            minDim *
-            0.035,
-          alienAlpha,
+        raisedTentacleOnBoat(
+          -1, absorbGesture, landedCraftPose.x + minDim * 0.008,
+          landedCraftPose.y - minDim * 0.035,
         );
 
       drawCraftAbsorption(
         ctx,
-        craftX,
-        waterY -
-          minDim *
-          0.015,
+        landedCraftPose.x,
+        landedCraftPose.y - minDim * 0.015,
         absorbTip.x,
         absorbTip.y,
         minDim *
@@ -3281,24 +3197,9 @@ if (departSkiff < 0.16) {
 
 
 
-  const clearIn =
-    smoothstep(
-      (
-        timeSinceVisualS -
-        21.2
-      ) /
-        0.90,
-    );
-
-  const clearOut =
-    1 -
-    smoothstep(
-      (
-        timeSinceVisualS -
-        36.2
-      ) /
-        0.80,
-    );
+  // CLEAR appears at splash + 13s and remains visible with STAGE 2.
+  const clearIn = smoothstep((splashAge - 13.0) / 0.65);
+  const clearOut = 1;
 
   const clearAlpha =
     clearIn *
@@ -5304,7 +5205,7 @@ export function ReentryPresentationCanvas({
         variant === "stage" &&
         phase === "flight" &&
         outcome === "EARTH_REACHED" &&
-        timeSinceVisualAtmosphereEntryS >= 17.80
+        timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S + 13.0
       ) {
         const clearAudioKey =
           `${result?.seed ?? 0}:stage1-clear`;
@@ -5877,9 +5778,9 @@ const failureTravelT =
           smoothstep(
             (
               timeSinceVisualAtmosphereEntryS -
-              25.1
+              (STAGE1_SPLASH_S + 9.2)
             ) /
-              3.2,
+              2.4,
           );
 
         craftAlpha *=
@@ -5985,7 +5886,7 @@ const failureTravelT =
           outcome === "EARTH_REACHED" &&
           latched && !miss &&
           timeSinceVisualAtmosphereEntryS > 14.15 &&
-          timeSinceVisualAtmosphereEntryS < 28.6;
+          timeSinceVisualAtmosphereEntryS < STAGE1_SPLASH_S + 15;
 
         ctx.save();
         if (submerging) {
@@ -6048,6 +5949,7 @@ const failureTravelT =
           timeSinceVisualAtmosphereEntryS,
           result?.seed ??
             1,
+          pose,
         );
       }
 
