@@ -93,5 +93,35 @@ export const desk: ReadingStoryInput = {
       choices: ["The narrator will have grown older","The desk will have been moved outside","The drawer will no longer exist","The date will have disappeared"],
       correctAnswer: "The narrator will have grown older",
     },
+    {
+      id: "q6",
+      question: "What detail shows the envelope is not yet ready to be sent?",
+      choices: ["It has not been sealed","It has no paper inside","It has been torn in half","It has no date"],
+      correctAnswer: "It has not been sealed",
+    },
+    {
+      id: "q7",
+      question: "Where is the date written on the envelope?",
+      choices: ["Small, in a corner","Across the whole desk","On the outside of the drawer","On a calendar hanging above"],
+      correctAnswer: "Small, in a corner",
+    },
+    {
+      id: "q8",
+      question: "What sound accompanies the narrator pulling the drawer?",
+      choices: ["A low scraping sound","A loud chime","A bell ringing","Water flowing"],
+      correctAnswer: "A low scraping sound",
+    },
+    {
+      id: "q9",
+      question: "What does the child rest against the edge of the desk?",
+      choices: ["Their chin","Their feet","A school bag","An open book"],
+      correctAnswer: "Their chin",
+    },
+    {
+      id: "q10",
+      question: "What does the narrator do after writing on nights when their breathing carries down the hall?",
+      choices: ["Closes the drawer","Posts the letter immediately","Throws the envelope away","Leaves the house"],
+      correctAnswer: "Closes the drawer",
+    },
   ],
 };
