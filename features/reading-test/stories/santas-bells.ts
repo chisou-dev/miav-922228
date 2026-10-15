@@ -25,29 +25,21 @@ export const santasBells = {
     },
     {
       id: "q3",
-      question: "What did the reindeer eat in spring?",
-      choices: ["Bread", "Grass", "Apples"],
-      correctAnswer: "Grass",
+      question: "How does the girl's reaction to the bells in summer differ from the girls' reaction in winter?",
+      choices: ["In summer she likes the sound without thinking of Santa; in winter they recognize Santa","In summer she runs toward Santa; in winter they ignore the sound","In both seasons everyone believes the bells come from a bicycle","No child hears the bells in either season"],
+      correctAnswer: "In summer she likes the sound without thinking of Santa; in winter they recognize Santa",
     },
     {
       id: "q4",
-      question: "What did a girl say about the bells in summer?",
-      choices: [
-        "“What a pretty sound.”",
-        "“Santa is here!”",
-        "“The bells are too loud.”",
-      ],
-      correctAnswer: "“What a pretty sound.”",
+      question: "What does the boy do when he hears the bells in fall?",
+      choices: ["He looks at a red star and then at Santa without speaking","He buys the sleigh from Santa","He asks Santa for a snow shovel","He runs away before he sees the shop"],
+      correctAnswer: "He looks at a red star and then at Santa without speaking",
     },
     {
       id: "q5",
-      question: "What happened on December 23?",
-      choices: [
-        "Santa went to the sea.",
-        "Santa bought a wooden bird.",
-        "Santa came home.",
-      ],
-      correctAnswer: "Santa came home.",
+      question: "What do the girls do when they hear the bells in winter?",
+      choices: ["They recognize Santa and run toward the sound","They ask someone to turn off the music","They walk away without looking","They hide their presents in the shop"],
+      correctAnswer: "They recognize Santa and run toward the sound",
     },
   ],
 } satisfies ReadingStoryInput;
