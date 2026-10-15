@@ -104,37 +104,21 @@ export const sampleStory = {
     },
     {
       id: "q3",
-      question: "What did Mara find in the coat besides the ticket?",
-      choices: [
-        "A phone number and a house key",
-        "A map of the coast and a brass key",
-        "A camera and a stamped letter",
-        "A red cap and a bus pass",
-      ],
-      correctAnswer: "A map of the coast and a brass key",
+      question: "What makes Mara consider taking the coat to Grey End instead of keeping it in the drawer?",
+      choices: ["The message on the map and the caller's urgency about the light","A letter from her manager ordering her to leave","A request from the train conductor to visit the coast","A station notice saying the drawer is broken"],
+      correctAnswer: "The message on the map and the caller's urgency about the light",
     },
     {
       id: "q4",
-      question: "What was inside locker 14?",
-      choices: [
-        "The navy coat and the unused ticket",
-        "A camera wrapped in a scarf, and an unsent letter",
-        "Osman's spare key to the station drawer",
-        "A timetable and a paper cup",
-      ],
-      correctAnswer: "A camera wrapped in a scarf, and an unsent letter",
+      question: "Why does the camera in locker 14 matter to Sato and his sister?",
+      choices: ["It contains the only photographs of their father on the water","It contains their tickets for the next train","It belongs to Mara's station manager","It shows the location of another missing coat"],
+      correctAnswer: "It contains the only photographs of their father on the water",
     },
     {
       id: "q5",
-      question: "What did the lit lamp at Grey End tell Sato's sister?",
-      choices: [
-        "The station drawer would stay locked until Monday",
-        "The evening train to Harrow had been cancelled",
-        "He was there and he had the camera, so she should stop",
-        "The pier lockers had already been cleared",
-      ],
-      correctAnswer:
-        "He was there and he had the camera, so she should stop",
+      question: "How does the lit lamp tell Sato's sister what to do?",
+      choices: ["It signals that he is at the pier with the camera, so she should stop","It tells her that the next train is leaving","It means the lockers have been emptied","It is a warning that boats cannot dock"],
+      correctAnswer: "It signals that he is at the pier with the camera, so she should stop",
     },
   ],
 } satisfies ReadingStoryInput;
