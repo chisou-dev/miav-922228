@@ -17,14 +17,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const story = getReadingStory(slug);
   if (!story) {
     return readingTestMetadata({
-      title: "Listening Test",
+      title: "Listening | MIAV LEARN",
       description: "Listen to a story and check what you heard.",
       path: "/listening-test",
     });
   }
 
   return readingTestMetadata({
-    title: `${story.title} | Listening Test`,
+    title: `${story.title} | Listening · MIAV LEARN`,
     description: "Listen to a story without the text, then answer five questions.",
     path: `/listening-test/${story.slug}`,
   });

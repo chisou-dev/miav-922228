@@ -55,7 +55,7 @@ export function AppSidebar({
   const t = useT();
   const readingActive = pathname === "/reading-test" || pathname.startsWith("/reading-test/");
   const listeningActive = pathname === "/listening-test" || pathname.startsWith("/listening-test/");
-  const learnActive = pathname === "/learn" || readingActive || listeningActive;
+  const learnActive = pathname === "/learn" || pathname.startsWith("/learn/") || readingActive || listeningActive;
 
   return (
     <aside

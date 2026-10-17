@@ -48,7 +48,7 @@ export function TestResults({
   const timeLabel = kind === "reading" ? "Reading time" : "Listening time";
 
   return (
-    <ReadingLayout label={kind === "reading" ? "Reading test results" : "Listening test results"}>
+    <ReadingLayout label={kind === "reading" ? "Reading results" : "Listening results"}>
       <div className="space-y-10 text-center">
         <p className="text-[0.72rem] tracking-[0.18em] uppercase text-[var(--reading-ink-muted)]">
           {kind === "reading" ? "Reading" : "Listening"}
