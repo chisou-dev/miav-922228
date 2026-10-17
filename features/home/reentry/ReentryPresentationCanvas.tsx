@@ -2685,6 +2685,9 @@ function drawStage1ClearSequence(
       splashAge / 0.38,
     );
 
+  // The hot hull steams during the immediate escape, but cools before
+  // the long two-handed salvage. Stop 24 radial gradients per frame once
+  // that vapor is no longer visually useful.
   const steamEnvelope =
     steamIn *
     (
@@ -2694,7 +2697,7 @@ function drawStage1ClearSequence(
           splashAge -
           5.5
         ) /
-          14.5,
+          6.5,
       )
     );
 
@@ -3108,7 +3111,10 @@ function drawStage1ClearSequence(
   const pointGesture = smoothstep((splashAge - 6.8) / 0.80) *
     (1 - smoothstep((splashAge - 9.3) / 0.50));
   const vehicleFormation = smoothstep((splashAge - 6.8) / 3.0);
-  const boardApproach = smoothstep((splashAge - 9.8) / 1.0);
+  // The old 1s move covered most of the distance to the skiff. A longer
+  // eased approach prevents the rider appearing to teleport when FPS dips.
+  const boardApproach = smoothstep((splashAge - 9.8) /
+    (STAGE1_ABSORB_START_S - 9.8));
   const absorbT = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
     (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
   // The squid stands ON the skiff and visibly recovers the original hull.
@@ -3163,7 +3169,8 @@ function drawStage1ClearSequence(
   const entranceY = skiffY - minSide * 0.063;
   const boardX = mix(sourceAlienX, seatX, boardApproach);
   // Feet enter first; only afterwards does the pointed mantle pass the lip.
-  const boardY = mix(sourceAlienY, entranceY, boardApproach) +
+  const boardingHop = Math.sin(boardApproach * Math.PI) * minSide * 0.020;
+  const boardY = mix(sourceAlienY, entranceY, boardApproach) - boardingHop +
     enterT * minSide * 0.138;
   // The actual opening clips the body; no fading or shrinking to disappear.
   const alienAlpha = alienRise;
@@ -3213,7 +3220,9 @@ function drawStage1ClearSequence(
       ctx.beginPath();
       ctx.rect(-w, -h, w * 3, h + hatchY);
       ctx.clip();
-    } else if (boardApproach > 0.99) {
+    } else if (enterT > 0.001) {
+      // Keep the entire creature visible ON the deck during the salvage
+      // gesture. Clip only when its feet actually descend into the opening.
       const hatchLipY = skiffY - skiffScale * 0.06;
       ctx.beginPath();
       ctx.rect(-w, -h, w * 3, h + hatchLipY);
@@ -4991,6 +5000,22 @@ export function ReentryPresentationCanvas({
     angleNorm: number;
     value: SpaceApproachResult;
   } | null>(null);
+  // Non-visual diagnostics and adaptive presentation only. These timings
+  // never influence Stage 1 physics, its success result or replay time.
+  const renderPerfRef = useRef({
+    lastRafMs: 0,
+    intervalAvgMs: 16.7,
+    drawAvgMs: 0,
+    oceanAvgMs: 0,
+    atmosphereAvgMs: 0,
+    epilogueAvgMs: 0,
+    compositeAvgMs: 0,
+    oceanActive: false,
+    oceanScale: 1,
+    slowFrames: 0,
+    fastFrames: 0,
+    frameCount: 0,
+  });
 
   useEffect(() => {
     if (phase === "flight") flightUtcHourRef.current = new Date().getUTCHours();
@@ -5077,6 +5102,8 @@ export function ReentryPresentationCanvas({
         phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
         powerNorm, variant, assistMode,
       } = presentationRef.current;
+      // The sea is active only in the surface shot of this actual frame.
+      renderPerfRef.current.oceanActive = false;
       const parent = canvas.parentElement;
       if (!parent) return;
 
@@ -5748,33 +5775,51 @@ const failureTravelT =
         latched &&
         !miss
       ) {
-        drawAtmosphereVolume(
-          ctx,
-          issPhotoRefs.current[earthRegion.photoIndex] ??
-            issPhotoRefs.current.find((img) => img !== null) ?? null,
-          earthRegion,
-          w,
-          h,
-          atmosphereSceneMix,
-          timeSinceVisualAtmosphereEntryS,
-          horizonAngle,
-          surfacePhase,
-          entrySteepness,
-        );
-
+        const perf = renderPerfRef.current;
         const showSurfaceApproach =
-          outcome ===
-            "EARTH_REACHED" &&
-          timeSinceVisualAtmosphereEntryS >=
-            10.5;
+          outcome === "EARTH_REACHED" &&
+          timeSinceVisualAtmosphereEntryS >= 10.5;
+        const surfaceMix = showSurfaceApproach
+          ? smoothstep((timeSinceVisualAtmosphereEntryS - 10.5) / 2.2)
+          : 0;
 
+        // Once the opaque WebGL ocean covers the entire frame, the costly
+        // full-screen ISS image below it is literally invisible. Skip drawing
+        // it (and its extra moon/glow) instead of compositing two full frames.
+        if (surfaceMix < 0.999) {
+          const atmosphereDrawStart = performance.now();
+          drawAtmosphereVolume(
+            ctx,
+            issPhotoRefs.current[earthRegion.photoIndex] ??
+              issPhotoRefs.current.find((img) => img !== null) ?? null,
+            earthRegion,
+            w,
+            h,
+            atmosphereSceneMix,
+            timeSinceVisualAtmosphereEntryS,
+            horizonAngle,
+            surfacePhase,
+            entrySteepness,
+          );
+          const atmosphereMs = performance.now() - atmosphereDrawStart;
+          perf.atmosphereAvgMs = perf.atmosphereAvgMs
+            ? perf.atmosphereAvgMs * 0.93 + atmosphereMs * 0.07
+            : atmosphereMs;
+        }
+
+        // Adaptive WebGL resolution changes only after persistent slow
+        // frames, with wide hysteresis. It preserves the same shader, waves,
+        // camera and playback clock; fewer pixels merely reduce GPU work.
+        perf.oceanActive = showSurfaceApproach && !!oceanWebGLRef.current;
         if (
           showSurfaceApproach
         ) {
+          const webglStart = performance.now();
+          const scale = perf.oceanScale;
           const oceanSurface =
             oceanWebGLRef.current?.render({
-              width: w,
-              height: h,
+              width: Math.max(1, Math.round(w * scale)),
+              height: Math.max(1, Math.round(h * scale)),
               timeS:
                 timeSinceVisualAtmosphereEntryS,
               sceneSeed:
@@ -5782,21 +5827,24 @@ const failureTravelT =
                 1,
             }) ??
             null;
+          const oceanMs = performance.now() - webglStart;
+          perf.oceanAvgMs = perf.oceanAvgMs
+            ? perf.oceanAvgMs * 0.93 + oceanMs * 0.07
+            : oceanMs;
 
+          const compositeStart = performance.now();
           drawSurfaceApproach(
             ctx,
             w,
             h,
-            smoothstep(
-              (
-                timeSinceVisualAtmosphereEntryS -
-                10.5
-              ) /
-                2.2,
-            ),
+            surfaceMix,
             timeSinceVisualAtmosphereEntryS,
             oceanSurface,
           );
+          const compositeMs = performance.now() - compositeStart;
+          perf.compositeAvgMs = perf.compositeAvgMs
+            ? perf.compositeAvgMs * 0.93 + compositeMs * 0.07
+            : compositeMs;
         }
 
         /*
@@ -6094,6 +6142,7 @@ const failureTravelT =
         latched &&
         !miss
       ) {
+        const epilogueDrawStart = performance.now();
         drawStage1ClearSequence(
           ctx,
           w,
@@ -6103,6 +6152,11 @@ const failureTravelT =
             1,
           pose,
         );
+        const perf = renderPerfRef.current;
+        const epilogueMs = performance.now() - epilogueDrawStart;
+        perf.epilogueAvgMs = perf.epilogueAvgMs
+          ? perf.epilogueAvgMs * 0.93 + epilogueMs * 0.07
+          : epilogueMs;
       }
 
       if (
@@ -6114,8 +6168,57 @@ const failureTravelT =
       }
     };
 
-    const loop = () => {
+    const loop = (rafNow: number) => {
+      const perf = renderPerfRef.current;
+      if (perf.lastRafMs > 0) {
+        // The refresh interval includes JS + compositing; timing is for
+        // adaptive raster quality only, never for animation progress.
+        const gap = Math.min(120, rafNow - perf.lastRafMs);
+        perf.intervalAvgMs = perf.intervalAvgMs * 0.93 + gap * 0.07;
+      }
+      perf.lastRafMs = rafNow;
+
+      if (perf.oceanActive) {
+        if (perf.intervalAvgMs > 24) {
+          perf.slowFrames += 1;
+          perf.fastFrames = 0;
+        } else if (perf.intervalAvgMs < 18.8) {
+          perf.fastFrames += 1;
+          perf.slowFrames = 0;
+        } else {
+          perf.slowFrames = Math.max(0, perf.slowFrames - 1);
+          perf.fastFrames = 0;
+        }
+        if (perf.slowFrames >= 35) {
+          perf.oceanScale = perf.oceanScale > 0.9 ? 0.85 : 0.74;
+          perf.slowFrames = 0;
+        } else if (perf.fastFrames >= 180) {
+          perf.oceanScale = perf.oceanScale < 0.8
+            ? 0.85 : 1;
+          perf.fastFrames = 0;
+        }
+      } else {
+        perf.slowFrames = 0;
+        perf.fastFrames = 0;
+      }
+
+      const start = performance.now();
       draw();
+      const drawMs = performance.now() - start;
+      perf.drawAvgMs = perf.drawAvgMs
+        ? perf.drawAvgMs * 0.93 + drawMs * 0.07 : drawMs;
+      perf.frameCount += 1;
+      // Inspect via canvas dataset without drawing a debugging overlay or
+      // spamming the console (which itself can cause frame stutter).
+      if (perf.frameCount % 60 === 0) {
+        canvas.dataset.frameIntervalMs = perf.intervalAvgMs.toFixed(1);
+        canvas.dataset.drawMs = perf.drawAvgMs.toFixed(1);
+        canvas.dataset.oceanMs = perf.oceanAvgMs.toFixed(1);
+        canvas.dataset.atmosphereMs = perf.atmosphereAvgMs.toFixed(1);
+        canvas.dataset.compositeMs = perf.compositeAvgMs.toFixed(1);
+        canvas.dataset.epilogueMs = perf.epilogueAvgMs.toFixed(1);
+        canvas.dataset.oceanScale = perf.oceanScale.toFixed(2);
+      }
       raf = requestAnimationFrame(loop);
     };
 
