@@ -9,6 +9,7 @@ import {
 } from "react";
 import { ReentryFullscreenPortal } from "./ReentryFullscreenPortal";
 import { ReentryHybridStage } from "./ReentryHybridStage";
+import { ReentryStage2Prototype } from "./ReentryStage2Prototype";
 import { ReentryLaunchControls } from "./ReentryLaunchControls";
 import { ReentryShellProvider } from "./reentryShellContext";
 import { useBodyScrollLock } from "./useBodyScrollLock";
@@ -314,6 +315,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
             role="application"
           >
+            {!showStage2Notice && (<>
             <ReentryHybridStage
               state={fullscreenState}
               playbackProgressRef={flightProgressRef}
@@ -346,7 +348,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 {REENTRY_SCENE.hintText}
               </p>
             )}
-
+            </>)}
           </div>
           {phase === "result" &&
             result &&
@@ -388,7 +390,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             )}
 
           {/* The flight reaches result only at the escape timeline endpoint. */}
-          {phase === "result" && result &&
+          {!showStage2Notice && phase === "result" && result &&
             (result.outcome !== "EARTH_REACHED" || flightProgress >= 1) && (
             result.outcome === "EARTH_REACHED" ? (
               <div
@@ -399,7 +401,10 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 <div className="flex flex-wrap items-center justify-center gap-6">
                   <button
                     type="button"
-                    onClick={() => setShowStage2Notice((value) => !value)}
+                    onClick={() => {
+                      stopReentryAudio();
+                      setShowStage2Notice(true);
+                    }}
                     className="rounded-sm border border-cyan-100/50 bg-[#061626]/75 px-5 py-2 text-[0.82rem] tracking-[0.20em] text-white shadow-[0_0_18px_rgba(120,208,250,0.13)] backdrop-blur-sm transition-colors hover:border-cyan-50 hover:bg-[#143148] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
                     aria-label="Stage 2 preview"
                   >
@@ -424,14 +429,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                     Close
                   </button>
                 </div>
-                {showStage2Notice && (
-                  <p
-                    role="status"
-                    className="rounded-sm border border-white/15 bg-black/70 px-4 py-2 text-[0.72rem] tracking-[0.10em] text-white/90 backdrop-blur-sm"
-                  >
-                    STAGE 2 — COMING SOON
-                  </p>
-                )}
+
               </div>
             ) : (
               <div
@@ -465,6 +463,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 </div>
               </div>
             )
+          )}
+          {showStage2Notice && (
+            <ReentryStage2Prototype onClose={() => setShowStage2Notice(false)} />
           )}
         </div>
         </ReentryFullscreenPortal>

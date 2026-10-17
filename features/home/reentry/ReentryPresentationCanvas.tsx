@@ -386,6 +386,21 @@ function localSkyDarkness01(hour: number): number {
   );
 }
 
+// Real NASA LRO mosaic of the Moon's near side (NASA SVS 5001).
+// Load once when the stage mounts; any network failure uses the original disc.
+const NASA_MOON_MOSAIC =
+  "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005001/moon_mosaic_print.jpg";
+let moonMosaic: HTMLImageElement | null = null;
+let moonRequested = false;
+function preloadMoonMosaic(): void {
+  if (moonRequested || typeof Image === "undefined") return;
+  moonRequested = true;
+  const img = new Image();
+  img.onload = () => { moonMosaic = img; };
+  img.onerror = () => { moonMosaic = null; };
+  img.src = NASA_MOON_MOSAIC;
+}
+
 function drawAtmosphericMoon(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -556,120 +571,23 @@ function drawAtmosphericMoon(
   );
   ctx.fill();
 
-  const disc =
-    ctx.createRadialGradient(
-      x - r * 0.28,
-      y - r * 0.32,
-      r * 0.10,
-      x,
-      y,
-      r,
-    );
-
-  disc.addColorStop(
-    0,
-    "rgba(245,245,236,0.98)",
-  );
-  disc.addColorStop(
-    0.58,
-    "rgba(211,214,207,0.96)",
-  );
-  disc.addColorStop(
-    1,
-    "rgba(151,158,157,0.96)",
-  );
-
-  ctx.fillStyle = disc;
-  ctx.beginPath();
-  ctx.arc(
-    x,
-    y,
-    r,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  /*
-   * Deterministic crater marks keep the small disc from reading as a flat
-   * white icon.
-   */
+  // Real lunar maria/craters, not a white disc with invented dots.
+  // Clip to the photographed limb; phase shadow remains below.
   ctx.save();
   ctx.beginPath();
-  ctx.arc(
-    x,
-    y,
-    r,
-    0,
-    Math.PI * 2,
-  );
+  ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.clip();
-
-  for (
-    let i = 0;
-    i < 7;
-    i += 1
-  ) {
-    const rx =
-      hash01(
-        0x6d6f6f6e,
-        i * 13 + 1,
-      );
-
-    const ry =
-      hash01(
-        0x6d6f6f6e,
-        i * 17 + 9,
-      );
-
-    const rr =
-      hash01(
-        0x6d6f6f6e,
-        i * 19 + 5,
-      );
-
-    const craterX =
-      x +
-      (
-        rx -
-        0.5
-      ) *
-        r *
-        1.25;
-
-    const craterY =
-      y +
-      (
-        ry -
-        0.5
-      ) *
-        r *
-        1.25;
-
-    ctx.fillStyle =
-      "rgba(92,99,101," +
-      (
-        0.08 +
-        rr * 0.12
-      ) +
-      ")";
-
-    ctx.beginPath();
-    ctx.arc(
-      craterX,
-      craterY,
-      r *
-        (
-          0.055 +
-          rr *
-            0.10
-        ),
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+  if (moonMosaic && moonMosaic.complete && moonMosaic.naturalWidth > 0) {
+    ctx.drawImage(moonMosaic, x - r, y - r, 2 * r, 2 * r);
+  } else {
+    // Offline fallback: dim surface, no fake crater dots.
+    const disc = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2,
+      0, x, y, r);
+    disc.addColorStop(0, "#d5d6d2");
+    disc.addColorStop(1, "#6a757c");
+    ctx.fillStyle = disc;
+    ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
   }
-
   ctx.restore();
 
   /*
@@ -3425,41 +3343,72 @@ function drawOceanContactShockwave(
 ): void {
   const age = atmosphereS - STAGE1_SPLASH_S;
   if (age < 0 || age >= 5) return;
-  const minDim = Math.min(w, h);
-  const ox = w * 0.48;
-  const oy = h * 0.792;
-  const fade = 1 - smoothstep((age - 3.6) / 1.4);
+  const m = Math.min(w, h);
+  const cx = w * 0.48;
+  const cy = h * 0.792;
+  const decay = 1 - smoothstep((age - 2.7) / 2.3);
+  if (decay <= 0.001) return;
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, h * 0.636, w, h * 0.364);
   ctx.clip();
-  ctx.globalCompositeOperation = "screen";
 
-  for (let band = 0; band < 4; band++) {
-    const localAge = age - band * 0.43;
-    if (localAge < 0) continue;
-    const emerge = smoothstep(localAge / 0.35);
-    const radius = minDim * (0.034 + localAge * (0.102 + band * 0.007));
-    const opacity = emerge * fade * (0.34 - band * 0.052);
-    if (opacity <= 0.002) continue;
-    for (let edge = 0; edge < 2; edge++) {
+  // Broad shadowed displacement under the impact (the water has volume).
+  const width = m * (0.03 + age * 0.112);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1, 0.24);
+  const water = ctx.createRadialGradient(0, 0, width * 0.5,
+    0, 0, width * 1.16);
+  water.addColorStop(0, "rgba(7,32,46,0)");
+  water.addColorStop(0.70, `rgba(8,43,58,${0.15 * decay})`);
+  water.addColorStop(0.84, `rgba(3,25,36,${0.25 * decay})`);
+  water.addColorStop(0.93, `rgba(100,171,180,${0.11 * decay})`);
+  water.addColorStop(1, "rgba(91,174,191,0)");
+  ctx.fillStyle = water;
+  ctx.beginPath();
+  ctx.arc(0, 0, width * 1.16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // The crest consists of intermittent, moving glints rather than closed
+  // white oval strokes. Three staggered waves decay over five seconds.
+  for (let ring = 0; ring < 3; ring++) {
+    const t = age - ring * 0.62;
+    if (t < 0) continue;
+    const spread = m * (0.03 + t * (0.095 + ring * 0.012));
+    const energy = smoothstep(t / 0.36) *
+      (1 - smoothstep((t - 2.2) / 2.6)) * decay;
+    if (energy <= 0.005) continue;
+    for (let sector = 0; sector < 20; sector++) {
+      const seed = hash01(0x5c3f9a, ring * 67 + sector);
+      // Individual broken portions of surf; most stay dark.
+      if (seed < 0.35) continue;
+      const a0 = sector * Math.PI / 10 + t * 0.038;
+      const length = (0.16 + seed * 0.11) * Math.PI / 10;
       ctx.beginPath();
-      for (let i = 0; i <= 64; i++) {
-        const a = i * Math.PI * 2 / 64;
-        const irregular = 1 +
-          0.019 * Math.sin(a * 7 + band * 2.1 + age * 1.6) +
-          0.011 * Math.sin(a * 13 - age * 0.8);
-        const r = radius * irregular;
-        const x = ox + Math.cos(a) * r;
-        const y = oy + Math.sin(a) * r * 0.24 + edge * minDim * 0.002;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      for (let j = 0; j <= 5; j++) {
+        const a = a0 + j / 5 * length;
+        const wobble = 1 + 0.026 * Math.sin(a * 9 + age * 2.1 + ring);
+        const x = cx + Math.cos(a) * spread * wobble;
+        const y = cy + Math.sin(a) * spread * wobble * 0.23;
+        if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
-      ctx.strokeStyle = edge === 0
-        ? `rgba(143,220,238,${opacity})`
-        : `rgba(220,246,250,${opacity * 0.60})`;
-      ctx.lineWidth = Math.max(0.8, minDim * (edge === 0 ? 0.0025 : 0.0011));
+      ctx.strokeStyle = `rgba(161,207,213,${energy * (0.09 + seed * 0.28)})`;
+      ctx.lineWidth = Math.max(0.8, m * (0.001 + seed * 0.0018));
       ctx.stroke();
+    }
+    // Small transient crest foam, scattered in the same ellipse.
+    for (let i = 0; i < 17; i++) {
+      const a = hash01(0xc72a8b, ring * 29 + i) * Math.PI * 2;
+      const jitter = hash01(0x82b91f, ring * 29 + i) - 0.5;
+      const rr = spread * (1 + jitter * 0.095);
+      ctx.fillStyle = `rgba(207,236,231,${energy * (0.05 + (jitter + 0.5) * 0.25)})`;
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 0.23,
+        m * (0.001 + (jitter + 0.5) * 0.002), m * 0.0008,
+        a * 0.14, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
   ctx.restore();
@@ -5029,6 +4978,7 @@ export function ReentryPresentationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
   const issPhotoRefs = useRef<(HTMLImageElement | null)[]>([null, null]);
+  useEffect(() => { preloadMoonMosaic(); }, []);
   const flightUtcHourRef = useRef(new Date().getUTCHours());
   const oceanWebGLRef =
     useRef<ReentryOceanWebGLRenderer | null>(null);

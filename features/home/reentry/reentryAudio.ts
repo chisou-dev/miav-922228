@@ -1,4 +1,5 @@
 import type { ReentryOutcome } from "./reentryTypes";
+import { STAGE1_ABSORB_START_S, STAGE1_ABSORB_END_S } from "./reentryStageTimeline";
 
 type AudioState = {
   ctx: AudioContext;
@@ -24,6 +25,76 @@ let resultTimer: number | null = null;
 let stage1ClearCueNodes: OscillatorNode[] = [];
 let seaAudioStarted = false;
 let lastSeaModulationAt = -1;
+let salvageTone: {
+  tones: OscillatorNode[];
+  envelope: GainNode;
+  filter: BiquadFilterNode;
+} | null = null;
+
+function stopSalvageSound(): void {
+  if (!salvageTone || !state) return;
+  const now = state.ctx.currentTime;
+  const { tones, envelope } = salvageTone;
+  envelope.gain.cancelScheduledValues(now);
+  envelope.gain.setTargetAtTime(0.0001, now, 0.09);
+  for (const tone of tones) {
+    try { tone.stop(now + 0.40); } catch { /* already stopped */ }
+  }
+  salvageTone = null;
+}
+
+/**
+ * Original uneasy organic thrumming while the ship's six threads flow.
+ * Not a reproduction of a real-world emergency alert or its cadence.
+ * Runs only in the actual salvage interval and respects master volume.
+ */
+function updateSalvageSound(splashAgeS: number): void {
+  if (!state) return;
+  const active = splashAgeS >= STAGE1_ABSORB_START_S &&
+    splashAgeS < STAGE1_ABSORB_END_S;
+  if (!active) {
+    stopSalvageSound();
+    return;
+  }
+  const { ctx, master } = state;
+  const now = ctx.currentTime;
+  if (!salvageTone) {
+    const envelope = ctx.createGain();
+    envelope.gain.setValueAtTime(0.0001, now);
+    envelope.gain.setTargetAtTime(0.060, now, 0.18);
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 550;
+    filter.Q.value = 1.5;
+    filter.connect(envelope);
+    envelope.connect(master);
+    const tones: OscillatorNode[] = [];
+    for (const [i, hz] of [83, 92, 133].entries()) {
+      const osc = ctx.createOscillator();
+      const level = ctx.createGain();
+      osc.type = i === 2 ? "sine" : "triangle";
+      osc.frequency.value = hz;
+      level.gain.value = i === 0 ? 0.44 : i === 1 ? 0.36 : 0.18;
+      osc.connect(level);
+      level.connect(filter);
+      osc.start(now);
+      tones.push(osc);
+    }
+    // A slow, irregular-sounding pulse evokes an alien material transfer.
+    const pulse = ctx.createOscillator();
+    const depth = ctx.createGain();
+    pulse.type = "sine";
+    pulse.frequency.value = 6.6;
+    depth.gain.value = 0.023;
+    pulse.connect(depth);
+    depth.connect(envelope.gain);
+    pulse.start(now);
+    tones.push(pulse);
+    salvageTone = { tones, envelope, filter };
+  }
+}
+
+
 let userVolume = 0.82;
 const VOLUME_KEY = "miav_reentry_vol_v1";
 const MASTER_PEAK = 0.74;
@@ -403,6 +474,7 @@ export function startReentryAmbience(): void {
   if (!ctx || !state) return;
 
   stopStage1ClearCue();
+  stopSalvageSound();
   seaAudioStarted = false;
   lastSeaModulationAt = -1;
 
@@ -582,6 +654,7 @@ export function setReentryAudioOcean(splashAgeS: number): void {
     );
     lastSeaModulationAt = t;
   }
+  updateSalvageSound(splashAgeS);
 }
 
 export function startReentryAudio(): void {
@@ -1032,6 +1105,7 @@ export function startStage1ClearAudio(): void {
 export function finishReentryAudio(
   outcome: ReentryOutcome,
 ): void {
+  stopSalvageSound();
   if (!state) return;
 
   clearTimers();
@@ -1079,6 +1153,7 @@ export function finishReentryAudio(
 export function stopReentryAudio(): void {
   clearTimers();
   stopStage1ClearCue();
+  stopSalvageSound();
 
   if (!state) return;
 
