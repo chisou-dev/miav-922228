@@ -21,7 +21,9 @@ export const SPACE_MISS_DURATION_MS =
 // Rear hatch, green squid emergence, fluid skiff, feet-first boarding,
 // sealed hatch/CLEAR, left-edge turn, gentle center glide, fast exit.
 // Physics v1.1 and the 120km handoff remain unchanged.
-export const STAGE1_SPLASH_S = 14.15;
+// The craft completes its descent at 15s. Start the spray just before
+// contact (approximately one CSS pixel at normal playback), not 0.85s early.
+export const STAGE1_SPLASH_S = 14.98;
 export const STAGE1_BOARD_COMPLETE_S = 12.7;
 export const STAGE1_CLEAR_HOLD_END_S = 14.7;
 export const STAGE1_GLIDE_END_S = 16.8;

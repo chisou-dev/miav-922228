@@ -20,8 +20,8 @@ export function launchEarthView(
   return {
     x: w * 0.22,
     y: h * 0.72,
-    // Bigger visible target (1.75x), still independent of physics geometry.
-    r: minDim * 0.185,
+    // Bigger and easier-to-aim visible target (about 2.4x the old 0.105 view).
+    r: minDim * 0.255,
   };
 }
 

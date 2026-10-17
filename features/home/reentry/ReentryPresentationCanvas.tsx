@@ -894,6 +894,45 @@ function drawAtmosphericHorizon(
   ctx.restore();
 }
 
+// One-time feathering prevents a rotated photograph's rectangular edge from
+// cutting a black diagonal through the sky. The original pixels are genuine
+// NASA ISS imagery; only the alpha at the perimeter is softened. Cache once,
+// never allocate or filter a full-size image inside requestAnimationFrame.
+const softEarthPhotoCache = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
+function softlyMaskedEarthPhoto(source: HTMLImageElement): HTMLCanvasElement {
+  const saved = softEarthPhotoCache.get(source);
+  if (saved) return saved;
+  const naturalW = Math.max(1, source.naturalWidth);
+  const naturalH = Math.max(1, source.naturalHeight);
+  const factor = Math.min(1, 1800 / Math.max(naturalW, naturalH));
+  const w = Math.max(1, Math.round(naturalW * factor));
+  const h = Math.max(1, Math.round(naturalH * factor));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const c = canvas.getContext("2d");
+  if (c) {
+    c.drawImage(source, 0, 0, w, h);
+    c.globalCompositeOperation = "destination-in";
+    const fadeX = c.createLinearGradient(0, 0, w, 0);
+    fadeX.addColorStop(0, "rgba(255,255,255,0)");
+    fadeX.addColorStop(0.16, "rgba(255,255,255,1)");
+    fadeX.addColorStop(0.84, "rgba(255,255,255,1)");
+    fadeX.addColorStop(1, "rgba(255,255,255,0)");
+    c.fillStyle = fadeX;
+    c.fillRect(0, 0, w, h);
+    const fadeY = c.createLinearGradient(0, 0, 0, h);
+    fadeY.addColorStop(0, "rgba(255,255,255,0)");
+    fadeY.addColorStop(0.12, "rgba(255,255,255,1)");
+    fadeY.addColorStop(0.88, "rgba(255,255,255,1)");
+    fadeY.addColorStop(1, "rgba(255,255,255,0)");
+    c.fillStyle = fadeY;
+    c.fillRect(0, 0, w, h);
+  }
+  softEarthPhotoCache.set(source, canvas);
+  return canvas;
+}
+
 function drawAtmosphereVolume(
   ctx: CanvasRenderingContext2D,
   earth: HTMLImageElement | null,
@@ -933,7 +972,8 @@ function drawAtmosphereVolume(
   if (earth && earth.naturalWidth > 0 && earth.naturalHeight > 0) {
     // Preserve actual photographic curvature, depth, clouds and coastlines.
     // Crops move within a single ISS exposure; no map stretched onto a disc.
-    const iw = earth.naturalWidth, ih = earth.naturalHeight;
+    const softened = softlyMaskedEarthPhoto(earth);
+    const iw = softened.width, ih = softened.height;
     const sx = iw * 0.075, sy = ih * 0.075;
     const sw = iw * 0.85, sh = ih * 0.85;
     const dw = Math.max(w * 1.55, h * 2.2) * (1 + region.zoom);
@@ -946,8 +986,9 @@ function drawAtmosphereVolume(
     ctx.globalAlpha = alpha * reveal;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    ctx.filter = "saturate(1.08) contrast(1.04)";
-    ctx.drawImage(earth, sx, sy, sw, sh, dx, dy, dw, dh);
+    // Color is already present in the real photograph. Filtering an
+    // oversized image every frame costs time during the squid animation.
+    ctx.drawImage(softened, sx, sy, sw, sh, dx, dy, dw, dh);
     ctx.restore();
   } else {
     // Safe photo-load fallback: a curved, illuminated blue ocean.
@@ -1907,7 +1948,7 @@ function drawStage1ClearSequence(
     1 -
     smoothstep(
       splashAge /
-        3.2,
+        2.25,
     );
 
   if (
@@ -2412,7 +2453,7 @@ function drawStage1ClearSequence(
 
   for (
     let i = 0;
-    i < 34;
+    i < 24;
     i++
   ) {
     const a =
@@ -2563,7 +2604,7 @@ function drawStage1ClearSequence(
 
     for (
       let i = 0;
-      i < 34;
+      i < 24;
       i++
     ) {
       const a =
@@ -3708,7 +3749,7 @@ function drawCurvedAtmosphereRim(
 
   const haze = ctx.createRadialGradient(
     cx, cy, r * 0.995,
-    cx, cy, r * 1.045,
+    cx, cy, r * 1.09,
   );
   haze.addColorStop(0, "rgba(125,205,255,0)");
   haze.addColorStop(0.38, `rgba(125,205,255,${0.022 + hazeStrength * 0.035})`);
@@ -3718,7 +3759,7 @@ function drawCurvedAtmosphereRim(
 
   ctx.fillStyle = haze;
   ctx.beginPath();
-  ctx.arc(cx, cy, r * 1.045, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r * 1.09, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -4811,6 +4852,12 @@ export function ReentryPresentationCanvas({
     null,
   );
   const prevHeadingRef = useRef<number | null>(null);
+  // SPACE integration may take thousands of steps. Preview it only when
+  // direction changes: never run the solver on every animation frame.
+  const idleSpaceCacheRef = useRef<{
+    angleNorm: number;
+    value: SpaceApproachResult;
+  } | null>(null);
 
   useEffect(() => {
     if (phase === "flight") flightUtcHourRef.current = new Date().getUTCHours();
@@ -4829,7 +4876,10 @@ export function ReentryPresentationCanvas({
 
     ISS_EARTH_PHOTOS.forEach((src, index) => {
       void loadImage(src).then((img) => {
-        if (live) issPhotoRefs.current[index] = img;
+        if (!live) return;
+        // Precompute the softened photo while loading, never inside the shot.
+        softlyMaskedEarthPhoto(img);
+        issPhotoRefs.current[index] = img;
       }).catch(() => {
         if (live) issPhotoRefs.current[index] = null;
       });
@@ -4949,11 +4999,23 @@ export function ReentryPresentationCanvas({
           powerNorm,
         );
 
-      const idleSpace = launchSpaceApproach(
-        mapLaunchToInput(0.5, angleNorm, 1).initialSpeedMps,
-        angleNorm,
-      );
+      // Use the computed launch trajectory during flight. In idle preview,
+      // reuse the last simulated SPACE trajectory until aim actually changes.
+      let idleSpace: SpaceApproachResult | null = null;
+      if (!spaceApproach) {
+        const cached = idleSpaceCacheRef.current;
+        if (cached && cached.angleNorm === angleNorm) {
+          idleSpace = cached.value;
+        } else {
+          idleSpace = launchSpaceApproach(
+            mapLaunchToInput(0.5, angleNorm, 1).initialSpeedMps,
+            angleNorm,
+          );
+          idleSpaceCacheRef.current = { angleNorm, value: idleSpace };
+        }
+      }
       const activeSpace = spaceApproach ?? idleSpace;
+      if (!activeSpace) return;
       const firstSpace = activeSpace.points[0]?.state;
       const periIdx = closestApproachIndex(activeSpace.points);
       const travelT =
@@ -5010,7 +5072,11 @@ export function ReentryPresentationCanvas({
         : reentryStageMix(displayAltitude);
 
       const launch = launchAnchorPx(w, h);
-      const launchHeading = directionNormToScreenHeadingRad(angleNorm);
+      // Preview at POWER always faces upper-right; DIRECTION selection then
+      // displays the player's actual heading, not a permanently fixed sprite.
+      const launchHeading = phase === "power"
+        ? -Math.PI / 4
+        : directionNormToScreenHeadingRad(angleNorm);
 
       const pathEarth =
         launchEarthView(w, h);
@@ -5764,7 +5830,7 @@ const failureTravelT =
         ) {
           // After the splash the hot trail must vanish; its tapered
           // translucent sheet was visible behind the resting vessel.
-          if (timeSinceVisualAtmosphereEntryS < 14.15) {
+          if (timeSinceVisualAtmosphereEntryS < STAGE1_SPLASH_S) {
             drawSuccessReentryBloom(
               ctx,
               pose.x,
@@ -5810,7 +5876,7 @@ const failureTravelT =
         const submerging =
           outcome === "EARTH_REACHED" &&
           latched && !miss &&
-          timeSinceVisualAtmosphereEntryS > 14.15 &&
+          timeSinceVisualAtmosphereEntryS > STAGE1_SPLASH_S &&
           timeSinceVisualAtmosphereEntryS < STAGE1_SPLASH_S + STAGE1_ESCAPE_EXIT_S;
 
         ctx.save();
@@ -5818,7 +5884,7 @@ const failureTravelT =
           // Mask the vehicle pixels ONLY; preserve the WebGL water everywhere.
           clipLandingCraftAboveWater(
             ctx, w, h, pose.x, craftLength,
-            timeSinceVisualAtmosphereEntryS - 14.15,
+            timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S,
           );
         }
         drawCraft(
