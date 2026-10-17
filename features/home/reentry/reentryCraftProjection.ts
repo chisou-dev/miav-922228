@@ -10,8 +10,9 @@ import { sampleFrame } from "./reentryVisual";
 export type Point = { x: number; y: number };
 
 /** Screen-normalized idle craft center. Independent of canvas pixel size. */
-export const LAUNCH_ANCHOR_NX = 0.27;
-export const LAUNCH_ANCHOR_NY = 0.16;
+// Keep the starting craft in the upper-right, safely left/below the AUDIO control.
+export const LAUNCH_ANCHOR_NX = 0.77;
+export const LAUNCH_ANCHOR_NY = 0.23;
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));

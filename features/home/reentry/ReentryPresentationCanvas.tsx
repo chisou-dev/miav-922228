@@ -917,16 +917,23 @@ function softlyMaskedEarthPhoto(source: HTMLImageElement): HTMLCanvasElement {
     c.drawImage(source, 0, 0, w, h);
     c.globalCompositeOperation = "destination-in";
     const fadeX = c.createLinearGradient(0, 0, w, 0);
+    // DrawImage crops source to 7.5%..92.5%: alpha MUST be zero at
+    // the actual crop edges, not at the edge of the uncropped photo.
+    // Otherwise the cropped rectangle reappears as a black diagonal line.
     fadeX.addColorStop(0, "rgba(255,255,255,0)");
-    fadeX.addColorStop(0.16, "rgba(255,255,255,1)");
-    fadeX.addColorStop(0.84, "rgba(255,255,255,1)");
+    fadeX.addColorStop(0.075, "rgba(255,255,255,0)");
+    fadeX.addColorStop(0.27, "rgba(255,255,255,1)");
+    fadeX.addColorStop(0.73, "rgba(255,255,255,1)");
+    fadeX.addColorStop(0.925, "rgba(255,255,255,0)");
     fadeX.addColorStop(1, "rgba(255,255,255,0)");
     c.fillStyle = fadeX;
     c.fillRect(0, 0, w, h);
     const fadeY = c.createLinearGradient(0, 0, 0, h);
     fadeY.addColorStop(0, "rgba(255,255,255,0)");
-    fadeY.addColorStop(0.12, "rgba(255,255,255,1)");
-    fadeY.addColorStop(0.88, "rgba(255,255,255,1)");
+    fadeY.addColorStop(0.075, "rgba(255,255,255,0)");
+    fadeY.addColorStop(0.24, "rgba(255,255,255,1)");
+    fadeY.addColorStop(0.76, "rgba(255,255,255,1)");
+    fadeY.addColorStop(0.925, "rgba(255,255,255,0)");
     fadeY.addColorStop(1, "rgba(255,255,255,0)");
     c.fillStyle = fadeY;
     c.fillRect(0, 0, w, h);
@@ -991,6 +998,23 @@ function drawAtmosphereVolume(
     // Color is already present in the real photograph. Filtering an
     // oversized image every frame costs time during the squid animation.
     ctx.drawImage(softened, sx, sy, sw, sh, dx, dy, dw, dh);
+    ctx.restore();
+
+    // A feathered, translucent blue atmosphere around the real
+    // photographic limb. All stops fade to zero; no straight border.
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = alpha * reveal;
+    const haze = ctx.createLinearGradient(
+      0, horizonY - h * 0.22, 0, horizonY + h * 0.18,
+    );
+    haze.addColorStop(0, "rgba(6,35,71,0)");
+    haze.addColorStop(0.38, "rgba(23,80,148,0.025)");
+    haze.addColorStop(0.55, "rgba(50,139,224,0.080)");
+    haze.addColorStop(0.69, "rgba(62,154,228,0.045)");
+    haze.addColorStop(1, "rgba(26,84,148,0)");
+    ctx.fillStyle = haze;
+    ctx.fillRect(-w, horizonY - h * 0.22, w * 3, h * 0.40);
     ctx.restore();
   } else {
     // Safe photo-load fallback: a curved, illuminated blue ocean.
@@ -2855,17 +2879,8 @@ function drawStage1ClearSequence(
 
       ctx.save();
 
-      ctx.filter =
-        "blur(" +
-        Math.max(
-          1.5,
-          minDim *
-            (
-              0.0035 +
-              life * 0.004
-            ),
-        ) +
-        "px)";
+      // The wisp already has four soft radial-gradient color stops.
+      // Avoid a GPU/CPU blur filter on EACH wisp EVERY frame.
 
       const wisp =
         ctx.createRadialGradient(
@@ -4957,6 +4972,19 @@ export function ReentryPresentationCanvas({
     null,
   );
   const prevHeadingRef = useRef<number | null>(null);
+
+  // React updates flightProgress frequently. Restarting the requestAnimationFrame
+  // effect on every update causes frame cancellation/recreation and visible
+  // cadence jitter. Read current props from one ref in a stable animation loop.
+  const presentationRef = useRef({
+    phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
+    powerNorm, variant, assistMode,
+  });
+  presentationRef.current = {
+    phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
+    powerNorm, variant, assistMode,
+  };
+
   // SPACE integration may take thousands of steps. Preview it only when
   // direction changes: never run the solver on every animation frame.
   const idleSpaceCacheRef = useRef<{
@@ -5045,12 +5073,24 @@ export function ReentryPresentationCanvas({
     let raf = 0;
 
     const draw = () => {
+      const {
+        phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
+        powerNorm, variant, assistMode,
+      } = presentationRef.current;
       const parent = canvas.parentElement;
       if (!parent) return;
 
       const w = Math.max(1, parent.clientWidth);
       const h = Math.max(1, parent.clientHeight);
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      // The 2D canvas is composited with a live WebGL ocean; reducing only
+      // the epilogue DPR bounds pixel fill without touching Physics or shaders.
+      const cinematicDprCap =
+        variant === "stage" &&
+        (phase === "flight" || phase === "result") &&
+        result?.outcome === "EARTH_REACHED"
+          ? 1.55
+          : 2;
+      const dpr = Math.min(cinematicDprCap, window.devicePixelRatio || 1);
 
       const pw = Math.floor(w * dpr);
       const ph = Math.floor(h * dpr);
@@ -5179,8 +5219,10 @@ export function ReentryPresentationCanvas({
       const launch = launchAnchorPx(w, h);
       // Preview at POWER always faces upper-right; DIRECTION selection then
       // displays the player's actual heading, not a permanently fixed sprite.
+      // The 48-second clock-hand direction is 18 degrees above horizontal
+      // toward the left (198 degrees in canvas coordinates).
       const launchHeading = phase === "power"
-        ? -3 * Math.PI / 4
+        ? -9 * Math.PI / 10
         : directionNormToScreenHeadingRad(angleNorm);
 
       const pathEarth =
@@ -6080,17 +6122,9 @@ const failureTravelT =
     raf = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(raf);
-  }, [
-    angleNorm,
-    flightProgress,
-    phase,
-    result,
-    spaceApproach,
-    spaceShare,
-    powerNorm,
-    variant,
-    assistMode,
-  ]);
+  // The RAF loop belongs to the mounted canvas, not to each physics-progress
+  // update. The live presentationRef supplies the latest scene on every tick.
+  }, [variant]);
 
   return (
     <canvas

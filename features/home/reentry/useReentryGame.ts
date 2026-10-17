@@ -56,7 +56,7 @@ export function useReentryGame(options?: {
 
   // 0.5 = nominal reentry direction. Unlike v5, this wraps instead of clamping.
   // Start facing upper right. Angle is still freely adjustable before LAUNCH.
-  const [angleNorm, setAngleNorm] = useState(0.875);
+  const [angleNorm, setAngleNorm] = useState(0.8);
 
   const [result, setResult] = useState<ReentryResult | null>(null);
   const [playRecord, setPlayRecord] =
@@ -175,7 +175,7 @@ export function useReentryGame(options?: {
     setSpaceApproach(null);
     setSpaceShare(1);
     setLockedPowerNorm(null);
-    setAngleNorm(0.875);
+    setAngleNorm(0.8);
     setFlightProgress(0);
     setSeed(createReentrySeed());
     powerCycleStartRef.current = performance.now();
