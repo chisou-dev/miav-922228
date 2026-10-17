@@ -46,12 +46,16 @@ function stopSalvageSound(): void {
 /**
  * Original uneasy organic thrumming while the ship's six threads flow.
  * Not a reproduction of a real-world emergency alert or its cadence.
- * Runs only in the actual salvage interval and respects master volume.
+ * Runs only during the two visible thread intervals and respects master volume.
  */
 function updateSalvageSound(splashAgeS: number): void {
   if (!state) return;
-  const active = splashAgeS >= STAGE1_ABSORB_START_S &&
+  // First thread creates the skiff at 6.8s; a second set pulls the
+  // original ship into both raised tentacles during the salvage interval.
+  const creatingSkiff = splashAgeS >= 6.8 && splashAgeS < 9.8;
+  const gatheringHull = splashAgeS >= STAGE1_ABSORB_START_S &&
     splashAgeS < STAGE1_ABSORB_END_S;
+  const active = creatingSkiff || gatheringHull;
   if (!active) {
     stopSalvageSound();
     return;
@@ -61,15 +65,17 @@ function updateSalvageSound(splashAgeS: number): void {
   if (!salvageTone) {
     const envelope = ctx.createGain();
     envelope.gain.setValueAtTime(0.0001, now);
-    envelope.gain.setTargetAtTime(0.060, now, 0.18);
+    // Mobile speakers cannot reproduce the old 83 Hz tone well.
+    // Raise audible mid-bass presence while keeping peaks below master.
+    envelope.gain.setTargetAtTime(0.19, now, 0.14);
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = 550;
+    filter.frequency.value = 1050;
     filter.Q.value = 1.5;
     filter.connect(envelope);
     envelope.connect(master);
     const tones: OscillatorNode[] = [];
-    for (const [i, hz] of [83, 92, 133].entries()) {
+    for (const [i, hz] of [157, 167, 241].entries()) {
       const osc = ctx.createOscillator();
       const level = ctx.createGain();
       osc.type = i === 2 ? "sine" : "triangle";
@@ -84,8 +90,8 @@ function updateSalvageSound(splashAgeS: number): void {
     const pulse = ctx.createOscillator();
     const depth = ctx.createGain();
     pulse.type = "sine";
-    pulse.frequency.value = 6.6;
-    depth.gain.value = 0.023;
+    pulse.frequency.value = 7.3;
+    depth.gain.value = 0.070;
     pulse.connect(depth);
     depth.connect(envelope.gain);
     pulse.start(now);

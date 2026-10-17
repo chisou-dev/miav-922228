@@ -5,8 +5,9 @@ import {
   STAGE2_FLIGHT_S,
   STAGE2_MAX_DEG,
   STAGE2_MIN_DEG,
+  STAGE2_MIN_PITCH_DEG,
+  STAGE2_MAX_PITCH_DEG,
   STAGE2_ZOOM_STEPS,
-  stage2AimPoint,
   stage2Clamp,
   stage2Evaluate,
   stage2Message,
@@ -16,11 +17,14 @@ import {
 // A self-contained, low-overhead Stage 2. It shares neither the 120km
 // handoff nor Physics v1.1 with Stage 1.
 type Phase = "aim" | "flight" | "result";
+type Wind = { direction: -1 | 1; strength: number; waveSeed: number };
 type View = {
   phase: Phase;
   angle: number;
   power: number;
   zoom: number;
+  pitch: number;
+  wind: Wind;
   outcome: Stage2Outcome | null;
 };
 const ease = (value: number) => {
@@ -233,210 +237,273 @@ function drawCoast(
   return { x: personX, y: faceY, unit };
 }
 
-function drawCockpitOverlay(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  time: number, zoom: number, angle: number, power: number,
-  phase: Phase, elapsed: number, outcome: Stage2Outcome | null,
-): void {
-  const s = Math.min(w, h);
-  ctx.save();
-  const rim = ctx.createLinearGradient(0, 0, w, h);
-  rim.addColorStop(0, "rgba(3,14,20,0.88)");
-  rim.addColorStop(0.5, "rgba(11,33,42,0.55)");
-  rim.addColorStop(1, "rgba(1,7,11,0.94)");
-  ctx.lineWidth = Math.max(12, s * 0.045);
-  ctx.strokeStyle = rim;
-  ctx.beginPath();
-  ctx.moveTo(0, h * 0.39);
-  ctx.quadraticCurveTo(w * 0.08, h * 0.01, w * 0.37, h * 0.018);
-  ctx.quadraticCurveTo(w * 0.64, h * 0.007, w * 0.97, h * 0.33);
-  ctx.stroke();
-  ctx.fillStyle = "rgba(1,9,15,0.86)";
-  ctx.beginPath();
-  ctx.moveTo(0, h * 0.89);
-  ctx.quadraticCurveTo(w * 0.23, h * 0.82, w * 0.50, h * 0.87);
-  ctx.quadraticCurveTo(w * 0.78, h * 0.83, w, h * 0.87);
-  ctx.lineTo(w, h);
-  ctx.lineTo(0, h);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "rgba(73,154,169,0.32)";
-  ctx.lineWidth = 1.1;
-  ctx.beginPath();
-  ctx.moveTo(0, h * 0.89);
-  ctx.quadraticCurveTo(w * 0.49, h * 0.81, w, h * 0.87);
-  ctx.stroke();
 
-  const cx = w * 0.5, cy = h * 0.51, r = Math.max(8, s * 0.014);
-  ctx.strokeStyle = phase === "result"
-    ? outcome === "NOSE" || outcome === "MOUTH"
-      ? "rgba(139,251,211,0.95)" : "rgba(255,168,135,0.94)"
-    : "rgba(160,240,224,0.78)";
-  ctx.lineWidth = Math.max(0.9, s * 0.0018);
-  ctx.beginPath();
-  ctx.moveTo(cx - r * 2.1, cy);
-  ctx.lineTo(cx - r * 0.65, cy);
-  ctx.moveTo(cx + r * 0.65, cy);
-  ctx.lineTo(cx + r * 2.1, cy);
-  ctx.moveTo(cx, cy - r * 2.1);
-  ctx.lineTo(cx, cy - r * 0.65);
-  ctx.moveTo(cx, cy + r * 0.65);
-  ctx.lineTo(cx, cy + r * 2.1);
-  ctx.arc(cx, cy, r * 0.60, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.font = "11px ui-monospace, SFMono-Regular, Consolas, monospace";
-  ctx.fillStyle = "rgba(175,231,223,0.74)";
-  const range = phase === "flight"
-    ? Math.max(0.3, 50 * (1 - elapsed / STAGE2_FLIGHT_S))
-    : phase === "result" ? 0.3 : 50;
-  ctx.fillText("RANGE " + range.toFixed(1) + " M", 22, h * 0.74);
-  ctx.fillText("← COAST  /  HEADING " + angle.toFixed(1) + "°", 22, h * 0.78);
-  ctx.fillText("OPTIC " + Math.round(zoom) + "X  /  POWER " +
-    Math.round(power * 100) + "%", 22, h * 0.82);
-  if (phase === "flight") {
-    const p = stage2Clamp(elapsed / STAGE2_FLIGHT_S, 0, 1);
-    const pulse = 0.47 + Math.sin(time * 8) * 0.22;
-    ctx.fillStyle = "rgba(114,238,206," + pulse + ")";
-    ctx.fillRect(cx - r * 0.14, cy - r * 0.14, r * 0.28, r * 0.28);
-    ctx.strokeStyle = "rgba(131,217,220,0.42)";
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * (1.25 + p * 3), 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
+/*
+ * Main sea view and optical cockpit are deliberately separate canvases.
+ * Changing optics never enlarges the main view before LAUNCH.
+ * Wind gust and wave drift use fixed math for a shot, not chance on impact.
+ */
+function driftAt(wind: Wind, p: number): { yaw: number; pitch: number } {
+  const progress = ease(p);
+  const gust = Math.sin(wind.waveSeed + p * 10.3) * 0.11;
+  return {
+    yaw: progress * (wind.direction * wind.strength * 0.13 + gust),
+    pitch: progress * (
+      Math.sin(wind.waveSeed * 1.9 + p * 16.8) * 0.17 +
+      Math.cos(p * 21.0 + wind.waveSeed) * 0.07
+    ),
+  };
 }
 
-function drawStage2(
+function drawLook(
   ctx: CanvasRenderingContext2D, w: number, h: number,
-  time: number, view: View, elapsed: number,
+  time: number, zoom: number,
+  yaw: number, pitch: number,
 ): void {
-  ctx.clearRect(0, 0, w, h);
-  const p = stage2Clamp(elapsed / STAGE2_FLIGHT_S, 0, 1);
-  const launchZoom = view.phase === "flight" || view.phase === "result"
-    ? 1 + 166 * ease((p - 0.13) / 0.74)
-    : 1;
-  const zoom = Math.max(view.zoom, launchZoom);
+  const unit = Math.min(w, h) * 0.0028;
   const faceX = w * 0.395;
   const faceY = h * 0.546;
-  const unit = Math.min(w, h) * 0.0028;
-  const aim = stage2AimPoint(view.angle);
-  const focusX = faceX + aim.x * unit;
-  const focusY = faceY + aim.y * unit;
-
-  // Optical zoom moves the entire shoreline through one continuous
-  // camera transform, with the selected aperture centred in the reticle.
+  // The camera pan tracks a patch of the face, not the nose or mouth.
+  // Even at maximum optical zoom the precise aperture is not resolved.
+  const lookX = faceX + yaw * unit * 0.10;
+  const lookY = faceY + (0.48 + pitch * 0.18) * unit;
   ctx.save();
-  ctx.translate(w * 0.5 - focusX * zoom, h * 0.51 - focusY * zoom);
+  ctx.translate(w * 0.5 - lookX * zoom, h * 0.50 - lookY * zoom);
   ctx.scale(zoom, zoom);
   drawCoast(ctx, w, h, time, zoom);
   ctx.restore();
-
-  // A non-graphic fictional hit effect: a flash and the result readout.
-  if (view.phase === "flight" && p > 0.84) {
-    const pulse = ease((p - 0.84) / 0.14);
-    const g = ctx.createRadialGradient(
-      w * 0.5, h * 0.51, 0, w * 0.5, h * 0.51, h * 0.29,
-    );
-    g.addColorStop(0, "rgba(121,246,225," + (pulse * 0.27) + ")");
-    g.addColorStop(1, "rgba(121,246,225,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-  }
-  if (view.phase === "result") {
-    ctx.fillStyle = "rgba(1,9,14,0.19)";
-    ctx.fillRect(0, 0, w, h);
-    // A fast pass is non-graphic: a tiny receding streak appears BEYOND
-    // the target rather than a still image claiming it penetrated.
-    if (view.outcome === "TOO_FAST") {
-      ctx.save();
-      ctx.globalCompositeOperation = "screen";
-      const streak = ctx.createLinearGradient(w * 0.4, h * 0.63, w, h * 0.24);
-      streak.addColorStop(0, "rgba(120,234,228,0)");
-      streak.addColorStop(0.65, "rgba(140,251,234,0.50)");
-      streak.addColorStop(1, "rgba(178,254,244,0)");
-      ctx.strokeStyle = streak;
-      ctx.lineWidth = Math.max(1.5, h * 0.004);
-      ctx.beginPath();
-      ctx.moveTo(w * 0.4, h * 0.63);
-      ctx.lineTo(w * 1.1, h * 0.18);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-  drawCockpitOverlay(
-    ctx, w, h, time, zoom, view.angle, view.power,
-    view.phase, elapsed, view.outcome,
-  );
 }
 
-const control = "touch-manipulation rounded-sm border border-cyan-100/35 " +
-  "bg-[#071a22]/90 px-3 py-2 text-[0.76rem] tracking-[0.08em] " +
-  "text-cyan-50 transition-colors hover:bg-[#123541] " +
+function drawSkiff(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, size: number,
+  yaw: number, pitch: number, alpha: number,
+): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(yaw * 0.032 - pitch * 0.018);
+  ctx.globalAlpha = alpha;
+  const metal = ctx.createLinearGradient(-size, -size, size, size);
+  metal.addColorStop(0, "#152e42");
+  metal.addColorStop(0.52, "#46798d");
+  metal.addColorStop(1, "#061726");
+  ctx.fillStyle = metal;
+  ctx.strokeStyle = "rgba(170,239,231,0.72)";
+  ctx.lineWidth = Math.max(1, size * 0.022);
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.90);
+  ctx.bezierCurveTo(size * 0.68, -size * 0.60, size, size * 0.36, size * 0.7, size * 0.62);
+  ctx.quadraticCurveTo(0, size * 0.90, -size * 0.7, size * 0.62);
+  ctx.bezierCurveTo(-size, size * 0.36, -size * 0.68, -size * 0.60, 0, -size * 0.90);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#05151d";
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.16, size * 0.38, size * 0.33, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(96,211,191,0.35)";
+  ctx.beginPath();ctx.moveTo(0, -size * 0.58);ctx.lineTo(0, -size * 0.15);ctx.stroke();
+  ctx.restore();
+}
+
+function drawMain(
+  ctx: CanvasRenderingContext2D, w: number, h: number,
+  time: number, v: View, elapsed: number,
+): void {
+  ctx.clearRect(0, 0, w, h);
+  const p = stage2Clamp(elapsed / STAGE2_FLIGHT_S, 0, 1);
+  const drift = driftAt(v.wind, p);
+  const viewYaw = v.angle + drift.yaw;
+  const viewPitch = v.pitch + drift.pitch;
+
+  // Motion toward the beach, not a pre-launch zoom. Main horizon stays wide
+  // while the user operates the binocular scope in the corner.
+  const launched = v.phase === "flight" || v.phase === "result";
+  const travel = ease((p - 0.08) / 0.89);
+  const cameraZoom = launched
+    ? 1 + 156 * travel * travel
+    : 1;
+  drawLook(ctx, w, h, time, cameraZoom, viewYaw, viewPitch);
+
+  if (v.phase === "aim") {
+    drawSkiff(ctx,
+      w * (0.50 + v.angle * 0.004),
+      h * (0.79 + v.pitch * 0.003),
+      Math.min(w, h) * 0.055,
+      v.angle, v.pitch, 0.95,
+    );
+  } else if (v.phase === "flight") {
+    const r = Math.min(w, h);
+    const speed = ease(p);
+    // Close water / wake streaks move faster as the craft accelerates.
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    for (let i = 0; i < 32; i++) {
+      const seed = (i * 0.6180339 + 0.13) % 1;
+      const x = ((seed + p * (0.12 + (i % 7) * 0.018)) % 1) * w;
+      const y = h * (0.55 + ((i * 0.317 + time * (0.4 + speed * 2.4)) % 1) * 0.52);
+      ctx.strokeStyle = "rgba(184,230,224," + (0.06 + speed * 0.18) + ")";
+      ctx.lineWidth = Math.max(0.7, r * 0.0012);
+      ctx.beginPath();ctx.moveTo(x, y);
+      ctx.lineTo(x + drift.yaw * 2, y + r * (0.006 + speed * 0.035));ctx.stroke();
+    }
+    ctx.restore();
+    const shipFade = 1 - ease((p - 0.68) / 0.25);
+    if (shipFade > 0.002) {
+      drawSkiff(ctx, w * (0.5 + drift.yaw * 0.015),
+        h * (0.80 - speed * 0.27 + drift.pitch * 0.016),
+        r * (0.054 - speed * 0.036),
+        viewYaw, viewPitch, shipFade);
+    }
+  }
+
+  if (v.phase === "result" && v.outcome) {
+    ctx.fillStyle = "rgba(0,9,18,0.36)";
+    ctx.fillRect(0, 0, w, h);
+  }
+}
+
+function drawOptic(
+  ctx: CanvasRenderingContext2D, w: number, h: number,
+  time: number, v: View, elapsed: number,
+): void {
+  const p = stage2Clamp(elapsed / STAGE2_FLIGHT_S, 0, 1);
+  const drift = driftAt(v.wind, p);
+  // Moving closer naturally increases apparent size, but optics only
+  // magnify this small monitor; never magnify the pre-launch main canvas.
+  const approach = v.phase === "aim" ? 1 : 1 + 3.0 * ease(p);
+  const zoom = Math.min(128, v.zoom * approach);
+  ctx.clearRect(0, 0, w, h);
+  drawLook(ctx, w, h, time, zoom,
+    v.angle + drift.yaw, v.pitch + drift.pitch);
+  const cx = w * 0.5, cy = h * 0.5;
+  const arm = Math.max(6, Math.min(w, h) * 0.10);
+  ctx.strokeStyle = "rgba(167,243,216,0.88)";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(cx - arm * 2.4, cy);ctx.lineTo(cx - arm * 0.55, cy);
+  ctx.moveTo(cx + arm * 0.55, cy);ctx.lineTo(cx + arm * 2.4, cy);
+  ctx.moveTo(cx, cy - arm * 2.4);ctx.lineTo(cx, cy - arm * 0.55);
+  ctx.moveTo(cx, cy + arm * 0.55);ctx.lineTo(cx, cy + arm * 2.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, arm * 0.48, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+const control = "touch-manipulation rounded-md border border-cyan-100/40 " +
+  "bg-[#061b24]/95 px-2 py-1.5 text-[0.76rem] font-medium text-cyan-50 " +
+  "transition-colors active:scale-[0.96] hover:bg-[#13394c] " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-100 " +
-  "disabled:opacity-35";
+  "disabled:opacity-30";
 const zoomSteps: readonly number[] = STAGE2_ZOOM_STEPS;
 
 export function ReentryStage2Prototype({ onClose }: { onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const opticRef = useRef<HTMLCanvasElement>(null);
   const [phase, setPhase] = useState<Phase>("aim");
   const [angle, setAngle] = useState(0);
-  const [power, setPower] = useState(0.5);
+  const [pitch, setPitch] = useState(0);
+  const [power, setPower] = useState(0.56);
   const [zoomIndex, setZoomIndex] = useState(0);
   const [outcome, setOutcome] = useState<Stage2Outcome | null>(null);
   const [notice, setNotice] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  // Forecast is visible BEFORE launch; gusts vary continuously during flight.
+  const wind: Wind = {
+    direction: attempt % 2 === 0 ? -1 : 1,
+    strength: 4 - (attempt % 3),
+    waveSeed: attempt * 1.731 + 0.77,
+  };
+  const zoom = zoomSteps[zoomIndex];
   const elapsedRef = useRef(0);
   const viewRef = useRef<View>({
-    phase: "aim", angle: 0, power: 0.5, zoom: 1, outcome: null,
+    phase: "aim", angle: 0, pitch: 0, power: 0.56,
+    zoom: 1, wind, outcome: null,
   });
-  const zoom = zoomSteps[zoomIndex];
-  viewRef.current = { phase, angle, power, zoom, outcome };
+
+  useEffect(() => {
+    viewRef.current = { phase, angle, pitch, power, zoom, wind, outcome };
+  }, [phase, angle, pitch, power, zoom, outcome, attempt]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const optic = opticRef.current;
+    const ctx = canvas?.getContext("2d");
+    const opticCtx = optic?.getContext("2d");
+    if (!canvas || !ctx || !optic || !opticCtx) return;
     let raf = 0;
-    let previous = 0;
+    let last = 0;
     const tick = (now: number) => {
-      if (previous === 0) previous = now;
-      const dt = Math.min(50, Math.max(0, now - previous));
-      previous = now;
+      if (!last) last = now;
+      const dt = Math.min(50, Math.max(0, now - last));
+      last = now;
       const v = viewRef.current;
       if (v.phase === "flight") {
-        elapsedRef.current = Math.min(
-          STAGE2_FLIGHT_S, elapsedRef.current + dt / 1000,
-        );
+        elapsedRef.current = Math.min(STAGE2_FLIGHT_S,
+          elapsedRef.current + dt / 1000);
         if (elapsedRef.current >= STAGE2_FLIGHT_S) {
-          const finalOutcome = stage2Evaluate(v.angle, v.power);
-          viewRef.current = { ...v, phase: "result", outcome: finalOutcome };
-          setOutcome(finalOutcome);
+          const d = driftAt(v.wind, 1);
+          const result = stage2Evaluate(
+            v.angle, v.power, v.pitch, d.yaw, d.pitch);
+          viewRef.current = { ...v, phase: "result", outcome: result };
+          setOutcome(result);
           setPhase("result");
         }
       }
-      const w = Math.max(1, Math.round(canvas.clientWidth));
-      const h = Math.max(1, Math.round(canvas.clientHeight));
-      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
-      const pw = Math.floor(w * dpr);
-      const ph = Math.floor(h * dpr);
-      if (canvas.width !== pw || canvas.height !== ph) {
-        canvas.width = pw;
-        canvas.height = ph;
+      for (const c of [canvas, optic]) {
+        const w = Math.max(1, Math.round(c.clientWidth));
+        const h = Math.max(1, Math.round(c.clientHeight));
+        const dpr = Math.min(1.25, window.devicePixelRatio || 1);
+        const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+        if (c.width !== pw || c.height !== ph) {
+          c.width = pw;
+          c.height = ph;
+        }
       }
+      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
+      const cw = Math.max(1, Math.round(canvas.clientWidth));
+      const ch = Math.max(1, Math.round(canvas.clientHeight));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawStage2(ctx, w, h, now / 1000, viewRef.current, elapsedRef.current);
+      drawMain(ctx, cw, ch, now / 1000,
+        viewRef.current, elapsedRef.current);
+      const ow = Math.max(1, Math.round(optic.clientWidth));
+      const oh = Math.max(1, Math.round(optic.clientHeight));
+      opticCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawOptic(opticCtx, ow, oh, now / 1000,
+        viewRef.current, elapsedRef.current);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const nudge = useCallback((delta: number) => {
-    setAngle(value => Math.round(stage2Clamp(
-      value + delta, STAGE2_MIN_DEG, STAGE2_MAX_DEG,
-    ) * 100) / 100);
+  const holdDelayRef = useRef<number | null>(null);
+  const holdRepeatRef = useRef<number | null>(null);
+  const stopHold = useCallback(() => {
+    if (holdDelayRef.current !== null) window.clearTimeout(holdDelayRef.current);
+    if (holdRepeatRef.current !== null) window.clearInterval(holdRepeatRef.current);
+    holdDelayRef.current = null;
+    holdRepeatRef.current = null;
   }, []);
+  useEffect(() => stopHold, [stopHold]);
+  const startHold = (move: () => void) => {
+    stopHold();
+    holdDelayRef.current = window.setTimeout(() => {
+      holdRepeatRef.current = window.setInterval(move, 85);
+    }, 280);
+  };
+
+  const nudgeAngle = useCallback((delta: number) => {
+    if (phase !== "aim") return;
+    setAngle(value => Math.round(stage2Clamp(
+      value + delta, STAGE2_MIN_DEG, STAGE2_MAX_DEG) * 100) / 100);
+  }, [phase]);
+  const nudgePitch = useCallback((delta: number) => {
+    if (phase !== "aim") return;
+    setPitch(value => Math.round(stage2Clamp(
+      value + delta, STAGE2_MIN_PITCH_DEG, STAGE2_MAX_PITCH_DEG) * 100) / 100);
+  }, [phase]);
 
   const launch = () => {
     if (phase !== "aim") return;
@@ -447,146 +514,135 @@ export function ReentryStage2Prototype({ onClose }: { onClose: () => void }) {
   };
   const retry = () => {
     elapsedRef.current = 0;
+    setAttempt(v => v + 1);
     setAngle(0);
-    setPower(0.5);
+    setPitch(0);
+    setPower(0.56);
     setZoomIndex(0);
     setOutcome(null);
     setNotice(false);
     setPhase("aim");
   };
-
   const cleared = outcome === "NOSE" || outcome === "MOUTH";
   const interactive = phase === "aim";
+  const p = stage2Clamp(elapsedRef.current / STAGE2_FLIGHT_S, 0, 1);
+  const drift = driftAt(wind, p);
+  const windIcon = wind.direction < 0 ? "←" : "→";
 
   return (
-    <div
-      className="absolute inset-0 z-[90] overflow-hidden bg-[#061e29] text-white"
-      role="region"
-      aria-label="Stage 2 — coastline approach"
-    >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
-        aria-label="Cockpit viewport showing a distant person, beach and rocky reefs"
-      />
-
-      <div className="pointer-events-none absolute left-3 top-14 z-[92] rounded-sm border-l border-cyan-100/40 bg-black/45 px-3 py-2 font-mono text-[0.62rem] tracking-[0.16em] sm:left-7 sm:top-6">
-        STAGE 2 <span className="ml-2 text-cyan-100/60">← COAST</span>
+    <div className="absolute inset-0 z-[90] overflow-hidden bg-[#061e29] text-white"
+      role="region" aria-label="Stage 2 — two-axis hovercraft aiming">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full"
+        aria-label="Wide sea view with hovercraft; coastline approaches at launch" />
+      <div className="pointer-events-none absolute left-3 top-14 z-[92] rounded-sm border-l border-cyan-100/40 bg-black/45 px-3 py-2 font-mono text-[0.61rem] tracking-[0.15em] sm:left-7 sm:top-6">
+        STAGE 2 <span className="ml-2 text-cyan-100/65">← COAST</span>
       </div>
-      <button
-        type="button"
-        onClick={onClose}
-        className={"absolute left-3 top-3 z-[95] sm:left-auto sm:right-4 sm:top-4 " + control}
-      >
-        BACK
-      </button>
+      <button type="button" onClick={onClose}
+        className={"absolute left-3 top-3 z-[96] " + control}>BACK</button>
 
-      {/* Small overhead craft/cockpit display: kept below the AUDIO control. */}
-      <div className="pointer-events-none absolute right-3 top-[5.5rem] z-[92] w-[8.5rem] rounded-md border border-cyan-100/25 bg-[#031521]/75 p-2 font-mono text-[0.58rem] text-cyan-100/75 sm:right-5 sm:w-[11rem]">
-        <div className="mb-1 flex justify-between text-[0.54rem] tracking-[0.15em]">
-          <span>COCKPIT</span><span>OPTICS</span>
+      {/* Only this panel contains the optical zoom. AUDIO sits above it. */}
+      <div className="absolute right-2 top-[5.4rem] z-[94] w-[min(44vw,18rem)] min-w-[8.7rem] overflow-hidden rounded-md border border-cyan-100/50 bg-[#061823]/95 shadow-[0_6px_22px_rgba(0,0,0,0.65)] sm:right-6 sm:top-[5.5rem]">
+        <div className="flex items-center justify-between border-b border-cyan-100/20 px-2 py-1 font-mono text-[0.54rem] tracking-[0.1em] text-cyan-100/80">
+          <span>COCKPIT OPTICS</span><span>{Math.round(zoom)}×</span>
         </div>
-        <svg viewBox="0 0 160 65" className="h-12 w-full sm:h-14" aria-hidden="true">
-          <path d="M10 47 Q80 61 150 47 L137 30 Q84 12 24 30Z" fill="#193b49" stroke="#6daeba" strokeWidth="1.5"/>
-          <ellipse cx="80" cy="38" rx="36" ry="9" fill="#071821" stroke="#8bc2c2"/>
-          <path d="M69 35 L80 18 L91 35" fill="none" stroke="#8bdbcf" strokeWidth="2"/>
-          <path d="M20 16 H45 M115 16 H140 M80 9 V17" stroke="#6daeba" strokeWidth="1"/>
-          <path d="M16 56 H144" stroke="#477b86" strokeDasharray="4 4"/>
-        </svg>
-        <div className="flex justify-between tabular-nums">
-          <span>50M → 0.30M</span><span>{Math.round(zoom)}X</span>
+        <canvas ref={opticRef} className="block aspect-[1.65] w-full"
+          aria-label="Zoomed live view toward the distant beach target"/>
+        <div className="flex flex-wrap justify-between gap-x-2 border-t border-cyan-100/20 bg-[#061b22]/95 px-2 py-1 font-mono text-[0.59rem] tabular-nums text-cyan-100/90">
+          <span>WIND {windIcon} {wind.strength}</span>
+          <span>H {angle.toFixed(1)}° V {pitch.toFixed(1)}°</span>
+        </div>
+        <div className="flex items-center justify-between gap-2 px-2 pb-2 pt-1">
+          <button type="button" className={control+" !px-3 !py-1"}
+            disabled={!interactive || zoomIndex===0}
+            onClick={()=>setZoomIndex(i=>Math.max(0,i-1))} aria-label="Cockpit zoom out">−</button>
+          <span className="font-mono text-[0.57rem] tracking-widest text-cyan-50/65">ZOOM</span>
+          <button type="button" className={control+" !px-3 !py-1"}
+            disabled={!interactive || zoomIndex===zoomSteps.length-1}
+            onClick={()=>setZoomIndex(i=>Math.min(zoomSteps.length-1,i+1))}
+            aria-label="Cockpit zoom in">+</button>
+        </div>
+      </div>
+
+      {/* Colored cockpit switches only peek above the lower hull; functional
+          arrows stay fully accessible above these decorative switches. */}
+      <div className="pointer-events-none absolute -bottom-4 left-0 right-0 z-[91] h-20 rounded-t-[45%] border-t border-cyan-200/35 bg-gradient-to-b from-[#193e4c]/85 to-[#031018]">
+        <div className="mx-auto mt-11 flex w-fit gap-3 opacity-80">
+          {["#dc9a44","#6ab89d","#5d9ee0","#da737b","#e0ca66","#8c83e0"].map((color,i)=>(
+            <span key={i} className="h-9 w-9 rounded-full border border-white/20 shadow-[0_0_5px_rgba(255,255,255,0.25)]"
+              style={{backgroundColor:color}}/>
+          ))}
         </div>
       </div>
 
       {interactive && (
-        <>
-          <div
-            className="absolute inset-x-0 bottom-[20%] z-[92] flex flex-col items-center gap-2 px-3 sm:bottom-[18%]"
-            role="group"
-            aria-label="Zoom, heading and power controls"
-          >
-            <div className="flex items-center gap-2 rounded-sm bg-[#061822]/80 px-2 py-1">
-              <span className="mr-1 font-mono text-[0.58rem] tracking-[0.12em] text-cyan-50/70">ZOOM</span>
-              <button
-                type="button"
-                className={control}
-                disabled={zoomIndex === 0}
-                onClick={() => setZoomIndex(v => Math.max(0, v - 1))}
-                aria-label="Zoom out"
-              >−</button>
-              <span className="min-w-12 text-center font-mono text-xs tabular-nums">{Math.round(zoom)}X</span>
-              <button
-                type="button"
-                className={control}
-                disabled={zoomIndex === zoomSteps.length - 1}
-                onClick={() => setZoomIndex(v => Math.min(zoomSteps.length - 1, v + 1))}
-                aria-label="Zoom in"
-              >+</button>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-sm bg-[#061822]/85 px-2 py-1">
-              <span className="mr-1 font-mono text-[0.57rem] tracking-[0.09em] text-cyan-50/70">DIRECTION</span>
-              <button className={control} type="button" onClick={() => nudge(-1)} aria-label="Aim left one degree">−1°</button>
-              <button className={control} type="button" onClick={() => nudge(-0.1)} aria-label="Aim left 0.1 degree">−0.1°</button>
-              <span className="min-w-[3.8rem] text-center font-mono text-[0.72rem] tabular-nums">{angle.toFixed(1)}°</span>
-              <button className={control} type="button" onClick={() => nudge(0.1)} aria-label="Aim right 0.1 degree">+0.1°</button>
-              <button className={control} type="button" onClick={() => nudge(1)} aria-label="Aim right one degree">+1°</button>
-            </div>
-            <div className="flex w-full max-w-[21rem] items-center gap-3 rounded-sm bg-[#061822]/85 px-3 py-2">
-              <label htmlFor="s2-power" className="font-mono text-[0.64rem] tracking-[0.10em]">POWER</label>
-              <input
-                id="s2-power"
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={Math.round(power * 100)}
-                onChange={e => setPower(Number(e.target.value) / 100)}
-                className="min-w-0 flex-1 accent-cyan-200"
-                aria-label="Stage 2 propulsion power"
-              />
-              <span className="w-9 text-right font-mono text-xs tabular-nums">{Math.round(power * 100)}%</span>
-            </div>
-            <button
-              type="button"
-              className={control + " min-w-36 border-cyan-100/65"}
-              onClick={launch}
-            >
-              LAUNCH
-            </button>
+        <div className="absolute inset-x-0 bottom-[7%] z-[95] flex flex-col items-center gap-2 px-2 sm:bottom-[6%]"
+          role="group" aria-label="Power and two-axis direction controls">
+          <div className="flex items-center gap-2 rounded-md bg-[#051923]/90 px-3 py-1.5">
+            <label htmlFor="stage2-power" className="font-mono text-[0.60rem] tracking-[0.11em] text-cyan-50/80">POWER</label>
+            <input id="stage2-power" type="range" min="0" max="100" step="1"
+              value={Math.round(power*100)}
+              onChange={e=>setPower(Number(e.target.value)/100)}
+              className="w-[min(31vw,10rem)] accent-amber-300"
+              aria-label="Stage 2 propulsion power"/>
+            <span className="w-9 font-mono text-[0.67rem] tabular-nums">{Math.round(power*100)}%</span>
           </div>
-        </>
-      )}
-
-      {phase === "flight" && (
-        <div className="pointer-events-none absolute inset-x-0 top-[17%] z-[92] text-center font-mono text-[0.7rem] tracking-[0.18em] text-cyan-100/80">
-          COURSE LOCKED · APPROACHING SHORE
+          <div className="flex items-center gap-2 rounded-md bg-[#051923]/90 px-2 py-1.5">
+            <div className="flex gap-1">
+              <button type="button" className={control+" !border-sky-200/65 !bg-[#174e69]"}
+                onPointerDown={()=>startHold(()=>nudgeAngle(-0.25))}
+                onPointerUp={stopHold} onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                onClick={()=>nudgeAngle(-0.25)} aria-label="Turn left">←</button>
+              <button type="button" className={control+" !border-sky-200/65 !bg-[#174e69]"}
+                onPointerDown={()=>startHold(()=>nudgeAngle(0.25))}
+                onPointerUp={stopHold} onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                onClick={()=>nudgeAngle(0.25)} aria-label="Turn right">→</button>
+            </div>
+            <div className="flex gap-1">
+              <button type="button" className={control+" !border-emerald-200/65 !bg-[#205d54]"}
+                onPointerDown={()=>startHold(()=>nudgePitch(-0.25))}
+                onPointerUp={stopHold} onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                onClick={()=>nudgePitch(-0.25)} aria-label="Aim up">↑</button>
+              <button type="button" className={control+" !border-emerald-200/65 !bg-[#205d54]"}
+                onPointerDown={()=>startHold(()=>nudgePitch(0.25))}
+                onPointerUp={stopHold} onPointerLeave={stopHold}
+                onPointerCancel={stopHold}
+                onClick={()=>nudgePitch(0.25)} aria-label="Aim down">↓</button>
+            </div>
+            <button type="button" className={control+" !border-amber-200/80 !bg-[#946027] !px-3"}
+              onClick={launch}>LAUNCH</button>
+          </div>
+          <p className="rounded bg-black/35 px-2 font-mono text-[0.51rem] tracking-[0.08em] text-white/70">
+            ← → HEADING · ↑ ↓ ELEVATION · WIND {windIcon} {wind.strength}
+          </p>
         </div>
       )}
 
-      {phase === "result" && outcome && (
-        <div className="absolute inset-x-0 bottom-[8%] z-[94] flex flex-col items-center gap-3 px-4 text-center">
-          <p
-            className={"max-w-sm rounded-sm border px-5 py-3 font-mono text-sm tracking-[0.12em] " +
-              (cleared ? "border-emerald-200/55 bg-[#062c29]/95" : "border-white/30 bg-[#071b25]/95")}
-            role="status"
-          >
+      {phase==="flight" && (
+        <p className="pointer-events-none absolute inset-x-0 top-[17%] z-[92] text-center font-mono text-[0.65rem] tracking-[0.14em] text-white/80">
+          HIGH-SPEED APPROACH · GUST & WAVE DRIFT
+        </p>
+      )}
+      {phase==="result" && outcome && (
+        <div className="absolute inset-x-0 bottom-[12%] z-[95] flex flex-col items-center gap-2 px-4 text-center">
+          <p className={"rounded-md border px-5 py-3 font-mono text-sm tracking-[0.10em] " +
+            (cleared ? "border-emerald-200/60 bg-[#062b27]/95" :
+              "border-white/30 bg-[#071924]/95")} role="status">
             {stage2Message(outcome)}
           </p>
-          <div className="flex gap-3">
-            {cleared && (
-              <button type="button" className={control} onClick={() => setNotice(v => !v)}>
-                STAGE 3
-              </button>
-            )}
+          <div className="flex gap-2">
+            {cleared&&<button type="button" className={control}
+              onClick={()=>setNotice(v=>!v)}>STAGE 3</button>}
             <button type="button" className={control} onClick={retry}>RETRY</button>
             <button type="button" className={control} onClick={onClose}>BACK</button>
           </div>
-          {notice && <p className="rounded-sm bg-black/65 px-3 py-2 text-xs tracking-wider">STAGE 3 — COMING SOON</p>}
+          {notice && <p className="rounded bg-black/60 px-2 py-2 text-xs tracking-widest">STAGE 3 — COMING SOON</p>}
         </div>
       )}
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-2 z-[92] text-center font-mono text-[0.49rem] tracking-[0.11em] text-white/50">
-        STAGE 2 · EXPERIMENTAL COCKPIT / FIXED TARGET · NO RANDOM WIN ROLL
+      <div className="pointer-events-none absolute inset-x-0 bottom-1 z-[92] text-center font-mono text-[0.47rem] tracking-[0.11em] text-white/40">
+        STAGE 2 · OPTICAL / FLIGHT PROTOTYPE
       </div>
     </div>
   );
