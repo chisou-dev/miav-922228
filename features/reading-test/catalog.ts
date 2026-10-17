@@ -15,6 +15,7 @@ import { stillness } from "@/features/reading-test/stories/stillness";
 import { theMonsterChapter1 } from "@/features/reading-test/stories/the-monster-chapter-1";
 import { tissue } from "@/features/reading-test/stories/tissue";
 import { seriesOpenings } from "@/features/reading-test/stories/series-openings";
+import { revisedQuestions } from "@/features/reading-test/quality-overrides";
 import type {
   ReadingLevel,
   ReadingStory,
@@ -87,9 +88,36 @@ const sources: readonly ReadingStoryInput[] = [
   theMonsterChapter1,
 ];
 
+const QUESTION_BANK_MIN = 3;
+const QUESTION_BANK_MAX = 100;
+
+function assertQuestion(slug: string, question: ReadingStoryInput["questions"][number]) {
+  if (
+    question.choices.length < 3 ||
+    question.choices.length > 4 ||
+    question.choices.filter((choice) => choice === question.correctAnswer).length !== 1
+  ) {
+    throw new Error(`${slug}: invalid choices for ${question.id}`);
+  }
+  if (new Set(question.choices).size !== question.choices.length) {
+    throw new Error(`${slug}: duplicate choices for ${question.id}`);
+  }
+}
+
+function assertBank(slug: string, questions: ReadingStoryInput["questions"], label: string) {
+  if (questions.length < QUESTION_BANK_MIN || questions.length > QUESTION_BANK_MAX) {
+    throw new Error(`${slug}: expected ${QUESTION_BANK_MIN} to ${QUESTION_BANK_MAX} ${label}`);
+  }
+  if (new Set(questions.map((question) => question.id)).size !== questions.length) {
+    throw new Error(`${slug}: duplicate ${label} ids`);
+  }
+  for (const question of questions) assertQuestion(slug, question);
+}
+
 function assertStory(story: ReadingStoryInput) {
-  if (story.questions.length < 3 || story.questions.length > 5) {
-    throw new Error(`${story.slug}: expected 3 to 5 questions`);
+  assertBank(story.slug, story.questions, "questions");
+  if (story.listeningQuestions) {
+    assertBank(story.slug, story.listeningQuestions, "listening questions");
   }
 
   if (
@@ -107,15 +135,6 @@ function assertStory(story: ReadingStoryInput) {
     throw new Error(`${story.slug}: a continue URL needs a series chapter`);
   }
 
-  for (const question of story.questions) {
-    if (
-      question.choices.length < 3 ||
-      question.choices.length > 4 ||
-      !question.choices.includes(question.correctAnswer)
-    ) {
-      throw new Error(`${story.slug}: invalid choices for ${question.id}`);
-    }
-  }
 }
 
 function isReadingLevel(level: number): level is ReadingLevel {
@@ -141,9 +160,10 @@ function resolveStory(story: ReadingStoryInput): ReadingStory {
   };
 }
 
-for (const story of sources) assertStory(story);
+const revisedSources = sources.map((story) => ({ ...story, questions: revisedQuestions(story.slug, story.questions) }));
+for (const story of revisedSources) assertStory(story);
 
-const stories: readonly ReadingStory[] = sources.map(resolveStory);
+const stories: readonly ReadingStory[] = revisedSources.map(resolveStory);
 
 export function getReadingStories() {
   return stories;

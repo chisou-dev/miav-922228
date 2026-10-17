@@ -1,36 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { QuizForm } from "@/features/learn/QuizForm";
+import { TestResults } from "@/features/learn/TestResults";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
-import {
-  countEnglishWords,
-  formatReadingDuration,
-  readingSpeedCaution,
-  readingWpm,
-  scoreComprehension,
-} from "@/features/reading-test/measure";
+import { drawQuiz, scoreDrawnQuiz } from "@/features/reading-test/draw";
+import { countEnglishWords } from "@/features/reading-test/measure";
+import { countWords } from "@/features/jeff/words";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
-import { useReadingStartedAt } from "@/features/reading-test/session";
+import {
+  beginReadingAttempt,
+  clearReadingAttempt,
+  patchReadingAttempt,
+  recentReadingQuestionIds,
+  useReadingAttempt,
+} from "@/features/reading-test/session";
+import {
+  challengeMinuteOptions,
+  defaultChallengeMinutes,
+  formatClock,
+  recommendedChallengeMinutes,
+} from "@/features/reading-test/timing";
 import type { ReadingQuestion } from "@/features/reading-test/types";
 
-type Step = "read" | "quiz" | "results";
 type Enjoyment = "yes" | "a-little" | "not-really";
-
-const enjoymentOptions: readonly { value: Enjoyment; label: string }[] = [
-  { value: "yes", label: "Yes" },
-  { value: "a-little", label: "A little" },
-  { value: "not-really", label: "Not really" },
-];
+type Mode = "practice" | "challenge";
 
 function StoryBody({ body }: { body: string }) {
   const paragraphs = body.split(/\n\n+/).filter(Boolean);
   return (
     <div className="story-content">
       {paragraphs.map((paragraph, index) => (
-        <p
-          key={`${index}-${paragraph.slice(0, 24)}`}
-          className="whitespace-pre-line"
-        >
+        <p key={`${index}-${paragraph.slice(0, 24)}`} className="whitespace-pre-line">
           {paragraph}
         </p>
       ))}
@@ -44,119 +45,230 @@ export function ReadingSession({
   body,
   questions,
   continueUrl,
+  language = "en",
 }: {
+  language?: "en" | "es" | "fr";
   slug: string;
   title: string;
   body: string;
   questions: readonly ReadingQuestion[];
   continueUrl?: string;
 }) {
-  const startedAt = useReadingStartedAt(slug);
-  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
-  const [step, setStep] = useState<Step>("read");
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const attempt = useReadingAttempt(slug);
+  const [now, setNow] = useState(() => Date.now());
+  const [mode, setMode] = useState<Mode>("challenge");
+  const [minutes, setMinutes] = useState(() =>
+    defaultChallengeMinutes(language === "en" ? countEnglishWords(body) : countWords(body)),
+  );
   const [enjoyment, setEnjoyment] = useState<Enjoyment | null>(null);
-  const [author, setAuthor] = useState<{ name: string; slug: string } | null>(
-    null,
-  );
+  const [author, setAuthor] = useState<{ name: string; slug: string } | null>(null);
 
-  const wordCount = countEnglishWords(body);
-  const allAnswered = questions.every((question) =>
-    question.choices.includes(answers[question.id] ?? ""),
-  );
+  const wordCount = language === "en" ? countEnglishWords(body) : countWords(body);
+  const suggested = recommendedChallengeMinutes(wordCount);
+  const options = challengeMinuteOptions(wordCount);
+
+  useEffect(() => {
+    if (!attempt || attempt.step !== "results") return;
+    let cancelled = false;
+    void import("@/features/reading-test/reveals").then((mod) => {
+      if (!cancelled) setAuthor(mod.revealAuthor(slug));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt, slug]);
+
+  useEffect(() => {
+    if (!attempt || attempt.step !== "active" || attempt.limitMs == null) return;
+    const startedAt = attempt.startedAt;
+    const limitMs = attempt.limitMs;
+    const endsAt = startedAt + limitMs;
+
+    function expireIfNeeded() {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < limitMs) return false;
+      patchReadingAttempt(slug, { step: "quiz", elapsedMs: elapsed });
+      return true;
+    }
+
+    if (expireIfNeeded()) return;
+    const delay = Math.max(0, endsAt - Date.now());
+    const timeout = window.setTimeout(expireIfNeeded, delay);
+    const interval = window.setInterval(() => {
+      setNow(Date.now());
+      expireIfNeeded();
+    }, 200);
+    function onVisible() {
+      setNow(Date.now());
+      expireIfNeeded();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [attempt, slug]);
+
+  function start() {
+    const paper = drawQuiz(questions, {
+      channel: "reading",
+      avoidIds: recentReadingQuestionIds(slug),
+    });
+    if (paper.length === 0) return;
+    beginReadingAttempt(slug, {
+      limitMs: mode === "practice" ? null : minutes * 60_000,
+      paper,
+    });
+  }
 
   function finishReading() {
-    if (startedAt == null) return;
-    setElapsedMs(Math.max(0, Date.now() - startedAt));
-    setStep("quiz");
+    if (!attempt) return;
+    patchReadingAttempt(slug, {
+      step: "quiz",
+      elapsedMs: Math.max(0, Date.now() - attempt.startedAt),
+    });
   }
+
+  const remaining =
+    attempt?.step === "active" && attempt.limitMs != null
+      ? Math.max(0, attempt.startedAt + attempt.limitMs - now)
+      : null;
+  const urgent = remaining != null && remaining <= 15_000;
+  const bar =
+    remaining != null && attempt?.limitMs
+      ? Math.max(0, Math.min(100, (remaining / attempt.limitMs) * 100))
+      : 100;
 
   return (
     <ReadingTestFrame eyebrow="Reading Test" title={title}>
-      {step === "read" ? (
+      {attempt == null ? (
+        <ReadingLayout label="Choose a reading time">
+        <section className="mx-auto mt-12 max-w-md text-center" aria-labelledby="reading-setup">
+          <h2 id="reading-setup" className="text-[1.05rem]">
+            Choose a time
+          </h2>
+          <p className="mt-4 text-[0.95rem] leading-relaxed text-[var(--foreground-muted)]">
+            Suggested for this story: {suggested} {suggested === 1 ? "minute" : "minutes"} at 200
+            words per minute. The clock starts when you press Start.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              className="reading-kindle-button font-[inherit]"
+              aria-pressed={mode === "practice"}
+              onClick={() => {
+                setMode("practice");
+              }}
+            >
+              Practice
+            </button>
+            <button
+              type="button"
+              className="reading-kindle-button font-[inherit]"
+              aria-pressed={mode === "challenge"}
+              onClick={() => {
+                setMode("challenge");
+              }}
+            >
+              Challenge
+            </button>
+          </div>
+          {mode === "practice" ? (
+            <p className="mt-6 text-[0.95rem] leading-relaxed text-[var(--foreground-muted)]">
+              No time limit.
+            </p>
+          ) : (
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {options.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className="reading-kindle-button font-[inherit]"
+                  aria-pressed={minutes === option}
+                  onClick={() => {
+                    setMinutes(option);
+                  }}
+                >
+                  {option} {option === 1 ? "minute" : "minutes"}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-10">
+            <button type="button" className="reading-kindle-button font-[inherit]" onClick={start}>
+              Start Reading
+            </button>
+          </div>
+        </section>
+        </ReadingLayout>
+      ) : null}
+
+      {attempt?.step === "active" ? (
         <ReadingLayout label={title}>
+          {attempt.limitMs == null ? (
+            <p className="mb-8 text-center text-[0.8rem] tracking-[0.14em] text-[var(--reading-ink-muted)] uppercase">
+              Practice · no time limit
+            </p>
+          ) : (
+            <div className="reading-timer" data-urgent={urgent ? "true" : "false"}>
+              <p>
+                Time remaining{" "}
+                <span className="tabular-nums" aria-live="polite">
+                  {formatClock(remaining ?? 0)}
+                </span>
+              </p>
+              <div className="reading-timer-track" aria-hidden="true">
+                <div className="reading-timer-bar" style={{ width: `${bar}%` }} />
+              </div>
+            </div>
+          )}
           <StoryBody body={body} />
           <div className="mt-14 text-center sm:mt-16">
             <button
               type="button"
               className="reading-kindle-button font-[inherit]"
               onClick={finishReading}
-              disabled={startedAt == null}
             >
-              Finished Reading
+              Finish Reading
             </button>
           </div>
         </ReadingLayout>
       ) : null}
 
-      {step === "quiz" ? (
+      {attempt?.step === "quiz" && attempt.elapsedMs != null ? (
         <ReadingLayout label="Comprehension questions">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!allAnswered || elapsedMs == null) return;
-              setStep("results");
-              void import("@/features/reading-test/reveals").then((mod) => {
-                setAuthor(mod.revealAuthor(slug));
+          <QuizForm
+            questions={attempt.paper}
+            answers={attempt.answers}
+            canSubmit={attempt.paper.every((question) =>
+              question.choices.some((choice) => choice.id === attempt.answers[question.id]),
+            )}
+            onAnswer={(questionId, choiceId) => {
+              patchReadingAttempt(slug, {
+                answers: { ...attempt.answers, [questionId]: choiceId },
               });
             }}
-          >
-            <ol className="space-y-10">
-              {questions.map((question, index) => (
-                <li key={question.id}>
-                  <fieldset>
-                    <legend className="text-[1.02rem] leading-relaxed">
-                      {index + 1}. {question.question}
-                    </legend>
-                    <div className="mt-4 space-y-3">
-                      {question.choices.map((choice) => (
-                        <label
-                          key={choice}
-                          className="flex cursor-pointer items-start gap-3 border border-[var(--reading-line)] px-4 py-3 text-[1rem] leading-relaxed has-checked:border-[color-mix(in_srgb,var(--reading-ink)_55%,transparent)]"
-                        >
-                          <input
-                            type="radio"
-                            className="mt-1.5"
-                            name={question.id}
-                            value={choice}
-                            checked={answers[question.id] === choice}
-                            onChange={() => {
-                              setAnswers((current) => ({
-                                ...current,
-                                [question.id]: choice,
-                              }));
-                            }}
-                          />
-                          <span>{choice}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-14 text-center sm:mt-16">
-              <button
-                type="submit"
-                className="reading-kindle-button font-[inherit] disabled:cursor-not-allowed disabled:opacity-40"
-                disabled={!allAnswered || elapsedMs == null}
-              >
-                See Results
-              </button>
-            </div>
-          </form>
+            onSubmit={() => {
+              patchReadingAttempt(slug, { step: "results" });
+            }}
+          />
         </ReadingLayout>
       ) : null}
 
-      {step === "results" && elapsedMs != null ? (
-        <Results
-          questions={questions}
-          author={author}
+      {attempt?.step === "results" && attempt.elapsedMs != null ? (
+        <ResultsView
+          paper={attempt.paper}
+          answers={attempt.answers}
+          elapsedMs={attempt.elapsedMs}
           wordCount={wordCount}
-          elapsedMs={elapsedMs}
-          answers={answers}
+          author={author}
           enjoyment={enjoyment}
           onEnjoyment={setEnjoyment}
+          onReplay={() => {
+            clearReadingAttempt(slug);
+            setAuthor(null);
+          }}
           continueUrl={continueUrl}
         />
       ) : null}
@@ -164,112 +276,41 @@ export function ReadingSession({
   );
 }
 
-function Results({
-  questions,
-  author,
-  wordCount,
-  elapsedMs,
+function ResultsView({
+  paper,
   answers,
+  elapsedMs,
+  wordCount,
+  author,
   enjoyment,
   onEnjoyment,
+  onReplay,
   continueUrl,
 }: {
-  questions: readonly ReadingQuestion[];
-  author: { name: string; slug: string } | null;
-  wordCount: number;
-  elapsedMs: number;
+  paper: Parameters<typeof scoreDrawnQuiz>[0];
   answers: Readonly<Record<string, string>>;
+  elapsedMs: number;
+  wordCount: number;
+  author: { name: string; slug: string } | null;
   enjoyment: Enjoyment | null;
   onEnjoyment: (value: Enjoyment) => void;
+  onReplay: () => void;
   continueUrl?: string;
 }) {
-  const wpm = readingWpm(wordCount, elapsedMs);
-  const caution = readingSpeedCaution(wordCount, elapsedMs);
-  const score = scoreComprehension(questions, answers);
-
+  const score = scoreDrawnQuiz(paper, answers);
   return (
-    <ReadingLayout label="Reading test results">
-      <div className="space-y-10 text-center">
-        <section aria-labelledby="reading-speed-label">
-          <h2
-            id="reading-speed-label"
-            className="text-[0.72rem] tracking-[0.18em] uppercase"
-          >
-            Reading Speed
-          </h2>
-          <p className="mt-4 text-[clamp(1.6rem,4vw,2rem)] font-medium tracking-[0.04em]">
-            {wpm == null ? "—" : `${wpm} WPM`}
-          </p>
-          <p className="mt-3 text-[0.95rem] leading-relaxed text-[var(--reading-ink-muted)]">
-            {formatReadingDuration(elapsedMs)}
-            {caution === "too-short" ? " · Too short to measure" : null}
-            {caution === "too-fast" ? " · Too fast to measure reliably" : null}
-          </p>
-          <p className="mx-auto mt-3 max-w-md text-[0.8rem] leading-relaxed text-[var(--reading-ink-muted)]">
-            Words per minute for this reading.
-          </p>
-        </section>
-
-        <section aria-labelledby="comprehension-label">
-          <h2
-            id="comprehension-label"
-            className="text-[0.72rem] tracking-[0.18em] uppercase"
-          >
-            Comprehension
-          </h2>
-          <p className="mt-4 text-[clamp(1.6rem,4vw,2rem)] font-medium tracking-[0.04em]">
-            {score.correct} / {score.total}
-          </p>
-          <p className="mt-3 text-[0.95rem] text-[var(--reading-ink-muted)]">
-            {score.percent}%
-          </p>
-          <p className="mx-auto mt-3 max-w-md text-[0.8rem] leading-relaxed text-[var(--reading-ink-muted)]">
-            Your score on the five questions for this story. It does not rate your English overall.
-          </p>
-        </section>
-
-        <fieldset>
-          <legend className="text-[1.05rem]">Did you enjoy this story?</legend>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            {enjoymentOptions.map((option) => (
-              <label
-                key={option.value}
-                className="inline-flex min-h-12 cursor-pointer items-center gap-2 border border-[var(--reading-line)] px-4 text-[0.95rem] has-checked:border-[color-mix(in_srgb,var(--reading-ink)_55%,transparent)]"
-              >
-                <input
-                  type="radio"
-                  name="enjoyment"
-                  value={option.value}
-                  checked={enjoyment === option.value}
-                  onChange={() => {
-                    onEnjoyment(option.value);
-                  }}
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        {author ? (
-          <p className="pt-6 text-[clamp(1.35rem,4vw,1.85rem)] font-medium leading-snug tracking-[0.03em]">
-            Written by{" "}
-            <a
-              href={`/authors/${author.slug}`}
-              className="underline decoration-[var(--reading-line)] underline-offset-[0.35em]"
-            >
-              {author.name}
-            </a>
-          </p>
-        ) : null}
-        {continueUrl ? (
-          <p>
-            <a href={continueUrl} className="reading-kindle-button font-[inherit]">
-              Continue the Story
-            </a>
-          </p>
-        ) : null}
-      </div>
-    </ReadingLayout>
+    <TestResults
+      kind="reading"
+      correct={score.correct}
+      total={score.total}
+      percent={score.percent}
+      elapsedMs={elapsedMs}
+      wordCount={wordCount}
+      author={author}
+      enjoyment={enjoyment}
+      onEnjoyment={onEnjoyment}
+      onReplay={onReplay}
+      continueUrl={continueUrl}
+    />
   );
 }
