@@ -6,8 +6,14 @@ type AudioState = {
   spacePad: GainNode;
   rumble: GainNode;
   hiss: GainNode;
+  sea: GainNode;
+  wind: GainNode;
+  splashImpact: GainNode;
   rumbleFilter: BiquadFilterNode;
   hissFilter: BiquadFilterNode;
+  seaFilter: BiquadFilterNode;
+  windFilter: BiquadFilterNode;
+  splashFilter: BiquadFilterNode;
   oscillators: OscillatorNode[];
   noiseSources: AudioBufferSourceNode[];
 };
@@ -16,6 +22,8 @@ let state: AudioState | null = null;
 let spacePingTimer: number | null = null;
 let resultTimer: number | null = null;
 let stage1ClearCueNodes: OscillatorNode[] = [];
+let seaAudioStarted = false;
+let lastSeaModulationAt = -1;
 let userVolume = 0.82;
 const VOLUME_KEY = "miav_reentry_vol_v1";
 const MASTER_PEAK = 0.74;
@@ -101,14 +109,46 @@ function getContext(): AudioContext | null {
   hiss.connect(hissFilter);
   hissFilter.connect(master);
 
+  // Share the existing looping noise sources with filtered surf, wind and
+  // contact impact. No repeated buffers or AudioNodes are created per frame.
+  const sea = ctx.createGain();
+  sea.gain.value = 0.0001;
+  const wind = ctx.createGain();
+  wind.gain.value = 0.0001;
+  const splashImpact = ctx.createGain();
+  splashImpact.gain.value = 0.0001;
+  const seaFilter = ctx.createBiquadFilter();
+  seaFilter.type = "lowpass";
+  seaFilter.frequency.value = 620;
+  const windFilter = ctx.createBiquadFilter();
+  windFilter.type = "bandpass";
+  windFilter.frequency.value = 980;
+  windFilter.Q.value = 0.42;
+  const splashFilter = ctx.createBiquadFilter();
+  splashFilter.type = "bandpass";
+  splashFilter.frequency.value = 280;
+  splashFilter.Q.value = 0.60;
+  seaFilter.connect(sea);
+  windFilter.connect(wind);
+  splashFilter.connect(splashImpact);
+  sea.connect(master);
+  wind.connect(master);
+  splashImpact.connect(master);
+
   state = {
     ctx,
     master,
     spacePad,
     rumble,
     hiss,
+    sea,
+    wind,
+    splashImpact,
     rumbleFilter,
     hissFilter,
+    seaFilter,
+    windFilter,
+    splashFilter,
     oscillators: [],
     noiseSources: [],
   };
@@ -363,6 +403,8 @@ export function startReentryAmbience(): void {
   if (!ctx || !state) return;
 
   stopStage1ClearCue();
+  seaAudioStarted = false;
+  lastSeaModulationAt = -1;
 
   /*
    * Retry can happen while finishReentryAudio still owns a delayed fade.
@@ -390,6 +432,10 @@ export function startReentryAmbience(): void {
     state.hiss.gain,
     t,
   );
+  for (const g of [state.sea, state.wind, state.splashImpact]) {
+    cancelParamAutomation(g.gain, t);
+    g.gain.setTargetAtTime(0.0001, t, 0.04);
+  }
   cancelParamAutomation(
     state.rumbleFilter.frequency,
     t,
@@ -481,6 +527,8 @@ export function startReentryAmbience(): void {
     rumbleNoise.connect(
       state.rumble,
     );
+    rumbleNoise.connect(state.seaFilter);
+    rumbleNoise.connect(state.splashFilter);
     rumbleNoise.start();
 
     const hissNoise =
@@ -489,6 +537,7 @@ export function startReentryAmbience(): void {
     hissNoise.connect(
       state.hiss,
     );
+    hissNoise.connect(state.windFilter);
     hissNoise.start();
 
     state.noiseSources = [
@@ -498,6 +547,41 @@ export function startReentryAmbience(): void {
   }
 
   scheduleSpacePings();
+}
+
+/**
+ * Cut atmospheric noise at the exact water contact. Splash is a short,
+ * one-shot burst; gentle surf and wind remain during the entire epilogue.
+ */
+export function setReentryAudioOcean(splashAgeS: number): void {
+  if (!state) return;
+  const t = state.ctx.currentTime;
+  if (!seaAudioStarted) {
+    seaAudioStarted = true;
+    clearSpacePingTimer();
+    for (const g of [state.rumble, state.hiss, state.spacePad]) {
+      cancelParamAutomation(g.gain, t);
+    }
+    state.rumble.gain.setTargetAtTime(0.0001, t, 0.035);
+    state.hiss.gain.setTargetAtTime(0.0001, t, 0.035);
+    state.spacePad.gain.setTargetAtTime(0.012, t, 0.30);
+    state.sea.gain.setTargetAtTime(0.092, t, 0.55);
+    state.wind.gain.setTargetAtTime(0.018, t, 0.85);
+    const impact = state.splashImpact.gain;
+    cancelParamAutomation(impact, t);
+    impact.setValueAtTime(0.0001, t);
+    impact.linearRampToValueAtTime(0.42, t + 0.045);
+    impact.exponentialRampToValueAtTime(0.0001, t + 1.75);
+  }
+  // A four-hertz envelope is sufficient for slow breakers.
+  // Avoid scheduling a new WebAudio automation on every canvas frame.
+  if (lastSeaModulationAt < 0 || t - lastSeaModulationAt >= 0.25) {
+    state.sea.gain.setTargetAtTime(
+      0.074 + 0.021 * Math.sin(Math.max(0, splashAgeS) * 1.65),
+      t, 0.75,
+    );
+    lastSeaModulationAt = t;
+  }
 }
 
 export function startReentryAudio(): void {
@@ -1004,6 +1088,12 @@ export function stopReentryAudio(): void {
   state.spacePad.gain.setTargetAtTime(0.0001, t, 0.08);
   state.rumble.gain.setTargetAtTime(0.0001, t, 0.06);
   state.hiss.gain.setTargetAtTime(0.0001, t, 0.06);
+  for (const g of [state.sea, state.wind, state.splashImpact]) {
+    cancelParamAutomation(g.gain, t);
+    g.gain.setTargetAtTime(0.0001, t, 0.06);
+  }
+  seaAudioStarted = false;
+  lastSeaModulationAt = -1;
 
   stopNodes();
 }

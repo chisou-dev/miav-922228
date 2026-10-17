@@ -60,6 +60,7 @@ import {
 import {
   finishReentryAudio,
   setReentryAudioFlight,
+  setReentryAudioOcean,
   startReentryAmbience,
   startStage1ClearAudio,
 } from "./reentryAudio";
@@ -3411,6 +3412,59 @@ function drawStage1ClearSequence(
   ctx.restore();
 }
 
+/**
+ * Waterborne radial displacement following the splash. Four broad ripples
+ * expand in perspective for five seconds, with gently irregular crests;
+ * no solid circles, hard edges, textures or extra GPU passes.
+ */
+function drawOceanContactShockwave(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  atmosphereS: number,
+): void {
+  const age = atmosphereS - STAGE1_SPLASH_S;
+  if (age < 0 || age >= 5) return;
+  const minDim = Math.min(w, h);
+  const ox = w * 0.48;
+  const oy = h * 0.792;
+  const fade = 1 - smoothstep((age - 3.6) / 1.4);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, h * 0.636, w, h * 0.364);
+  ctx.clip();
+  ctx.globalCompositeOperation = "screen";
+
+  for (let band = 0; band < 4; band++) {
+    const localAge = age - band * 0.43;
+    if (localAge < 0) continue;
+    const emerge = smoothstep(localAge / 0.35);
+    const radius = minDim * (0.034 + localAge * (0.102 + band * 0.007));
+    const opacity = emerge * fade * (0.34 - band * 0.052);
+    if (opacity <= 0.002) continue;
+    for (let edge = 0; edge < 2; edge++) {
+      ctx.beginPath();
+      for (let i = 0; i <= 64; i++) {
+        const a = i * Math.PI * 2 / 64;
+        const irregular = 1 +
+          0.019 * Math.sin(a * 7 + band * 2.1 + age * 1.6) +
+          0.011 * Math.sin(a * 13 - age * 0.8);
+        const r = radius * irregular;
+        const x = ox + Math.cos(a) * r;
+        const y = oy + Math.sin(a) * r * 0.24 + edge * minDim * 0.002;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = edge === 0
+        ? `rgba(143,220,238,${opacity})`
+        : `rgba(220,246,250,${opacity * 0.60})`;
+      ctx.lineWidth = Math.max(0.8, minDim * (edge === 0 ? 0.0025 : 0.0011));
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 function drawSurfaceApproach(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -3443,6 +3497,8 @@ function drawSurfaceApproach(
       h,
     );
     ctx.restore();
+
+    drawOceanContactShockwave(ctx, w, h, timeSinceVisualS);
 
     /*
      * Moon is kept as the existing deterministic lunar overlay so phase and
@@ -3773,6 +3829,7 @@ function drawSurfaceApproach(
   ctx.fillStyle = haze;
   ctx.fillRect(0, horizonY - h * 0.05, w, h * 0.11);
   ctx.restore();
+  drawOceanContactShockwave(ctx, w, h, timeSinceVisualS);
 }
 
 function drawEarthTexture(
@@ -5699,17 +5756,26 @@ const failureTravelT =
           failureStartS;
 
       if (variant === "stage" && phase === "flight") {
-        setReentryAudioFlight(
-          playback,
-          heat,
-          outcome,
-          timeSinceVisualAtmosphereEntryS,
-          failureStartS,
-          destructionAmount,
-          outcome === "EARTH_REACHED"
-            ? successLandingT(timeSinceVisualAtmosphereEntryS)
-            : 0,
-        );
+        // Contact is an audio boundary. Once water is reached do NOT let
+        // the hot-capsule heat value keep driving reentry rumble and hiss.
+        if (outcome === "EARTH_REACHED" && latched &&
+            timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S) {
+          setReentryAudioOcean(
+            timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S,
+          );
+        } else {
+          setReentryAudioFlight(
+            playback,
+            heat,
+            outcome,
+            timeSinceVisualAtmosphereEntryS,
+            failureStartS,
+            destructionAmount,
+            outcome === "EARTH_REACHED"
+              ? successLandingT(timeSinceVisualAtmosphereEntryS)
+              : 0,
+          );
+        }
       }
 
       drawStars(
@@ -5992,8 +6058,17 @@ const failureTravelT =
         const splashAge = timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S;
         const salvage = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
           (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
-        craftAlpha *= 1 - smoothstep((salvage - 0.69) / 0.31);
-        craftLength *= mix(1, 0.24, smoothstep((salvage - 0.22) / 0.78));
+        // The six liquid filaments first pull the FULL hull up out of the
+        // water, before it shrinks toward the two raised hands.
+        const lift = smoothstep((salvage - 0.05) / 0.71);
+        const minSide = Math.min(w, h);
+        pose = {
+          x: pose.x + minSide * 0.065 * lift,
+          y: pose.y - minSide * 0.14 * lift,
+          angle: pose.angle - 0.16 * lift,
+        };
+        craftAlpha *= 1 - smoothstep((salvage - 0.77) / 0.23);
+        craftLength *= mix(1, 0.20, smoothstep((salvage - 0.38) / 0.62));
       }
 
       if (miss) {
@@ -6087,7 +6162,9 @@ const failureTravelT =
           outcome === "EARTH_REACHED" &&
           latched && !miss &&
           timeSinceVisualAtmosphereEntryS > STAGE1_SPLASH_S &&
-          timeSinceVisualAtmosphereEntryS < STAGE1_SPLASH_S + STAGE1_ESCAPE_EXIT_S;
+          // Stop sea masking once the recovery threads begin lifting the hull.
+          timeSinceVisualAtmosphereEntryS <
+            STAGE1_SPLASH_S + STAGE1_ABSORB_START_S + 0.65;
 
         ctx.save();
         if (submerging) {
