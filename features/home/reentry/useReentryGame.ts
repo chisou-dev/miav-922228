@@ -65,6 +65,8 @@ export function useReentryGame(options?: {
     useState<SpaceApproachResult | null>(null);
   const [spaceShare, setSpaceShare] = useState(1);
   const [flightProgress, setFlightProgress] = useState(0);
+  // Per-frame presentation clock, independent of React re-renders.
+  const flightProgressRef = useRef(0);
 
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const powerCycleStartRef = useRef(0);
@@ -126,38 +128,46 @@ export function useReentryGame(options?: {
       setSpaceApproach(record.spaceApproach ?? null);
       setSpaceShare(record.spaceShare ?? 1);
       setFlightProgress(0);
+      flightProgressRef.current = 0;
       setPhase("flight");
-      flightStartRef.current = performance.now();
+      const flightStart = performance.now();
+      flightStartRef.current = flightStart;
 
       const duration = durationMs ?? 12000;
-      let hiddenAt: number | null = null;
+      // An overloaded graphics frame MUST NOT fast-forward the story.
+      // Advance visual time by the lesser of elapsed wall time and 50ms.
+      // This only changes cinematic playback; Physics v1.1 was computed
+      // at launch and remains exactly as before.
+      let lastFrameAt = flightStart;
+      let elapsedVisualMs = 0;
+      let lastReactPublishedAt = flightStart;
 
       const tick = (now: number) => {
-        const start = flightStartRef.current;
-        if (start === null) return;
-
+        if (flightStartRef.current === null) return;
         if (typeof document !== "undefined" && document.hidden) {
-          if (hiddenAt === null) hiddenAt = now;
+          lastFrameAt = now;
           rafRef.current = requestAnimationFrame(tick);
           return;
         }
 
-        if (hiddenAt !== null) {
-          flightStartRef.current = start + (now - hiddenAt);
-          hiddenAt = null;
+        const deltaMs = Math.min(50, Math.max(0, now - lastFrameAt));
+        lastFrameAt = now;
+        elapsedVisualMs = Math.min(duration, elapsedVisualMs + deltaMs);
+        const p = Math.min(1, elapsedVisualMs / duration);
+
+        // The canvas reads this REF every frame. React updates at 10Hz,
+        // keeping the UI responsive without rebuilding the page at 60Hz.
+        flightProgressRef.current = p;
+        if (now - lastReactPublishedAt >= 100 || p >= 1) {
+          setFlightProgress(p);
+          lastReactPublishedAt = now;
         }
-
-        const elapsedStart = flightStartRef.current ?? start;
-        const p = Math.min(1, (now - elapsedStart) / duration);
-
-        setFlightProgress(p);
 
         if (p >= 1) {
           stopFlightLoop();
           setPhase("result");
           return;
         }
-
         rafRef.current = requestAnimationFrame(tick);
       };
 
@@ -177,6 +187,7 @@ export function useReentryGame(options?: {
     setLockedPowerNorm(null);
     setAngleNorm(0.8);
     setFlightProgress(0);
+    flightProgressRef.current = 0;
     setSeed(createReentrySeed());
     powerCycleStartRef.current = performance.now();
     setPowerOscillator(0);
@@ -335,6 +346,7 @@ export function useReentryGame(options?: {
     spaceApproach,
     spaceShare,
     flightProgress,
+    flightProgressRef,
     surfaceRef,
     lockPower,
     launch,

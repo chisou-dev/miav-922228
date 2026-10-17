@@ -5,6 +5,7 @@ import type { ReentryDrawState } from "./reentryWebgl";
 
 export function ReentryHybridStage({
   state,
+  playbackProgressRef,
   variant,
   showEffects,
   showCockpitAssets,
@@ -15,6 +16,7 @@ export function ReentryHybridStage({
   className,
 }: {
   state: ReentryDrawState;
+  playbackProgressRef?: { current: number };
   variant: "preview" | "stage";
   showEffects: boolean;
   showCockpitAssets: boolean;
@@ -41,6 +43,7 @@ export function ReentryHybridStage({
         phase={state.phase}
         result={state.result}
         flightProgress={state.flightProgress}
+        playbackProgressRef={playbackProgressRef}
         angleNorm={state.angleNorm ?? 0.5}
         spaceApproach={state.spaceApproach ?? null}
         spaceShare={state.spaceShare ?? 1}

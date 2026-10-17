@@ -4950,6 +4950,7 @@ export function ReentryPresentationCanvas({
   phase,
   result,
   flightProgress,
+  playbackProgressRef,
   angleNorm,
   spaceApproach,
   spaceShare,
@@ -4960,6 +4961,7 @@ export function ReentryPresentationCanvas({
   phase: ReentryPhase;
   result: ReentryResult | null;
   flightProgress: number;
+  playbackProgressRef?: { current: number };
   angleNorm: number;
   spaceApproach: SpaceApproachResult | null;
   spaceShare: number;
@@ -5012,8 +5014,6 @@ export function ReentryPresentationCanvas({
     compositeAvgMs: 0,
     oceanActive: false,
     oceanScale: 1,
-    slowFrames: 0,
-    fastFrames: 0,
     frameCount: 0,
   });
 
@@ -5059,7 +5059,14 @@ export function ReentryPresentationCanvas({
     oceanWebGLRef.current =
       renderer;
 
+    // Prewarm the heavy fragment shader on the setup screen, not during
+    // the first visible sea frame. This avoids a late shader compile stall.
+    const warmupTimer = window.setTimeout(() => {
+      renderer?.render({ width: 64, height: 36, timeS: 0, sceneSeed: 1 });
+    }, 150);
+
     return () => {
+      window.clearTimeout(warmupTimer);
       renderer?.destroy();
 
       if (
@@ -5140,7 +5147,7 @@ export function ReentryPresentationCanvas({
         phase === "result"
           ? 1
           : phase === "flight"
-            ? flightProgress
+            ? (playbackProgressRef?.current ?? flightProgress)
             : 0;
       const outcome = result?.outcome;
       const miss = spaceApproach?.kind === "SPACE_MISS";
@@ -6178,29 +6185,10 @@ const failureTravelT =
       }
       perf.lastRafMs = rafNow;
 
-      if (perf.oceanActive) {
-        if (perf.intervalAvgMs > 24) {
-          perf.slowFrames += 1;
-          perf.fastFrames = 0;
-        } else if (perf.intervalAvgMs < 18.8) {
-          perf.fastFrames += 1;
-          perf.slowFrames = 0;
-        } else {
-          perf.slowFrames = Math.max(0, perf.slowFrames - 1);
-          perf.fastFrames = 0;
-        }
-        if (perf.slowFrames >= 35) {
-          perf.oceanScale = perf.oceanScale > 0.9 ? 0.85 : 0.74;
-          perf.slowFrames = 0;
-        } else if (perf.fastFrames >= 180) {
-          perf.oceanScale = perf.oceanScale < 0.8
-            ? 0.85 : 1;
-          perf.fastFrames = 0;
-        }
-      } else {
-        perf.slowFrames = 0;
-        perf.fastFrames = 0;
-      }
+      // Never resize the WebGL framebuffer as an automatic response to
+      // dropped frames. Such resizing reallocates GPU memory during the shot
+      // and was itself a source of visible pauses. The renderer now has a
+      // fixed bounded pixel budget at every viewport size.
 
       const start = performance.now();
       draw();

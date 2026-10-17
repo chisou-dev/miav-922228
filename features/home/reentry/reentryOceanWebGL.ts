@@ -1692,7 +1692,7 @@ export function createReentryOceanWebGLRenderer():
 
         const baseDpr =
           Math.min(
-            1.35,
+            1,
             window.devicePixelRatio ||
               1,
           );
@@ -1706,12 +1706,12 @@ export function createReentryOceanWebGLRenderer():
               baseDpr,
           );
 
-        /*
-         * Slightly higher budget than v1 because water detail is now the
-         * visual reward of Stage 1, while still staying bounded on phones.
-         */
+        // This fragment shader runs multiple layered noise passes at
+        // EVERY pixel. At 1.65M pixels it can stall integrated GPUs long
+        // enough to skip the atmosphere shot. Cap the GPU work to 0.8M
+        // pixels per frame while keeping the original ocean shader intact.
         const pixelBudget =
-          1_650_000;
+          800_000;
 
         const budgetScale =
           targetPixels >
@@ -1724,7 +1724,7 @@ export function createReentryOceanWebGLRenderer():
 
         const renderDpr =
           Math.max(
-            0.88,
+            0.20,
             baseDpr *
               budgetScale,
           );

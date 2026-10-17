@@ -114,6 +114,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     result,
     playRecord,
     flightProgress,
+    flightProgressRef,
     spaceApproach,
     spaceShare,
     surfaceRef,
@@ -315,6 +316,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
           >
             <ReentryHybridStage
               state={fullscreenState}
+              playbackProgressRef={flightProgressRef}
               variant="stage"
               showEffects={showEffects}
               showCockpitAssets={false}
