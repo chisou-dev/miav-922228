@@ -34,10 +34,6 @@ const revised: Readonly<Record<string, Readonly<Record<string, ReadingQuestion>>
     q3: { id: "q3", question: "Which online comment describes the person as if he were a game character?", choices: ["NPC behavior.", "Best restaurant ever.", "The doors are broken."], correctAnswer: "NPC behavior." },
     q5: { id: "q5", question: "What does the narrator deny doing by the close of the chapter?", choices: ["Thinking about anyone at all", "Watching a train", "Taking a lunch break"], correctAnswer: "Thinking about anyone at all" },
   },
-  "santas-bells": {
-    q4: { id: "q4", question: "How does the girl's reaction in summer differ from the Christmas reaction?", choices: ["She enjoys the sound without thinking of Santa", "She runs away because the bells are frightening", "She asks Santa for a toy"], correctAnswer: "She enjoys the sound without thinking of Santa" },
-    q5: { id: "q5", question: "Why is Santa's return on December 23 important to the ending?", choices: ["He is home with the presents before Christmas Eve", "He begins his summer holiday", "He leaves the reindeer behind at the sea"], correctAnswer: "He is home with the presents before Christmas Eve" },
-  },
   "the-day-i-couldnt-find-anyone": {
     q3: { id: "q3", question: "What remains of the route when the narrator can no longer check the phone?", choices: ["Third right, left at the park, white house", "A printed ticket with a map", "Only the friend's phone number"], correctAnswer: "Third right, left at the park, white house" },
     q5: { id: "q5", question: "Where does the search finally lead the narrator?", choices: ["To the phone partly submerged in muddy water", "To a phone in the friend's kitchen", "To a phone in a taxi"], correctAnswer: "To the phone partly submerged in muddy water" },

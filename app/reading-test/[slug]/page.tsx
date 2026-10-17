@@ -20,14 +20,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const story = getReadingStory(slug);
   if (!story) {
     return readingTestMetadata({
-      title: "5-Minute Reading Test",
+      title: "Reading | MIAV LEARN",
       description: "Read a short story and check your reading speed and comprehension.",
       path: "/reading-test",
     });
   }
 
   return readingTestMetadata({
-    title: `${story.title} | 5-Minute Reading Test`,
+    title: `${story.title} | Reading · MIAV LEARN`,
     description:
       "Read a short story and check your reading speed and comprehension.",
     path: `/reading-test/${story.slug}`,

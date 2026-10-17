@@ -141,7 +141,7 @@ export function ReadingSession({
       : 100;
 
   return (
-    <ReadingTestFrame eyebrow="Reading Test" title={title}>
+    <ReadingTestFrame eyebrow="Reading" title={title}>
       {attempt == null ? (
         <ReadingLayout label="Choose a reading time">
         <section className="mx-auto mt-12 max-w-md text-center" aria-labelledby="reading-setup">

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
 
-const description = "Improve your English through stories.";
+const description = "Enjoy stories through reading and listening.";
 
 export const metadata: Metadata = readingTestMetadata({
   title: "MIAV LEARN | MIAV-922228",
@@ -14,13 +14,13 @@ export const metadata: Metadata = readingTestMetadata({
 const cards = [
   {
     href: "/reading-test",
-    title: "Reading Test",
-    text: "Read a story. Race the clock. Test what you remember.",
+    title: "Reading",
+    text: "Choose a story. Take your time, or try the clock.",
   },
   {
     href: "/listening-test",
-    title: "Listening Test",
-    text: "Listen to a story. No text. Test what you heard.",
+    title: "Listening",
+    text: "Listen without the text, then see what you remember.",
   },
 ] as const;
 

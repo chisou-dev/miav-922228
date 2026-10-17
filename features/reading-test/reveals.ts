@@ -6,7 +6,6 @@ const readingAuthors: Readonly<Record<string, { name: string; slug: string }>> =
   "the-day-i-couldnt-find-anyone": { name: "Takashi Yabe", slug: "takashi-yabe" },
   "lost-property": { name: "Takashi Yabe", slug: "takashi-yabe" },
   "after-the-rain": { name: "Takashi Yabe", slug: "takashi-yabe" },
-  "santas-bells": { name: "Takashi Yabe", slug: "takashi-yabe" },
   "the-silver-thread": { name: "Takashi Yabe", slug: "takashi-yabe" },
   "sample-story": { name: "Takashi Yabe", slug: "takashi-yabe" },
   mia: { name: "Takashi Yabe", slug: "takashi-yabe" },

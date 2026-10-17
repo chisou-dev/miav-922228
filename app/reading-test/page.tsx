@@ -6,19 +6,18 @@ import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 
 const description =
-  "Read a short story, measure your reading speed, and answer five questions to check your understanding.";
+  "Choose a story, read at your own pace, and see what stays with you.";
 
 export const metadata: Metadata = readingTestMetadata({
-  title: "Read a Story. Test Your Reading. | MIAV-922228",
+  title: "Reading | MIAV LEARN",
   description,
   path: "/reading-test",
 });
 
 const steps = [
-  "Choose a story",
-  "Practice with no limit, or race a clock",
+  "Choose a level and a story",
+  "Read at your pace, or try the clock",
   "Answer five questions",
-  "See your results and discover the author",
 ] as const;
 
 export default function ReadingTestPage() {
@@ -27,8 +26,8 @@ export default function ReadingTestPage() {
 
   return (
     <ReadingTestFrame
-      eyebrow="Reading Test"
-      title="Read a Story. Test Your Reading."
+      eyebrow="MIAV LEARN"
+      title="Reading"
       summary={description}
     >
       <ol className="mx-auto mt-12 max-w-md space-y-3 text-left text-[0.95rem] leading-relaxed text-[var(--foreground)] sm:mt-14">

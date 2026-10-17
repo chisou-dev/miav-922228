@@ -5,7 +5,6 @@ import { getFlashPiece } from "@/features/library/catalog";
 import { countEnglishWords, estimatedReadingMinutes } from "@/features/reading-test/measure";
 import { analyzeReadability } from "@/features/reading-test/readability";
 import { flashTests } from "@/features/reading-test/stories/flash-tests";
-import { santasBells } from "@/features/reading-test/stories/santas-bells";
 import { desk } from "@/features/reading-test/stories/desk";
 import { entrance } from "@/features/reading-test/stories/entrance";
 import { layers } from "@/features/reading-test/stories/layers";
@@ -75,7 +74,6 @@ const sources: readonly ReadingStoryInput[] = [
   flashSource("the-day-i-couldnt-find-anyone"),
   flashSource("lost-property"),
   flashSource("after-the-rain"),
-  santasBells,
   flashSource("the-silver-thread"),
   sampleStory,
   ...seriesSources,
