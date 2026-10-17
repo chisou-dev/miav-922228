@@ -18,16 +18,19 @@ export const SPACE_MISS_DURATION_MS =
 
 
 // Stage 1 cinematic visual clock, measured from water contact.
-// Rear hatch, green squid emergence, fluid skiff, feet-first boarding,
-// sealed hatch/CLEAR, left-edge turn, gentle center glide, fast exit.
+// After the craft-top exit, the squid boards the skiff and raises multiple
+// tentacles to draw the original hull into its hands through separate filaments.
+// It then enters the skiff, the hatch seals / CLEAR stays, and only the skiff departs.
 // Physics v1.1 and the 120km handoff remain unchanged.
 // The craft completes its descent at 15s. Start the spray just before
 // contact (approximately one CSS pixel at normal playback), not 0.85s early.
 export const STAGE1_SPLASH_S = 14.98;
-export const STAGE1_BOARD_COMPLETE_S = 12.7;
-export const STAGE1_CLEAR_HOLD_END_S = 14.7;
-export const STAGE1_GLIDE_END_S = 16.8;
-export const STAGE1_ESCAPE_EXIT_S = 18.2;
+export const STAGE1_ABSORB_START_S = 10.8;
+export const STAGE1_ABSORB_END_S = 14.2;
+export const STAGE1_BOARD_COMPLETE_S = 15.7;
+export const STAGE1_CLEAR_HOLD_END_S = 17.5;
+export const STAGE1_GLIDE_END_S = 20.0;
+export const STAGE1_ESCAPE_EXIT_S = 21.5;
 export const STAGE1_EPILOGUE_DURATION_S = STAGE1_ESCAPE_EXIT_S;
 export const ATMOSPHERE_SUCCESS_MS = Math.round(
   (STAGE1_SPLASH_S + STAGE1_EPILOGUE_DURATION_S) * 1000,

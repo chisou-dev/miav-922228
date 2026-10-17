@@ -39,6 +39,8 @@ import {
   spaceInboundDurationMs,
   successLandingT,
   STAGE1_SPLASH_S,
+  STAGE1_ABSORB_START_S,
+  STAGE1_ABSORB_END_S,
   STAGE1_BOARD_COMPLETE_S,
   STAGE1_CLEAR_HOLD_END_S,
   STAGE1_GLIDE_END_S,
@@ -1426,11 +1428,11 @@ function drawAlienRaisedTentacle(
   ctx.save();
   ctx.globalAlpha = alpha;
   const skin = ctx.createLinearGradient(rootX - rootR, rootY, endX + rootR, endY);
-  skin.addColorStop(0, "#10172a");
-  skin.addColorStop(0.20, "#64304d");
-  skin.addColorStop(0.53, "#cf6d85");
-  skin.addColorStop(0.78, "#594468");
-  skin.addColorStop(1, "#154963");
+  skin.addColorStop(0, "#0b2421");
+  skin.addColorStop(0.20, "#235d4d");
+  skin.addColorStop(0.53, "#69c8a8");
+  skin.addColorStop(0.78, "#246e61");
+  skin.addColorStop(1, "#123b43");
   ctx.fillStyle = skin;
   ctx.fill(arm);
   ctx.save();
@@ -1861,6 +1863,88 @@ function drawCraftAbsorption(
 }
 
 
+
+/**
+ * Recover the original ship with six separate organic filaments flowing
+ * INTO the raised tentacles. All geometry derives from playback time and the
+ * current ocean pose; no timers, particle state or white laser beams.
+ */
+function drawSalvageFilaments(
+  ctx: CanvasRenderingContext2D,
+  craftX: number,
+  craftY: number,
+  leftHand: { x: number; y: number },
+  rightHand: { x: number; y: number },
+  progress: number,
+  ageS: number,
+  minDim: number,
+  seed: number,
+): void {
+  const p = clamp01(progress);
+  const grow = smoothstep(p / 0.18);
+  const fade = 1 - smoothstep((p - 0.79) / 0.21);
+  const strength = grow * fade;
+  if (strength <= 0.002) return;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.lineCap = "round";
+  for (let i = 0; i < 6; i++) {
+    const jitter = hash01(seed ^ 0x174b2ca, i * 17 + 3);
+    const fromX = craftX + (i - 2.5) * minDim * 0.009;
+    const fromY = craftY - minDim * (0.017 + jitter * 0.018);
+    const hand = i % 2 === 0 ? leftHand : rightHand;
+    const toX = hand.x + (i % 3 - 1) * minDim * 0.0025;
+    const toY = hand.y + (jitter - 0.5) * minDim * 0.004;
+    const oscillation = Math.sin(ageS * 1.4 + i * 1.73) * minDim * 0.011;
+    const midX = (fromX + toX) * 0.5;
+    const midY = Math.min(fromY, toY) - minDim * (0.055 + jitter * 0.05);
+    const c1x = mix(fromX, midX, 0.56) + oscillation;
+    const c1y = mix(fromY, midY, 0.65);
+    const c2x = mix(toX, midX, 0.50) - oscillation;
+    const c2y = mix(toY, midY, 0.65);
+
+    const point = (t: number): { x: number; y: number } => {
+      const inv = 1 - t;
+      return {
+        x: inv * inv * inv * fromX +
+          3 * inv * inv * t * c1x +
+          3 * inv * t * t * c2x + t * t * t * toX,
+        y: inv * inv * inv * fromY +
+          3 * inv * inv * t * c1y +
+          3 * inv * t * t * c2y + t * t * t * toY,
+      };
+    };
+
+    ctx.beginPath();
+    const start = point(0);
+    ctx.moveTo(start.x, start.y);
+    for (let step = 1; step <= 15; step++) {
+      const pos = point((step / 15) * grow);
+      ctx.lineTo(pos.x, pos.y);
+    }
+    ctx.strokeStyle = i % 3 === 0
+      ? `rgba(186,239,245,${0.55 * strength})`
+      : i % 3 === 1
+        ? `rgba(92,210,190,${0.48 * strength})`
+        : `rgba(115,171,237,${0.40 * strength})`;
+    ctx.lineWidth = Math.max(0.65, minDim * (0.0011 + jitter * 0.0006));
+    ctx.stroke();
+
+    // Two tiny liquid beads per thread travel towards the raised hand.
+    for (let k = 0; k < 2; k++) {
+      const travel = (ageS * 0.32 + i * 0.21 + k * 0.42) % 1;
+      if (travel > grow) continue;
+      const dot = point(travel);
+      ctx.fillStyle = `rgba(194,250,237,${0.75 * strength})`;
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, Math.max(0.55, minDim * 0.0018),
+        0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 
 function drawRearCraftHatch(
   ctx: CanvasRenderingContext2D,
@@ -2996,13 +3080,13 @@ function drawStage1ClearSequence(
    *  1) alien rises from the half-submerged craft;
    *  2) one tentacle points and ejects a thin liquid filament;
    *  3) the filament condenses into the small escape skiff;
-   *  4) another tentacle absorbs the original craft;
-   *  5) the alien boards and the skiff departs.
+   *  4) the alien boards; both arms draw in the original ship through threads;
+   *  5) it enters the skiff, seals the hatch and departs.
    *
    * Everything stays in the same ocean shot; there is no cut to a still image.
    */
-  // Stage 1 escape is entirely playback driven, with no instant appearance
-  // or body fading during boarding. Original craft stays in the water.
+  // Stage 1 escape is playback driven: the squid rises, creates the skiff,
+  // boards its deck, lifts both arms and draws in the original craft.
   const hatchOpen = smoothstep((splashAge - 1.2) / 1.4);
   const alienRise = smoothstep((splashAge - 2.6) / 2.6);
   const climbCraft = smoothstep((splashAge - 5.2) / 1.6);
@@ -3010,8 +3094,12 @@ function drawStage1ClearSequence(
     (1 - smoothstep((splashAge - 9.3) / 0.50));
   const vehicleFormation = smoothstep((splashAge - 6.8) / 3.0);
   const boardApproach = smoothstep((splashAge - 9.8) / 1.0);
-  const enterT = smoothstep((splashAge - 10.8) / 1.2);
-  const hatchClose = smoothstep((splashAge - 12.0) / 0.7);
+  const absorbT = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
+    (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
+  // The squid stands ON the skiff and visibly recovers the original hull.
+  // Afterwards, feet and then the mantle descend through the black hatch.
+  const enterT = smoothstep((splashAge - STAGE1_ABSORB_END_S) / 1.0);
+  const hatchClose = smoothstep((splashAge - (STAGE1_BOARD_COMPLETE_S - 0.5)) / 0.5);
 
   // Left near the screen edge, then deliberate travel to its midpoint.
   // The final 1.4s carries the EMPTY exterior rapidly beyond the right edge.
@@ -3132,6 +3220,23 @@ function drawStage1ClearSequence(
         vehicleFormation, alienAlpha, alienScale, seed,
       );
     }
+  }
+
+  // Both hands rise over the deck. Six independent liquid threads converge
+  // from the stranded hull to these two live, rotating tentacle tips.
+  if (absorbT > 0.001 && absorbT < 1 && enterT < 0.001) {
+    const armRise = smoothstep(absorbT / 0.19) *
+      (1 - smoothstep((absorbT - 0.88) / 0.12));
+    const leftTip = raisedTentacle(
+      -1, armRise, boardX - minDim * 0.065, boardY - minDim * 0.090,
+    );
+    const rightTip = raisedTentacle(
+      1, armRise, boardX + minDim * 0.082, boardY - minDim * 0.085,
+    );
+    drawSalvageFilaments(
+      ctx, landedCraftPose.x, landedCraftPose.y,
+      leftTip, rightTip, absorbT, splashAge, minDim, seed,
+    );
   }
 
   const skiffAppear = smoothstep((vehicleFormation - 0.42) / 0.58);
@@ -5075,7 +5180,7 @@ export function ReentryPresentationCanvas({
       // Preview at POWER always faces upper-right; DIRECTION selection then
       // displays the player's actual heading, not a permanently fixed sprite.
       const launchHeading = phase === "power"
-        ? -Math.PI / 4
+        ? -3 * Math.PI / 4
         : directionNormToScreenHeadingRad(angleNorm);
 
       const pathEarth =
@@ -5674,7 +5779,7 @@ const failureTravelT =
 
       if (idle) {
         craftLength =
-          baseCraft * 0.72;
+          baseCraft * 0.48;
       } else if (miss) {
         /*
          * The craft becomes rice-grain small near Earth and even smaller
@@ -5696,7 +5801,7 @@ const failureTravelT =
 
         const nearScale =
           mix(
-            0.72,
+            0.48,
             0.16,
             toPeriapsis,
           );
@@ -5724,8 +5829,8 @@ const failureTravelT =
         craftLength =
           baseCraft *
           mix(
-            0.72,
-            0.145,
+            0.48,
+            0.105,
             smoothstep(
               travelT,
             ),
@@ -5782,9 +5887,17 @@ const failureTravelT =
           );
       }
 
-      // The original vehicle remains floating, with its stern hatch open.
-      // Only the sealed fluid skiff leaves the screen.
+      // The former craft remains through the thread-transfer ritual, then
+      // shrinks and dissolves before the occupied skiff can depart.
       let craftAlpha = 1;
+      if (outcome === "EARTH_REACHED" && latched && !miss &&
+          timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S) {
+        const splashAge = timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S;
+        const salvage = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
+          (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
+        craftAlpha *= 1 - smoothstep((salvage - 0.69) / 0.31);
+        craftLength *= mix(1, 0.24, smoothstep((salvage - 0.22) / 0.78));
+      }
 
       if (miss) {
         craftAlpha =
