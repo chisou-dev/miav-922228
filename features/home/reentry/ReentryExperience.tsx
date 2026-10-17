@@ -55,7 +55,7 @@ const previewDrawState = {
   phase: "power" as const,
   result: null,
   flightProgress: 0,
-  angleNorm: 0.5,
+  angleNorm: 0.125,
   seed: 0,
 };
 

@@ -18,14 +18,14 @@ export const SPACE_MISS_DURATION_MS =
 
 
 // Stage 1 cinematic visual clock, measured from water contact.
-// 12s boarding/CLEAR, 13.2s gentle left-to-right glide, 15.8s dash,
-// 18s entirely out of frame, then Stage 2 controls.
+// Rear hatch, green squid emergence, fluid skiff, feet-first boarding,
+// sealed hatch/CLEAR, left-edge turn, gentle center glide, fast exit.
 // Physics v1.1 and the 120km handoff remain unchanged.
 export const STAGE1_SPLASH_S = 14.15;
-export const STAGE1_BOARD_COMPLETE_S = 12;
-export const STAGE1_CLEAR_HOLD_END_S = 13.2;
-export const STAGE1_GLIDE_END_S = 15.8;
-export const STAGE1_ESCAPE_EXIT_S = 18;
+export const STAGE1_BOARD_COMPLETE_S = 12.7;
+export const STAGE1_CLEAR_HOLD_END_S = 14.7;
+export const STAGE1_GLIDE_END_S = 16.8;
+export const STAGE1_ESCAPE_EXIT_S = 18.2;
 export const STAGE1_EPILOGUE_DURATION_S = STAGE1_ESCAPE_EXIT_S;
 export const ATMOSPHERE_SUCCESS_MS = Math.round(
   (STAGE1_SPLASH_S + STAGE1_EPILOGUE_DURATION_S) * 1000,

@@ -1038,11 +1038,11 @@ function drawLiquidAlien(
     const skin = ctx.createLinearGradient(
       rootX - rootWidth, scale * 0.04, rootX + rootWidth, scale * 0.39
     );
-    skin.addColorStop(0, "#100f22");
-    skin.addColorStop(0.25, "#762840");
-    skin.addColorStop(0.53, "#bd5b65");
-    skin.addColorStop(0.76, "#4a2350");
-    skin.addColorStop(1, "#10263f");
+    skin.addColorStop(0, "#08261f");
+    skin.addColorStop(0.25, "#1b6952");
+    skin.addColorStop(0.53, "#4cc19a");
+    skin.addColorStop(0.76, "#155943");
+    skin.addColorStop(1, "#0a3736");
     ctx.fillStyle = skin;
     ctx.fill(body);
     ctx.save();
@@ -1069,16 +1069,16 @@ function drawLiquidAlien(
   leftFin.moveTo(-scale * 0.13, -scale * 0.89);
   leftFin.bezierCurveTo(-scale * 0.46, -scale * 0.81, -scale * 0.55, -scale * 0.52, -scale * 0.31, -scale * 0.39);
   leftFin.quadraticCurveTo(-scale * 0.20, -scale * 0.65, -scale * 0.13, -scale * 0.89);
-  ctx.fillStyle = "#243454";
+  ctx.fillStyle = "#115346";
   ctx.fill(leftFin);
   const rightFin = new Path2D();
   rightFin.moveTo(scale * 0.12, -scale * 0.94);
   rightFin.bezierCurveTo(scale * 0.43, -scale * 0.86, scale * 0.50, -scale * 0.54, scale * 0.29, -scale * 0.33);
   rightFin.quadraticCurveTo(scale * 0.18, -scale * 0.67, scale * 0.12, -scale * 0.94);
   const finShine = ctx.createLinearGradient(0, -scale, scale * 0.5, -scale * 0.45);
-  finShine.addColorStop(0, "#472349");
-  finShine.addColorStop(0.52, "#bd4a68");
-  finShine.addColorStop(1, "#183a57");
+  finShine.addColorStop(0, "#0b3d35");
+  finShine.addColorStop(0.52, "#57c7a7");
+  finShine.addColorStop(1, "#0f635c");
   ctx.fillStyle = finShine;
   ctx.fill(rightFin);
 
@@ -1107,11 +1107,11 @@ function drawLiquidAlien(
     -scale * 0.14, -scale * 0.82, scale * 0.035,
     scale * 0.18, -scale * 0.45, scale * 0.75
   );
-  mantleLight.addColorStop(0, "#d58d91");
-  mantleLight.addColorStop(0.23, "#a74862");
-  mantleLight.addColorStop(0.49, "#632745");
-  mantleLight.addColorStop(0.74, "#25233e");
-  mantleLight.addColorStop(1, "#081522");
+  mantleLight.addColorStop(0, "#91e4bc");
+  mantleLight.addColorStop(0.23, "#46aa82");
+  mantleLight.addColorStop(0.49, "#24775f");
+  mantleLight.addColorStop(0.74, "#12493f");
+  mantleLight.addColorStop(1, "#071e20");
   ctx.fillStyle = mantleLight;
   ctx.fill(mantle);
 
@@ -1121,9 +1121,9 @@ function drawLiquidAlien(
     -scale * 0.17, -scale * 0.82, 0,
     -scale * 0.17, -scale * 0.82, scale * 0.37
   );
-  wet.addColorStop(0, "rgba(255,225,228,0.50)");
-  wet.addColorStop(0.28, "rgba(248,146,172,0.16)");
-  wet.addColorStop(1, "rgba(248,146,172,0)");
+  wet.addColorStop(0, "rgba(221,255,239,0.53)");
+  wet.addColorStop(0.28, "rgba(110,236,187,0.20)");
+  wet.addColorStop(1, "rgba(110,236,187,0)");
   ctx.fillStyle = wet;
   ctx.fillRect(-scale, -scale * 1.3, 2 * scale, scale * 1.6);
 
@@ -1185,6 +1185,7 @@ function drawEscapeSkiff(
   scale: number,
   alpha: number,
   tilt = -0.08,
+  hatchClose01 = 0,
 ): void {
   if (alpha <= 0.001) return;
   ctx.save();
@@ -1275,6 +1276,27 @@ function drawEscapeSkiff(
   ctx.beginPath();
   ctx.ellipse(scale * 0.12, -scale * 0.07, scale * 0.194, scale * 0.093, -0.08, 0, Math.PI * 2);
   ctx.fill();
+
+  // An actual top-entry hatch rather than a painted black ornament.
+  // The metal cover closes only once the last part of the squid is inside.
+  if (hatchClose01 > 0.001) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(scale * 0.12, -scale * 0.07,
+      scale * 0.194, scale * 0.093, -0.08, 0, Math.PI * 2);
+    ctx.clip();
+    const cover = ctx.createLinearGradient(
+      -scale * 0.10, -scale * 0.21, scale * 0.39, scale * 0.05);
+    cover.addColorStop(0, "#11183e");
+    cover.addColorStop(0.34, "#5f65bb");
+    cover.addColorStop(0.63, "#2b87a3");
+    cover.addColorStop(1, "#091830");
+    ctx.fillStyle = cover;
+    // Slide as a curved metal iris across the oval rather than blinking shut.
+    ctx.fillRect(-scale * 0.10 - (1 - hatchClose01) * scale * 0.42,
+      -scale * 0.28, scale * 0.52, scale * 0.42);
+    ctx.restore();
+  }
 
   // Local chrome glimmer follows the edge and falls off naturally.
   const lip = ctx.createLinearGradient(-scale * 0.5, scale * 0.04, scale * 0.6, scale * 0.14);
@@ -1798,6 +1820,43 @@ function drawCraftAbsorption(
 }
 
 
+
+function drawRearCraftHatch(
+  ctx: CanvasRenderingContext2D,
+  pose: { x: number; y: number; angle: number },
+  craftLength: number,
+  open01: number,
+): void {
+  if (open01 < 0.001) return;
+  ctx.save();
+  ctx.translate(pose.x, pose.y);
+  ctx.rotate(pose.angle);
+  // The craft nose points along +X; the exit is set into the tail at -X.
+  const hx = -craftLength * 0.37;
+  const rx = craftLength * 0.18;
+  const ry = craftLength * 0.102;
+  ctx.fillStyle = "rgba(2,7,19,0.95)";
+  ctx.beginPath();
+  ctx.ellipse(hx, 0, rx * open01, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(174,224,244,0.65)";
+  ctx.lineWidth = Math.max(0.5, craftLength * 0.013);
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(hx, -ry);
+  ctx.rotate(-open01 * 0.85);
+  const metal = ctx.createLinearGradient(-rx, -ry, rx, ry);
+  metal.addColorStop(0, "#231444");
+  metal.addColorStop(0.54, "#745ba5");
+  metal.addColorStop(1, "#132c49");
+  ctx.fillStyle = metal;
+  ctx.beginPath();
+  ctx.ellipse(0, -ry * 0.32, rx, ry * 0.82, 0, Math.PI, Math.PI * 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
 
 function drawStage1ClearSequence(
   ctx: CanvasRenderingContext2D,
@@ -2901,80 +2960,74 @@ function drawStage1ClearSequence(
    *
    * Everything stays in the same ocean shot; there is no cut to a still image.
    */
-  // Arrival stays leisurely enough to see the liquid vehicle forming,
-  // the former craft dissolve, and the alien actually board. All timing
-  // uses the playback-derived seconds, never a real-time interval.
-  const alienRise = smoothstep((splashAge - 0.6) / 4.4);
-  const pointGesture = smoothstep((splashAge - 5.05) / 0.90)
-    * (1 - smoothstep((splashAge - 8.30) / 0.60));
-  const vehicleFormation = smoothstep((splashAge - 5.70) / 2.80);
-  const absorbGesture = smoothstep((splashAge - 8.50) / 0.65)
-    * (1 - smoothstep((splashAge - 10.65) / 0.48));
-  const absorbCraft = smoothstep((splashAge - 8.70) / 1.90);
-  const boardSkiff = smoothstep((splashAge - 10.5) /
-    (STAGE1_BOARD_COMPLETE_S - 10.5));
+  // Stage 1 escape is entirely playback driven, with no instant appearance
+  // or body fading during boarding. Original craft stays in the water.
+  const hatchOpen = smoothstep((splashAge - 1.2) / 1.4);
+  const alienRise = smoothstep((splashAge - 2.6) / 2.6);
+  const climbCraft = smoothstep((splashAge - 5.2) / 1.6);
+  const pointGesture = smoothstep((splashAge - 6.8) / 0.80) *
+    (1 - smoothstep((splashAge - 9.3) / 0.50));
+  const vehicleFormation = smoothstep((splashAge - 6.8) / 3.0);
+  const boardApproach = smoothstep((splashAge - 9.8) / 1.0);
+  const enterT = smoothstep((splashAge - 10.8) / 1.2);
+  const hatchClose = smoothstep((splashAge - 12.0) / 0.7);
 
-  // After the landing, breathe for 1.2s before a clear left-to-right exit.
-  // Only a modest leftward glide, not the old busy 180-degree turn.
-  const settleT = smoothstep((splashAge - 12.60) /
-    (STAGE1_CLEAR_HOLD_END_S - 12.60));
+  // Left near the screen edge, then deliberate travel to its midpoint.
+  // The final 1.4s carries the EMPTY exterior rapidly beyond the right edge.
+  const leftT = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) /
+    (STAGE1_CLEAR_HOLD_END_S - STAGE1_BOARD_COMPLETE_S));
   const glideT = smoothstep((splashAge - STAGE1_CLEAR_HOLD_END_S) /
     (STAGE1_GLIDE_END_S - STAGE1_CLEAR_HOLD_END_S));
   const dashT = clamp01((splashAge - STAGE1_GLIDE_END_S) /
     (STAGE1_ESCAPE_EXIT_S - STAGE1_GLIDE_END_S));
   const dash = dashT * dashT * dashT;
+  const minSide = Math.min(w, h);
   const landedTilt = Math.max(-0.16, Math.min(
     0.16, (landedCraftPose.angle - Math.PI / 2) * 0.80,
   ));
-  const skiffRoll = -0.08 - Math.sin(glideT * Math.PI) * 0.07
-    - dash * 0.20;
-  const parentTilt = mix(landedTilt, skiffRoll, boardSkiff);
+  const skiffRoll = mix(-0.08, -0.21, leftT) +
+    glideT * 0.14 - dash * 0.18;
+  const parentTilt = mix(landedTilt, skiffRoll, boardApproach);
   const flightScale = mix(1, 0.82, dash);
-  const alienScale = minDim * 0.034 * flightScale;
+  const alienScale = minSide * 0.034;
 
-  // The creature shares the craft's translation and roll before boarding.
-  const riseX = minDim * 0.032;
-  const riseY = -minDim * mix(0.006, 0.043, alienRise);
-  const sourceAlienX = landedCraftPose.x +
-    riseX * Math.cos(landedTilt) - riseY * Math.sin(landedTilt);
-  const sourceAlienY = landedCraftPose.y +
-    riseX * Math.sin(landedTilt) + riseY * Math.cos(landedTilt);
+  // Tail hatch uses the actual floating craft pose, including wave bob/roll.
+  const hatchX = landedCraftPose.x -
+    Math.cos(landedCraftPose.angle) * minSide * 0.041;
+  const hatchY = landedCraftPose.y -
+    Math.sin(landedCraftPose.angle) * minSide * 0.041;
+  const emergeX = hatchX + Math.sin(landedTilt) * minSide * 0.015;
+  const emergeY = hatchY + minSide * mix(0.036, -0.028, alienRise);
+  const topX = landedCraftPose.x + minSide * 0.028;
+  const topY = landedCraftPose.y - minSide * 0.060;
+  const sourceAlienX = mix(emergeX, topX, climbCraft);
+  const sourceAlienY = mix(emergeY, topY, climbCraft);
 
-  const skiffRestX = craftX + minDim * 0.245;
-  const skiffRestY = waterY - minDim * 0.038 +
-    Math.sin(splashAge * 2.2 + seed * 0.002) * minDim * 0.004;
-  // The float moves only a little left after the one-second CLEAR hold.
-  // Glide then carries the occupied boat gently right; the final dash
-  // accelerates all the way beyond the screen edge, for every aspect ratio.
-  const skiffGlideX = skiffRestX -
-    minDim * 0.14 * settleT + minDim * 0.20 * glideT;
-  const skiffGlideY = skiffRestY -
-    minDim * 0.032 * Math.sin(glideT * Math.PI);
-  const exitTravel = Math.max(w * 1.15, w - skiffGlideX + minDim * 0.40);
-  const skiffX = skiffGlideX + dash * exitTravel;
-  const skiffY = skiffGlideY - dash * h * 0.04;
-
-  // A single seat transform is shared by both the metallic skiff and rider.
-  const socketDX = minDim * 0.004 * flightScale;
-  const socketDY = -minDim * 0.026 * flightScale;
-  const aboardX = skiffX +
-    socketDX * Math.cos(skiffRoll) - socketDY * Math.sin(skiffRoll);
-  const aboardY = skiffY +
-    socketDX * Math.sin(skiffRoll) + socketDY * Math.cos(skiffRoll);
-  const boardX = mix(sourceAlienX, aboardX, boardSkiff);
-  // One restrained leap, landing exactly in the skiff socket at 12s.
-  const jumpArcY = Math.sin(boardSkiff * Math.PI) * minDim * 0.050;
-  const boardY = mix(sourceAlienY, aboardY, boardSkiff) - jumpArcY;
+  const skiffRestX = craftX + minSide * 0.245;
+  const skiffRestY = waterY - minSide * 0.038 +
+    Math.sin(splashAge * 2.2 + seed * 0.002) * minSide * 0.004;
+  const leftX = Math.max(minSide * 0.14, w * 0.10);
+  const middleX = w * 0.50;
+  const glideX = mix(mix(skiffRestX, leftX, leftT), middleX, glideT);
+  const exitTravel = Math.max(w * 1.10, w - middleX + minSide * 0.44);
+  const skiffX = glideX + dash * exitTravel;
+  const skiffY = skiffRestY - minSide * 0.03 * leftT +
+    minSide * 0.02 * glideT - h * 0.04 * dash;
+  const skiffScale = minSide * mix(0.030, 0.075, vehicleFormation) *
+    mix(1, 0.82, dash);
+  const seatX = skiffX + Math.cos(skiffRoll) * skiffScale * 0.12;
+  const entranceY = skiffY - minSide * 0.063;
+  const boardX = mix(sourceAlienX, seatX, boardApproach);
+  // Feet enter first; only afterwards does the pointed mantle pass the lip.
+  const boardY = mix(sourceAlienY, entranceY, boardApproach) +
+    enterT * minSide * 0.138;
+  // The actual opening clips the body; no fading or shrinking to disappear.
   const alienAlpha = alienRise;
-
-  // Apply the same craft roll to the pointing/absorbing arms and their tips.
-  const raisedTentacleOnBoat = (
+  const raisedTentacle = (
     side: -1 | 1, progress: number, targetX: number, targetY: number,
   ): { x: number; y: number } => {
-    const cos = Math.cos(parentTilt);
-    const sin = Math.sin(parentTilt);
-    const dx = targetX - boardX;
-    const dy = targetY - boardY;
+    const cos = Math.cos(parentTilt), sin = Math.sin(parentTilt);
+    const dx = targetX - boardX, dy = targetY - boardY;
     ctx.save();
     ctx.translate(boardX, boardY);
     ctx.rotate(parentTilt);
@@ -2987,183 +3040,115 @@ function drawStage1ClearSequence(
       y: boardY + tip.x * sin + tip.y * cos };
   };
 
-  if (
-    alienAlpha >
-    0.001
-  ) {
-    // Only a tiny contact shadow where the creature climbs from the sea.
-    // Do not obscure or repaint the underlying WebGL water.
-    if (boardSkiff < 0.18) {
-      const amount = alienAlpha * (1 - smoothstep(boardSkiff / 0.18));
-      ctx.save();
-      const shadow = ctx.createRadialGradient(
-        sourceAlienX, waterY + minDim * 0.012, 0,
-        sourceAlienX, waterY + minDim * 0.012, minDim * 0.05
-      );
-      shadow.addColorStop(0, "rgba(5,24,40," + (amount * 0.24) + ")");
-      shadow.addColorStop(0.60, "rgba(31,105,130," + (amount * 0.09) + ")");
-      shadow.addColorStop(1, "rgba(31,105,130,0)");
-      ctx.fillStyle = shadow;
-      ctx.beginPath();
-      ctx.ellipse(
-        sourceAlienX, waterY + minDim * 0.012,
-        minDim * 0.05, minDim * 0.009, 0, 0, Math.PI * 2
-      );
-      ctx.fill();
-      ctx.restore();
-    }
+  // The rear hatch opening and two soft, gripping limbs are connected to
+  // the floating craft. Nothing appears independently in midair.
+  if (hatchOpen > 0 && alienRise > 0 && climbCraft < 0.98) {
     ctx.save();
+    ctx.strokeStyle = "rgba(105,222,168," +
+      (0.85 * alienRise * (1 - climbCraft)) + ")";
+    ctx.lineWidth = Math.max(0.9, minDim * 0.0038);
+    ctx.lineCap = "round";
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(boardX + side * alienScale * 0.12, boardY + alienScale * 0.15);
+      ctx.quadraticCurveTo(
+        hatchX + side * minDim * 0.028, hatchY - minDim * 0.011,
+        hatchX + side * minDim * 0.012, hatchY + minDim * 0.004,
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // At the rear hatch the creature is occluded by the solid fuselage.
+  // At the hovercraft, only the portion above the black entrance is visible:
+  // feet first, then mantle, so boarding is not an opacity trick.
+  if (alienAlpha > 0.001 && enterT < 1) {
+    ctx.save();
+    if (climbCraft < 0.001) {
+      ctx.beginPath();
+      ctx.rect(-w, -h, w * 3, h + hatchY);
+      ctx.clip();
+    } else if (boardApproach > 0.99) {
+      const hatchLipY = skiffY - skiffScale * 0.06;
+      ctx.beginPath();
+      ctx.rect(-w, -h, w * 3, h + hatchLipY);
+      ctx.clip();
+    }
     ctx.translate(boardX, boardY);
     ctx.rotate(parentTilt);
-    drawLiquidAlien(
-      ctx, 0, 0, alienScale, alienAlpha,
-      mix(0.12, -0.06, boardSkiff),
-    );
+    drawLiquidAlien(ctx, 0, 0, alienScale, alienAlpha,
+      mix(0.19, -0.03, boardApproach));
     ctx.restore();
 
-    if (
-      pointGesture >
-      0.001 &&
-      boardSkiff <
-        0.18
-    ) {
-      const pointerTip =
-        raisedTentacleOnBoat(
-          1, pointGesture, boardX + minDim * 0.075,
-          boardY - minDim * 0.080,
-        );
-
-      drawAlienFluidVehicleFormation(
-        ctx,
-        pointerTip.x,
-        pointerTip.y,
-        skiffRestX,
-        skiffRestY,
-        vehicleFormation,
-        alienAlpha,
-        alienScale,
-        seed,
+    if (pointGesture > 0.001 && boardApproach < 0.01) {
+      const tip = raisedTentacle(
+        1, pointGesture, boardX + minDim * 0.075,
+        boardY - minDim * 0.080,
       );
-    }
-
-    if (
-      absorbGesture >
-      0.001 &&
-      boardSkiff <
-        0.22
-    ) {
-      const absorbTip =
-        raisedTentacleOnBoat(
-          -1, absorbGesture, landedCraftPose.x + minDim * 0.008,
-          landedCraftPose.y - minDim * 0.035,
-        );
-
-      drawCraftAbsorption(
-        ctx,
-        landedCraftPose.x,
-        landedCraftPose.y - minDim * 0.015,
-        absorbTip.x,
-        absorbTip.y,
-        minDim *
-          0.12,
-        absorbCraft,
-        seed,
+      drawAlienFluidVehicleFormation(
+        ctx, tip.x, tip.y, skiffRestX, skiffRestY,
+        vehicleFormation, alienAlpha, alienScale, seed,
       );
     }
   }
 
-  const skiffAppear =
-    smoothstep(
-      (
-        vehicleFormation -
-        0.42
-      ) /
-        0.58,
-    );
-
-  if (
-    skiffAppear >
-    0.001
-  ) {
-    const skiffScale =
-      minDim *
-      mix(
-        0.030,
-        0.075,
-        skiffAppear,
-      ) *
-      mix(
-        1,
-        0.82,
-        dash,
-      );
-
-if (dashT < 0.16) {
-      // A tiny shadow on the actual water; no artificial dark foreground.
-      const amount = skiffAppear * (1 - smoothstep(dashT / 0.16));
+  const skiffAppear = smoothstep((vehicleFormation - 0.42) / 0.58);
+  if (skiffAppear > 0.001) {
+    if (leftT < 0.05) {
       ctx.save();
+      const amount = skiffAppear * (1 - smoothstep(leftT / 0.05));
       const shade = ctx.createRadialGradient(
         skiffRestX, waterY + minDim * 0.013, 0,
-        skiffRestX, waterY + minDim * 0.013, skiffScale * 1.25
+        skiffRestX, waterY + minDim * 0.013, skiffScale * 1.3,
       );
-      shade.addColorStop(0, "rgba(3,21,37," + (amount * 0.35) + ")");
-      shade.addColorStop(0.53, "rgba(14,78,100," + (amount * 0.13) + ")");
+      shade.addColorStop(0, "rgba(3,21,37," + (amount * 0.32) + ")");
       shade.addColorStop(1, "rgba(14,78,100,0)");
       ctx.fillStyle = shade;
       ctx.beginPath();
-      ctx.ellipse(
-        skiffRestX, waterY + minDim * 0.013,
-        skiffScale * 1.25, skiffScale * 0.17, 0, 0, Math.PI * 2
-      );
+      ctx.ellipse(skiffRestX, waterY + minDim * 0.013,
+        skiffScale * 1.3, skiffScale * 0.19, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
-    drawEscapeSkiff(ctx, skiffX, skiffY, skiffScale, skiffAppear, skiffRoll);
+    // Draw AFTER the creature, so the metallic deck hides lower tentacles.
+    // The sliding closure sits precisely over the existing dark oval.
+    drawEscapeSkiff(ctx, skiffX, skiffY, skiffScale, skiffAppear,
+      skiffRoll, hatchClose);
     if (dashT > 0.04 && dashT < 0.92) {
-      // Short metallic reflection during acceleration, not a light beam.
       ctx.save();
       ctx.globalCompositeOperation = "screen";
-      ctx.globalAlpha = 0.20 * Math.sin(Math.PI * dashT);
+      ctx.globalAlpha = 0.22 * Math.sin(Math.PI * dashT);
       ctx.translate(skiffX, skiffY);
       ctx.rotate(skiffRoll);
-      const chrome = ctx.createLinearGradient(-skiffScale, 0, skiffScale, 0);
-      chrome.addColorStop(0, "rgba(160,225,253,0)");
-      chrome.addColorStop(0.6, "rgba(215,248,255,0.86)");
-      chrome.addColorStop(1, "rgba(160,225,253,0)");
-      ctx.strokeStyle = chrome;
-      ctx.lineWidth = Math.max(0.7, skiffScale * 0.09);
+      const reflection = ctx.createLinearGradient(-skiffScale, 0, skiffScale, 0);
+      reflection.addColorStop(0, "rgba(160,225,253,0)");
+      reflection.addColorStop(0.60, "rgba(215,248,255,0.88)");
+      reflection.addColorStop(1, "rgba(160,225,253,0)");
+      ctx.strokeStyle = reflection;
+      ctx.lineWidth = Math.max(0.7, skiffScale * 0.08);
       ctx.beginPath();
       ctx.moveTo(-skiffScale * 0.45, -skiffScale * 0.14);
       ctx.lineTo(skiffScale * 0.46, -skiffScale * 0.10);
       ctx.stroke();
       ctx.restore();
     }
-
     if (dashT > 0.12 && dashT < 0.96) {
-      // Broad and short displaced-air wake, never a straight light ray.
       ctx.save();
-      ctx.globalCompositeOperation = "screen";
-      const amount = Math.sin(Math.PI * dashT) * 0.95;
-      const wx = skiffX - skiffScale * 0.85;
-      const wy = skiffY + skiffScale * 0.14;
+      const amount = Math.sin(Math.PI * dashT);
       const wake = ctx.createRadialGradient(
-        wx, wy, 0, wx, wy, skiffScale * 1.25
-      );
-      wake.addColorStop(0, "rgba(143,222,243," + (0.15 * amount) + ")");
-      wake.addColorStop(0.40, "rgba(96,171,222," + (0.08 * amount) + ")");
+        skiffX - skiffScale, skiffY, 0,
+        skiffX - skiffScale, skiffY, skiffScale * 1.3);
+      wake.addColorStop(0, "rgba(143,222,243," + 0.18 * amount + ")");
       wake.addColorStop(1, "rgba(96,171,222,0)");
       ctx.fillStyle = wake;
       ctx.beginPath();
-      ctx.ellipse(
-        wx, wy, skiffScale * 1.25, skiffScale * 0.28,
-        -0.22, 0, Math.PI * 2
-      );
+      ctx.ellipse(skiffX - skiffScale, skiffY,
+        skiffScale * 1.3, skiffScale * 0.25, -0.20, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
   }
-
-
 
   // CLEAR appears only on completed boarding, and never fades out.
   const clearAlpha = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) / 0.45);
@@ -5731,34 +5716,9 @@ const failureTravelT =
           );
       }
 
+      // The original vehicle remains floating, with its stern hatch open.
+      // Only the sealed fluid skiff leaves the screen.
       let craftAlpha = 1;
-
-      if (
-        outcome ===
-          "EARTH_REACHED" &&
-        latched &&
-        !miss
-      ) {
-        const absorbOriginalCraft =
-          smoothstep(
-            (
-              timeSinceVisualAtmosphereEntryS -
-              (STAGE1_SPLASH_S + 8.7)
-            ) /
-              1.9,
-          );
-
-        craftAlpha *=
-          1 -
-          absorbOriginalCraft;
-
-        craftLength *=
-          mix(
-            1,
-            0.30,
-            absorbOriginalCraft,
-          );
-      }
 
       if (miss) {
         craftAlpha =
@@ -5865,6 +5825,12 @@ const failureTravelT =
           ctx, pose.x, pose.y, pose.angle,
           craftLength, craftAlpha, heat, assistMode, landingPalette,
         );
+        if (outcome === "EARTH_REACHED" && latched && !miss &&
+            timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S) {
+          const age = timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S;
+          drawRearCraftHatch(ctx, pose, craftLength,
+            smoothstep((age - 1.2) / 1.4));
+        }
         ctx.restore();
       }
 

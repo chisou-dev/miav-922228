@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   findGuaranteedStage1Clear,
   runStage1Launch,
+  stage1AssistedDirectionNorm,
 } from "./reentryLaunchPipeline";
 import { launchAnchorPx } from "./reentryCraftProjection";
 import { launchEarthView } from "./reentryEarthCamera";
@@ -54,7 +55,8 @@ export function useReentryGame(options?: {
   const [lockedPowerNorm, setLockedPowerNorm] = useState<number | null>(null);
 
   // 0.5 = nominal reentry direction. Unlike v5, this wraps instead of clamping.
-  const [angleNorm, setAngleNorm] = useState(0.5);
+  // Start facing upper right. Angle is still freely adjustable before LAUNCH.
+  const [angleNorm, setAngleNorm] = useState(0.125);
 
   const [result, setResult] = useState<ReentryResult | null>(null);
   const [playRecord, setPlayRecord] =
@@ -173,7 +175,7 @@ export function useReentryGame(options?: {
     setSpaceApproach(null);
     setSpaceShare(1);
     setLockedPowerNorm(null);
-    setAngleNorm(0.5);
+    setAngleNorm(0.125);
     setFlightProgress(0);
     setSeed(createReentrySeed());
     powerCycleStartRef.current = performance.now();
@@ -243,6 +245,9 @@ export function useReentryGame(options?: {
     );
     const simStarted = performance.now();
 
+    const assistedDirection = stage1AssistedDirectionNorm(
+      angleNorm, earthBearingScreenRad,
+    );
     const guaranteed =
       options?.guaranteedClear
         ? findGuaranteedStage1Clear(
@@ -257,7 +262,7 @@ export function useReentryGame(options?: {
       guaranteed?.launched ??
       runStage1Launch(
         lockedPowerNorm,
-        angleNorm,
+        assistedDirection,
         seed,
         earthBearingScreenRad,
         spaceStartAltitudeM,
@@ -287,6 +292,10 @@ export function useReentryGame(options?: {
       ).toFixed(1);
     }
 
+    // Commit the assisted heading before playback. SPACE thereafter remains LOCKed.
+    if (!guaranteed && assistedDirection !== angleNorm) {
+      setAngleNorm(assistedDirection);
+    }
     beginFlight(launched.result, launched.record, launched.durationMs);
   }, [
     angleNorm,

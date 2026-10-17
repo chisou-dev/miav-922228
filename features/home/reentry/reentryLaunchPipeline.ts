@@ -369,6 +369,33 @@ export function durationForStage1(
   };
 }
 
+/**
+ * Stage 1 accessibility aim assist, applied ONCE at launch before SPACE lock.
+ * A chosen heading within +/-25 degrees of the visible Earth bearing is
+ * compressed into +/-3.5 degrees of its center. The simulator still integrates
+ * the actual flight and can BURN/BREAK; this does not force EARTH_REACHED.
+ * Beyond this cone the mapping expands smoothly back to the full 360-degree
+ * compass so there is no jump at the +/-25-degree boundary.
+ */
+export function stage1AssistedDirectionNorm(
+  angleNorm: number,
+  earthBearingScreenRad: number,
+): number {
+  const chosen = -Math.PI / 2 + wrap01(angleNorm) * Math.PI * 2;
+  const delta = Math.atan2(
+    Math.sin(chosen - earthBearingScreenRad),
+    Math.cos(chosen - earthBearingScreenRad),
+  );
+  const halfCone = 25 * Math.PI / 180;
+  const inner = 3.5 * Math.PI / 180;
+  const magnitude = Math.abs(delta);
+  const correctedOffset = magnitude <= halfCone
+    ? (magnitude / halfCone) * inner
+    : inner + ((magnitude - halfCone) / (Math.PI - halfCone)) * (Math.PI - inner);
+  const corrected = earthBearingScreenRad + Math.sign(delta) * correctedOffset;
+  return wrap01((corrected + Math.PI / 2) / (Math.PI * 2));
+}
+
 export function runStage1Launch(
   powerNorm: number,
   angleNorm: number,
