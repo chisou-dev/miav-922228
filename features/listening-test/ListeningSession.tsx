@@ -10,10 +10,12 @@ import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import type { ReadingQuestion } from "@/features/reading-test/types";
 import {
   LISTENING_RATES,
-  pickEnglishVoice,
+  pickVoice,
+  SPOKEN_LOCALES,
+  type SpeechLanguage,
   speechAvailable,
   speechChunks,
-  waitForEnglishVoice,
+  waitForVoice,
 } from "@/features/listening-test/speech";
 import {
   beginListeningAttempt,
@@ -31,7 +33,9 @@ export function ListeningSession({
   body,
   questions,
   continueUrl,
+  language = "en",
 }: {
+  language?: SpeechLanguage;
   slug: string;
   title: string;
   body: string;
@@ -52,7 +56,7 @@ export function ListeningSession({
   const [author, setAuthor] = useState<{ name: string; slug: string } | null>(null);
   const cursorRef = useRef(0);
   const attemptRef = useRef(attempt);
-  const englishVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const playRequestRef = useRef(0);
   const heardRef = useRef(false);
   const pausedRef = useRef(false);
@@ -64,8 +68,8 @@ export function ListeningSession({
     if (!speechAvailable()) return;
     const synth = window.speechSynthesis;
     const remember = () => {
-      const voice = pickEnglishVoice(synth.getVoices());
-      if (voice) englishVoiceRef.current = voice;
+      const voice = pickVoice(synth.getVoices(), language);
+      if (voice) voiceRef.current = voice;
     };
     remember();
     synth.addEventListener("voiceschanged", remember);
@@ -73,7 +77,7 @@ export function ListeningSession({
     return () => {
       synth.removeEventListener("voiceschanged", remember);
     };
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     if (!attempt || attempt.step !== "results") return;
@@ -116,13 +120,13 @@ export function ListeningSession({
       if (index < chunks.length) return false;
       if (cancelled || generation !== generationRef.current) return true;
       setPlaying(false);
-      const voice = englishVoiceRef.current;
+      const voice = voiceRef.current;
       const active = attemptRef.current;
       if (
         !active ||
         !heardRef.current ||
         !voice ||
-        !voice.lang.toLowerCase().replace("_", "-").startsWith("en")
+        !voice.lang.toLowerCase().replace("_", "-").startsWith(language)
       ) {
         return true;
       }
@@ -136,14 +140,14 @@ export function ListeningSession({
 
     function speakFrom(index: number) {
       if (cancelled || generation !== generationRef.current || finishIfDone(index)) return;
-      const voice = englishVoiceRef.current;
-      if (!voice || !voice.lang.toLowerCase().replace("_", "-").startsWith("en")) {
+      const voice = voiceRef.current;
+      if (!voice || !voice.lang.toLowerCase().replace("_", "-").startsWith(language)) {
         setPlaying(false);
         setVoiceNote(true);
         return;
       }
       const utterance = new SpeechSynthesisUtterance(chunks[index] ?? "");
-      utterance.lang = "en-US";
+      utterance.lang = SPOKEN_LOCALES[language];
       utterance.rate = playbackRate;
       utterance.voice = voice;
       const epoch = speakEpochRef.current;
@@ -188,8 +192,8 @@ export function ListeningSession({
 
     function start() {
       if (cancelled || voicesReady) return;
-      const voice = englishVoiceRef.current;
-      if (!voice || !voice.lang.toLowerCase().replace("_", "-").startsWith("en")) return;
+      const voice = voiceRef.current;
+      if (!voice || !voice.lang.toLowerCase().replace("_", "-").startsWith(language)) return;
       voicesReady = true;
       synth.cancel();
       speakTimer = window.setTimeout(() => {
@@ -206,8 +210,8 @@ export function ListeningSession({
 
     start();
     const onVoices = () => {
-      const voice = pickEnglishVoice(synth.getVoices());
-      if (voice) englishVoiceRef.current = voice;
+      const voice = pickVoice(synth.getVoices(), language);
+      if (voice) voiceRef.current = voice;
       start();
     };
     synth.addEventListener("voiceschanged", onVoices);
@@ -223,17 +227,17 @@ export function ListeningSession({
       synth.removeEventListener("voiceschanged", onVoices);
       synth.cancel();
     };
-  }, [playing, playToken, playbackRate, slug, body]);
+  }, [playing, playToken, playbackRate, slug, body, language]);
 
-  async function prepareEnglishVoice() {
+  async function prepareTargetVoice() {
     if (!speechAvailable()) return null;
     const request = playRequestRef.current;
     const synth = window.speechSynthesis;
     const voice =
-      englishVoiceRef.current ??
-      (await waitForEnglishVoice(synth, () => request !== playRequestRef.current));
+      voiceRef.current ??
+      (await waitForVoice(synth, language, () => request !== playRequestRef.current));
     if (request !== playRequestRef.current || !voice) return null;
-    englishVoiceRef.current = voice;
+    voiceRef.current = voice;
     setVoiceName(voice.name);
     setVoiceNote(false);
     return voice;
@@ -249,7 +253,7 @@ export function ListeningSession({
       return;
     }
     setSpeechError(null);
-    const voice = await prepareEnglishVoice();
+    const voice = await prepareTargetVoice();
     if (!voice) {
       setVoiceNote(true);
       setPlaying(false);
@@ -269,7 +273,7 @@ export function ListeningSession({
       setPlaying(false);
       return;
     }
-    const voice = await prepareEnglishVoice();
+    const voice = await prepareTargetVoice();
     if (!voice) {
       setVoiceNote(true);
       setPlaying(false);
@@ -314,16 +318,16 @@ export function ListeningSession({
             Choose a speed
           </h2>
           <p className="mt-4 text-[0.95rem] leading-relaxed text-[var(--foreground-muted)]">
-            The story is read aloud. The text stays hidden. Playback uses this device&apos;s English voice.
+            The story is read aloud. The text stays hidden. Playback uses this device&apos;s voice for the selected language.
           </p>
           {voiceNote ? (
             <p className="mt-6 text-[0.95rem] leading-relaxed" role="alert">
-              No English voice is available on this device. The questions stay closed until an English voice can read the story.
+              No {language.toUpperCase()} voice is available on this device. The questions stay closed until a suitable voice can read the story.
             </p>
           ) : null}
           {speechError === "unavailable" ? (
             <p className="mt-6 text-[0.95rem] leading-relaxed" role="alert">
-              Speech playback is not available in this browser. Listening needs a device that can read English aloud.
+              Speech playback is not available in this browser. Listening needs a device that supports speech playback.
             </p>
           ) : null}
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -375,17 +379,17 @@ export function ListeningSession({
           ) : null}
           {voiceName && !voiceNote ? (
             <p className="mt-3 text-center text-[0.8rem] tracking-[0.12em] text-[var(--reading-ink-muted)] uppercase">
-              English voice: {voiceName}
+              {language.toUpperCase()} voice: {voiceName}
             </p>
           ) : null}
           {voiceNote && !unavailable ? (
             <p className="mx-auto mt-8 max-w-md text-center text-[0.95rem] leading-relaxed" role="alert">
-              No English voice is available on this device. The questions stay closed until an English voice can read the story.
+              No {language.toUpperCase()} voice is available on this device. The questions stay closed until a suitable voice can read the story.
             </p>
           ) : null}
           {unavailable ? (
             <p className="mx-auto mt-8 max-w-md text-center text-[0.95rem] leading-relaxed" role="alert">
-              Speech playback is not available in this browser. Listening needs a device that can read English aloud.
+              Speech playback is not available in this browser. Listening needs a device that supports speech playback.
             </p>
           ) : null}
           {speechError && heard ? (

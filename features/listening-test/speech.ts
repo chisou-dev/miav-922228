@@ -77,21 +77,24 @@ function splitLongSentence(text: string): string[] {
   return chunks.length > 0 ? chunks : [text];
 }
 
-function englishRank(voice: SpeechSynthesisVoice): number | null {
+export type SpeechLanguage = "en" | "es" | "fr";
+export const SPOKEN_LOCALES: Record<SpeechLanguage, string> = { en: "en-US", es: "es-ES", fr: "fr-FR" };
+
+function voiceRank(voice: SpeechSynthesisVoice, language: SpeechLanguage): number | null {
   const lang = voice.lang.toLowerCase().replace("_", "-");
-  const english = lang === "en-us" ? 0 : lang.startsWith("en") ? 2 : null;
-  if (english == null) return null;
+  if (!(lang === language || lang.startsWith(`${language}-`))) return null;
+  const exact = lang === SPOKEN_LOCALES[language].toLowerCase() ? 0 : 2;
   const local = voice.localService ? 0 : 4;
   const multilingual = voice.name.toLowerCase().includes("multilingual") ? 1 : 0;
-  return english + local + multilingual;
+  return exact + local + multilingual;
 }
 
-/** Prefer an installed en-US voice. Online English voices are used only when no local English voice exists. */
-export function pickEnglishVoice(voices: readonly SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+/** Never substitute an English voice for Spanish or French. */
+export function pickVoice(voices: readonly SpeechSynthesisVoice[], language: SpeechLanguage): SpeechSynthesisVoice | null {
   let best: SpeechSynthesisVoice | null = null;
   let bestRank = Number.POSITIVE_INFINITY;
   for (const voice of voices) {
-    const rank = englishRank(voice);
+    const rank = voiceRank(voice, language);
     if (rank == null || rank >= bestRank) continue;
     best = voice;
     bestRank = rank;
@@ -99,16 +102,16 @@ export function pickEnglishVoice(voices: readonly SpeechSynthesisVoice[]): Speec
   return best;
 }
 
-/** Voices often arrive after the first getVoices() call. Do not speak before this resolves. */
-export function waitForEnglishVoice(
+/** Wait for the right-language voice before opening an attempt. */
+export function waitForVoice(
   synth: SpeechSynthesis,
+  language: SpeechLanguage,
   isCancelled: () => boolean,
   timeoutMs = 2500,
 ): Promise<SpeechSynthesisVoice | null> {
-  const pick = () => (isCancelled() ? null : pickEnglishVoice(synth.getVoices()));
+  const pick = () => isCancelled() ? null : pickVoice(synth.getVoices(), language);
   const immediate = pick();
   if (immediate) return Promise.resolve(immediate);
-
   return new Promise((resolve) => {
     let settled = false;
     const finish = (voice: SpeechSynthesisVoice | null) => {
@@ -119,19 +122,18 @@ export function waitForEnglishVoice(
       resolve(voice);
     };
     const onVoices = () => {
-      if (isCancelled()) {
-        finish(null);
-        return;
-      }
-      const voice = pickEnglishVoice(synth.getVoices());
+      if (isCancelled()) { finish(null); return; }
+      const voice = pick();
       if (voice) finish(voice);
     };
     synth.addEventListener("voiceschanged", onVoices);
-    const timer = window.setTimeout(() => {
-      finish(pick());
-    }, timeoutMs);
+    const timer = window.setTimeout(() => finish(pick()), timeoutMs);
     synth.getVoices();
   });
+}
+export function pickEnglishVoice(voices: readonly SpeechSynthesisVoice[]) { return pickVoice(voices, "en"); }
+export function waitForEnglishVoice(synth: SpeechSynthesis, cancelled: () => boolean, timeoutMs = 2500) {
+  return waitForVoice(synth, "en", cancelled, timeoutMs);
 }
 
 export const LISTENING_RATES = [0.75, 1, 1.25, 1.5] as const;

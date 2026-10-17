@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getReadingStories } from "@/features/reading-test/catalog";
 import { countEnglishWords } from "@/features/reading-test/measure";
 import { readingLevelLabel } from "@/features/reading-test/readability";
@@ -21,6 +22,12 @@ export function StoryIndex({ mode }: { mode: "reading" | "listening" }) {
 
   return (
     <div className="mt-14 space-y-14 text-center sm:mt-16">
+      <section aria-label="Featured: Jeff" className="mx-auto max-w-2xl border border-[var(--line)] px-5 py-8">
+        <p className="text-xs uppercase tracking-[0.14em] text-[var(--foreground-muted)]">Featured · Jeff · 14 episodes</p>
+        <h2 className="mt-4 text-2xl">Learn with Jeff</h2>
+        <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">Three languages, three difficulty levels. Reading and Listening.</p>
+        <Link href="/learn/jeff" className="mt-6 inline-block underline underline-offset-4">Choose language and level →</Link>
+      </section>
       {levels.map((level) => {
         const group = storiesAtLevel(stories, level);
         const automatic = group.every((story) => story.levelSource === "automatic");

@@ -15,6 +15,7 @@ import { stillness } from "@/features/reading-test/stories/stillness";
 import { theMonsterChapter1 } from "@/features/reading-test/stories/the-monster-chapter-1";
 import { tissue } from "@/features/reading-test/stories/tissue";
 import { seriesOpenings } from "@/features/reading-test/stories/series-openings";
+import { revisedQuestions } from "@/features/reading-test/quality-overrides";
 import type {
   ReadingLevel,
   ReadingStory,
@@ -159,9 +160,10 @@ function resolveStory(story: ReadingStoryInput): ReadingStory {
   };
 }
 
-for (const story of sources) assertStory(story);
+const revisedSources = sources.map((story) => ({ ...story, questions: revisedQuestions(story.slug, story.questions) }));
+for (const story of revisedSources) assertStory(story);
 
-const stories: readonly ReadingStory[] = sources.map(resolveStory);
+const stories: readonly ReadingStory[] = revisedSources.map(resolveStory);
 
 export function getReadingStories() {
   return stories;

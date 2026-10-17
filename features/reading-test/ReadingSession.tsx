@@ -6,6 +6,7 @@ import { TestResults } from "@/features/learn/TestResults";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
 import { drawQuiz, scoreDrawnQuiz } from "@/features/reading-test/draw";
 import { countEnglishWords } from "@/features/reading-test/measure";
+import { countWords } from "@/features/jeff/words";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import {
   beginReadingAttempt,
@@ -44,7 +45,9 @@ export function ReadingSession({
   body,
   questions,
   continueUrl,
+  language = "en",
 }: {
+  language?: "en" | "es" | "fr";
   slug: string;
   title: string;
   body: string;
@@ -55,12 +58,12 @@ export function ReadingSession({
   const [now, setNow] = useState(() => Date.now());
   const [mode, setMode] = useState<Mode>("challenge");
   const [minutes, setMinutes] = useState(() =>
-    defaultChallengeMinutes(countEnglishWords(body)),
+    defaultChallengeMinutes(language === "en" ? countEnglishWords(body) : countWords(body)),
   );
   const [enjoyment, setEnjoyment] = useState<Enjoyment | null>(null);
   const [author, setAuthor] = useState<{ name: string; slug: string } | null>(null);
 
-  const wordCount = countEnglishWords(body);
+  const wordCount = language === "en" ? countEnglishWords(body) : countWords(body);
   const suggested = recommendedChallengeMinutes(wordCount);
   const options = challengeMinuteOptions(wordCount);
 
