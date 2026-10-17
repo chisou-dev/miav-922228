@@ -67,20 +67,20 @@ function updateSalvageSound(splashAgeS: number): void {
     envelope.gain.setValueAtTime(0.0001, now);
     // Mobile speakers cannot reproduce the old 83 Hz tone well.
     // Raise audible mid-bass presence while keeping peaks below master.
-    envelope.gain.setTargetAtTime(0.19, now, 0.14);
+    envelope.gain.setTargetAtTime(0.22, now, 0.11);
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = 1050;
+    filter.frequency.value = 2300;
     filter.Q.value = 1.5;
     filter.connect(envelope);
     envelope.connect(master);
     const tones: OscillatorNode[] = [];
-    for (const [i, hz] of [157, 167, 241].entries()) {
+    for (const [i, hz] of [157, 167, 241, 690, 1130, 1580].entries()) {
       const osc = ctx.createOscillator();
       const level = ctx.createGain();
-      osc.type = i === 2 ? "sine" : "triangle";
+      osc.type = i === 2 || i >= 4 ? "sine" : "triangle";
       osc.frequency.value = hz;
-      level.gain.value = i === 0 ? 0.44 : i === 1 ? 0.36 : 0.18;
+      level.gain.value = [0.44, 0.36, 0.18, 0.16, 0.13, 0.065][i];
       osc.connect(level);
       level.connect(filter);
       osc.start(now);
@@ -651,16 +651,23 @@ export function setReentryAudioOcean(splashAgeS: number): void {
     impact.linearRampToValueAtTime(0.42, t + 0.045);
     impact.exponentialRampToValueAtTime(0.0001, t + 1.75);
   }
-  // A four-hertz envelope is sufficient for slow breakers.
-  // Avoid scheduling a new WebAudio automation on every canvas frame.
+  // The alien threads receive their own distinct high-frequency voice.
+  // Duck the surf/wind ONLY while the threads are audible, so the effect
+  // doesn't disappear into the broad-band wind noise on phone speakers.
+  updateSalvageSound(splashAgeS);
   if (lastSeaModulationAt < 0 || t - lastSeaModulationAt >= 0.25) {
+    const threadsActive = salvageTone !== null;
     state.sea.gain.setTargetAtTime(
-      0.074 + 0.021 * Math.sin(Math.max(0, splashAgeS) * 1.65),
-      t, 0.75,
+      threadsActive ? 0.020
+        : 0.074 + 0.021 * Math.sin(Math.max(0, splashAgeS) * 1.65),
+      t, threadsActive ? 0.08 : 0.75,
+    );
+    state.wind.gain.setTargetAtTime(
+      threadsActive ? 0.0025 : 0.018,
+      t, threadsActive ? 0.08 : 0.40,
     );
     lastSeaModulationAt = t;
   }
-  updateSalvageSound(splashAgeS);
 }
 
 export function startReentryAudio(): void {

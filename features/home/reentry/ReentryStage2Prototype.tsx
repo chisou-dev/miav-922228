@@ -1,649 +1,413 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  STAGE2_FLIGHT_S,
-  STAGE2_MAX_DEG,
-  STAGE2_MIN_DEG,
-  STAGE2_MIN_PITCH_DEG,
-  STAGE2_MAX_PITCH_DEG,
-  STAGE2_ZOOM_STEPS,
-  stage2Clamp,
-  stage2Evaluate,
-  stage2Message,
-  type Stage2Outcome,
-} from "./reentryStage2Aim";
+  STAGE2_ISLANDS, STAGE2_ZOOMS, bearingTo, clamp,
+  initialStage2Nav, islandDistance, signedBearing, stage2OutcomeText,
+  stage2Visitors, stage2Wind, stepStage2, wrap360,
+  type Stage2Input, type Stage2Island, type Stage2IslandId,
+  type Stage2Nav,
+} from "./reentryStage2Navigation";
 
-// A self-contained, low-overhead Stage 2. It shares neither the 120km
-// handoff nor Physics v1.1 with Stage 1.
-type Phase = "aim" | "flight" | "result";
-type Wind = { direction: -1 | 1; strength: number; waveSeed: number };
-type View = {
-  phase: Phase;
-  angle: number;
-  power: number;
-  zoom: number;
-  pitch: number;
-  wind: Wind;
-  outcome: Stage2Outcome | null;
-};
-const ease = (value: number) => {
-  const t = stage2Clamp(value, 0, 1);
-  return t * t * (3 - 2 * t);
-};
+type People = Record<Stage2IslandId, boolean>;
+type Axis = "left"|"right"|"up"|"down";
+const defaultPeople:People={japan:false,antarctic:true,visitor:false};
+const baseKeys:Stage2Input={left:false,right:false,up:false,down:false,thrust:0};
+const deg=Math.PI/180;
+const ctrl="touch-none select-none rounded-lg border border-cyan-200/40 bg-[#092b39]/95 "+
+  "text-cyan-50 font-mono font-semibold shadow-[0_3px_12px_rgba(0,0,0,0.35)] "+
+  "active:bg-[#32778d] focus-visible:outline focus-visible:outline-2 "+
+  "focus-visible:outline-cyan-100 disabled:opacity-35";
 
-function drawPerson(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  u: number,
-  time: number,
-): void {
-  const breathe = Math.sin(time * 1.2) * 0.028;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(-0.055);
-  ctx.fillStyle = "#54453e";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, u * 0.95, u * 1.18, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#d3a07e";
-  ctx.beginPath();
-  ctx.moveTo(-0.43 * u, 1.06 * u);
-  ctx.lineTo(-0.70 * u, 3.0 * u);
-  ctx.lineTo(-0.6 * u, 6.6 * u);
-  ctx.lineTo(0.62 * u, 6.6 * u);
-  ctx.lineTo(0.72 * u, 3.0 * u);
-  ctx.lineTo(0.46 * u, 1.02 * u);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "#8b99a0";
-  ctx.beginPath();
-  ctx.moveTo(-0.7 * u, 2.6 * u);
-  ctx.lineTo(0.7 * u, 2.6 * u);
-  ctx.lineTo(0.75 * u, 5.1 * u);
-  ctx.lineTo(-0.75 * u, 5.1 * u);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "#3f484d";
-  ctx.fillRect(-0.64 * u, 5.1 * u, 0.57 * u, 3.2 * u);
-  ctx.fillRect(0.07 * u, 5.1 * u, 0.57 * u, 3.2 * u);
-
-  // The small face becomes readable only through optical zoom.
-  const face = ctx.createRadialGradient(
-    -0.28 * u, -0.37 * u, 0.04 * u, 0, 0, u * 1.4,
-  );
-  face.addColorStop(0, "#f3c9a8");
-  face.addColorStop(0.7, "#cc957a");
-  face.addColorStop(1, "#986d5e");
-  ctx.fillStyle = face;
-  ctx.beginPath();
-  ctx.ellipse(0, breathe * u, 0.78 * u, 1.02 * u, -0.07, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#805c54";
-  ctx.lineWidth = 0.045 * u;
-  ctx.beginPath();
-  ctx.moveTo(-0.57 * u, -0.19 * u);
-  ctx.quadraticCurveTo(-0.35 * u, -0.27 * u, -0.13 * u, -0.18 * u);
-  ctx.moveTo(0.13 * u, -0.18 * u);
-  ctx.quadraticCurveTo(0.36 * u, -0.27 * u, 0.59 * u, -0.18 * u);
-  ctx.stroke();
-
-  ctx.fillStyle = "#b17a63";
-  ctx.beginPath();
-  ctx.ellipse(0, 0.2 * u, 0.28 * u, 0.4 * u, 0, 0, Math.PI * 2);
-  ctx.fill();
-  for (const side of [-1, 1]) {
-    ctx.fillStyle = "#3f2830";
-    ctx.beginPath();
-    ctx.ellipse(
-      side * 0.18 * u, (0.28 + breathe) * u,
-      0.088 * u, 0.064 * u, side * 0.17, 0, Math.PI * 2,
-    );
-    ctx.fill();
+function drawFigure(ctx:CanvasRenderingContext2D,x:number,y:number,u:number,
+  skin:string,hair:string,coat:string,polar=false,time=0):void {
+  if(u<0.65){ctx.fillStyle=coat;ctx.fillRect(x-u/2,y-u/2,Math.max(1,u),Math.max(2,u*2));return;}
+  ctx.save();ctx.translate(x,y+Math.sin(time*1.1)*u*0.01);
+  ctx.fillStyle=coat;
+  ctx.beginPath();ctx.moveTo(-u*.50,u*.55);ctx.lineTo(-u*.85,u*2.7);
+  ctx.lineTo(u*.85,u*2.7);ctx.lineTo(u*.5,u*.55);ctx.fill();
+  ctx.fillStyle=hair;ctx.beginPath();ctx.ellipse(0,0,u*.79,u*.95,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,u*.10,u*.69,u*.83,0,0,Math.PI*2);ctx.fill();
+  if(polar){
+    ctx.strokeStyle="#e8e9e3";ctx.lineWidth=Math.max(.7,u*.17);
+    ctx.beginPath();ctx.ellipse(0,u*.10,u*.71,u*.88,0,0,Math.PI*2);ctx.stroke();
   }
-  ctx.fillStyle = "#60343c";
-  ctx.beginPath();
-  ctx.ellipse(0, (0.70 + breathe) * u, 0.29 * u, 0.10 * u, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,197,166,0.7)";
-  ctx.lineWidth = 0.026 * u;
-  ctx.beginPath();
-  ctx.ellipse(0, (0.70 + breathe) * u, 0.29 * u, 0.09 * u, 0, Math.PI, Math.PI * 2);
-  ctx.stroke();
+  ctx.strokeStyle="rgba(62,39,32,0.6)";ctx.lineWidth=Math.max(.45,u*.027);
+  ctx.beginPath();ctx.moveTo(-u*.54,-u*.08);ctx.quadraticCurveTo(-u*.27,-u*.14,-u*.06,-u*.07);
+  ctx.moveTo(u*.06,-u*.07);ctx.quadraticCurveTo(u*.3,-u*.15,u*.54,-u*.08);ctx.stroke();
+  ctx.fillStyle="#9f786b";ctx.beginPath();ctx.ellipse(0,u*.31,u*.22,u*.25,0,0,Math.PI*2);ctx.fill();
+  for(const side of [-1,1]){
+    ctx.fillStyle="#402d32";ctx.beginPath();
+    ctx.ellipse(side*u*.13,u*.47,u*.069,u*.039,side*.14,0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle="#64363a";ctx.beginPath();ctx.ellipse(0,u*.72,u*.26,u*.065,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
 
-function drawCoast(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  seconds: number,
-  zoom: number,
-): { x: number; y: number; unit: number } {
-  const personX = w * 0.395;
-  const faceY = h * 0.546;
-  const unit = Math.min(w, h) * 0.0028;
+function drawIsland(
+  ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav,
+  island:Stage2Island,people:People,zoom:number,time:number,
+):void {
+  const dx=island.x-s.x,dy=island.y-s.y;
+  const distance=Math.max(3,Math.hypot(dx,dy));
+  const relative=signedBearing(bearingTo(dx,dy)-s.heading);
+  const fov=110/zoom;
+  if(Math.abs(relative)>fov*.58)return;
+  const x=w*.5+Math.tan(relative*deg)*w/(2*Math.tan(fov*deg/2));
+  const size=clamp(h*18*zoom/(distance+40),1.5,h*5);
+  const horizon=h*(0.525+s.pitch*.005);
+  const y=horizon - size*.19;
+  ctx.save();ctx.translate(x,y);
+  const polar=island.id==="antarctic";
+  const remote=island.id==="visitor";
+  ctx.fillStyle=polar?"#607d89":remote?"#38594e":"#4b6654";
+  ctx.beginPath();ctx.moveTo(-size*1.7,size*.21);
+  ctx.bezierCurveTo(-size*.92,-size*.20,-size*.80,-size*.34,-size*.45,-size*.42);
+  ctx.lineTo(-size*.19,-size*(polar?.78:.49));
+  ctx.quadraticCurveTo(size*.05,-size*.44,size*.36,-size*.55);
+  ctx.quadraticCurveTo(size*.80,-size*.10,size*1.65,size*.25);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=polar?"#d6e6e5":"#d2be91";
+  ctx.beginPath();ctx.moveTo(-size*1.73,size*.19);
+  ctx.quadraticCurveTo(0,size*.075,size*1.72,size*.20);
+  ctx.lineTo(size*1.72,size*.43);ctx.lineTo(-size*1.73,size*.43);ctx.fill();
 
-  // From about 3m and closer the camera sees only sand and the person's
-  // face. Rendering full-screen sea gradients at 167x is invisible GPU work
-  // and can hitch on phones; use a cheap close-up background instead.
-  if (zoom > 12) {
-    ctx.fillStyle = "#c8b791";
-    ctx.fillRect(0, 0, w, h);
-    for (let i = 0; i < 16; i++) {
-      const x = personX + ((i * 17) % 19 - 9) * unit * 2.8;
-      const y = faceY + ((i * 11) % 13 - 6) * unit * 3.0;
-      ctx.fillStyle = i % 3 ? "rgba(90,81,61,0.12)" : "rgba(241,231,195,0.25)";
-      ctx.fillRect(x, y, unit * 0.18, unit * 0.16);
+  if(polar){
+    ctx.fillStyle="#c3cbd3";
+    ctx.fillRect(-size*.32,-size*.39,size*.66,size*.30);
+    ctx.fillStyle="#c8694a";
+    ctx.fillRect(-size*.24,-size*.28,size*.13,size*.12);
+    ctx.fillRect(size*.06,-size*.28,size*.13,size*.12);
+    ctx.strokeStyle="#b1d9df";ctx.lineWidth=Math.max(.6,size*.024);
+    ctx.beginPath();ctx.moveTo(size*.45,-size*.39);ctx.lineTo(size*.45,-size*.8);ctx.stroke();
+  }else{
+    ctx.fillStyle="#29493c";
+    for(let i=0;i<5;i++){
+      const ax=(i-2)*size*.37;
+      ctx.beginPath();ctx.moveTo(ax,-size*.11);
+      ctx.lineTo(ax-size*.13,-size*.48);ctx.lineTo(ax+size*.14,-size*.48);
+      ctx.closePath();ctx.fill();
     }
-    drawPerson(ctx, personX, faceY, unit, seconds);
-    return { x: personX, y: faceY, unit };
   }
-  const horizon = h * 0.48;
-  const sky = ctx.createLinearGradient(0, 0, 0, horizon);
-  sky.addColorStop(0, "#1f576f");
-  sky.addColorStop(0.54, "#6b9eb0");
-  sky.addColorStop(1, "#c4cbc0");
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, w, h);
-
-  for (let i = 0; i < 9; i++) {
-    const cx = w * ((i * 0.21 + 0.08) % 1);
-    const cy = h * (0.12 + (i % 4) * 0.055);
-    const cloud = ctx.createRadialGradient(cx, cy, 0, cx, cy, h * 0.075);
-    cloud.addColorStop(0, "rgba(248,250,246,0.23)");
-    cloud.addColorStop(1, "rgba(248,250,246,0)");
-    ctx.fillStyle = cloud;
-    ctx.fillRect(cx - h * 0.08, cy - h * 0.08, h * 0.16, h * 0.16);
+  if(remote&&people.visitor){
+    ctx.fillStyle="#d3d5c9";
+    ctx.beginPath();ctx.moveTo(-size*.97,size*.17);
+    ctx.lineTo(-size*.48,size*.12);ctx.lineTo(-size*.44,size*.24);
+    ctx.lineTo(-size*1.04,size*.26);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#a5cbd1";ctx.lineWidth=Math.max(.6,size*.017);
+    ctx.beginPath();ctx.moveTo(-size*.75,size*.13);
+    ctx.lineTo(-size*.75,-size*.25);ctx.stroke();
+    ctx.fillStyle="#93b6bd";ctx.beginPath();
+    ctx.moveTo(-size*.75,-size*.26);ctx.lineTo(-size*.50,size*.08);
+    ctx.lineTo(-size*.75,size*.08);ctx.closePath();ctx.fill();
   }
 
-  const ocean = ctx.createLinearGradient(0, horizon, 0, h);
-  ocean.addColorStop(0, "#397d89");
-  ocean.addColorStop(0.65, "#195768");
-  ocean.addColorStop(1, "#092b3e");
-  ctx.fillStyle = ocean;
-  ctx.fillRect(0, horizon, w, h - horizon);
+  if(people[island.id]){
+    const u=Math.max(.65,size*.081);
+    const skin=island.id==="japan"?"#d7a77e":island.id==="antarctic"?"#bf9782":"#8e6554";
+    const hair=island.id==="japan"?"#181c24":island.id==="antarctic"?"#313b42":"#312d30";
+    drawFigure(ctx,size*.28,-size*.26,u,skin,hair,
+      island.id==="antarctic"?"#df762e":"#7da09f",polar,time);
+    if(remote){
+      drawFigure(ctx,-size*.07,-size*.18,u*.85,"#e7b999","#573b2f","#cf707c",false,time);
+      drawFigure(ctx,size*.57,-size*.16,u*.75,"#a8795c","#242527","#e8c979",false,time);
+    }
+  }
 
-  // Distant land and a beach that really remains visible at wide angle.
-  ctx.fillStyle = "#3c6465";
-  ctx.beginPath();
-  ctx.moveTo(0, h * 0.51);
-  ctx.lineTo(w * 0.13, h * 0.48);
-  ctx.lineTo(w * 0.34, h * 0.46);
-  ctx.lineTo(w * 0.59, h * 0.495);
-  ctx.lineTo(w, h * 0.47);
-  ctx.lineTo(w, h * 0.56);
-  ctx.closePath();
-  ctx.fill();
-  const sand = ctx.createLinearGradient(0, h * 0.51, 0, h * 0.72);
-  sand.addColorStop(0, "#998c6b");
-  sand.addColorStop(0.48, "#d2be91");
-  sand.addColorStop(1, "#bdab84");
-  ctx.fillStyle = sand;
-  ctx.beginPath();
-  ctx.moveTo(0, h * 0.565);
-  ctx.bezierCurveTo(w * 0.3, h * 0.52, w * 0.66, h * 0.59, w, h * 0.55);
-  ctx.lineTo(w, h * 0.71);
-  ctx.bezierCurveTo(w * 0.77, h * 0.67, w * 0.45, h * 0.72, 0, h * 0.66);
-  ctx.closePath();
-  ctx.fill();
+  if(size>16){
+    ctx.font=Math.max(8,Math.min(12,size*.16))+"px ui-monospace, monospace";
+    ctx.fillStyle="rgba(222,240,233,.72)";
+    const status=people[island.id]?"":" · NO VISITOR";
+    ctx.fillText(island.label+status,-size*.72,size*.57);
+  }
+  ctx.restore();
+}
 
-  // Uneven basalt reefs and breaking foam at both sides of the beach.
-  const reefs = [
-    [0.09, 0.59, 0.07], [0.19, 0.62, 0.035], [0.73, 0.62, 0.055],
-    [0.83, 0.59, 0.085], [0.94, 0.66, 0.05],
-  ];
-  reefs.forEach(([nx, ny, r], i) => {
-    const x = nx * w, y = ny * h, size = r * Math.min(w, h);
-    ctx.fillStyle = i % 2 ? "#44565b" : "#384b4e";
-    ctx.beginPath();
-    ctx.moveTo(x - size, y + size * 0.33);
-    ctx.lineTo(x - size * 0.63, y - size * 0.60);
-    ctx.lineTo(x - size * 0.16, y - size * 0.84);
-    ctx.lineTo(x + size * 0.34, y - size * 0.48);
-    ctx.lineTo(x + size * 0.87, y + size * 0.32);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(230,242,235,0.44)";
-    ctx.lineWidth = 1.1;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.3, size * 1.13, size * 0.2, -0.06, 0, Math.PI);
-    ctx.stroke();
-  });
-
-  // Deliberately few strokes: phone GPU and desktop integrated GPUs both
-  // render this without the heavyweight Stage 1 ocean shader.
-  for (let i = 0; i < 56; i++) {
-    const depth = (i + 0.5) / 56;
-    const x = w * ((i * 0.6180339 + 0.23) % 1);
-    const y = h * (0.705 + depth * 0.29);
-    const shift = Math.sin(seconds * 1.1 + i * 2.7) * w * 0.003;
-    ctx.strokeStyle = "rgba(194,231,229," + (0.045 + depth * 0.18) + ")";
-    ctx.lineWidth = Math.max(0.6, depth * 1.8);
-    ctx.beginPath();
-    ctx.moveTo(x + shift, y);
-    ctx.quadraticCurveTo(x + depth * w * 0.023, y - 1.6,
-      x + depth * w * 0.048, y);
+function drawSeascape(
+  ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav,
+  people:People,zoom:number,time:number,optic:boolean,
+):void {
+  const horizon=h*(.525+s.pitch*.005);
+  ctx.clearRect(0,0,w,h);
+  const sky=ctx.createLinearGradient(0,0,0,horizon);
+  sky.addColorStop(0,"#286d8d");sky.addColorStop(.65,"#85bbcc");sky.addColorStop(1,"#b9d3cf");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,w,horizon+1);
+  const water=ctx.createLinearGradient(0,horizon,0,h);
+  water.addColorStop(0,"#3b8299");water.addColorStop(.5,"#156582");
+  water.addColorStop(1,"#062c48");
+  ctx.fillStyle=water;ctx.fillRect(0,horizon,w,h-horizon);
+  // Sparse moving crests keep the sea alive without a full-resolution shader.
+  for(let i=0;i<(optic?18:62);i++){
+    const depth=(i+.5)/(optic?18:62);
+    const y=horizon+(h-horizon)*depth*depth;
+    const x=w*((i*.6180339+time*.008*(.4+depth*2))%1);
+    const len=w*(.012+depth*.06);
+    ctx.strokeStyle="rgba(196,238,231,"+(.04+depth*.22)+")";
+    ctx.lineWidth=Math.max(.5,depth*1.6);
+    ctx.beginPath();ctx.moveTo(x,y);
+    ctx.quadraticCurveTo(x+len*.45,y-depth*2,x+len,y);
     ctx.stroke();
   }
-
-  ctx.fillStyle = "rgba(50,45,39,0.22)";
-  ctx.beginPath();
-  ctx.ellipse(personX + unit, faceY + unit * 8.3,
-    unit * 3.3, unit * 0.9, 0, 0, Math.PI * 2);
-  ctx.fill();
-  drawPerson(ctx, personX, faceY, unit, seconds);
-  return { x: personX, y: faceY, unit };
+  for(const island of STAGE2_ISLANDS)drawIsland(ctx,w,h,s,island,people,zoom,time);
 }
 
-
-/*
- * Main sea view and optical cockpit are deliberately separate canvases.
- * Changing optics never enlarges the main view before LAUNCH.
- * Wind gust and wave drift use fixed math for a shot, not chance on impact.
- */
-function driftAt(wind: Wind, p: number): { yaw: number; pitch: number } {
-  const progress = ease(p);
-  const gust = Math.sin(wind.waveSeed + p * 10.3) * 0.11;
-  return {
-    yaw: progress * (wind.direction * wind.strength * 0.13 + gust),
-    pitch: progress * (
-      Math.sin(wind.waveSeed * 1.9 + p * 16.8) * 0.17 +
-      Math.cos(p * 21.0 + wind.waveSeed) * 0.07
-    ),
-  };
-}
-
-function drawLook(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  time: number, zoom: number,
-  yaw: number, pitch: number,
-): void {
-  const unit = Math.min(w, h) * 0.0028;
-  const faceX = w * 0.395;
-  const faceY = h * 0.546;
-  // The camera pan tracks a patch of the face, not the nose or mouth.
-  // Even at maximum optical zoom the precise aperture is not resolved.
-  const lookX = faceX + yaw * unit * 0.10;
-  const lookY = faceY + (0.48 + pitch * 0.18) * unit;
-  ctx.save();
-  ctx.translate(w * 0.5 - lookX * zoom, h * 0.50 - lookY * zoom);
-  ctx.scale(zoom, zoom);
-  drawCoast(ctx, w, h, time, zoom);
+function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav):void {
+  const size=Math.min(w,h)*.082;
+  const x=w*.50;
+  const sink=s.outcome==="SEA"?Math.min(1,(s.seconds%6)/3):0;
+  const y=h*.79+Math.sin(s.seconds*2.8)*2+s.pitch*.8+size*sink*1.4;
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(s.seconds)*.014);
+  const metal=ctx.createLinearGradient(-size,-size,size,size);
+  metal.addColorStop(0,"#152a3c");metal.addColorStop(.5,"#49758b");
+  metal.addColorStop(1,"#091727");
+  ctx.fillStyle=metal;ctx.strokeStyle="#9ed8d4";
+  ctx.lineWidth=1.7;
+  ctx.beginPath();ctx.moveTo(0,-size*.90);
+  ctx.bezierCurveTo(size*.8,-size*.42,size*.98,size*.55,size*.71,size*.68);
+  ctx.quadraticCurveTo(0,size*.87,-size*.71,size*.68);
+  ctx.bezierCurveTo(-size*.98,size*.55,-size*.8,-size*.42,0,-size*.90);
+  ctx.fill();ctx.stroke();
+  ctx.fillStyle="#051923";
+  ctx.beginPath();ctx.ellipse(0,size*.18,size*.39,size*.32,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="rgba(136,226,209,.63)";
+  ctx.beginPath();ctx.moveTo(0,-size*.66);ctx.lineTo(0,-size*.20);ctx.stroke();
   ctx.restore();
 }
 
-function drawSkiff(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  yaw: number, pitch: number, alpha: number,
-): void {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(yaw * 0.032 - pitch * 0.018);
-  ctx.globalAlpha = alpha;
-  const metal = ctx.createLinearGradient(-size, -size, size, size);
-  metal.addColorStop(0, "#152e42");
-  metal.addColorStop(0.52, "#46798d");
-  metal.addColorStop(1, "#061726");
-  ctx.fillStyle = metal;
-  ctx.strokeStyle = "rgba(170,239,231,0.72)";
-  ctx.lineWidth = Math.max(1, size * 0.022);
-  ctx.beginPath();
-  ctx.moveTo(0, -size * 0.90);
-  ctx.bezierCurveTo(size * 0.68, -size * 0.60, size, size * 0.36, size * 0.7, size * 0.62);
-  ctx.quadraticCurveTo(0, size * 0.90, -size * 0.7, size * 0.62);
-  ctx.bezierCurveTo(-size, size * 0.36, -size * 0.68, -size * 0.60, 0, -size * 0.90);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = "#05151d";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.16, size * 0.38, size * 0.33, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(96,211,191,0.35)";
-  ctx.beginPath();ctx.moveTo(0, -size * 0.58);ctx.lineTo(0, -size * 0.15);ctx.stroke();
-  ctx.restore();
+function drawMonitor(
+  ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav,
+  people:People,zoom:number,time:number,
+):void {
+  // The monitor always faces the same bearing as the craft. It does not
+  // lock onto or automatically center a person's nose/mouth.
+  drawSeascape(ctx,w,h,s,people,zoom,time,true);
+  const cx=w*.5,cy=h*.52,r=Math.min(w,h)*.10;
+  ctx.strokeStyle="rgba(187,241,230,.91)";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-r*2,cy);ctx.lineTo(cx-r*.5,cy);
+  ctx.moveTo(cx+r*.5,cy);ctx.lineTo(cx+r*2,cy);
+  ctx.moveTo(cx,cy-r*2);ctx.lineTo(cx,cy-r*.5);
+  ctx.moveTo(cx,cy+r*.5);ctx.lineTo(cx,cy+r*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r*.47,0,Math.PI*2);ctx.stroke();
 }
 
-function drawMain(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  time: number, v: View, elapsed: number,
-): void {
-  ctx.clearRect(0, 0, w, h);
-  const p = stage2Clamp(elapsed / STAGE2_FLIGHT_S, 0, 1);
-  const drift = driftAt(v.wind, p);
-  const viewYaw = v.angle + drift.yaw;
-  const viewPitch = v.pitch + drift.pitch;
-
-  // Motion toward the beach, not a pre-launch zoom. Main horizon stays wide
-  // while the user operates the binocular scope in the corner.
-  const launched = v.phase === "flight" || v.phase === "result";
-  const travel = ease((p - 0.08) / 0.89);
-  const cameraZoom = launched
-    ? 1 + 156 * travel * travel
-    : 1;
-  drawLook(ctx, w, h, time, cameraZoom, viewYaw, viewPitch);
-
-  if (v.phase === "aim") {
-    drawSkiff(ctx,
-      w * (0.50 + v.angle * 0.004),
-      h * (0.79 + v.pitch * 0.003),
-      Math.min(w, h) * 0.055,
-      v.angle, v.pitch, 0.95,
-    );
-  } else if (v.phase === "flight") {
-    const r = Math.min(w, h);
-    const speed = ease(p);
-    // Close water / wake streaks move faster as the craft accelerates.
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    for (let i = 0; i < 32; i++) {
-      const seed = (i * 0.6180339 + 0.13) % 1;
-      const x = ((seed + p * (0.12 + (i % 7) * 0.018)) % 1) * w;
-      const y = h * (0.55 + ((i * 0.317 + time * (0.4 + speed * 2.4)) % 1) * 0.52);
-      ctx.strokeStyle = "rgba(184,230,224," + (0.06 + speed * 0.18) + ")";
-      ctx.lineWidth = Math.max(0.7, r * 0.0012);
-      ctx.beginPath();ctx.moveTo(x, y);
-      ctx.lineTo(x + drift.yaw * 2, y + r * (0.006 + speed * 0.035));ctx.stroke();
-    }
-    ctx.restore();
-    const shipFade = 1 - ease((p - 0.68) / 0.25);
-    if (shipFade > 0.002) {
-      drawSkiff(ctx, w * (0.5 + drift.yaw * 0.015),
-        h * (0.80 - speed * 0.27 + drift.pitch * 0.016),
-        r * (0.054 - speed * 0.036),
-        viewYaw, viewPitch, shipFade);
-    }
-  }
-
-  if (v.phase === "result" && v.outcome) {
-    ctx.fillStyle = "rgba(0,9,18,0.36)";
-    ctx.fillRect(0, 0, w, h);
-  }
+function createCanvasScale(canvas:HTMLCanvasElement):{w:number;h:number;dpr:number}{
+  const w=Math.max(1,Math.round(canvas.clientWidth));
+  const h=Math.max(1,Math.round(canvas.clientHeight));
+  const dpr=Math.min(1.3,window.devicePixelRatio||1);
+  const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
+  if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph;}
+  return {w,h,dpr};
 }
 
-function drawOptic(
-  ctx: CanvasRenderingContext2D, w: number, h: number,
-  time: number, v: View, elapsed: number,
-): void {
-  const p = stage2Clamp(elapsed / STAGE2_FLIGHT_S, 0, 1);
-  const drift = driftAt(v.wind, p);
-  // Moving closer naturally increases apparent size, but optics only
-  // magnify this small monitor; never magnify the pre-launch main canvas.
-  const approach = v.phase === "aim" ? 1 : 1 + 3.0 * ease(p);
-  const zoom = Math.min(128, v.zoom * approach);
-  ctx.clearRect(0, 0, w, h);
-  drawLook(ctx, w, h, time, zoom,
-    v.angle + drift.yaw, v.pitch + drift.pitch);
-  const cx = w * 0.5, cy = h * 0.5;
-  const arm = Math.max(6, Math.min(w, h) * 0.10);
-  ctx.strokeStyle = "rgba(167,243,216,0.88)";
-  ctx.lineWidth = 0.9;
-  ctx.beginPath();
-  ctx.moveTo(cx - arm * 2.4, cy);ctx.lineTo(cx - arm * 0.55, cy);
-  ctx.moveTo(cx + arm * 0.55, cy);ctx.lineTo(cx + arm * 2.4, cy);
-  ctx.moveTo(cx, cy - arm * 2.4);ctx.lineTo(cx, cy - arm * 0.55);
-  ctx.moveTo(cx, cy + arm * 0.55);ctx.lineTo(cx, cy + arm * 2.4);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(cx, cy, arm * 0.48, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
-const control = "touch-manipulation rounded-md border border-cyan-100/40 " +
-  "bg-[#061b24]/95 px-2 py-1.5 text-[0.76rem] font-medium text-cyan-50 " +
-  "transition-colors active:scale-[0.96] hover:bg-[#13394c] " +
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-100 " +
-  "disabled:opacity-30";
-const zoomSteps: readonly number[] = STAGE2_ZOOM_STEPS;
-
-export function ReentryStage2Prototype({ onClose }: { onClose: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const opticRef = useRef<HTMLCanvasElement>(null);
-  const [phase, setPhase] = useState<Phase>("aim");
-  const [angle, setAngle] = useState(0);
-  const [pitch, setPitch] = useState(0);
-  const [power, setPower] = useState(0.56);
-  const [zoomIndex, setZoomIndex] = useState(0);
-  const [outcome, setOutcome] = useState<Stage2Outcome | null>(null);
-  const [notice, setNotice] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  // Forecast is visible BEFORE launch; gusts vary continuously during flight.
-  const wind: Wind = {
-    direction: attempt % 2 === 0 ? -1 : 1,
-    strength: 4 - (attempt % 3),
-    waveSeed: attempt * 1.731 + 0.77,
-  };
-  const zoom = zoomSteps[zoomIndex];
-  const elapsedRef = useRef(0);
-  const viewRef = useRef<View>({
-    phase: "aim", angle: 0, pitch: 0, power: 0.56,
-    zoom: 1, wind, outcome: null,
-  });
-
-  useEffect(() => {
-    viewRef.current = { phase, angle, pitch, power, zoom, wind, outcome };
-  }, [phase, angle, pitch, power, zoom, outcome, attempt]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const optic = opticRef.current;
-    const ctx = canvas?.getContext("2d");
-    const opticCtx = optic?.getContext("2d");
-    if (!canvas || !ctx || !optic || !opticCtx) return;
-    let raf = 0;
-    let last = 0;
-    const tick = (now: number) => {
-      if (!last) last = now;
-      const dt = Math.min(50, Math.max(0, now - last));
-      last = now;
-      const v = viewRef.current;
-      if (v.phase === "flight") {
-        elapsedRef.current = Math.min(STAGE2_FLIGHT_S,
-          elapsedRef.current + dt / 1000);
-        if (elapsedRef.current >= STAGE2_FLIGHT_S) {
-          const d = driftAt(v.wind, 1);
-          const result = stage2Evaluate(
-            v.angle, v.power, v.pitch, d.yaw, d.pitch);
-          viewRef.current = { ...v, phase: "result", outcome: result };
-          setOutcome(result);
-          setPhase("result");
-        }
-      }
-      for (const c of [canvas, optic]) {
-        const w = Math.max(1, Math.round(c.clientWidth));
-        const h = Math.max(1, Math.round(c.clientHeight));
-        const dpr = Math.min(1.25, window.devicePixelRatio || 1);
-        const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
-        if (c.width !== pw || c.height !== ph) {
-          c.width = pw;
-          c.height = ph;
-        }
-      }
-      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
-      const cw = Math.max(1, Math.round(canvas.clientWidth));
-      const ch = Math.max(1, Math.round(canvas.clientHeight));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawMain(ctx, cw, ch, now / 1000,
-        viewRef.current, elapsedRef.current);
-      const ow = Math.max(1, Math.round(optic.clientWidth));
-      const oh = Math.max(1, Math.round(optic.clientHeight));
-      opticCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawOptic(opticCtx, ow, oh, now / 1000,
-        viewRef.current, elapsedRef.current);
-      raf = requestAnimationFrame(tick);
+export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
+  const mainRef=useRef<HTMLCanvasElement>(null);
+  const opticRef=useRef<HTMLCanvasElement>(null);
+  const simRef=useRef<Stage2Nav>(initialStage2Nav());
+  const inputRef=useRef<Stage2Input>({...baseKeys});
+  const peopleRef=useRef<People>(defaultPeople);
+  const zoomRef=useRef(1);
+  const [people,setPeople]=useState<People>(defaultPeople);
+  const [hud,setHud]=useState<Stage2Nav>(initialStage2Nav);
+  const [zoomIndex,setZoomIndex]=useState(0);
+  const [thrustView,setThrustView]=useState(0);
+  const [stage3Notice,setStage3Notice]=useState(false);
+  const [help,setHelp]=useState(false);
+  const pressingThrust=useRef(false);
+  const hudPublished=useRef(0);
+  useEffect(()=>{zoomRef.current=STAGE2_ZOOMS[zoomIndex];},[zoomIndex]);
+  useEffect(()=>{
+    const refresh=()=>{
+      const current=stage2Visitors(new Date());
+      peopleRef.current=current;setPeople(current);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+    refresh();
+    const id=window.setInterval(refresh,60000);
+    return()=>window.clearInterval(id);
+  },[]);
 
-  const holdDelayRef = useRef<number | null>(null);
-  const holdRepeatRef = useRef<number | null>(null);
-  const stopHold = useCallback(() => {
-    if (holdDelayRef.current !== null) window.clearTimeout(holdDelayRef.current);
-    if (holdRepeatRef.current !== null) window.clearInterval(holdRepeatRef.current);
-    holdDelayRef.current = null;
-    holdRepeatRef.current = null;
-  }, []);
-  useEffect(() => stopHold, [stopHold]);
-  const startHold = (move: () => void) => {
-    stopHold();
-    holdDelayRef.current = window.setTimeout(() => {
-      holdRepeatRef.current = window.setInterval(move, 85);
-    }, 280);
+  useEffect(()=>{
+    const main=mainRef.current,optics=opticRef.current;
+    const ctx=main?.getContext("2d"),scope=optics?.getContext("2d");
+    if(!main||!ctx||!optics||!scope)return;
+    let raf=0,previous=0;
+    const frame=(now:number)=>{
+      if(!previous)previous=now;
+      const dt=Math.min(.05,Math.max(0,(now-previous)/1000));
+      previous=now;
+      simRef.current=stepStage2(simRef.current,inputRef.current,dt,peopleRef.current);
+      const sim=simRef.current;
+      if(sim.outcome)inputRef.current.thrust=0;
+      const c=createCanvasScale(main);
+      ctx.setTransform(c.dpr,0,0,c.dpr,0,0);
+      drawSeascape(ctx,c.w,c.h,sim,peopleRef.current,1,now/1000,false);
+      drawHovercraft(ctx,c.w,c.h,sim);
+      const o=createCanvasScale(optics);
+      scope.setTransform(o.dpr,0,0,o.dpr,0,0);
+      drawMonitor(scope,o.w,o.h,sim,peopleRef.current,zoomRef.current,now/1000);
+      if(now-hudPublished.current>120||sim.outcome&&now-hudPublished.current>50){
+        hudPublished.current=now;
+        setHud({...sim});
+      }
+      raf=requestAnimationFrame(frame);
+    };
+    raf=requestAnimationFrame(frame);
+    return()=>cancelAnimationFrame(raf);
+  },[]);
+
+  const zoomIn=()=>setZoomIndex(i=>Math.min(STAGE2_ZOOMS.length-1,i+1));
+  const zoomOut=()=>setZoomIndex(i=>Math.max(0,i-1));
+  const pressAxis=(axis:Axis,e:ReactPointerEvent<HTMLButtonElement>)=>{
+    e.preventDefault();
+    if(simRef.current.outcome)return;
+    try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* optional */}
+    inputRef.current[axis]=true;
+    // Tap must also advance a few degrees, even if the next RAF is late.
+    const s=simRef.current;
+    const amount=axis==="left"?-2.4:axis==="right"?2.4:0;
+    const pitch=axis==="up"?.7:axis==="down"?-.7:0;
+    simRef.current={...s,heading:wrap360(s.heading+amount),
+      pitch:clamp(s.pitch+pitch,-15,15)};
+    setHud({...simRef.current});
   };
-
-  const nudgeAngle = useCallback((delta: number) => {
-    if (phase !== "aim") return;
-    setAngle(value => Math.round(stage2Clamp(
-      value + delta, STAGE2_MIN_DEG, STAGE2_MAX_DEG) * 100) / 100);
-  }, [phase]);
-  const nudgePitch = useCallback((delta: number) => {
-    if (phase !== "aim") return;
-    setPitch(value => Math.round(stage2Clamp(
-      value + delta, STAGE2_MIN_PITCH_DEG, STAGE2_MAX_PITCH_DEG) * 100) / 100);
-  }, [phase]);
-
-  const launch = () => {
-    if (phase !== "aim") return;
-    elapsedRef.current = 0;
-    setOutcome(null);
-    setNotice(false);
-    setPhase("flight");
+  const releaseAxis=(axis:Axis)=>{inputRef.current[axis]=false;};
+  const adjustThrust=(e:ReactPointerEvent<HTMLButtonElement>)=>{
+    const b=e.currentTarget.getBoundingClientRect();
+    const position=clamp(1-(e.clientY-b.top)/Math.max(1,b.height),0,1);
+    const amount=clamp(.20+position*.80,0,1);
+    inputRef.current.thrust=amount;
+    setThrustView(amount);
   };
-  const retry = () => {
-    elapsedRef.current = 0;
-    setAttempt(v => v + 1);
-    setAngle(0);
-    setPitch(0);
-    setPower(0.56);
-    setZoomIndex(0);
-    setOutcome(null);
-    setNotice(false);
-    setPhase("aim");
+  const startThrust=(e:ReactPointerEvent<HTMLButtonElement>)=>{
+    e.preventDefault();
+    if(simRef.current.outcome||simRef.current.fuel<=0)return;
+    pressingThrust.current=true;
+    try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* optional */}
+    adjustThrust(e);
   };
-  const cleared = outcome === "NOSE" || outcome === "MOUTH";
-  const interactive = phase === "aim";
-  const p = stage2Clamp(elapsedRef.current / STAGE2_FLIGHT_S, 0, 1);
-  const drift = driftAt(wind, p);
-  const windIcon = wind.direction < 0 ? "←" : "→";
+  const stopThrust=()=>{
+    pressingThrust.current=false;
+    inputRef.current.thrust=0;setThrustView(0);
+  };
+  const reset=()=>{
+    stopThrust();
+    inputRef.current={...baseKeys};
+    simRef.current=initialStage2Nav();
+    setHud({...simRef.current});
+    setZoomIndex(0);setStage3Notice(false);
+  };
+  useEffect(()=>()=>{
+    pressingThrust.current=false;
+    inputRef.current={...baseKeys};
+  },[]);
+  const wind=stage2Wind(hud);
+  const speed=Math.hypot(hud.vx,hud.vy);
+  const clear=hud.outcome==="NOSE"||hud.outcome==="MOUTH";
+  const activeCount=Number(people.japan)+Number(people.antarctic)+Number(people.visitor);
+  const nearest=STAGE2_ISLANDS.slice().sort((a,b)=>islandDistance(hud,a)-islandDistance(hud,b))[0];
+  const axisButtons:{axis:Axis;label:string;glyph:string}[]=[
+    {axis:"left",label:"Turn left",glyph:"←"},
+    {axis:"right",label:"Turn right",glyph:"→"},
+    {axis:"up",label:"Raise nose",glyph:"↑"},
+    {axis:"down",label:"Lower nose",glyph:"↓"},
+  ];
+  return <div className="absolute inset-0 z-[90] overflow-hidden bg-[#062536] text-cyan-50"
+    role="region" aria-label="Stage 2 · free navigation across 360-degree ocean">
+    <canvas ref={mainRef} className="absolute inset-0 h-full w-full"
+      aria-label="Panoramic ocean with three distant islands and a steerable hovercraft"/>
+    <div className="pointer-events-none absolute left-3 top-14 z-[91] rounded border-l border-cyan-100/45 bg-[#06202b]/70 px-3 py-1.5 font-mono text-[.58rem] tracking-[.13em] sm:left-5 sm:top-5">
+      STAGE 2 · OPEN SEA
+    </div>
+    <button type="button" onClick={onClose} className={ctrl+" absolute left-3 top-3 z-[96] px-3 py-2 sm:right-auto"}>
+      BACK
+    </button>
+    <button type="button" onClick={()=>setHelp(v=>!v)}
+      className={ctrl+" absolute left-20 top-3 z-[96] px-3 py-2"} aria-label="Controls help">?</button>
+    {help&&<div className="absolute left-3 top-24 z-[97] max-w-[17rem] rounded bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl">
+      Turn 360° with arrows and locate one of three islands on the horizon.
+      Press and slide THRUST upward for more power. Release to glide.
+      Watch FUEL, ALTITUDE and WIND; adjust heading while moving.
+      Zoom changes only the right-hand monitor. Targets exist at local times.
+    </div>}
 
-  return (
-    <div className="absolute inset-0 z-[90] overflow-hidden bg-[#061e29] text-white"
-      role="region" aria-label="Stage 2 — two-axis hovercraft aiming">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full"
-        aria-label="Wide sea view with hovercraft; coastline approaches at launch" />
-      <div className="pointer-events-none absolute left-3 top-14 z-[92] rounded-sm border-l border-cyan-100/40 bg-black/45 px-3 py-2 font-mono text-[0.61rem] tracking-[0.15em] sm:left-7 sm:top-6">
-        STAGE 2 <span className="ml-2 text-cyan-100/65">← COAST</span>
+    <div className="absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] sm:right-5">
+      <div className="flex items-center justify-between border-b border-cyan-100/20 px-2 py-1 font-mono text-[.52rem] tracking-wider">
+        <span>COCKPIT · OPTICS</span><span>{STAGE2_ZOOMS[zoomIndex]}×</span>
       </div>
-      <button type="button" onClick={onClose}
-        className={"absolute left-3 top-3 z-[96] " + control}>BACK</button>
-
-      {/* Only this panel contains the optical zoom. AUDIO sits above it. */}
-      <div className="absolute right-2 top-[5.4rem] z-[94] w-[min(44vw,18rem)] min-w-[8.7rem] overflow-hidden rounded-md border border-cyan-100/50 bg-[#061823]/95 shadow-[0_6px_22px_rgba(0,0,0,0.65)] sm:right-6 sm:top-[5.5rem]">
-        <div className="flex items-center justify-between border-b border-cyan-100/20 px-2 py-1 font-mono text-[0.54rem] tracking-[0.1em] text-cyan-100/80">
-          <span>COCKPIT OPTICS</span><span>{Math.round(zoom)}×</span>
-        </div>
-        <canvas ref={opticRef} className="block aspect-[1.65] w-full"
-          aria-label="Zoomed live view toward the distant beach target"/>
-        <div className="flex flex-wrap justify-between gap-x-2 border-t border-cyan-100/20 bg-[#061b22]/95 px-2 py-1 font-mono text-[0.59rem] tabular-nums text-cyan-100/90">
-          <span>WIND {windIcon} {wind.strength}</span>
-          <span>H {angle.toFixed(1)}° V {pitch.toFixed(1)}°</span>
-        </div>
-        <div className="flex items-center justify-between gap-2 px-2 pb-2 pt-1">
-          <button type="button" className={control+" !px-3 !py-1"}
-            disabled={!interactive || zoomIndex===0}
-            onClick={()=>setZoomIndex(i=>Math.max(0,i-1))} aria-label="Cockpit zoom out">−</button>
-          <span className="font-mono text-[0.57rem] tracking-widest text-cyan-50/65">ZOOM</span>
-          <button type="button" className={control+" !px-3 !py-1"}
-            disabled={!interactive || zoomIndex===zoomSteps.length-1}
-            onClick={()=>setZoomIndex(i=>Math.min(zoomSteps.length-1,i+1))}
-            aria-label="Cockpit zoom in">+</button>
-        </div>
+      <canvas ref={opticRef} className="block aspect-[1.65] w-full" aria-label="Magnified view of the same forward bearing"/>
+      <div className="flex flex-wrap justify-between gap-x-2 bg-[#04121a] px-2 py-1 font-mono text-[.54rem]">
+        <span>WIND {wind.arrow} {wind.strength}</span>
+        <span>HDG {Math.round(hud.heading)}°</span>
       </div>
-
-      {/* Colored cockpit switches only peek above the lower hull; functional
-          arrows stay fully accessible above these decorative switches. */}
-      <div className="pointer-events-none absolute -bottom-4 left-0 right-0 z-[91] h-20 rounded-t-[45%] border-t border-cyan-200/35 bg-gradient-to-b from-[#193e4c]/85 to-[#031018]">
-        <div className="mx-auto mt-11 flex w-fit gap-3 opacity-80">
-          {["#dc9a44","#6ab89d","#5d9ee0","#da737b","#e0ca66","#8c83e0"].map((color,i)=>(
-            <span key={i} className="h-9 w-9 rounded-full border border-white/20 shadow-[0_0_5px_rgba(255,255,255,0.25)]"
-              style={{backgroundColor:color}}/>
-          ))}
-        </div>
-      </div>
-
-      {interactive && (
-        <div className="absolute inset-x-0 bottom-[7%] z-[95] flex flex-col items-center gap-2 px-2 sm:bottom-[6%]"
-          role="group" aria-label="Power and two-axis direction controls">
-          <div className="flex items-center gap-2 rounded-md bg-[#051923]/90 px-3 py-1.5">
-            <label htmlFor="stage2-power" className="font-mono text-[0.60rem] tracking-[0.11em] text-cyan-50/80">POWER</label>
-            <input id="stage2-power" type="range" min="0" max="100" step="1"
-              value={Math.round(power*100)}
-              onChange={e=>setPower(Number(e.target.value)/100)}
-              className="w-[min(31vw,10rem)] accent-amber-300"
-              aria-label="Stage 2 propulsion power"/>
-            <span className="w-9 font-mono text-[0.67rem] tabular-nums">{Math.round(power*100)}%</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-md bg-[#051923]/90 px-2 py-1.5">
-            <div className="flex gap-1">
-              <button type="button" className={control+" !border-sky-200/65 !bg-[#174e69]"}
-                onPointerDown={()=>startHold(()=>nudgeAngle(-0.25))}
-                onPointerUp={stopHold} onPointerLeave={stopHold}
-                onPointerCancel={stopHold}
-                onClick={()=>nudgeAngle(-0.25)} aria-label="Turn left">←</button>
-              <button type="button" className={control+" !border-sky-200/65 !bg-[#174e69]"}
-                onPointerDown={()=>startHold(()=>nudgeAngle(0.25))}
-                onPointerUp={stopHold} onPointerLeave={stopHold}
-                onPointerCancel={stopHold}
-                onClick={()=>nudgeAngle(0.25)} aria-label="Turn right">→</button>
-            </div>
-            <div className="flex gap-1">
-              <button type="button" className={control+" !border-emerald-200/65 !bg-[#205d54]"}
-                onPointerDown={()=>startHold(()=>nudgePitch(-0.25))}
-                onPointerUp={stopHold} onPointerLeave={stopHold}
-                onPointerCancel={stopHold}
-                onClick={()=>nudgePitch(-0.25)} aria-label="Aim up">↑</button>
-              <button type="button" className={control+" !border-emerald-200/65 !bg-[#205d54]"}
-                onPointerDown={()=>startHold(()=>nudgePitch(0.25))}
-                onPointerUp={stopHold} onPointerLeave={stopHold}
-                onPointerCancel={stopHold}
-                onClick={()=>nudgePitch(0.25)} aria-label="Aim down">↓</button>
-            </div>
-            <button type="button" className={control+" !border-amber-200/80 !bg-[#946027] !px-3"}
-              onClick={launch}>LAUNCH</button>
-          </div>
-          <p className="rounded bg-black/35 px-2 font-mono text-[0.51rem] tracking-[0.08em] text-white/70">
-            ← → HEADING · ↑ ↓ ELEVATION · WIND {windIcon} {wind.strength}
-          </p>
-        </div>
-      )}
-
-      {phase==="flight" && (
-        <p className="pointer-events-none absolute inset-x-0 top-[17%] z-[92] text-center font-mono text-[0.65rem] tracking-[0.14em] text-white/80">
-          HIGH-SPEED APPROACH · GUST & WAVE DRIFT
-        </p>
-      )}
-      {phase==="result" && outcome && (
-        <div className="absolute inset-x-0 bottom-[12%] z-[95] flex flex-col items-center gap-2 px-4 text-center">
-          <p className={"rounded-md border px-5 py-3 font-mono text-sm tracking-[0.10em] " +
-            (cleared ? "border-emerald-200/60 bg-[#062b27]/95" :
-              "border-white/30 bg-[#071924]/95")} role="status">
-            {stage2Message(outcome)}
-          </p>
-          <div className="flex gap-2">
-            {cleared&&<button type="button" className={control}
-              onClick={()=>setNotice(v=>!v)}>STAGE 3</button>}
-            <button type="button" className={control} onClick={retry}>RETRY</button>
-            <button type="button" className={control} onClick={onClose}>BACK</button>
-          </div>
-          {notice && <p className="rounded bg-black/60 px-2 py-2 text-xs tracking-widest">STAGE 3 — COMING SOON</p>}
-        </div>
-      )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-1 z-[92] text-center font-mono text-[0.47rem] tracking-[0.11em] text-white/40">
-        STAGE 2 · OPTICAL / FLIGHT PROTOTYPE
+      <div className="flex items-center justify-between px-2 py-1.5">
+        <button type="button" className={ctrl+" px-3 py-1"} onClick={zoomOut} disabled={zoomIndex===0} aria-label="Zoom out">−</button>
+        <span className="font-mono text-[.56rem] text-cyan-100/75">OPTICAL ZOOM</span>
+        <button type="button" className={ctrl+" px-3 py-1"} onClick={zoomIn} disabled={zoomIndex===STAGE2_ZOOMS.length-1} aria-label="Zoom in">+</button>
       </div>
     </div>
-  );
+
+    <div className="pointer-events-none absolute inset-x-3 top-[5.4rem] z-[92] w-fit max-w-[52%] rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[5rem]">
+      <div>FUEL <span className={hud.fuel<.22?"text-amber-300":"text-emerald-200"}>{Math.round(hud.fuel*100)}%</span></div>
+      <div>SPD {Math.round(speed)} m/s · ALT {hud.altitude.toFixed(1)} m</div>
+      <div>HEADING {Math.round(hud.heading)}° · WIND {wind.arrow} {wind.strength}</div>
+      <div className="text-cyan-100/65">ACTIVE SITES {activeCount}/3</div>
+      <div className="text-cyan-100/65">NEAREST {Math.round(islandDistance(hud,nearest))} m</div>
+    </div>
+
+    <div className="pointer-events-none absolute -bottom-4 inset-x-0 z-[90] h-20 rounded-t-[40%] border-t border-cyan-100/35 bg-gradient-to-b from-[#1c5260]/80 to-[#04131e]">
+      <div className="mx-auto mt-11 flex w-fit gap-2 opacity-75">
+        {["#e2a04d","#5bb09c","#76b0de","#d27c8d","#e4cf7b"].map((c,i)=>
+          <span key={i} className="h-8 w-8 rounded-full border border-white/25" style={{backgroundColor:c}}/>)}
+      </div>
+    </div>
+
+    {!hud.outcome&&<div className="absolute inset-x-0 bottom-[6%] z-[95] flex items-end justify-between gap-3 px-3 sm:bottom-[7%] sm:px-8"
+      role="group" aria-label="Two-thumb hovercraft flight controls">
+      <div className="rounded-xl border border-cyan-100/20 bg-[#031823]/85 p-2">
+        <div className="mb-1 text-center font-mono text-[.50rem] tracking-[.12em] text-cyan-100/70">STEERING</div>
+        <div className="grid grid-cols-2 gap-1">
+          {axisButtons.map(({axis,label,glyph})=>
+            <button key={axis} type="button" className={ctrl+" h-12 w-12 text-xl sm:h-14 sm:w-14"}
+              aria-label={label}
+              onPointerDown={e=>pressAxis(axis,e)}
+              onPointerUp={()=>releaseAxis(axis)}
+              onPointerCancel={()=>releaseAxis(axis)}
+              onLostPointerCapture={()=>releaseAxis(axis)}>{glyph}</button>)}
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-1 rounded-xl border border-amber-100/20 bg-[#031823]/85 p-2">
+        <div className="font-mono text-[.50rem] tracking-wider text-amber-100/85">THRUST · HOLD + SLIDE</div>
+        <button type="button"
+          className="relative h-28 w-20 touch-none overflow-hidden rounded-lg border border-amber-100/70 bg-gradient-to-b from-[#ad742e] via-[#4e5e48] to-[#164558] text-amber-50 shadow-lg sm:h-32 sm:w-24"
+          aria-label="Hold to thrust; slide up for higher power and down for lower power"
+          onPointerDown={startThrust}
+          onPointerMove={e=>{if(pressingThrust.current)adjustThrust(e);}}
+          onPointerUp={stopThrust} onPointerCancel={stopThrust}
+          onLostPointerCapture={stopThrust}>
+          <span className="absolute left-1 top-1 font-mono text-[.49rem]">MAX</span>
+          <span className="absolute bottom-1 left-1 font-mono text-[.49rem]">MIN</span>
+          <span className="absolute inset-x-2 top-1/2 border-t border-amber-100/65"/>
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-lg font-bold">{Math.round(thrustView*100)}%</span>
+        </button>
+        <div className="font-mono text-[.48rem] text-cyan-100/70">
+          {hud.launched?"RELEASE = GLIDE":"PRESS TO BEGIN"}
+        </div>
+      </div>
+    </div>}
+
+    {hud.outcome&&<div className="absolute inset-x-2 bottom-[12%] z-[96] flex flex-col items-center gap-3 text-center">
+      <p className={"rounded-lg border px-5 py-3 font-mono text-[.75rem] tracking-wider "+
+        (clear?"border-emerald-200 bg-[#073c34]/95":"border-white/35 bg-[#061923]/95")} role="status">
+        {stage2OutcomeText(hud.outcome)}
+      </p>
+      <div className="flex gap-3">
+        {clear&&<button type="button" className={ctrl+" px-4 py-2"} onClick={()=>setStage3Notice(v=>!v)}>STAGE 3</button>}
+        <button type="button" className={ctrl+" px-4 py-2"} onClick={reset}>RETRY</button>
+        <button type="button" className={ctrl+" px-4 py-2"} onClick={onClose}>BACK</button>
+      </div>
+      {stage3Notice&&<p className="bg-black/70 px-3 py-2 font-mono text-xs">STAGE 3 — COMING SOON</p>}
+    </div>}
+    <p className="pointer-events-none absolute bottom-1 inset-x-0 z-[92] text-center font-mono text-[.44rem] tracking-wider text-white/45">
+      STAGE 2 · NAVIGATION / FUEL PROTOTYPE · NO RANDOM HIT ROLL
+    </p>
+  </div>;
 }
