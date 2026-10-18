@@ -19,26 +19,34 @@ type CabinSound = {
 };
 
 let cabin: CabinSound | null = null;
-const pitches = [376, 493, 410, 0, 522, 443, 351, 0, 403, 565, 329, 0, 476] as const;
+// Deliberately not a musical scale or a repeating tune.
+const signalPattern = [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0] as const;
+const fractional = (v: number) => v - Math.floor(v);
 const clamp = (x: number, min: number, max: number) =>
   Math.max(min, Math.min(max, x));
 
 function strike(c: CabinSound, at: number): void {
   const n = c.beat++;
-  const idx = n % pitches.length;
-  const hz = pitches[idx];
-  if (!hz) return;
+  const idx = n % signalPattern.length;
+  if (!signalPattern[idx]) return;
   const { ctx, cabinet } = c;
-  const decay = idx === 9 ? 0.27 : 0.15;
+  // Bright wandering "glugs" that accidentally resemble happy electronics,
+  // but won't settle into a melody. As BLOOD falls the intervals distort.
   const lively = 1 - c.blood;
-  const frequency = hz * (1 + Math.sin(n * 1.617) * 0.024);
+  const a = fractional(Math.sin((n + 11) * 79.137) * 43758.5453);
+  const b = fractional(Math.sin((n + 31) * 37.719) * 18271.4321);
+  const frequency = (325 + a * 330) * (1 + lively * (b - 0.5) * 0.15);
+  const decay = 0.10 + b * 0.17;
   const osc = ctx.createOscillator();
   const envelope = ctx.createGain();
   osc.type = idx % 4 === 0 ? "triangle" : "sine";
-  osc.frequency.setValueAtTime(frequency * (idx % 3 === 0 ? 1.15 : 0.88), at);
+  osc.frequency.setValueAtTime(
+    frequency * (idx % 3 === 0 ? 1.19 : 0.81), at);
   osc.frequency.exponentialRampToValueAtTime(frequency, at + decay);
   envelope.gain.setValueAtTime(0.0001, at);
-  envelope.gain.linearRampToValueAtTime((idx % 3 === 0 ? 0.22 : 0.135) * (0.88 + lively * 0.2), at + 0.016);
+  envelope.gain.linearRampToValueAtTime(
+    (idx % 3 === 0 ? 0.18 : 0.12) * (0.92 + lively * 0.30),
+    at + 0.015);
   envelope.gain.exponentialRampToValueAtTime(0.0001, at + decay + 0.13);
   osc.connect(envelope);
   envelope.connect(cabinet);
@@ -49,12 +57,12 @@ function strike(c: CabinSound, at: number): void {
   };
 
   // Occasional dissonant tiny bell is the uncanny part, never a loud alarm.
-  if (idx === 4 || idx === 9) {
+  if (idx === 8 || idx === 15) {
     const bell = ctx.createOscillator();
     const bellGain = ctx.createGain();
     bell.type = "sine";
-    bell.frequency.setValueAtTime(idx === 4 ? 791 : 927, at + 0.07);
-    bell.frequency.exponentialRampToValueAtTime(idx === 4 ? 748 : 864, at + 0.30);
+    bell.frequency.setValueAtTime(idx === 8 ? 826 : 1183, at + 0.07);
+    bell.frequency.exponentialRampToValueAtTime(idx === 8 ? 743 : 1011, at + 0.30);
     bellGain.gain.setValueAtTime(0.0001, at + 0.07);
     bellGain.gain.linearRampToValueAtTime(0.038, at + 0.10);
     bellGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.33);
@@ -76,8 +84,10 @@ function schedulePulses(c: CabinSound): void {
   while (c.nextPulse < now + 0.25) {
     // A slightly lopsided 13-beat mechanical loop, not a regular song.
     strike(c, Math.max(c.nextPulse, now + 0.005));
-    const jitter = c.beat % 7 === 0 ? 0.083 : c.beat % 5 === 0 ? -0.024 : 0;
-    c.nextPulse += 0.445 - (1 - c.blood) * 0.055 + jitter;
+    const stagger = 0.095 * Math.sin(c.beat * 1.741) +
+      0.042 * Math.sin(c.beat * 3.117);
+    c.nextPulse += Math.max(0.23,
+      0.48 - (1 - c.blood) * 0.095 - c.thrust * 0.045 + stagger);
   }
 }
 
@@ -113,9 +123,17 @@ export function startStage2CabinAudio(volume: number): void {
 
     const hum = ctx.createOscillator();
     const humGain = ctx.createGain();
+    const wobble = ctx.createOscillator();
+    const wobbleDepth = ctx.createGain();
+    wobble.type = "sine";
+    wobble.frequency.value = 4.7;
+    wobbleDepth.gain.value = 3.4;
+    wobble.connect(wobbleDepth);
+    wobbleDepth.connect(hum.frequency);
+    wobble.start();
     hum.type = "triangle";
     hum.frequency.value = 115;
-    humGain.gain.value = 0.040;
+    humGain.gain.value = 0.038;
     hum.connect(humGain);
     humGain.connect(cabinet);
     hum.start();
@@ -124,7 +142,7 @@ export function startStage2CabinAudio(volume: number): void {
     const unstable = ctx.createOscillator();
     const unstableGain = ctx.createGain();
     unstable.type = "sine";
-    unstable.frequency.value = 118.7;
+    unstable.frequency.value = 119.9;
     unstableGain.gain.value = 0.025;
     unstable.connect(unstableGain);
     unstableGain.connect(cabinet);

@@ -401,6 +401,44 @@ function preloadMoonMosaic(): void {
   img.src = NASA_MOON_MOSAIC;
 }
 
+// Accurate 2026 hourly lunar disk/phase renderings based on NASA LRO's
+// topography and imagery. Unlike the 1231-tile NAC collage, these show
+// natural crater relief, real terminator shadows, and no stitched tile seams.
+// Only ONE tiny 730px frame is loaded at any time; the phase is already in
+// the photographically textured image, so do not draw a synthetic shadow.
+const MOON_2026_FRAME_DIR =
+  "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005587/frames/730x730_1x1_30p/";
+let realMoonImage: HTMLImageElement | null = null;
+let realMoonFrame: number | null = null;
+let realMoonFailedFrame: number | null = null;
+function getRealMoonFrame(nowMs: number): HTMLImageElement | null {
+  if (typeof Image === "undefined") return null;
+  const year = new Date(nowMs).getUTCFullYear();
+  // NASA's 2026 hourly sequence is exact for 2026. In subsequent years,
+  // reuse the same observed lunar disk by synodic phase rather than
+  // reverting to the stitched photomosaic. Libration is approximate then.
+  const sourceTime = year === 2026
+    ? nowMs
+    : Date.UTC(2026, 0, 18, 19) + moonPhase01(nowMs) * SYNODIC_MONTH_MS;
+  const frame = Math.min(8760, Math.max(1,
+    Math.floor((sourceTime - Date.UTC(2026, 0, 1)) / 3600000) + 1));
+  if (realMoonFrame === frame) return realMoonImage;
+  if (realMoonFailedFrame === frame) return null;
+  realMoonFrame = frame;
+  realMoonImage = null;
+  const image = new Image();
+  image.decoding = "async";
+  image.onload = () => {
+    if (realMoonFrame === frame) realMoonImage = image;
+  };
+  image.onerror = () => {
+    if (realMoonFrame === frame) realMoonFailedFrame = frame;
+  };
+  image.src = MOON_2026_FRAME_DIR + "moon." +
+    String(frame).padStart(4, "0") + ".jpg";
+  return null;
+}
+
 function drawAtmosphericMoon(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -570,6 +608,24 @@ function drawAtmosphericMoon(
     Math.PI * 2,
   );
   ctx.fill();
+
+  const actualMoonFrame = getRealMoonFrame(nowMs);
+  if (actualMoonFrame && actualMoonFrame.complete &&
+      actualMoonFrame.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI);
+    ctx.clip();
+    // NASA's disk nearly fills the 730-square frame. A small crop
+    // removes the remaining black edge without producing a white outline.
+    const sourcePad = actualMoonFrame.naturalWidth * 0.027;
+    const side = actualMoonFrame.naturalWidth - sourcePad * 2;
+    ctx.drawImage(actualMoonFrame, sourcePad, sourcePad, side, side,
+      x - r, y - r, r * 2, r * 2);
+    ctx.restore();
+    ctx.restore();
+    return;
+  }
 
   // Real lunar maria/craters, not a white disc with invented dots.
   // Clip to the photographed limb; phase shadow remains below.
