@@ -20,7 +20,8 @@ import { REENTRY_SCENE } from "./reentrySceneLayout";
 import { preloadReentryPreviewAssets } from "./reentryAssets";
 import { shouldShowNearbySuccess } from "./reentryNearbySuccess";
 import type { ReentryOutcome } from "./reentryTypes";
-import { startReentryAmbience, stopReentryAudio } from "./reentryAudio";
+import { getReentryUserVolume, startReentryAmbience, stopReentryAudio } from "./reentryAudio";
+import { startStage2CabinAudio } from "./reentryStage2CabinAudio";
 import { ReentryAudioControl } from "./ReentryAudioControl";
 
 const actionClass =
@@ -403,6 +404,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                     type="button"
                     onClick={() => {
                       stopReentryAudio();
+                      // This click is the browser's audio-unlock gesture.
+                      startStage2CabinAudio(getReentryUserVolume());
                       setShowStage2Notice(true);
                     }}
                     className="rounded-sm border border-cyan-100/50 bg-[#061626]/75 px-5 py-2 text-[0.82rem] tracking-[0.20em] text-white shadow-[0_0_18px_rgba(120,208,250,0.13)] backdrop-blur-sm transition-colors hover:border-cyan-50 hover:bg-[#143148] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"

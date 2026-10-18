@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getReentryUserVolume,
   setReentryUserVolume,
@@ -9,6 +9,12 @@ import {
 export function ReentryAudioControl() {
   const [open, setOpen] = useState(false);
   const [volume, setVolume] = useState(getReentryUserVolume);
+  // Both Stage 1 and the overlaid Stage 2 controls display the same volume.
+  useEffect(() => {
+    const refresh = () => setVolume(getReentryUserVolume());
+    window.addEventListener("miav-reentry-volume-change", refresh);
+    return () => window.removeEventListener("miav-reentry-volume-change", refresh);
+  }, []);
 
   return (
     <div className="pointer-events-auto absolute right-5 top-5 z-50 flex flex-col items-end gap-2">

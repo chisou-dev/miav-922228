@@ -1,4 +1,5 @@
 import type { ReentryOutcome } from "./reentryTypes";
+import { setStage2CabinVolume } from "./reentryStage2CabinAudio";
 import { STAGE1_ABSORB_START_S, STAGE1_ABSORB_END_S } from "./reentryStageTimeline";
 
 type AudioState = {
@@ -144,6 +145,10 @@ export function setReentryUserVolume(next: number): void {
     }
   }
   applyMasterVolume();
+  setStage2CabinVolume(userVolume);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("miav-reentry-volume-change"));
+  }
 }
 
 function hasAudio(): boolean {

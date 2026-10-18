@@ -8,6 +8,14 @@ import {
   type Stage2Input, type Stage2Island, type Stage2IslandId,
   type Stage2Nav,
 } from "./reentryStage2Navigation";
+import { ReentryAudioControl } from "./ReentryAudioControl";
+import { getReentryUserVolume } from "./reentryAudio";
+import {
+  resumeStage2CabinAudio,
+  startStage2CabinAudio,
+  stopStage2CabinAudio,
+  updateStage2CabinAudio,
+} from "./reentryStage2CabinAudio";
 
 type People = Record<Stage2IslandId, boolean>;
 const defaultPeople:People={japan:false,antarctic:true,visitor:false};
@@ -222,6 +230,9 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
   const [help,setHelp]=useState(false);
   const pressingThrust=useRef(false);
   const hudPublished=useRef(0);
+  const soundUpdated=useRef(0);
+  // Route changes or leaving Stage 2 must never leave cabin sound playing.
+  useEffect(() => () => stopStage2CabinAudio(), []);
   useEffect(()=>{zoomRef.current=STAGE2_ZOOMS[zoomIndex];},[zoomIndex]);
   useEffect(()=>{
     const refresh=()=>{
@@ -256,6 +267,12 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       const o=createCanvasScale(optics);
       scope.setTransform(o.dpr,0,0,o.dpr,0,0);
       drawMonitor(scope,o.w,o.h,sim,peopleRef.current,zoomRef.current,now/1000);
+      if (sim.outcome) {
+        stopStage2CabinAudio();
+      } else if (now - soundUpdated.current >= 450) {
+        soundUpdated.current = now;
+        updateStage2CabinAudio(sim.blood, sim.throttle);
+      }
       if(now-hudPublished.current>120||sim.outcome&&now-hudPublished.current>50){
         hudPublished.current=now;
         setHud({...sim});
@@ -267,7 +284,10 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     return()=>cancelAnimationFrame(raf);
   },[]);
 
-  const zoomIn=()=>setZoomIndex(i=>Math.min(STAGE2_ZOOMS.length-1,i+1));
+  const zoomIn=()=>{
+    resumeStage2CabinAudio();
+    setZoomIndex(i=>Math.min(STAGE2_ZOOMS.length-1,i+1));
+  };
   const zoomOut=()=>setZoomIndex(i=>Math.max(0,i-1));
   const moveStick=(e:ReactPointerEvent<HTMLDivElement>)=>{
     const rect=e.currentTarget.getBoundingClientRect();
@@ -294,6 +314,7 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
   };
   const startThrust=(e:ReactPointerEvent<HTMLButtonElement>)=>{
     e.preventDefault();
+    resumeStage2CabinAudio();
     if(simRef.current.outcome||simRef.current.blood<=0)return;
     pressingThrust.current=true;
     try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* optional */}
@@ -307,6 +328,9 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     setThrustView(0);
   };
   const reset=()=>{
+    // Retry is another explicit user gesture; recreate the soundscape
+    // after the previous impact closed its AudioContext.
+    startStage2CabinAudio(getReentryUserVolume());
     stopThrust();
     clearStick();
     inputRef.current={...baseKeys};
@@ -327,6 +351,8 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     role="region" aria-label="Stage 2 · free navigation across 360-degree ocean">
     <canvas ref={mainRef} className="absolute inset-0 h-full w-full"
       aria-label="Panoramic ocean with three distant islands and a steerable hovercraft"/>
+    {/* Same global AUDIO volume and mute preference as Stage 1. */}
+    <ReentryAudioControl />
     <div className="pointer-events-none absolute left-3 top-14 z-[91] rounded border-l border-cyan-100/45 bg-[#06202b]/70 px-3 py-1.5 font-mono text-[.58rem] tracking-[.13em] sm:left-5 sm:top-5">
       STAGE 2 · OPEN SEA
     </div>
