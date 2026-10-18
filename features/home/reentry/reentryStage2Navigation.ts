@@ -8,22 +8,24 @@ export type Stage2IslandId = "japan" | "antarctic" | "visitor";
 export type Stage2End = "NOSE" | "MOUTH" | "SEA" | "SAND" | "REEF" | "TOO_FAST" | "MISSED";
 export type Stage2Island = {
   id: Stage2IslandId; bearing: number; radius: number;
-  x: number; y: number; label: string;
+  x: number; y: number;
 };
 export type Stage2Nav = {
   x: number; y: number; vx: number; vy: number; heading: number;
   pitch: number; altitude: number; verticalSpeed: number;
-  fuel: number; throttle: number; seconds: number; launched: boolean;
+  blood: number; throttle: number; thrustHoldS: number;
+  seconds: number; launched: boolean;
   outcome: Stage2End | null; destination: Stage2IslandId | null;
 };
-export type Stage2Input = { left: boolean; right: boolean; up: boolean; down: boolean; thrust: number };
+export type Stage2Input = { steerX: number; steerY: number; thrust: number };
 export type Stage2Wind = { bearing: number; strength: number; arrow: string };
 export const STAGE2_ISLANDS: readonly Stage2Island[] = [
-  { id:"japan",bearing:35,radius:32,x:Math.sin(35*Math.PI/180)*350,y:Math.cos(35*Math.PI/180)*350,label:"JAPAN" },
-  { id:"antarctic",bearing:151,radius:35,x:Math.sin(151*Math.PI/180)*410,y:Math.cos(151*Math.PI/180)*410,label:"POLAR BASE" },
-  { id:"visitor",bearing:272,radius:30,x:Math.sin(272*Math.PI/180)*380,y:Math.cos(272*Math.PI/180)*380,label:"REMOTE ISLAND" },
+  { id:"japan",bearing:35,radius:32,x:Math.sin(35*Math.PI/180)*425,y:Math.cos(35*Math.PI/180)*425 },
+  { id:"antarctic",bearing:151,radius:35,x:Math.sin(151*Math.PI/180)*480,y:Math.cos(151*Math.PI/180)*480 },
+  { id:"visitor",bearing:272,radius:30,x:Math.sin(272*Math.PI/180)*460,y:Math.cos(272*Math.PI/180)*460 },
 ];
-export const STAGE2_ZOOMS = [1,2,4,8,16] as const;
+// Even the highest zoom reveals only a rough shoreline at the starting range.
+export const STAGE2_ZOOMS = [1,2,3,4,6] as const;
 export const clamp = (v:number,lo:number,hi:number) => Math.max(lo,Math.min(hi,v));
 export const wrap360 = (v:number) => (v%360+360)%360;
 export function signedBearing(delta:number):number {
@@ -67,8 +69,9 @@ export function stage2Wind(s:Stage2Nav):Stage2Wind {
   return {bearing,strength,arrow};
 }
 export function initialStage2Nav():Stage2Nav {
-  return {x:0,y:0,vx:0,vy:0,heading:0,pitch:0,altitude:3.2,
-    verticalSpeed:0,fuel:1,throttle:0,seconds:0,launched:false,
+  return {x:0,y:0,vx:0,vy:0,heading:0,pitch:0,altitude:2.05,
+    verticalSpeed:0,blood:1,throttle:0,thrustHoldS:0,
+    seconds:0,launched:false,
     outcome:null,destination:null};
 }
 function resolveContact(s:Stage2Nav,people:Record<Stage2IslandId,boolean>):Stage2Nav {
@@ -77,20 +80,20 @@ function resolveContact(s:Stage2Nav,people:Record<Stage2IslandId,boolean>):Stage
     if(dist>island.radius)continue;
     const speed=Math.hypot(s.vx,s.vy);
     // The island itself is terrain. A face is tiny relative to the beach.
-    if(dist<4.1 && people[island.id] && s.altitude>1.25 && s.altitude<2.35) {
+    if(dist<8.5 && people[island.id] && s.altitude>1.10 && s.altitude<2.60) {
       const dx=island.x-s.x,dy=island.y-s.y;
       const direction=bearingTo(dx,dy);
       const incidence=Math.abs(signedBearing(direction-s.heading));
       // The face is approached along the axis of travel. The narrow
       // left/right opening is an actual world-space corridor, not a random roll.
       const lateral=signedBearing(s.heading-island.bearing)*0.065;
-      if(incidence<13 && speed>=2.4 && speed<=10.8){
-        if(Math.abs(lateral+0.44)<0.37&&s.altitude<1.79)
+      if(incidence<20 && speed>=2.4 && speed<=14.5){
+        if(Math.abs(lateral+0.44)<0.46&&s.altitude<1.95)
           return {...s,outcome:"NOSE",destination:island.id};
-        if(Math.abs(lateral-0.34)<0.49&&s.altitude>=1.79)
+        if(Math.abs(lateral-0.34)<0.55&&s.altitude>=1.75)
           return {...s,outcome:"MOUTH",destination:island.id};
       }
-      if(speed>10.8)return {...s,outcome:"TOO_FAST",destination:island.id};
+      if(speed>14.5)return {...s,outcome:"TOO_FAST",destination:island.id};
     }
     if(s.altitude<=0.65){
       const reef=Math.abs(signedBearing(s.heading-island.bearing))>11;
@@ -103,48 +106,70 @@ function resolveContact(s:Stage2Nav,people:Record<Stage2IslandId,boolean>):Stage
   if(s.seconds>115)return {...s,outcome:"MISSED"};
   return s;
 }
+/**
+ * Two-thumb model: analogue pad steers at any angle, propulsion pressure is
+ * HOLD DURATION rather than Y position. A tap gives a small visible impulse,
+ * while continued holding ramps up acceleration smoothly over ~3 seconds.
+ * A blood reserve supports the alien hover organ: coast without burning it,
+ * then descend only once exhausted. Stage 1 physics is not involved.
+ */
 export function stepStage2(
   old:Stage2Nav,input:Stage2Input,dt:number,
   people:Record<Stage2IslandId,boolean>,
 ):Stage2Nav {
   if(old.outcome)return old;
   const step=clamp(dt,0,0.05);
-  const turn=(Number(input.right)-Number(input.left))*54*step;
-  const elevate=(Number(input.up)-Number(input.down))*13*step;
-  const heading=wrap360(old.heading+turn);
-  const pitch=clamp(old.pitch+elevate,-15,15);
-  const throttle=clamp(input.thrust,0,1);
-  // Scan the 360° horizon for free. Flight starts on the first real thrust.
-  const launched=old.launched||throttle>0.02;
-  if(!launched)return {...old,heading,pitch,throttle:0};
-  const fuel=Math.max(0,old.fuel-(0.004+0.046*throttle*throttle)*step);
-  const actual=fuel>0?throttle:0;
+  const xAxis=clamp(input.steerX,-1,1),yAxis=clamp(input.steerY,-1,1);
+  const heading=wrap360(old.heading+xAxis*65*step);
+  const pitch=clamp(old.pitch+yAxis*10*step,-12,12);
+  const pressed=input.thrust>0.02 && old.blood>0;
+  const launched=old.launched||pressed;
+  if(!launched)return {...old,heading,pitch,throttle:0,thrustHoldS:0};
+
+  const thrustHoldS=pressed?old.thrustHoldS+step:0;
+  const throttle=pressed?(0.18+0.82*(1-Math.exp(-thrustHoldS/2.6))):0;
+  // About two thirds of the blood is spent on open-water cruise;
+  // the final third remains for correcting the approach to a face.
+  const useRate=0.0028+(pressed?(0.014+0.009*throttle*throttle):0);
+  const blood=Math.max(0,old.blood-useRate*step);
+  const active=blood>0?throttle:0;
   const seconds=old.seconds+step;
   const wind=stage2Wind({...old,seconds});
   const radians=heading*Math.PI/180;
-  const gust=(wind.strength/4)*0.42*(1+0.27*Math.sin(seconds*1.3));
-  let vx=old.vx+(Math.sin(radians)*(6.2*actual)+
+  const gust=(wind.strength/4)*0.24*(1+0.20*Math.sin(seconds*1.3));
+  let vx=old.vx+(Math.sin(radians)*(3.0*active)+
     Math.sin(wind.bearing*Math.PI/180)*gust)*step;
-  let vy=old.vy+(Math.cos(radians)*(6.2*actual)+
+  let vy=old.vy+(Math.cos(radians)*(3.0*active)+
     Math.cos(wind.bearing*Math.PI/180)*gust)*step;
-  const drag=Math.max(0,1-0.06*step);
+  // Short taps must produce a small, physical push even at 30 FPS.
+  if(pressed&&old.throttle===0) {
+    vx+=Math.sin(radians)*0.80;
+    vy+=Math.cos(radians)*0.80;
+  }
+  const drag=Math.max(0,1-0.205*step);
   vx*=drag;vy*=drag;
   const speed=Math.hypot(vx,vy);
-  if(speed>32){vx*=32/speed;vy*=32/speed;}
-  const wave=Math.sin(seconds*2.8+old.x*0.035)*0.22;
-  const verticalAcc=(actual-0.48)*1.7+pitch*0.08+wave-old.verticalSpeed*0.82;
-  const verticalSpeed=clamp(old.verticalSpeed+verticalAcc*step,-2.5,2);
+  if(speed>16){vx*=16/speed;vy*=16/speed;}
+
+  const wave=Math.sin(seconds*2.8+old.x*0.035)*0.13;
+  const targetHeight=clamp(2.05+pitch*0.085+Math.hypot(vx,vy)*0.009,1.05,3.65);
+  // Blood gives passive hover lift even during gliding; without blood
+  // there is no sustained lift, and vertical velocity accumulates.
+  const verticalAcc=blood>0
+    ? (targetHeight-old.altitude)*2.2-old.verticalSpeed*1.8+wave*.11
+    : -1.65-old.verticalSpeed*.12;
+  const verticalSpeed=clamp(old.verticalSpeed+verticalAcc*step,-3.5,2);
   const altitude=old.altitude+verticalSpeed*step;
   const next:Stage2Nav={...old,x:old.x+vx*step,y:old.y+vy*step,
-    vx,vy,heading,pitch,altitude,verticalSpeed,fuel,
-    throttle:actual,seconds,launched};
+    vx,vy,heading,pitch,altitude,verticalSpeed,blood,
+    throttle:active,thrustHoldS,seconds,launched};
   return resolveContact(next,people);
 }
 export function stage2OutcomeText(outcome:Stage2End):string {
   switch(outcome){
     case "NOSE":return "STAGE 2 CLEAR · NASAL ENTRY";
     case "MOUTH":return "STAGE 2 CLEAR · ORAL ENTRY";
-    case "SEA":return "FUEL / ALTITUDE LOST · SANK AT SEA";
+    case "SEA":return "BLOOD DEPLETED · SANK AT SEA";
     case "SAND":return "BEACH IMPACT · BURIED IN SAND";
     case "REEF":return "ROCK / REEF COLLISION";
     case "TOO_FAST":return "ENTRY SPEED TOO HIGH";
