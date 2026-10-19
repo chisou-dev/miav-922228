@@ -4,7 +4,7 @@ import { LanguageSwitcher, useT, type MessageKey } from "@/features/shared/i18n"
 import { sfSectionClass } from "@/features/shared/SfSection";
 
 const navLinkClassName =
-  "transition-opacity duration-300 hover:text-[var(--foreground)]";
+  "inline-flex min-h-11 items-center py-2 transition-colors duration-300 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--foreground)]";
 
 const navLinks = [
   { href: "/books", labelKey: "nav.books" },
@@ -16,7 +16,7 @@ export function SiteHeader() {
   const t = useT();
 
   return (
-    <header className="flex flex-col gap-8 pt-10 pl-11 sm:flex-row sm:items-baseline sm:justify-between sm:gap-10 sm:pt-14 lg:pl-0">
+    <header className="flex flex-col gap-4 pt-6 pl-11 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:pt-14 lg:pl-0">
       <p className="text-[0.8rem] tracking-[0.18em] text-[var(--foreground)]">
         <span>MIAV-922228</span>
         <span
@@ -33,9 +33,9 @@ export function SiteHeader() {
           {t("nav.chapters")}
         </a>
       </p>
-      <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 sm:justify-end">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 sm:gap-x-8 sm:justify-end">
         <nav aria-label={t("nav.primaryAria")}>
-          <ul className="flex flex-wrap gap-x-8 gap-y-3 text-[0.8rem] tracking-[0.14em] text-[var(--foreground-muted)] uppercase sm:justify-end">
+          <ul className="flex flex-wrap gap-x-6 gap-y-0 text-[0.8rem] tracking-[0.14em] text-[var(--foreground-muted)] uppercase sm:gap-x-8 sm:justify-end">
             {navLinks.map((item) => (
               <li key={item.href}>
                 <a href={item.href} className={navLinkClassName}>

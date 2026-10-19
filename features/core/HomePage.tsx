@@ -11,20 +11,26 @@ import { ReentryHeroTeaser } from "@/features/home/reentry/reentryShellContext";
 import { useT } from "@/features/shared/i18n";
 
 const primaryLinkClassName =
-  "text-[0.85rem] font-medium tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--foreground)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]";
+  "inline-flex min-h-11 items-center py-2 text-[0.85rem] font-medium tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--foreground)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--foreground)]";
 
 const secondaryLinkClassName =
-  "text-[0.85rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)] hover:decoration-[var(--foreground-muted)]";
+  "inline-flex min-h-11 items-center py-2 text-[0.85rem] tracking-[0.12em] text-[var(--foreground-muted)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:text-[var(--foreground)] hover:decoration-[var(--foreground-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--foreground)]";
 
 const sectionLinkClassName =
-  "text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]";
+  "inline-flex min-h-11 items-center py-2 text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--foreground)]";
 
-const sectionBase = "scroll-mt-28 py-24 sm:py-32";
+const sectionBase = "scroll-mt-28 py-14 sm:py-24 lg:py-28";
 
 const sectionHeadingClass =
   "text-2xl font-medium tracking-[0.06em] text-[var(--foreground)] sm:text-[1.65rem]";
 
-export function HomePage() {
+type FirstRead = {
+  href: string;
+  title: string;
+  minutes: number;
+};
+
+export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
   const t = useT();
   const gameHref = gamesLibraryUrl();
 
@@ -36,15 +42,15 @@ export function HomePage() {
         </h1>
         <ReentryHeroTeaser />
       </div>
-      <p className="mt-8 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:mt-10 sm:text-lg sm:leading-8">
+      <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:mt-9 sm:text-lg sm:leading-8">
         {t("home.tagline")}
       </p>
-      <p className="mt-12 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-16 sm:text-base sm:leading-[2]">
+      <p className="mt-7 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2]">
         {t("home.lead")}
       </p>
       <nav
         aria-label={t("home.ctaStart")}
-        className="mt-10 flex flex-col items-start gap-y-4 sm:mt-12 sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-4"
+        className="mt-7 flex flex-col items-start gap-y-1 sm:mt-10 sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-2"
       >
         <Link href="/start-here" className={primaryLinkClassName}>
           {t("home.ctaStart")}
@@ -56,6 +62,27 @@ export function HomePage() {
           {t("home.ctaGames")}
         </a>
       </nav>
+      {firstRead ? (
+        <aside
+          aria-label={t("works.newHereEyebrow")}
+          className="mt-7 max-w-lg border-l border-[var(--line)] pl-4 sm:mt-9 sm:pl-5"
+        >
+          <p className="text-[0.78rem] leading-relaxed tracking-[0.05em] text-[var(--foreground-muted)]">
+            <span className="font-medium text-[var(--foreground)]">
+              {t("works.newHereEyebrow")}
+            </span>{" "}
+            {t("works.newHereLead")}
+          </p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0 text-[0.8rem]">
+            <Link href={firstRead.href} className={primaryLinkClassName}>
+              {firstRead.title} <span aria-hidden="true" className="ml-1">→</span>
+            </Link>
+            <span className="text-[var(--foreground-muted)]">
+              {t("works.minutesRead", { minutes: firstRead.minutes })}
+            </span>
+          </p>
+        </aside>
+      ) : null}
     </>
   );
 
@@ -64,20 +91,20 @@ export function HomePage() {
       <main>
         <section
           aria-label={t("home.introAria")}
-          className="flex flex-col justify-center py-20 sm:py-28 lg:min-h-[calc(100vh-8rem)] lg:py-32"
+          className="flex flex-col justify-center py-12 sm:py-20 lg:min-h-[calc(100vh-8rem)] lg:py-28"
         >
           <ReentryErrorBoundary>
             <ReentryExperience heroCopy={heroCopy} />
           </ReentryErrorBoundary>
         </section>
 
-        <div className="pb-32 sm:pb-40">
+        <div className="pb-16 sm:pb-28">
           <SfSection id="about" variant="central-offset" className={sectionBase}>
             <h2 className={sectionHeadingClass}>{t("home.aboutTitle")}</h2>
-            <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
+            <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
               {t("home.aboutBody")}
             </p>
-            <p className="mt-12 sm:mt-14">
+            <p className="mt-8 sm:mt-12">
               <Link href="/author" className={sectionLinkClassName}>
                 {t("home.aboutAuthorCta")}
               </Link>
@@ -91,7 +118,7 @@ export function HomePage() {
 
           <SfSection id="chapters" variant="central" className={sectionBase}>
             <h2 className={sectionHeadingClass}>{t("nav.chapters")}</h2>
-            <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
+            <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
               {t("home.readBody")}
             </p>
             <p className="mt-8 flex flex-wrap gap-x-8 gap-y-3 sm:mt-10">
@@ -109,7 +136,7 @@ export function HomePage() {
 
           <SfSection id="books" variant="split" className={sectionBase}>
             <h2 className={sectionHeadingClass}>{t("nav.books")}</h2>
-            <p className="mt-10 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
+            <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2.05]">
               {t("home.booksBody")}
             </p>
             <p className="mt-8 sm:mt-10">

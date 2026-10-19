@@ -9,7 +9,7 @@ import { SfDivider } from "@/features/shared/SfSection";
 import { t } from "@/features/shared/i18n";
 
 const linkClassName =
-  "text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)]";
+  "inline-flex min-h-11 items-center py-2 text-[0.85rem] tracking-[0.12em] text-[var(--foreground)] underline decoration-[var(--line)] underline-offset-[0.45em] transition-colors duration-300 hover:decoration-[var(--foreground-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--foreground)]";
 
 type PathwayProps = {
   id: string;
@@ -21,17 +21,17 @@ type PathwayProps = {
 
 function StartHerePathway({ id, heading, body, href, cta }: PathwayProps) {
   return (
-    <section aria-labelledby={id} className="py-8 sm:py-10">
+    <section aria-labelledby={id} className="py-6 sm:py-9">
       <h2
         id={id}
         className="text-[0.72rem] tracking-[0.2em] text-[var(--foreground-muted)] uppercase"
       >
         {heading}
       </h2>
-      <p className="mt-6 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:text-base sm:leading-[2.05]">
+      <p className="mt-4 max-w-lg text-[0.95rem] leading-[2] tracking-[0.01em] text-[var(--foreground-muted)] sm:text-base sm:leading-[2.05]">
         {body}
       </p>
-      <p className="mt-8 sm:mt-10">
+      <p className="mt-5 sm:mt-8">
         <Link href={href} className={linkClassName}>
           {cta}
         </Link>
