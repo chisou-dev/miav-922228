@@ -141,7 +141,7 @@ function drawSeascape(
   ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav,
   people:People,zoom:number,time:number,optic:boolean,
 ):void {
-  const horizon=h*(.525+s.pitch*.005);
+  const horizon=h*(.525+s.pitch*.0035+(s.altitude-2.05)*.0030);
   ctx.clearRect(0,0,w,h);
   const sky=ctx.createLinearGradient(0,0,0,horizon);
   sky.addColorStop(0,"#286d8d");sky.addColorStop(.65,"#85bbcc");sky.addColorStop(1,"#b9d3cf");
@@ -168,9 +168,22 @@ function drawSeascape(
 function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav):void {
   const size=Math.min(w,h)*.082;
   const x=w*.50;
-  const sink=s.outcome==="SEA"?Math.min(1,(s.seconds%6)/3):0;
-  const y=h*.79+Math.sin(s.seconds*2.8)*2+s.pitch*.8+size*sink*1.4;
-  ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(s.seconds)*.014);
+  // Actual altitude, not just nose pitch, moves the ship visibly upward.
+  // A stable wake/shadow stays on the water below it.
+  const rise=clamp((s.altitude-2.05)*h*.037,-h*.06,h*.36);
+  const sink=s.outcome==="SEA"?Math.min(1,(2.05-s.altitude)/2.05):0;
+  const y=h*.79-rise+Math.sin(s.seconds*2.8)*1.7+size*sink*.40;
+  const shadowY=h*.865;
+  ctx.save();
+  ctx.globalAlpha=clamp(.30-s.altitude*.012,.07,.27);
+  ctx.fillStyle="#061d34";
+  ctx.beginPath();ctx.ellipse(x,shadowY,size*(.67+s.altitude*.017),size*.18,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="rgba(157,220,223,.40)";ctx.lineWidth=1;
+  ctx.beginPath();ctx.ellipse(x,shadowY,size*.83,size*.24,0,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+
+  ctx.save();ctx.translate(x,y);
+  ctx.rotate(Math.sin(s.seconds)*.014+s.pitch*.007);
   const metal=ctx.createLinearGradient(-size,-size,size,size);
   metal.addColorStop(0,"#152a3c");metal.addColorStop(.5,"#49758b");
   metal.addColorStop(1,"#091727");
@@ -276,7 +289,7 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       if(now-hudPublished.current>120||sim.outcome&&now-hudPublished.current>50){
         hudPublished.current=now;
         setHud({...sim});
-        setThrustView(sim.throttle);
+        setThrustView(sim.targetSpeed/14);
       }
       raf=requestAnimationFrame(frame);
     };
@@ -312,20 +325,28 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     inputRef.current.steerY=0;
     setStick({x:0,y:0});
   };
+  const updateSpeedLever=(e:ReactPointerEvent<HTMLButtonElement>)=>{
+    const rect=e.currentTarget.getBoundingClientRect();
+    // Top raises cruising speed; bottom reduces it. Middle is neutral.
+    // The set speed survives lifting your finger off this lever.
+    const position=clamp(
+      (rect.top+rect.height/2-e.clientY)/(rect.height*.43),-1,1,
+    );
+    inputRef.current.thrust=Math.abs(position)<.13?0:position;
+  };
   const startThrust=(e:ReactPointerEvent<HTMLButtonElement>)=>{
     e.preventDefault();
     resumeStage2CabinAudio();
     if(simRef.current.outcome||simRef.current.blood<=0)return;
     pressingThrust.current=true;
     try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* optional */}
-    // Short contact gives a small physical push. Continued holding
-    // increases throttle internally rather than requiring a slide.
-    inputRef.current.thrust=1;
+    updateSpeedLever(e);
   };
   const stopThrust=()=>{
     pressingThrust.current=false;
+    // Zero input means HOLD CURRENT CRUISE, NOT "STOP".
     inputRef.current.thrust=0;
-    setThrustView(0);
+    setThrustView(simRef.current.targetSpeed/14);
   };
   const reset=()=>{
     // Retry is another explicit user gesture; recreate the soundscape
@@ -363,10 +384,12 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       className={ctrl+" absolute left-20 top-3 z-[96] px-3 py-2"} aria-label="Controls help">?</button>
     {help&&<div className="absolute left-3 top-24 z-[97] max-w-[17rem] rounded bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl">
       Drag the circular pad toward the direction you want to steer.
-      Tap BOOST for a small push, or hold to accelerate gradually.
-      Release to glide. BLOOD is your hovercraft's finite energy reserve.
-      Distant land is only faintly visible through the optical monitor.
-      Zoom never locks onto a target. Watch wind and altitude on approach.
+      Drag the left stick up and down to change flight altitude, and release
+      to hold that height. Turn sideways to steer. Hold the upper part of
+      SPEED to increase cruise speed, or the lower part to slow down.
+      Release SPEED to maintain that cruising speed. Blood is consumed
+      during flight, faster at high speed and extra when changing height.
+      A fly-by that misses the island is reported as a failed approach.
     </div>}
 
     <div className="absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] sm:right-5">
@@ -386,8 +409,9 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     </div>
 
     <div className="pointer-events-none absolute inset-x-3 top-[5.4rem] z-[92] w-fit max-w-[52%] rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[5rem]">
-      <div>SPD {Math.round(speed)} m/s · ALT {hud.altitude.toFixed(1)} m</div>
-      <div>HEADING {Math.round(hud.heading)}° · WIND {wind.arrow} {wind.strength}</div>
+      <div>SPD {speed.toFixed(1)} m/s · SET {hud.targetSpeed.toFixed(1)}</div>
+      <div>ALT {hud.altitude.toFixed(1)} m · SET {hud.targetAltitude.toFixed(1)}</div>
+      <div>HDG {Math.round(hud.heading)}° · WIND {wind.arrow} {wind.strength}</div>
       <div className="text-cyan-100/65">ACTIVE SIGNALS {activeCount}</div>
       <div className="text-cyan-100/65">
         {islandDistance(hud,nearest)<165
@@ -421,8 +445,8 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     {!hud.outcome&&<div className="absolute inset-x-0 bottom-[6%] z-[95] flex items-end justify-between gap-3 px-3 sm:bottom-[7%] sm:px-8"
       role="group" aria-label="Two-thumb hovercraft flight controls">
       <div className="rounded-xl border border-cyan-100/20 bg-[#031823]/90 p-2">
-        <div className="mb-1 text-center font-mono text-[.50rem] tracking-[.12em] text-cyan-100/70">STEERING</div>
-        <div role="group" aria-label="Analog direction pad: drag to steer"
+        <div className="mb-1 text-center font-mono text-[.50rem] tracking-[.12em] text-cyan-100/70">TURN / ALT</div>
+        <div role="group" aria-label="Analog direction pad: left and right turn, up ascends, down descends"
           className="relative h-[7.5rem] w-[7.5rem] touch-none rounded-full border-2 border-cyan-100/40 bg-[#082f40]/95 shadow-[inset_0_3px_12px_rgba(0,0,0,.55)] sm:h-36 sm:w-36"
           onPointerDown={beginStick}
           onPointerMove={e=>{if(stickPointerRef.current===e.pointerId)moveStick(e);}}
@@ -440,21 +464,24 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
         </div>
       </div>
       <div className="flex flex-col items-center gap-1 rounded-xl border border-rose-200/25 bg-[#031823]/85 p-2">
-        <div className="font-mono text-[.52rem] tracking-wide text-rose-100/85">BOOST</div>
+        <div className="font-mono text-[.52rem] tracking-wide text-rose-100/85">CRUISE SPEED</div>
         <button type="button"
           className="relative h-28 w-20 touch-none overflow-hidden rounded-xl border border-rose-100/70 bg-gradient-to-b from-[#bc6340] via-[#7e324a] to-[#301536] text-rose-50 shadow-lg active:brightness-125 sm:h-32 sm:w-24"
-          aria-label="Tap for a small push or hold to accelerate gradually"
+          aria-label="Hold upper lever to speed up or lower lever to slow down; release to maintain speed"
           onPointerDown={startThrust}
+          onPointerMove={e=>{if(pressingThrust.current)updateSpeedLever(e);}}
           onPointerUp={stopThrust} onPointerCancel={stopThrust}
           onLostPointerCapture={stopThrust}>
-          <span className="absolute left-1 top-2 font-mono text-[.48rem]">HOLD</span>
-          <span className="absolute inset-x-2 top-1/2 border-t border-rose-100/35"/>
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-lg font-bold">{Math.round(thrustView*100)}%</span>
-          <span className="absolute bottom-1 left-1 font-mono text-[.47rem]">TAP</span>
+          <span className="pointer-events-none absolute left-1 top-2 font-mono text-[.48rem]">▲ FASTER</span>
+          <span className="pointer-events-none absolute inset-x-2 top-1/2 border-t border-rose-100/35"/>
+          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold"
+            style={{bottom:"calc("+(thrustView*72+10)+"% - 11px)"}}>●</span>
+          <span className="pointer-events-none absolute bottom-1 left-1 font-mono text-[.48rem]">▼ SLOWER</span>
         </button>
-        <div className="font-mono text-[.48rem] text-cyan-100/70">
-          {hud.launched?"RELEASE = GLIDE":"HOLD TO FLY"}
+        <div className="font-mono text-[.53rem] font-semibold text-rose-100">
+          {hud.targetSpeed.toFixed(1)} m/s
         </div>
+        <div className="font-mono text-[.46rem] text-cyan-100/70">RELEASE = HOLD SPEED</div>
       </div>
     </div>}
 
