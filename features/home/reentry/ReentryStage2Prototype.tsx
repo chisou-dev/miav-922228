@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  STAGE2_ISLANDS, STAGE2_ZOOMS, bearingTo, clamp,
+  STAGE2_ISLANDS, STAGE2_ZOOMS, bearingTo, clamp, stage2FaceHeights,
   initialStage2Nav, islandDistance, signedBearing, stage2OutcomeText,
   stage2Visitors, stage2Wind, stepStage2, wrap360,
   type Stage2Input, type Stage2Island, type Stage2IslandId,
@@ -70,15 +70,25 @@ function drawIsland(
   const x=w*.5+Math.tan(relative*deg)*w/(2*Math.tan(fov*deg/2));
   // Only at close range does the person's face become truly huge, like
   // a planet ahead; the telescope cannot reveal an exact opening at launch.
-  const nearMagnification=distance<60
-    ? 1+6*Math.pow(1-distance/60,2)
+  // An island is far larger than a person. Keep the first scope silhouette
+  // tiny at 400m, then increase its apparent size smoothly on approach.
+  const approach=clamp((420-distance)/280,0,1);
+  const distantScale=.17+.83*approach*approach*(3-2*approach);
+  const nearMagnification=distance<65
+    ? 1+4.2*Math.pow(1-distance/65,2)
     : 1;
-  const size=clamp(h*7.8*zoom/(distance+55)*nearMagnification,.5,h*5);
-  const horizon=h*(0.525+s.pitch*.005);
-  const y=horizon - size*.19;
+  const size=clamp(h*13.2*zoom/(distance+62)*distantScale*nearMagnification,.5,h*6);
+  const horizon=h*(0.525+s.pitch*.0035+(s.altitude-2.05)*.0030);
+  // Consistent vertical perspective: a higher craft sees shoreline and
+  // the face move downward while the visible ship climbs on the main screen.
+  const y=horizon-size*.19+(s.altitude-2.05)*size*.055;
   ctx.save();ctx.translate(x,y);ctx.globalAlpha*=fade;
   const polar=island.id==="antarctic";
   const remote=island.id==="visitor";
+  // Expand the terrain separately from the people; the previous rendering
+  // made the coastline look barely bigger than the figure standing on it.
+  ctx.save();
+  ctx.scale(1.60,1.42);
   ctx.fillStyle=polar?"#607d89":remote?"#38594e":"#4b6654";
   ctx.beginPath();ctx.moveTo(-size*1.7,size*.21);
   ctx.bezierCurveTo(-size*.92,-size*.20,-size*.80,-size*.34,-size*.45,-size*.42);
@@ -121,12 +131,19 @@ function drawIsland(
     ctx.lineTo(-size*.75,size*.08);ctx.closePath();ctx.fill();
   }
 
-  // No face-level identification from hundreds of metres away.
-  if(people[island.id]&&distance<68){
-    const u=Math.max(.65,size*.081);
+  ctx.restore();
+  // The human is small beside the coast, but becomes giant relative to the
+  // hovercraft only on final approach. The face is centred on the collider.
+  if(people[island.id]&&distance<100){
+    const finalFaceApproach=clamp((23-distance)/23,0,1);
+    const u=Math.max(.65,size*(.17+.055*finalFaceApproach));
     const skin=island.id==="japan"?"#d7a77e":island.id==="antarctic"?"#bf9782":"#8e6554";
     const hair=island.id==="japan"?"#181c24":island.id==="antarctic"?"#313b42":"#312d30";
-    drawFigure(ctx,size*.28,-size*.26,u,skin,hair,
+    const face = stage2FaceHeights(island);
+    const profile = (face.nose+face.mouth)*.5;
+    // Taller polar worker is set a little higher in the same projection.
+    const faceBaseY=-size*.16-(profile-6.2)*size*.02;
+    drawFigure(ctx,0,faceBaseY,u,skin,hair,
       island.id==="antarctic"?"#df762e":"#7da09f",polar,time);
     if(remote){
       drawFigure(ctx,-size*.07,-size*.18,u*.85,"#e7b999","#573b2f","#cf707c",false,time);
@@ -418,6 +435,12 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
           ? "SHORE "+Math.round(islandDistance(hud,nearest))+" m"
           : "SHORE --"}
       </div>
+      {islandDistance(hud,nearest)<90 && people[nearest.id] && (
+        <div className="text-amber-100/85">
+          FACE ALT ~{Math.floor(stage2FaceHeights(nearest).mouth)}–
+          {Math.ceil(stage2FaceHeights(nearest).nose)} m
+        </div>
+      )}
     </div>
 
     <div className="pointer-events-none absolute -bottom-4 inset-x-0 z-[90] h-20 rounded-t-[40%] border-t border-cyan-100/35 bg-gradient-to-b from-[#1c5260]/80 to-[#04131e]">

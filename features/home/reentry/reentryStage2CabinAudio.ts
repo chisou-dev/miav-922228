@@ -19,75 +19,97 @@ type CabinSound = {
 };
 
 let cabin: CabinSound | null = null;
-// Deliberately not a musical scale or a repeating tune.
-const signalPattern = [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0] as const;
-const fractional = (v: number) => v - Math.floor(v);
+// A recognisable, looping 32-step cabin tune with two answering phrases.
+// Warm, almost cheerful intervals return to a deliberately wrong note.
+// It is original generative WebAudio synthesis, not radio chatter or an
+// imitation of an emergency warning. 0 denotes a breathing space.
+const melody = [
+  392.00, 440.00, 523.25, 587.33, 523.25, 440.00, 392.00, 0,
+  440.00, 523.25, 659.25, 587.33, 523.25, 466.16, 440.00, 392.00,
+  349.23, 392.00, 440.00, 523.25, 587.33, 523.25, 440.00, 0,
+  392.00, 466.16, 523.25, 587.33, 554.37, 523.25, 440.00, 392.00,
+] as const;
+const bassLine = [130.81, 146.83, 164.81, 138.59] as const;
 const clamp = (x: number, min: number, max: number) =>
   Math.max(min, Math.min(max, x));
 
-function strike(c: CabinSound, at: number): void {
-  const n = c.beat++;
-  const idx = n % signalPattern.length;
-  if (!signalPattern[idx]) return;
+function playVoice(
+  c: CabinSound, at: number, frequency: number,
+  volume: number, duration: number, wave: OscillatorType,
+  cutoffFall = 0.965,
+): void {
   const { ctx, cabinet } = c;
-  // Bright wandering "glugs" that accidentally resemble happy electronics,
-  // but won't settle into a melody. As BLOOD falls the intervals distort.
-  const lively = 1 - c.blood;
-  const a = fractional(Math.sin((n + 11) * 79.137) * 43758.5453);
-  const b = fractional(Math.sin((n + 31) * 37.719) * 18271.4321);
-  const frequency = (325 + a * 330) * (1 + lively * (b - 0.5) * 0.15);
-  const decay = 0.10 + b * 0.17;
   const osc = ctx.createOscillator();
   const envelope = ctx.createGain();
-  osc.type = idx % 4 === 0 ? "triangle" : "sine";
-  osc.frequency.setValueAtTime(
-    frequency * (idx % 3 === 0 ? 1.19 : 0.81), at);
-  osc.frequency.exponentialRampToValueAtTime(frequency, at + decay);
-  envelope.gain.setValueAtTime(0.0001, at);
-  envelope.gain.linearRampToValueAtTime(
-    (idx % 3 === 0 ? 0.18 : 0.12) * (0.92 + lively * 0.30),
-    at + 0.015);
-  envelope.gain.exponentialRampToValueAtTime(0.0001, at + decay + 0.13);
+  osc.type = wave;
+  osc.frequency.setValueAtTime(Math.max(20,frequency),at);
+  osc.frequency.exponentialRampToValueAtTime(
+    Math.max(20,frequency*cutoffFall),at+duration,
+  );
+  envelope.gain.setValueAtTime(0.0001,at);
+  envelope.gain.exponentialRampToValueAtTime(
+    Math.max(.0002,volume),at+.025,
+  );
+  envelope.gain.exponentialRampToValueAtTime(.0001,at+duration);
   osc.connect(envelope);
   envelope.connect(cabinet);
   osc.start(at);
-  osc.stop(at + decay + 0.15);
-  osc.onended = () => {
-    try { osc.disconnect(); envelope.disconnect(); } catch { /* closed context */ }
+  osc.stop(at+duration+.025);
+  osc.onended=()=>{
+    try {osc.disconnect();envelope.disconnect();} catch {/* closed */ }
   };
+}
 
-  // Occasional dissonant tiny bell is the uncanny part, never a loud alarm.
-  if (idx === 8 || idx === 15) {
-    const bell = ctx.createOscillator();
-    const bellGain = ctx.createGain();
-    bell.type = "sine";
-    bell.frequency.setValueAtTime(idx === 8 ? 826 : 1183, at + 0.07);
-    bell.frequency.exponentialRampToValueAtTime(idx === 8 ? 743 : 1011, at + 0.30);
-    bellGain.gain.setValueAtTime(0.0001, at + 0.07);
-    bellGain.gain.linearRampToValueAtTime(0.038, at + 0.10);
-    bellGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.33);
-    bell.connect(bellGain);
-    bellGain.connect(cabinet);
-    bell.start(at + 0.07);
-    bell.stop(at + 0.34);
-    bell.onended = () => {
-      try { bell.disconnect(); bellGain.disconnect(); } catch { /* closed context */ }
-    };
+function strike(c: CabinSound, at: number): void {
+  const step = c.beat++;
+  const index=step%melody.length;
+  const bloodLoss=1-c.blood;
+  const tune=melody[index];
+
+  if(tune>0){
+    // Longer rounded toy-organ notes connect across steps: this is a
+    // melody rather than individual communication blips.
+    const accent=index%8===0?1.24:index%4===0?1.10:0.88;
+    const slightlyWrong = bloodLoss * (
+      0.014 * Math.sin(step*.73) + (index===28?.017:0)
+    );
+    const hz=tune*(1+slightlyWrong);
+    const hold=index%8===3||index%8===4?.58:.41;
+    playVoice(c,at,hz,.20*accent,hold,"triangle");
+    playVoice(c,at+.022,hz*2.004,.036*accent,hold*.85,"sine");
+  }
+
+  // Four chords repeat in a 10.5 second phrase, drifting between a
+  // playful major character and sour minor-second tension.
+  if(index%8===0){
+    const chord=bassLine[Math.floor(index/8)];
+    playVoice(c,at,chord,.15,2.0,"sine",.999);
+    playVoice(c,at+.04,chord*1.5,.060,1.84,"triangle",1.002);
+    const tension = index===24 ? Math.pow(2,1/12) : 1.25;
+    playVoice(c,at+.06,chord*2*tension,.042,1.55,"sine",.998);
+  }
+  // Tactile wooden pulse on each quarter-note, no random signal bursts.
+  if(index%2===0){
+    playVoice(c,at,118,.028,.105,"sine",.60);
+  }
+  // A tiny, deliberately sour answer only at the end of the second phrase.
+  if(index===28){
+    playVoice(c,at+.09,740*(1+bloodLoss*.022),.055,.35,"sine",.92);
   }
 }
 
 function schedulePulses(c: CabinSound): void {
-  if (c.ctx.state === "closed") return;
-  const now = c.ctx.currentTime;
-  // Avoid a burst of catch-up notes after a tab or CPU suspension.
-  if (c.nextPulse < now - 0.8) c.nextPulse = now + 0.02;
-  while (c.nextPulse < now + 0.25) {
-    // A slightly lopsided 13-beat mechanical loop, not a regular song.
-    strike(c, Math.max(c.nextPulse, now + 0.005));
-    const stagger = 0.095 * Math.sin(c.beat * 1.741) +
-      0.042 * Math.sin(c.beat * 3.117);
-    c.nextPulse += Math.max(0.23,
-      0.48 - (1 - c.blood) * 0.095 - c.thrust * 0.045 + stagger);
+  if(c.ctx.state!=="running")return;
+  const now=c.ctx.currentTime;
+  // Never catch up a backlog if a smartphone suspends the audio context.
+  if(c.nextPulse<now-.7)c.nextPulse=now+.025;
+  let scheduled=0;
+  while(c.nextPulse<now+.30 && scheduled++<3){
+    const step=c.beat;
+    strike(c,Math.max(now+.006,c.nextPulse));
+    // Gentle 3+3+2 swing keeps the melody jaunty while still flowing.
+    const swing=[.015,-.012,.018,-.009,.015,-.018,.013,-.022][step%8];
+    c.nextPulse+=.327+swing-c.thrust*.008;
   }
 }
 
@@ -111,13 +133,13 @@ export function startStage2CabinAudio(volume: number): void {
     compressor.connect(ctx.destination);
 
     const master = ctx.createGain();
-    master.gain.value = clamp(volume, 0, 1) * 0.26;
+    master.gain.value = clamp(volume, 0, 1) * 0.24;
     master.connect(compressor);
 
     // Sheltered inside the small hovercraft: high frequencies are rolled off.
     const cabinet = ctx.createBiquadFilter();
     cabinet.type = "lowpass";
-    cabinet.frequency.value = 2100;
+    cabinet.frequency.value = 2550;
     cabinet.Q.value = 0.62;
     cabinet.connect(master);
 
@@ -133,7 +155,7 @@ export function startStage2CabinAudio(volume: number): void {
     wobble.start();
     hum.type = "triangle";
     hum.frequency.value = 115;
-    humGain.gain.value = 0.038;
+    humGain.gain.value = 0.029;
     hum.connect(humGain);
     humGain.connect(cabinet);
     hum.start();
@@ -143,7 +165,7 @@ export function startStage2CabinAudio(volume: number): void {
     const unstableGain = ctx.createGain();
     unstable.type = "sine";
     unstable.frequency.value = 119.9;
-    unstableGain.gain.value = 0.025;
+    unstableGain.gain.value = 0.020;
     unstable.connect(unstableGain);
     unstableGain.connect(cabinet);
     unstable.start();
@@ -174,7 +196,7 @@ export function updateStage2CabinAudio(blood: number, thrust: number): void {
   c.thrust = clamp(thrust, 0, 1);
   const now = c.ctx.currentTime;
   c.cabinet.frequency.setTargetAtTime(
-    1300 + c.blood * 950 + c.thrust * 250, now, 0.30);
+    1680 + c.blood * 850 + c.thrust * 180, now, 0.30);
   c.hum.frequency.setTargetAtTime(
     105 + c.thrust * 36 - (1 - c.blood) * 10, now, 0.25);
 }
@@ -182,7 +204,7 @@ export function updateStage2CabinAudio(blood: number, thrust: number): void {
 export function setStage2CabinVolume(volume: number): void {
   if (!cabin || cabin.ctx.state === "closed") return;
   cabin.master.gain.setTargetAtTime(
-    clamp(volume, 0, 1) * 0.26, cabin.ctx.currentTime, 0.04);
+    clamp(volume, 0, 1) * 0.24, cabin.ctx.currentTime, 0.04);
 }
 
 export function stopStage2CabinAudio(): void {

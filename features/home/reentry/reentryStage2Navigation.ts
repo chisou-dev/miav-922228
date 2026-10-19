@@ -27,6 +27,15 @@ export const STAGE2_ISLANDS: readonly Stage2Island[] = [
   { id:"visitor",bearing:272,radius:30,x:Math.sin(272*Math.PI/180)*460,y:Math.cos(272*Math.PI/180)*460 },
 ];
 // Even the highest zoom reveals only a rough shoreline at the starting range.
+/** Facial entry is high above the water for a tiny alien craft.
+ * These metres are shared by the visible face and the collision volumes.
+ * The worker at the polar base stands slightly higher than beachgoers.
+ */
+export function stage2FaceHeights(island: Stage2Island): { nose: number; mouth: number } {
+  if (island.id === "antarctic") return { nose: 8.4, mouth: 7.5 };
+  if (island.id === "visitor") return { nose: 7.0, mouth: 6.2 };
+  return { nose: 6.6, mouth: 5.8 };
+}
 export const STAGE2_ZOOMS = [1,2,3,4,6] as const;
 export const clamp = (v:number,lo:number,hi:number) => Math.max(lo,Math.min(hi,v));
 export const wrap360 = (v:number) => (v%360+360)%360;
@@ -92,12 +101,15 @@ function resolveContact(s:Stage2Nav,people:Record<Stage2IslandId,boolean>):Stage
     const direction=bearingTo(dx,dy);
     const incidence=Math.abs(signedBearing(direction-s.heading));
     const lateral=signedBearing(s.heading-island.bearing)*0.065;
-    if(dist<8.5 && people[island.id] &&
-      s.altitude>1.10 && s.altitude<2.60) {
+    const face = stage2FaceHeights(island);
+    const targetHeight = s.altitude > (face.nose + face.mouth) * 0.5
+      ? face.nose : face.mouth;
+    const atFaceHeight = Math.abs(s.altitude-targetHeight) < 0.48;
+    if(dist<8.5 && people[island.id] && atFaceHeight) {
       if(incidence<20 && speed>=2.4 && speed<=14.5){
-        if(Math.abs(lateral+0.44)<0.46 && s.altitude<1.95)
+        if(targetHeight===face.nose && Math.abs(lateral+0.44)<0.46)
           return {...s,outcome:"NOSE",destination:island.id};
-        if(Math.abs(lateral-0.34)<0.55 && s.altitude>=1.75)
+        if(targetHeight===face.mouth && Math.abs(lateral-0.34)<0.55)
           return {...s,outcome:"MOUTH",destination:island.id};
       }
       if(speed>14.5)return {...s,outcome:"TOO_FAST",destination:island.id};
@@ -142,7 +154,7 @@ export function stepStage2(
   const lever=clamp(input.thrust,-1,1);
 
   const heading=wrap360(old.heading+sx*66*step);
-  const targetAltitude=clamp(old.targetAltitude+sy*4.1*step,0.9,11.5);
+  const targetAltitude=clamp(old.targetAltitude+sy*5.6*step,0.9,14.0);
   const targetAltitudeChange=targetAltitude-old.targetAltitude;
   const targetSpeed=old.blood>0
     ? clamp(old.targetSpeed+lever*5.8*step,0,14)
@@ -180,9 +192,9 @@ export function stepStage2(
   const wave=Math.sin(seconds*2.9+old.x*0.033)*0.12;
   const heightDifference=targetAltitude-old.altitude;
   const verticalAcceleration=old.blood>0
-    ? clamp(heightDifference*1.65-old.verticalSpeed*1.9+wave*.1,-3.0,3.0)
+    ? clamp(heightDifference*1.90-old.verticalSpeed*1.90+wave*.1,-3.8,3.8)
     : -1.50-old.verticalSpeed*0.10;
-  const verticalSpeed=clamp(old.verticalSpeed+verticalAcceleration*step,-3.6,2.8);
+  const verticalSpeed=clamp(old.verticalSpeed+verticalAcceleration*step,-3.9,3.4);
   const altitude=old.altitude+verticalSpeed*step;
   const up= Math.max(0,verticalSpeed);
   const down= Math.max(0,-verticalSpeed);
