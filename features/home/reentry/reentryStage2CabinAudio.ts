@@ -68,10 +68,12 @@ function strike(c:CabinSound,at:number):void {
   const count=c.beat++;
   const step=count%CABIN_NOTES.length;
   const phrase=Math.floor(step/24);
-  const pitchIndex=CABIN_NOTES[step];
+  // Convert literal union (-1 rests / note indices) to a runtime number
+  // and safely bound the lookup; avoids TS tuple index -1 errors.
+  const pitchIndex=Number(CABIN_NOTES[step] ?? -1);
   const uneasy=1-c.blood;
   if(pitchIndex>=0){
-    const hz=ALIEN_FREQ[pitchIndex]*
+    const hz=(ALIEN_FREQ[pitchIndex] ?? 407)*
       (1+uneasy*.014*Math.sin(step*.41+phrase*.3));
     const stress=(step%24===0||step%24===12)?1.16:.88;
     const duration=(step%6===2||step%7===0)?.255:.16;
