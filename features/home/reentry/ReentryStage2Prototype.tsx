@@ -9,6 +9,7 @@ import {
   type Stage2Nav,
 } from "./reentryStage2Navigation";
 import { ReentryAudioControl } from "./ReentryAudioControl";
+import { drawEscapeSkiff } from "./reentryEscapeSkiff";
 import { getReentryUserVolume } from "./reentryAudio";
 import {
   resumeStage2CabinAudio,
@@ -183,38 +184,79 @@ function drawSeascape(
 }
 
 function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav):void {
-  const size=Math.min(w,h)*.082;
+  const m=Math.min(w,h);
+  // Vessel is the SAME Stage 1 escape skiff (not the damaged landing hull).
+  const size=m*.19;
+  const speed=Math.hypot(s.vx,s.vy);
+  const altitudeShift=clamp((s.altitude-2.05)*h*.038,-h*.055,h*.37);
+  const bob=Math.sin(s.seconds*2.8)*Math.max(.7,2.2-s.altitude*.1);
   const x=w*.50;
-  // Actual altitude, not just nose pitch, moves the ship visibly upward.
-  // A stable wake/shadow stays on the water below it.
-  const rise=clamp((s.altitude-2.05)*h*.037,-h*.06,h*.36);
-  const sink=s.outcome==="SEA"?Math.min(1,(2.05-s.altitude)/2.05):0;
-  const y=h*.79-rise+Math.sin(s.seconds*2.8)*1.7+size*sink*.40;
-  const shadowY=h*.865;
+  const y=h*.79-altitudeShift+bob;
+  const seaY=h*.85;
+  const shadowAlpha=clamp(.33-s.altitude*.020,.05,.28);
+
+  // A softened hovering shadow stays on the water instead of following the hull.
   ctx.save();
-  ctx.globalAlpha=clamp(.30-s.altitude*.012,.07,.27);
-  ctx.fillStyle="#061d34";
-  ctx.beginPath();ctx.ellipse(x,shadowY,size*(.67+s.altitude*.017),size*.18,0,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="rgba(157,220,223,.40)";ctx.lineWidth=1;
-  ctx.beginPath();ctx.ellipse(x,shadowY,size*.83,size*.24,0,0,Math.PI*2);ctx.stroke();
+  ctx.translate(x,seaY);
+  ctx.scale(1,.32);
+  const shadow=ctx.createRadialGradient(0,0,size*.1,0,0,size*1.6);
+  shadow.addColorStop(0,"rgba(2,20,31,"+shadowAlpha+")");
+  shadow.addColorStop(1,"rgba(2,24,40,0)");
+  ctx.fillStyle=shadow;ctx.beginPath();
+  ctx.arc(0,0,size*1.6,0,Math.PI*2);ctx.fill();
   ctx.restore();
 
-  ctx.save();ctx.translate(x,y);
-  ctx.rotate(Math.sin(s.seconds)*.014+s.pitch*.007);
-  const metal=ctx.createLinearGradient(-size,-size,size,size);
-  metal.addColorStop(0,"#152a3c");metal.addColorStop(.5,"#49758b");
-  metal.addColorStop(1,"#091727");
-  ctx.fillStyle=metal;ctx.strokeStyle="#9ed8d4";
-  ctx.lineWidth=1.7;
-  ctx.beginPath();ctx.moveTo(0,-size*.90);
-  ctx.bezierCurveTo(size*.8,-size*.42,size*.98,size*.55,size*.71,size*.68);
-  ctx.quadraticCurveTo(0,size*.87,-size*.71,size*.68);
-  ctx.bezierCurveTo(-size*.98,size*.55,-size*.8,-size*.42,0,-size*.90);
-  ctx.fill();ctx.stroke();
-  ctx.fillStyle="#051923";
-  ctx.beginPath();ctx.ellipse(0,size*.18,size*.39,size*.32,0,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="rgba(136,226,209,.63)";
-  ctx.beginPath();ctx.moveTo(0,-size*.66);ctx.lineTo(0,-size*.20);ctx.stroke();
+  // Wispy heat-shimmer ribbons and a refractive ghost of the sea, BELOW
+  // the hovering metal; approximate refraction without expensive readPixels.
+  // These grow with flight speed but remain subtle and translucent.
+  const shimmer=clamp(.18+speed/18,0,1);
+  if(s.outcome===null && shimmer>.05){
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x-size*1.7,y+size*.06,size*3.4,
+      Math.max(0,seaY-y+size*.55));
+    ctx.clip();
+    ctx.globalCompositeOperation="screen";
+    for(let i=0;i<8;i++){
+      const t=s.seconds*(1.7+speed*.065)+i*1.71;
+      const offset=(i-3.5)*size*.19+Math.sin(t*2.7)*size*.06;
+      const startY=y+size*(.14+i*.085);
+      ctx.beginPath();ctx.moveTo(x+offset,startY);
+      ctx.bezierCurveTo(x+offset+Math.sin(t)*size*.13,startY+size*.16,
+        x+offset-Math.sin(t*.72)*size*.10,startY+size*.46,
+        x+offset+Math.sin(t*1.13)*size*.06,startY+size*.83);
+      ctx.strokeStyle="rgba(150,233,231,"+
+        (0.018+shimmer*.030+(i%3)*.004)+")";
+      ctx.lineWidth=Math.max(.9,m*.0032);ctx.stroke();
+    }
+    ctx.restore();
+
+    // Forward motion has a reference: water streaks accelerate underneath
+    // the craft and its projected shadow. No HUD-only illusion of velocity.
+    if(speed>1.2){
+      ctx.save();ctx.globalCompositeOperation="screen";
+      const intensity=clamp(speed/14,0,1);
+      for(let i=0;i<19;i++){
+        const seed=(i*.61803399+.17)%1;
+        const progress=((s.seconds*(.11+intensity*.62)+seed)%1);
+        const yLine=seaY+m*.012+progress*(h-seaY);
+        const xLine=x+(seed-.5)*m*(.4+progress*.75);
+        const len=m*(.008+intensity*.023+progress*.021);
+        ctx.strokeStyle="rgba(182,231,224,"+(intensity*(.065+progress*.09))+")";
+        ctx.lineWidth=Math.max(.6,progress*1.6);
+        ctx.beginPath();ctx.moveTo(xLine-len*.5,yLine);
+        ctx.lineTo(xLine+len*.5,yLine);ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  // Both attitudes are smoothed in the physics state. Turning right
+  // banks right; accelerating gently raises the nose, then settles level.
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(s.bank*.82-s.noseLift);
+  drawEscapeSkiff(ctx,0,0,size,1,-.08,1);
   ctx.restore();
 }
 
@@ -243,7 +285,9 @@ function createCanvasScale(canvas:HTMLCanvasElement):{w:number;h:number;dpr:numb
   return {w,h,dpr};
 }
 
-export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
+export function ReentryStage2Prototype({
+  onClose,onExitHome,
+}:{onClose:()=>void;onExitHome:()=>void}){
   const mainRef=useRef<HTMLCanvasElement>(null);
   const opticRef=useRef<HTMLCanvasElement>(null);
   const simRef=useRef<Stage2Nav>(initialStage2Nav());
@@ -258,11 +302,24 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
   const stickPointerRef=useRef<number|null>(null);
   const [stage3Notice,setStage3Notice]=useState(false);
   const [help,setHelp]=useState(false);
+  const [opticGone,setOpticGone]=useState(false);
+  const opticGoneRef=useRef(false);
+  const [assistedTestClear,setAssistedTestClear]=useState(false);
+  const [resultReady,setResultReady]=useState(false);
+  const resultReadyRef=useRef(false);
+  const resultBeganAt=useRef<number|null>(null);
+  const headerTaps=useRef<{count:number;last:number;timer:number|null}>({
+    count:0,last:0,timer:null,
+  });
   const pressingThrust=useRef(false);
   const hudPublished=useRef(0);
   const soundUpdated=useRef(0);
   // Route changes or leaving Stage 2 must never leave cabin sound playing.
-  useEffect(() => () => stopStage2CabinAudio(), []);
+  useEffect(() => () => {
+    if(headerTaps.current.timer!==null)
+      window.clearTimeout(headerTaps.current.timer);
+    stopStage2CabinAudio();
+  }, []);
   useEffect(()=>{zoomRef.current=STAGE2_ZOOMS[zoomIndex];},[zoomIndex]);
   useEffect(()=>{
     const refresh=()=>{
@@ -289,14 +346,40 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
         inputRef.current.thrust=0;
         inputRef.current.steerX=0;
         inputRef.current.steerY=0;
+        if(resultBeganAt.current===null)resultBeganAt.current=now;
+        if(!resultReadyRef.current && now-resultBeganAt.current>=1050){
+          resultReadyRef.current=true;
+          setResultReady(true);
+        }
+      } else if (!opticGoneRef.current) {
+        // One-way handoff: close the optical scope only once a shoreline
+        // fills enough of the unzoomed view to steer by eye. Don't reopen
+        // at the threshold if the craft circles back.
+        for(const island of STAGE2_ISLANDS){
+          const distance=islandDistance(sim,island);
+          const offAxis=Math.abs(signedBearing(
+            bearingTo(island.x-sim.x,island.y-sim.y)-sim.heading));
+          if(distance<105 && offAxis<43){
+            opticGoneRef.current=true;
+            setOpticGone(true);
+            break;
+          }
+        }
       }
       const c=createCanvasScale(main);
       ctx.setTransform(c.dpr,0,0,c.dpr,0,0);
       drawSeascape(ctx,c.w,c.h,sim,peopleRef.current,1,now/1000,false);
       drawHovercraft(ctx,c.w,c.h,sim);
-      const o=createCanvasScale(optics);
-      scope.setTransform(o.dpr,0,0,o.dpr,0,0);
-      drawMonitor(scope,o.w,o.h,sim,peopleRef.current,zoomRef.current,now/1000);
+      if(sim.outcome==="NOSE"||sim.outcome==="MOUTH"){
+        const entryT=clamp((now-(resultBeganAt.current??now))/1050,0,1);
+        ctx.fillStyle="rgba(1,7,17,"+(entryT*.76)+")";
+        ctx.fillRect(0,0,c.w,c.h);
+      }
+      if(!opticGoneRef.current){
+        const o=createCanvasScale(optics);
+        scope.setTransform(o.dpr,0,0,o.dpr,0,0);
+        drawMonitor(scope,o.w,o.h,sim,peopleRef.current,zoomRef.current,now/1000);
+      }
       if (sim.outcome) {
         stopStage2CabinAudio();
       } else if (now - soundUpdated.current >= 450) {
@@ -374,12 +457,48 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
     inputRef.current={...baseKeys};
     simRef.current=initialStage2Nav();
     setHud({...simRef.current});
+    opticGoneRef.current=false;
+    setOpticGone(false);
+    setAssistedTestClear(false);
+    resultBeganAt.current=null;
+    resultReadyRef.current=false;
+    setResultReady(false);
     setZoomIndex(0);setStage3Notice(false);
   };
   useEffect(()=>()=>{
     pressingThrust.current=false;
     inputRef.current={...baseKeys};
   },[]);
+
+  // Same 700ms / three-tap gesture as the Stage 1 title. A single
+  // tap returns home; three rapid taps trigger an UNSCORED test clear.
+  // This never changes the normal physics or any score/leaderboard data.
+  const handleTitleTap=()=>{
+    const now=performance.now();
+    const tap=headerTaps.current;
+    if(now-tap.last>700)tap.count=0;
+    tap.last=now;
+    tap.count++;
+    if(tap.timer!==null){window.clearTimeout(tap.timer);tap.timer=null;}
+    if(tap.count>=3){
+      tap.count=0;
+      // Works even after a failed trial, so the clear screen can be tested
+      // without restarting the entire stage.
+      const current=simRef.current;
+      resultBeganAt.current=null;
+      resultReadyRef.current=false;
+      setResultReady(false);
+      simRef.current={...current,outcome:"NOSE",destination:current.destination};
+      setHud({...simRef.current});
+      setAssistedTestClear(true);
+      setStage3Notice(false);
+      return;
+    }
+    tap.timer=window.setTimeout(()=>{
+      tap.count=0;tap.timer=null;
+      onExitHome();
+    },700);
+  };
   const wind=stage2Wind(hud);
   const speed=Math.hypot(hud.vx,hud.vy);
   const clear=hud.outcome==="NOSE"||hud.outcome==="MOUTH";
@@ -391,15 +510,18 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       aria-label="Panoramic ocean with three distant islands and a steerable hovercraft"/>
     {/* Same global AUDIO volume and mute preference as Stage 1. */}
     <ReentryAudioControl />
-    <div className="pointer-events-none absolute left-3 top-14 z-[91] rounded border-l border-cyan-100/45 bg-[#06202b]/70 px-3 py-1.5 font-mono text-[.58rem] tracking-[.13em] sm:left-5 sm:top-5">
-      STAGE 2 · OPEN SEA
-    </div>
-    <button type="button" onClick={onClose} className={ctrl+" absolute left-3 top-3 z-[96] px-3 py-2 sm:right-auto"}>
-      BACK
+    <button type="button" onClick={handleTitleTap}
+      className="absolute left-5 top-5 z-[96] rounded-sm border border-white/15 bg-black/35 px-4 py-2 text-[0.72rem] font-medium tracking-[0.20em] text-white/85 backdrop-blur-sm transition-colors hover:bg-black/55 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+      aria-label="MIAV-922228 home. Triple tap tests Stage 2 clear without recording a score.">
+      MIAV-922228
     </button>
-    <button type="button" onClick={()=>setHelp(v=>!v)}
-      className={ctrl+" absolute left-20 top-3 z-[96] px-3 py-2"} aria-label="Controls help">?</button>
-    {help&&<div className="absolute left-3 top-24 z-[97] max-w-[17rem] rounded bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl">
+    <div className="absolute left-3 top-[4.35rem] z-[96] flex gap-2 sm:left-5">
+      <button type="button" onClick={onClose} className={ctrl+" px-3 py-1.5"}>BACK</button>
+      <button type="button" onClick={()=>setHelp(v=>!v)}
+        className={ctrl+" px-3 py-1.5"} aria-label="Controls help">?</button>
+    </div>
+    {opticGone&&<p className="pointer-events-none absolute right-4 top-[4.65rem] z-[94] rounded border border-cyan-100/30 bg-[#082533]/70 px-2 py-1 font-mono text-[.54rem] tracking-wider">VISUAL CONTACT</p>}
+    {help&&<div className="absolute left-3 top-[7.65rem] z-[97] max-w-[17rem] rounded bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl">
       Drag the circular pad toward the direction you want to steer.
       Drag the left stick up and down to change flight altitude, and release
       to hold that height. Turn sideways to steer. Hold the upper part of
@@ -409,7 +531,8 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       A fly-by that misses the island is reported as a failed approach.
     </div>}
 
-    <div className="absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] sm:right-5">
+    <div className={"absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] transition-opacity duration-1000 "+(opticGone?"pointer-events-none opacity-0":"opacity-100")+" sm:right-5"}
+      aria-hidden={opticGone}>
       <div className="flex items-center justify-between border-b border-cyan-100/20 px-2 py-1 font-mono text-[.52rem] tracking-wider">
         <span>COCKPIT · OPTICS</span><span>{STAGE2_ZOOMS[zoomIndex]}×</span>
       </div>
@@ -425,7 +548,8 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       </div>
     </div>
 
-    <div className="pointer-events-none absolute inset-x-3 top-[5.4rem] z-[92] w-fit max-w-[52%] rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[5rem]">
+    <div className="pointer-events-none absolute inset-x-3 top-[7.6rem] z-[92] w-fit max-w-[52%] rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[7.6rem]">
+      <div className="font-semibold tracking-widest text-cyan-50">STAGE 2</div>
       <div>SPD {speed.toFixed(1)} m/s · SET {hud.targetSpeed.toFixed(1)}</div>
       <div>ALT {hud.altitude.toFixed(1)} m · SET {hud.targetAltitude.toFixed(1)}</div>
       <div>HDG {Math.round(hud.heading)}° · WIND {wind.arrow} {wind.strength}</div>
@@ -508,18 +632,29 @@ export function ReentryStage2Prototype({onClose}:{onClose:()=>void}){
       </div>
     </div>}
 
-    {hud.outcome&&<div className="absolute inset-x-2 bottom-[12%] z-[96] flex flex-col items-center gap-3 text-center">
-      <p className={"rounded-lg border px-5 py-3 font-mono text-[.75rem] tracking-wider "+
-        (clear?"border-emerald-200 bg-[#073c34]/95":"border-white/35 bg-[#061923]/95")} role="status">
-        {stage2OutcomeText(hud.outcome)}
-      </p>
-      <div className="flex gap-3">
-        {clear&&<button type="button" className={ctrl+" px-4 py-2"} onClick={()=>setStage3Notice(v=>!v)}>STAGE 3</button>}
-        <button type="button" className={ctrl+" px-4 py-2"} onClick={reset}>RETRY</button>
-        <button type="button" className={ctrl+" px-4 py-2"} onClick={onClose}>BACK</button>
+    {hud.outcome&&(resultReady || !clear)&&<div className="absolute inset-x-2 bottom-[13%] z-[96] flex flex-col items-center gap-3 text-center">
+      <div className={"w-[min(92vw,27rem)] rounded-lg border px-5 py-5 shadow-[0_10px_35px_rgba(0,0,0,.7)] "+
+        (clear?"border-cyan-100/55 bg-[#061a2b]/95":"border-white/35 bg-[#061923]/95")} role="status">
+        <p className="font-mono text-base font-semibold tracking-[.22em] text-white">
+          {clear?"STAGE 2 CLEAR":"STAGE 2 · FLIGHT ENDED"}
+        </p>
+        <p className="mt-2 font-mono text-[.69rem] tracking-[.12em] text-cyan-100/80">
+          {clear?(hud.outcome==="NOSE"?"NASAL ENTRY":"ORAL ENTRY"):stage2OutcomeText(hud.outcome)}
+        </p>
+        {assistedTestClear&&<p className="mt-2 font-mono text-[.62rem] tracking-wider text-amber-200">TEST CLEAR · UNSCORED</p>}
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          {clear&&<button type="button" className={ctrl+" px-4 py-2"} onClick={()=>setStage3Notice(v=>!v)}>STAGE 3</button>}
+          <button type="button" className={ctrl+" px-4 py-2"} onClick={reset}>RETRY</button>
+          <button type="button" className={ctrl+" px-4 py-2"} onClick={onClose}>BACK</button>
+        </div>
+        {stage3Notice&&<p className="mt-3 rounded bg-black/60 px-3 py-2 font-mono text-xs tracking-wider">STAGE 3 — COMING SOON</p>}
       </div>
-      {stage3Notice&&<p className="bg-black/70 px-3 py-2 font-mono text-xs">STAGE 3 — COMING SOON</p>}
     </div>}
+    {clear&&!resultReady&&(
+      <p className="pointer-events-none absolute inset-x-0 top-[42%] z-[95] text-center font-mono text-[.72rem] tracking-[.24em] text-cyan-100/90">
+        ENTERING {hud.outcome==="NOSE"?"NASAL":"ORAL"} PASSAGE
+      </p>
+    )}
     <p className="pointer-events-none absolute bottom-1 inset-x-0 z-[92] text-center font-mono text-[.44rem] tracking-wider text-white/45">
       STAGE 2 · BLOOD NAVIGATION PROTOTYPE · NO RANDOM HIT ROLL
     </p>

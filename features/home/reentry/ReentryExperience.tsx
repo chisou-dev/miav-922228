@@ -468,7 +468,10 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             )
           )}
           {showStage2Notice && (
-            <ReentryStage2Prototype onClose={() => setShowStage2Notice(false)} />
+            <ReentryStage2Prototype
+              onClose={() => setShowStage2Notice(false)}
+              onExitHome={closeSession}
+            />
           )}
         </div>
         </ReentryFullscreenPortal>

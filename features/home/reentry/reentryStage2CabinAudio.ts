@@ -19,97 +19,99 @@ type CabinSound = {
 };
 
 let cabin: CabinSound | null = null;
-// A recognisable, looping 32-step cabin tune with two answering phrases.
-// Warm, almost cheerful intervals return to a deliberately wrong note.
-// It is original generative WebAudio synthesis, not radio chatter or an
-// imitation of an emergency warning. 0 denotes a breathing space.
-const melody = [
-  392.00, 440.00, 523.25, 587.33, 523.25, 440.00, 392.00, 0,
-  440.00, 523.25, 659.25, 587.33, 523.25, 466.16, 440.00, 392.00,
-  349.23, 392.00, 440.00, 523.25, 587.33, 523.25, 440.00, 0,
-  392.00, 466.16, 523.25, 587.33, 554.37, 523.25, 440.00, 392.00,
+/**
+ * 30-second original alien cabin sequence (96 steps x 0.3125 seconds).
+ * Returns to its start exactly after thirty seconds. Short "to-to-to"
+ * motifs evoke the earlier cockpit chirps, but all four 7.5-second sections
+ * vary: playful, curious, uncanny, then an unsettled return to the first
+ * phrase. Not four copies of an eight-second loop, and not radio signalling.
+ * Pitch numbers index the deliberate in-between notes below; -1 is rest.
+ */
+const CABIN_NOTES = [
+  // 0-7.5: curious, irregularly dancing taps
+  0,2,4,3, 1,3,0,-1, 2,5,4,1, 0,3,5,2, 4,-1,2,0, 3,6,4,1,
+  // 7.5-15: answering notes with rising curiosity
+  2,4,6,4, 3,0,2,1, 4,7,6,-1, 3,5,2,0, 1,4,3,6, 5,2,1,-1,
+  // 15-22.5: a cheerful pattern frays into unsettling intervals
+  1,3,5,7, 6,3,4,-1, 5,7,8,6, 3,8,5,2, 7,-1,6,4, 2,5,1,3,
+  // 22.5-30: darker answer and a recognisable circular return
+  6,4,2,5, 7,3,6,-1, 8,4,7,5, 3,1,6,2, 4,3,1,-1, 3,2,0,0,
 ] as const;
-const bassLine = [130.81, 146.83, 164.81, 138.59] as const;
-const clamp = (x: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, x));
+const ALIEN_FREQ = [326,372,407,453,489,551,603,658,704] as const;
+const CABIN_STEP_S = 30/CABIN_NOTES.length; // exact 30.0 seconds
+const clamp = (x:number,min:number,max:number) =>
+  Math.max(min,Math.min(max,x));
 
 function playVoice(
-  c: CabinSound, at: number, frequency: number,
-  volume: number, duration: number, wave: OscillatorType,
-  cutoffFall = 0.965,
-): void {
-  const { ctx, cabinet } = c;
-  const osc = ctx.createOscillator();
-  const envelope = ctx.createGain();
-  osc.type = wave;
-  osc.frequency.setValueAtTime(Math.max(20,frequency),at);
+  c:CabinSound,at:number,hz:number,level:number,
+  duration:number,wave:OscillatorType,endRatio=0.96,
+):void {
+  const {ctx,cabinet}=c;
+  const osc=ctx.createOscillator();
+  const envelope=ctx.createGain();
+  osc.type=wave;
+  osc.frequency.setValueAtTime(Math.max(30,hz),at);
   osc.frequency.exponentialRampToValueAtTime(
-    Math.max(20,frequency*cutoffFall),at+duration,
-  );
-  envelope.gain.setValueAtTime(0.0001,at);
-  envelope.gain.exponentialRampToValueAtTime(
-    Math.max(.0002,volume),at+.025,
-  );
+    Math.max(30,hz*endRatio),at+duration);
+  envelope.gain.setValueAtTime(.0001,at);
+  envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,level),at+.013);
   envelope.gain.exponentialRampToValueAtTime(.0001,at+duration);
   osc.connect(envelope);
   envelope.connect(cabinet);
-  osc.start(at);
-  osc.stop(at+duration+.025);
+  osc.start(at);osc.stop(at+duration+.012);
   osc.onended=()=>{
-    try {osc.disconnect();envelope.disconnect();} catch {/* closed */ }
+    try {osc.disconnect();envelope.disconnect();}catch{/* stage closed */ }
   };
 }
 
-function strike(c: CabinSound, at: number): void {
-  const step = c.beat++;
-  const index=step%melody.length;
-  const bloodLoss=1-c.blood;
-  const tune=melody[index];
-
-  if(tune>0){
-    // Longer rounded toy-organ notes connect across steps: this is a
-    // melody rather than individual communication blips.
-    const accent=index%8===0?1.24:index%4===0?1.10:0.88;
-    const slightlyWrong = bloodLoss * (
-      0.014 * Math.sin(step*.73) + (index===28?.017:0)
-    );
-    const hz=tune*(1+slightlyWrong);
-    const hold=index%8===3||index%8===4?.58:.41;
-    playVoice(c,at,hz,.20*accent,hold,"triangle");
-    playVoice(c,at+.022,hz*2.004,.036*accent,hold*.85,"sine");
+function strike(c:CabinSound,at:number):void {
+  const count=c.beat++;
+  const step=count%CABIN_NOTES.length;
+  const phrase=Math.floor(step/24);
+  const pitchIndex=CABIN_NOTES[step];
+  const uneasy=1-c.blood;
+  if(pitchIndex>=0){
+    const hz=ALIEN_FREQ[pitchIndex]*
+      (1+uneasy*.014*Math.sin(step*.41+phrase*.3));
+    const stress=(step%24===0||step%24===12)?1.16:.88;
+    const duration=(step%6===2||step%7===0)?.255:.16;
+    // First-version organic little "toto" sound, not a pop keyboard.
+    playVoice(c,at,hz*(step%4===0?1.17:.81),.16*stress,duration,
+      step%3===0?"triangle":"sine",step%4===0?.84:1.14);
+    if(step%5===2||step%9===6){
+      playVoice(c,at+.086,hz*.91,.065,.105,"sine",1.09);
+    }
   }
-
-  // Four chords repeat in a 10.5 second phrase, drifting between a
-  // playful major character and sour minor-second tension.
-  if(index%8===0){
-    const chord=bassLine[Math.floor(index/8)];
-    playVoice(c,at,chord,.15,2.0,"sine",.999);
-    playVoice(c,at+.04,chord*1.5,.060,1.84,"triangle",1.002);
-    const tension = index===24 ? Math.pow(2,1/12) : 1.25;
-    playVoice(c,at+.06,chord*2*tension,.042,1.55,"sine",.998);
+  // Very restrained hovering cabin undertone; section 3 detunes.
+  if(step%12===0){
+    const root=[116.4,128.2,119.3,108.1][phrase];
+    playVoice(c,at,root,.065,2.15,"triangle",.997);
+    playVoice(c,at+.045,root*(phrase===2?1.434:1.504),
+      .031,1.70,"sine",1.003);
   }
-  // Tactile wooden pulse on each quarter-note, no random signal bursts.
-  if(index%2===0){
-    playVoice(c,at,118,.028,.105,"sine",.60);
+  // A distant alien shiver in the middle, not a warning beep.
+  if(phrase===2&&(step%24===15||step%24===19)){
+    playVoice(c,at+.04,719+step*1.1,.046,.32,"sine",.80);
   }
-  // A tiny, deliberately sour answer only at the end of the second phrase.
-  if(index===28){
-    playVoice(c,at+.09,740*(1+bloodLoss*.022),.055,.35,"sine",.92);
-  }
+  // The last phrases point back into the opening tone without a sudden
+  // rhythmic or amplitude reset when the thirty-second cycle repeats.
 }
 
-function schedulePulses(c: CabinSound): void {
+function schedulePulses(c:CabinSound):void {
   if(c.ctx.state!=="running")return;
   const now=c.ctx.currentTime;
-  // Never catch up a backlog if a smartphone suspends the audio context.
-  if(c.nextPulse<now-.7)c.nextPulse=now+.025;
+  // If throttled by the phone, resync the beat index as well. Otherwise
+  // pauses shift the phrase and break the fixed 30-second music loop.
+  if(c.nextPulse<now-.70){
+    const skipped=Math.max(0,Math.floor((now-c.nextPulse)/CABIN_STEP_S));
+    c.beat+=skipped;
+    c.nextPulse+=skipped*CABIN_STEP_S;
+    if(c.nextPulse<now-.70)c.nextPulse=now+.02;
+  }
   let scheduled=0;
-  while(c.nextPulse<now+.30 && scheduled++<3){
-    const step=c.beat;
+  while(c.nextPulse<now+.25&&scheduled++<3){
     strike(c,Math.max(now+.006,c.nextPulse));
-    // Gentle 3+3+2 swing keeps the melody jaunty while still flowing.
-    const swing=[.015,-.012,.018,-.009,.015,-.018,.013,-.022][step%8];
-    c.nextPulse+=.327+swing-c.thrust*.008;
+    c.nextPulse+=CABIN_STEP_S;
   }
 }
 

@@ -13,6 +13,7 @@ export type Stage2Island = {
 export type Stage2Nav = {
   x: number; y: number; vx: number; vy: number; heading: number;
   pitch: number; altitude: number; verticalSpeed: number;
+  bank: number; noseLift: number;
   blood: number; throttle: number;
   targetSpeed: number; targetAltitude: number;
   seconds: number; launched: boolean;
@@ -80,7 +81,7 @@ export function stage2Wind(s:Stage2Nav):Stage2Wind {
   return {bearing,strength,arrow};
 }
 export function initialStage2Nav():Stage2Nav {
-  return {x:0,y:0,vx:0,vy:0,heading:0,pitch:0,altitude:2.05,
+  return {x:0,y:0,vx:0,vy:0,heading:0,pitch:0,bank:0,noseLift:0,altitude:2.05,
     verticalSpeed:0,blood:1,throttle:0,targetSpeed:0,targetAltitude:2.05,
     seconds:0,launched:false,
     outcome:null,destination:null};
@@ -160,8 +161,15 @@ export function stepStage2(
     ? clamp(old.targetSpeed+lever*5.8*step,0,14)
     : 0;
   const launched=old.launched || targetSpeed>0.06;
+  const bank=old.bank+(sx*.18-old.bank)*Math.min(1,step*3.8);
+  const speedBefore=Math.hypot(old.vx,old.vy);
+  // A little bow-up posture at speed; stronger when accelerating.
+  const liftGoal=clamp(
+    (targetSpeed>speedBefore?targetSpeed-speedBefore:0)*.017+
+    targetSpeed/14*.045,0,.15);
+  const noseLift=old.noseLift+(liftGoal-old.noseLift)*Math.min(1,step*2.8);
   if(!launched) {
-    return {...old,heading,targetAltitude,throttle:0,targetSpeed:0};
+    return {...old,heading,targetAltitude,bank,noseLift,throttle:0,targetSpeed:0};
   }
 
   const seconds=old.seconds+step;
@@ -207,7 +215,7 @@ export function stepStage2(
   const throttle=targetSpeed/14;
   const next:Stage2Nav={
     ...old,x:old.x+vx*step,y:old.y+vy*step,vx,vy,
-    heading,pitch:clamp(old.pitch*0.90+sy*1.5,-10,10),
+    heading,bank,noseLift,pitch:clamp(old.pitch*0.90+sy*1.5,-10,10),
     altitude,verticalSpeed,blood,throttle,
     targetAltitude,targetSpeed,seconds,launched,
   };
