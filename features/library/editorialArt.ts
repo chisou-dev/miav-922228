@@ -5,9 +5,9 @@
  */
 export const EDITORIAL_ART = {
   afterRain: {
-    src: "/images/editorial/after-the-rain.svg",
-    width: 1200, height: 675,
-    alt: "An empty bookshop street reflected in the pavement after rain",
+    src: "/images/editorial/after-the-rain.webp",
+    width: 1672, height: 941,
+    alt: "A rain-washed hillside street and a small bookshop overlooking the coast at sunset",
   },
   jeff: {
     src: "/images/editorial/jeff.webp",
@@ -28,6 +28,21 @@ export const EDITORIAL_ART = {
     src: "/images/editorial/next-time-i-see-you.webp",
     width: 1672, height: 941,
     alt: "A red ribbon and letter on a piano beside a twilight window",
+  },
+  milk: {
+    src: "/images/editorial/milk.webp",
+    width: 1672, height: 941,
+    alt: "A dairy farmer seen from behind tending a small herd of cows in morning light",
+  },
+  antAndGrasshopper: {
+    src: "/images/editorial/the-ant-and-the-grasshopper.webp",
+    width: 1672, height: 941,
+    alt: "Ants gathering grain as a grasshopper rests above an autumn valley",
+  },
+  honestWoodcutter: {
+    src: "/images/editorial/the-honest-woodcutter.webp",
+    width: 1672, height: 941,
+    alt: "A woodcutter resting with an axe and logs beside a tranquil forest river",
   },
   layers: {
     src: "/images/editorial/layers.webp",

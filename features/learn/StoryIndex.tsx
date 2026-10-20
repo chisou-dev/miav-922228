@@ -12,6 +12,9 @@ const levels: readonly ReadingLevel[] = [1, 2, 3, 4, 5];
 
 function readingArt(story: ReadingStory) {
   if (story.slug === "after-the-rain") return EDITORIAL_ART.afterRain;
+  if (story.slug === "milk") return EDITORIAL_ART.milk;
+  if (story.slug === "the-ant-and-the-grasshopper") return EDITORIAL_ART.antAndGrasshopper;
+  if (story.slug === "the-honest-woodcutter") return EDITORIAL_ART.honestWoodcutter;
   if (story.slug === "the-day-i-couldnt-find-anyone") return EDITORIAL_ART.dayCouldntFindAnyone;
   if (story.slug === "lost-property") return EDITORIAL_ART.lostProperty;
   if (story.slug === "entrance") return EDITORIAL_ART.entrance;
