@@ -21,6 +21,7 @@ import {
 import { getSeriesStoryChapter } from "@/features/library/seriesContent";
 import { BookContinueCard } from "@/features/library/BookContinueCard";
 import { LibraryListItem, LibraryShell } from "@/features/library/LibraryShell";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
 import { ReadingLayout } from "@/features/library/ReadingLayout";
 import {
   BookJsonLd,
@@ -104,6 +105,7 @@ export function FlashFictionPage() {
               title={piece.title}
               meta={`${piece.minutes} min read`}
               description={piece.blurb}
+              image={piece.slug === "after-the-rain" ? EDITORIAL_ART.afterRain : undefined}
             />
           ))}
         </div>

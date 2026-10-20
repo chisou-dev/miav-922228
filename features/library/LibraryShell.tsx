@@ -94,38 +94,39 @@ export function LibraryListItem({
   };
 }) {
   const body = (
-    <>
+    <div className={image ? "flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7" : ""}>
       {image ? (
-        <span className="mb-6 block overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--background)]">
+        <span className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden border border-[var(--line)] bg-[var(--background-deep)] sm:w-[220px]">
           <Image
             src={image.src}
             alt={image.alt}
-            width={image.width}
-            height={image.height}
-            className="h-auto w-full"
-            sizes="(max-width: 768px) 100vw, 720px"
+            fill
+            sizes="(max-width: 639px) 100vw, 220px"
+            className="object-cover"
           />
         </span>
       ) : null}
-      <div className="flex items-baseline justify-between gap-6">
-        <h2 className="text-[1.05rem] font-medium tracking-[0.06em] text-[var(--foreground)]">
-          {title}
-        </h2>
-        <span className="shrink-0 text-[0.72rem] tracking-[0.14em] text-[var(--foreground-muted)]">
-          {actionLabel}
-        </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h2 className="text-[1.05rem] font-medium leading-relaxed tracking-[0.06em] text-[var(--foreground)]">
+            {title}
+          </h2>
+          <span className="shrink-0 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
+            {actionLabel}
+          </span>
+        </div>
+        {meta ? (
+          <p className="mt-2 text-[0.72rem] tracking-[0.1em] text-[var(--foreground-muted)]">
+            {meta}
+          </p>
+        ) : null}
+        {description ? (
+          <p className="mt-3 max-w-lg text-[0.88rem] leading-[1.85] text-[var(--foreground-muted)]">
+            {description}
+          </p>
+        ) : null}
       </div>
-      {meta ? (
-        <p className="mt-2 text-[0.72rem] tracking-[0.12em] text-[var(--foreground-muted)]">
-          {meta}
-        </p>
-      ) : null}
-      {description ? (
-        <p className="mt-3 max-w-lg text-[0.88rem] leading-[1.85] text-[var(--foreground-muted)]">
-          {description}
-        </p>
-      ) : null}
-    </>
+    </div>
   );
 
   const borderClass = showBorder ? "border-b border-[var(--line)]" : "";

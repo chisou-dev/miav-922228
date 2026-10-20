@@ -58,7 +58,7 @@ export function SeriesCategoryPage({
                     ? `${featured.genre} · ${featured.language}`
                     : undefined
                 }
-                description={featured.summary}
+                description={featured.cardDescription || featured.summary}
                 actionLabel={featured.comingSoon ? "Coming Soon." : "Read →"}
                 image={featured.cover}
               />
@@ -82,7 +82,7 @@ export function SeriesCategoryPage({
                         ? `${series.genre} · ${series.language}`
                         : undefined
                     }
-                    description={series.summary}
+                    description={series.cardDescription || series.summary}
                     actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
                     image={series.cover}
                   />
@@ -105,7 +105,7 @@ export function SeriesCategoryPage({
                       : undefined
                 }
                 image={series.cover}
-                description={series.summary || undefined}
+                description={series.cardDescription || series.summary || undefined}
                 actionLabel={series.comingSoon ? "Coming Soon." : "Read →"}
               />
             ))}

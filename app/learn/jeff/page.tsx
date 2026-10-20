@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import { JEFF_LANGUAGES, JEFF_LANGUAGE_LABELS } from "@/features/jeff/catalog";
 
@@ -8,8 +10,16 @@ export const metadata: Metadata = {
 };
 export default function JeffHome() {
   return (
-    <ReadingTestFrame eyebrow="MIAV LEARN · FEATURED" title="Jeff" summary="Fourteen connected stories about making a life in Japan. Choose your language and your level.">
-      <section className="mx-auto mt-12 max-w-3xl">
+    <ReadingTestFrame eyebrow="MIAV LEARN · FEATURED" title="Jeff" summary="An American working in Japan slowly becomes part of a place he barely knows. Fourteen connected stories, told in three languages.">
+      <section className="mx-auto mt-9 max-w-3xl">
+        <div className="relative aspect-[16/9] w-full overflow-hidden border border-[var(--line)]">
+          <Image src={EDITORIAL_ART.jeff.src} alt={EDITORIAL_ART.jeff.alt}
+            fill sizes="(max-width: 768px) 100vw, 740px"
+            className="object-cover"/>
+        </div>
+        <p className="mx-auto mt-5 max-w-lg text-center text-sm leading-[1.85] text-[var(--foreground-muted)]">
+          In a small restaurant and on the streets he walks each day, Jeff starts to recognize the people around him. Not every encounter is easy.
+        </p>
         <h2 className="text-center text-lg">Choose a language</h2>
         <ul className="mt-7 grid gap-4 sm:grid-cols-3">
           {JEFF_LANGUAGES.map((language) => (

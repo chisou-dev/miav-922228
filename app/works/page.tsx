@@ -17,6 +17,7 @@ import {
   type SfSectionVariant,
 } from "@/features/shared/SfSection";
 import { MiavEditionLinks } from "@/features/stories/miav/MiavEditionLinks";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
 import { t } from "@/features/shared/i18n";
 
 export const metadata: Metadata = libraryPageMetadata({
@@ -57,6 +58,8 @@ export default function WorksPage() {
               href={flashHref(starterFlash.slug)}
               title={starterFlash.title}
               meta={t("works.minutesRead", { minutes: starterFlash.minutes })}
+              description={starterFlash.blurb}
+              image={starterFlash.slug === "after-the-rain" ? EDITORIAL_ART.afterRain : undefined}
               actionLabel={t("home.featured.readCta")}
             />
           </div>
@@ -75,9 +78,8 @@ export default function WorksPage() {
               href={seriesHref(featured.id)}
               title={featured.title}
               meta={featured.genre}
-              description={
-                featured.worksFeaturedNote || featured.summary
-              }
+              description={featured.cardDescription || featured.summary}
+              image={featured.cover}
               actionLabel="Explore →"
             />
             {featured.id === "miav-922228" ? <MiavEditionLinks /> : null}

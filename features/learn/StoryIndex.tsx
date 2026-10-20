@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
 import { getReadingStories } from "@/features/reading-test/catalog";
 import { countEnglishWords } from "@/features/reading-test/measure";
 import { readingLevelLabel } from "@/features/reading-test/readability";
@@ -7,6 +9,19 @@ import type { ReadingLevel, ReadingStory } from "@/features/reading-test/types";
 import { StartListeningLink } from "@/features/listening-test/StartListeningLink";
 
 const levels: readonly ReadingLevel[] = [1, 2, 3, 4, 5];
+
+function readingArt(story: ReadingStory) {
+  if (story.slug === "after-the-rain") return EDITORIAL_ART.afterRain;
+  if (story.contentType !== "series-opening") return null;
+  switch (story.seriesTitle) {
+    case "MIAV-922228": return EDITORIAL_ART.miav;
+    case "JAPAN 8000Hz": return EDITORIAL_ART.japan8000hz;
+    case "Fourth Period": return EDITORIAL_ART.fourthPeriod;
+    case "Next Time I See You": return EDITORIAL_ART.nextTimeISeeYou;
+    case "After ¥50 Million": return EDITORIAL_ART.after50Million;
+    default: return null;
+  }
+}
 
 function minutesLabel(minutes: number) {
   const unit = minutes === 1 ? "minute" : "minutes";
@@ -22,11 +37,23 @@ export function StoryIndex({ mode }: { mode: "reading" | "listening" }) {
 
   return (
     <div className="mt-14 space-y-14 text-center sm:mt-16">
-      <section aria-label="Featured: Jeff" className="mx-auto max-w-2xl border border-[var(--line)] px-5 py-8">
-        <p className="text-xs uppercase tracking-[0.14em] text-[var(--foreground-muted)]">Featured · Jeff · 14 episodes</p>
-        <h2 className="mt-4 text-2xl">Learn with Jeff</h2>
-        <p className="mt-3 text-sm leading-relaxed text-[var(--foreground-muted)]">Three languages, three difficulty levels. Reading and Listening.</p>
-        <Link href="/learn/jeff" className="mt-6 inline-block underline underline-offset-4">Choose language and level →</Link>
+      <section aria-label="Featured: Jeff" className="mx-auto max-w-2xl overflow-hidden border border-[var(--line)] text-left sm:flex">
+        <Link href="/learn/jeff" className="relative block aspect-[16/9] w-full shrink-0 sm:aspect-auto sm:w-[42%]"
+          aria-label="Explore Jeff">
+          <Image src={EDITORIAL_ART.jeff.src} alt={EDITORIAL_ART.jeff.alt}
+            fill sizes="(max-width: 639px) 100vw, 270px" className="object-cover"/>
+        </Link>
+        <div className="px-5 py-6 sm:px-6 sm:py-7">
+          <p className="text-xs uppercase tracking-[0.14em] text-[var(--foreground-muted)]">Featured · Jeff · 14 episodes</p>
+          <h2 className="mt-3 text-2xl">Jeff</h2>
+          <p className="mt-3 text-sm leading-[1.8] text-[var(--foreground-muted)]">
+            A new life in Japan begins with everyday misunderstandings and unexpected encounters.
+          </p>
+          <p className="mt-2 text-xs text-[var(--foreground-muted)]">English, Spanish and French · Three levels</p>
+          <Link href="/learn/jeff" className="mt-4 inline-flex min-h-11 items-center underline underline-offset-4">
+            Choose language and level →
+          </Link>
+        </div>
       </section>
 
       <div className="mx-auto max-w-2xl space-y-3 text-left" aria-label="Choose a level">
@@ -59,9 +86,17 @@ export function StoryIndex({ mode }: { mode: "reading" | "listening" }) {
                       </p>
                     ) : null}
                     <ul className="divide-y divide-[var(--line)]">
-                      {group.map((story) => (
+                      {group.map((story) => {
+                        const art = readingArt(story);
+                        return (
                         <li key={story.slug} className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="min-w-0">
+                          {art ? (
+                            <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden border border-[var(--line)] sm:w-32">
+                              <Image src={art.src} alt={art.alt} fill
+                                sizes="(max-width: 639px) 100vw, 128px" className="object-cover"/>
+                            </div>
+                          ) : null}
+                          <div className="min-w-0 flex-1">
                             {story.seriesTitle ? (
                               <p className="text-xs tracking-[0.05em] text-[var(--foreground-muted)]">{story.seriesTitle}</p>
                             ) : null}
@@ -81,7 +116,8 @@ export function StoryIndex({ mode }: { mode: "reading" | "listening" }) {
                             )}
                           </div>
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   </>
                 )}

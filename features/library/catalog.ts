@@ -4,6 +4,7 @@
  */
 
 import { japan8000hzKindle } from "@/features/stories/japan-8000hz/store";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
 import { fourthPeriodKindle } from "@/features/stories/fourth-period/store";
 import {
   after50MillionChapterDescriptions,
@@ -85,6 +86,8 @@ export type Series = {
   title: string;
   /** Short intro shown on category lists and series pages (2–3 lines). */
   summary: string;
+  /** Short, spoiler-free editorial label for index cards only. */
+  cardDescription?: string;
   /** Schema.org genre */
   genre: string;
   seo: PageSeo;
@@ -252,6 +255,8 @@ export const seriesList: readonly Series[] = [
         "A quiet literary series about artificial intelligence, memory, family, relationships, and the passage of time.",
     },
     featured: true,
+    cardDescription: "A voice enters everyday life. What changes may take years to notice.",
+    cover: EDITORIAL_ART.miav,
     worksFeaturedNote: "The latest chapter is available.",
     chapters: miavChapters,
   },
@@ -261,6 +266,8 @@ export const seriesList: readonly Series[] = [
     title: "JAPAN 8000Hz",
     summary:
       "A literary novel about invisible social pressure and the quiet discomfort of modern Japan.",
+    cardDescription: "On an ordinary day, the minutes refuse to move.",
+    cover: EDITORIAL_ART.japan8000hz,
     genre: "Literary Fiction",
     seo: {
       title: "JAPAN 8000Hz | Literary Fiction",
@@ -296,6 +303,8 @@ export const seriesList: readonly Series[] = [
     title: "Fourth Period",
     summary:
       "A series of quiet stories inspired by moral education and childhood memories.",
+    cardDescription: "A childhood lesson returns thirty years later. Its answer is less certain now.",
+    cover: EDITORIAL_ART.fourthPeriod,
     genre: "Literary Fiction",
     seo: {
       title: "Fourth Period | Literary Fiction",
@@ -346,6 +355,7 @@ export const seriesList: readonly Series[] = [
     categoryId: "literary-sf",
     title: "After ¥50 Million",
     summary: after50MillionSummary,
+    cardDescription: "He finally has the money to stop working. What happens the morning after?",
     genre: "Literary Fiction",
     language: "English",
     previewNote: after50MillionPreviewNote,
@@ -367,6 +377,8 @@ export const seriesList: readonly Series[] = [
     title: "Next Time I See You",
     summary:
       "A coming-of-age short story about first love, a lost letter, and the words we wait too long to say.",
+    cardDescription: "A letter is lost. The words it carried remain unfinished.",
+    cover: EDITORIAL_ART.nextTimeISeeYou,
     genre: nextTimeISeeYouGenre,
     seo: {
       title:

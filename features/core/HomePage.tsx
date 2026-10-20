@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { SiteShell } from "@/features/shared/SiteShell";
 import { SfSection } from "@/features/shared/SfSection";
 import { CosmicMorseDivider } from "@/features/shared/cosmic-morse";
@@ -28,6 +29,8 @@ type FirstRead = {
   href: string;
   title: string;
   minutes: number;
+  blurb: string;
+  image: { src: string; width: number; height: number; alt: string } | null;
 };
 
 export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
@@ -65,22 +68,36 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
       {firstRead ? (
         <aside
           aria-label={t("works.newHereEyebrow")}
-          className="mt-7 max-w-lg border-l border-[var(--line)] pl-4 sm:mt-9 sm:pl-5"
+          className="mt-7 max-w-xl border-l border-[var(--line)] pl-4 sm:mt-9 sm:pl-5"
         >
-          <p className="text-[0.78rem] leading-relaxed tracking-[0.05em] text-[var(--foreground-muted)]">
-            <span className="font-medium text-[var(--foreground)]">
-              {t("works.newHereEyebrow")}
-            </span>{" "}
-            {t("works.newHereLead")}
-          </p>
-          <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0 text-[0.8rem]">
-            <Link href={firstRead.href} className={primaryLinkClassName}>
-              {firstRead.title} <span aria-hidden="true" className="ml-1">→</span>
-            </Link>
-            <span className="text-[var(--foreground-muted)]">
-              {t("works.minutesRead", { minutes: firstRead.minutes })}
-            </span>
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+            {firstRead.image ? (
+              <Link href={firstRead.href}
+                className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden border border-[var(--line)] sm:w-40"
+                aria-label={firstRead.title}>
+                <Image src={firstRead.image.src} alt={firstRead.image.alt}
+                  fill sizes="(max-width: 639px) 100vw, 160px"
+                  className="object-cover"/>
+              </Link>
+            ) : null}
+            <div className="min-w-0">
+              <p className="text-[0.78rem] leading-relaxed tracking-[0.05em] text-[var(--foreground-muted)]">
+                <span className="font-medium text-[var(--foreground)]">
+                  {t("works.newHereEyebrow")}
+                </span>{" "}
+                {t("works.newHereLead")}
+              </p>
+              <Link href={firstRead.href} className={primaryLinkClassName}>
+                {firstRead.title} <span aria-hidden="true" className="ml-1">→</span>
+              </Link>
+              <p className="max-w-md text-[0.8rem] leading-[1.75] text-[var(--foreground-muted)]">
+                {firstRead.blurb}
+              </p>
+              <p className="mt-2 text-[0.72rem] tracking-wide text-[var(--foreground-muted)]">
+                {t("works.minutesRead", { minutes: firstRead.minutes })}
+              </p>
+            </div>
+          </div>
         </aside>
       ) : null}
     </>
