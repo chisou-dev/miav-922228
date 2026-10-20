@@ -29,6 +29,21 @@ export const EDITORIAL_ART = {
     width: 1672, height: 941,
     alt: "A red ribbon and letter on a piano beside a twilight window",
   },
+  layers: {
+    src: "/images/editorial/layers.webp",
+    width: 1672, height: 941,
+    alt: "A broken rusted border fence winding across an expansive barren landscape",
+  },
+  tissue: {
+    src: "/images/editorial/tissue.webp",
+    width: 1672, height: 941,
+    alt: "A tissue box on a nursery classroom windowsill seen from outside",
+  },
+  desk: {
+    src: "/images/editorial/desk.webp",
+    width: 1672, height: 941,
+    alt: "A letter on a modest desk illuminated by a warm evening lamp",
+  },
   miav: {
     src: "/images/miav/miav-og.png",
     width: 1280, height: 720,

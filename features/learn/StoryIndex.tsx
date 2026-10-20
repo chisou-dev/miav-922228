@@ -12,6 +12,9 @@ const levels: readonly ReadingLevel[] = [1, 2, 3, 4, 5];
 
 function readingArt(story: ReadingStory) {
   if (story.slug === "after-the-rain") return EDITORIAL_ART.afterRain;
+  if (story.slug === "layers") return EDITORIAL_ART.layers;
+  if (story.slug === "tissue") return EDITORIAL_ART.tissue;
+  if (story.slug === "desk") return EDITORIAL_ART.desk;
   if (story.contentType !== "series-opening") return null;
   switch (story.seriesTitle) {
     case "MIAV-922228": return EDITORIAL_ART.miav;
