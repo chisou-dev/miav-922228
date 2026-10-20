@@ -44,6 +44,26 @@ export const EDITORIAL_ART = {
     width: 1672, height: 941,
     alt: "A letter on a modest desk illuminated by a warm evening lamp",
   },
+  dayCouldntFindAnyone: {
+    src: "/images/editorial/the-day-i-couldnt-find-anyone.webp",
+    width: 1672, height: 941,
+    alt: "A lone person seen from behind on a quiet residential street at dusk",
+  },
+  lostProperty: {
+    src: "/images/editorial/lost-property.webp",
+    width: 1672, height: 941,
+    alt: "A visitor at a lost property reception counter in a mysterious long corridor",
+  },
+  entrance: {
+    src: "/images/editorial/entrance.webp",
+    width: 1672, height: 941,
+    alt: "A person waiting beside glass automatic entrance doors as people pass within",
+  },
+  theMonster: {
+    src: "/images/editorial/the-monster.webp",
+    width: 1672, height: 941,
+    alt: "A teenager seen from behind amid an anonymous crowd in a neon-lit city square",
+  },
   miav: {
     src: "/images/miav/miav-og.png",
     width: 1280, height: 720,

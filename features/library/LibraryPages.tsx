@@ -105,7 +105,15 @@ export function FlashFictionPage() {
               title={piece.title}
               meta={`${piece.minutes} min read`}
               description={piece.blurb}
-              image={piece.slug === "after-the-rain" ? EDITORIAL_ART.afterRain : undefined}
+              image={
+                piece.slug === "after-the-rain"
+                  ? EDITORIAL_ART.afterRain
+                  : piece.slug === "the-day-i-couldnt-find-anyone"
+                    ? EDITORIAL_ART.dayCouldntFindAnyone
+                    : piece.slug === "lost-property"
+                      ? EDITORIAL_ART.lostProperty
+                      : undefined
+              }
             />
           ))}
         </div>
