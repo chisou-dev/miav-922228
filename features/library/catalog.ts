@@ -14,7 +14,6 @@ import {
   after50MillionSummary,
   after50MillionWorkId,
 } from "@/features/stories/after-50-million/work";
-import { AFTER_50_MILLION_HERO } from "@/features/stories/after-50-million/visual";
 import {
   nextTimeISeeYouChapters,
   nextTimeISeeYouGenre,
@@ -359,12 +358,7 @@ export const seriesList: readonly Series[] = [
     genre: "Literary Fiction",
     language: "English",
     previewNote: after50MillionPreviewNote,
-    cover: {
-      src: AFTER_50_MILLION_HERO.path,
-      width: AFTER_50_MILLION_HERO.width,
-      height: AFTER_50_MILLION_HERO.height,
-      alt: AFTER_50_MILLION_HERO.alt,
-    },
+    cover: EDITORIAL_ART.after50Million,
     seo: {
       title: `After ¥50 Million | ${AUTHOR_NAME}`,
       description: after50MillionSummary,

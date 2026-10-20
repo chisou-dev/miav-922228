@@ -15,19 +15,19 @@ export const EDITORIAL_ART = {
     alt: "A quiet Japanese side street and a warm restaurant lantern at dusk",
   },
   japan8000hz: {
-    src: "/images/editorial/japan-8000hz.svg",
-    width: 1200, height: 675,
-    alt: "An almost empty railway platform with a red signal",
+    src: "/images/editorial/japan-8000hz.webp",
+    width: 1672, height: 941,
+    alt: "A rain-dark Japanese railway platform at dusk with a red signal",
   },
   fourthPeriod: {
-    src: "/images/editorial/fourth-period.svg",
-    width: 1200, height: 675,
-    alt: "An empty classroom in the late afternoon",
+    src: "/images/editorial/fourth-period.webp",
+    width: 1672, height: 941,
+    alt: "An empty classroom illuminated by the setting sun",
   },
   nextTimeISeeYou: {
-    src: "/images/editorial/next-time-i-see-you.svg",
-    width: 1200, height: 675,
-    alt: "A red ribbon suspended against a quiet blue sky",
+    src: "/images/editorial/next-time-i-see-you.webp",
+    width: 1672, height: 941,
+    alt: "A red ribbon and letter on a piano beside a twilight window",
   },
   miav: {
     src: "/images/miav/miav-og.png",
@@ -35,8 +35,8 @@ export const EDITORIAL_ART = {
     alt: "MIAV-922228 representative artwork",
   },
   after50Million: {
-    src: "/images/after-50-million/after-50-million-hero.png",
+    src: "/images/editorial/after-50-million.webp",
     width: 1672, height: 941,
-    alt: "A blue balloon against a cloudy sky — After ¥50 Million",
+    alt: "A blue balloon rising alone through sunlit clouds — After ¥50 Million",
   },
 } as const;
