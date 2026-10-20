@@ -10,9 +10,9 @@ export const EDITORIAL_ART = {
     alt: "An empty bookshop street reflected in the pavement after rain",
   },
   jeff: {
-    src: "/images/editorial/jeff.svg",
-    width: 1200, height: 675,
-    alt: "A quiet Japanese side street and a warm restaurant lantern at dusk",
+    src: "/images/editorial/jeff.webp",
+    width: 1672, height: 941,
+    alt: "Jeff overlooking airplanes from an airport observation deck in bright morning light",
   },
   japan8000hz: {
     src: "/images/editorial/japan-8000hz.webp",
