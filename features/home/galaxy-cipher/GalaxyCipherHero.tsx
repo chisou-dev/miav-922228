@@ -35,12 +35,12 @@ function mix(a: number, b: number, u: number): number {
   return a + (b - a) * u;
 }
 
-function pathAt(points: Point[], fraction: number): Point {
+function pathAt(points: Point[], times: number[], fraction: number): Point {
   if (points.length < 2) return points[0] ?? { x: 0, y: 0 };
-  const span = points.length - 1;
-  const at = Math.min(span - 0.00001, Math.max(0, fraction * span));
-  const i = Math.floor(at);
-  const t = at - i;
+  let i = 0;
+  while (i < times.length - 2 && fraction >= times[i + 1]) i += 1;
+  const t = Math.max(0, Math.min(1,
+    (fraction - times[i]) / Math.max(0.001, times[i + 1] - times[i])));
   const p0 = points[Math.max(0, i - 1)];
   const p1 = points[i];
   const p2 = points[i + 1];
@@ -182,6 +182,7 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
     let radius = 18;
     let targets: Target[] = [];
     let points: Point[] = [];
+    let pathTimes: number[] = [];
     let fired = new Set<number>();
     let loop = -1;
     let sparks: Spark[] = [];
@@ -216,8 +217,8 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       const titleChars = chars.filter((node) => node.dataset.galaxyGlyph === "title");
       const taglineChars = chars.filter((node) => node.dataset.galaxyGlyph === "tagline");
       const chosen = [
-        titleChars[1], titleChars[4], taglineChars[2], titleChars[8],
-        taglineChars[8], titleChars[10], taglineChars[14], taglineChars[19],
+        titleChars[1], taglineChars[8], titleChars[5], taglineChars[2],
+        titleChars[8], taglineChars[14], titleChars[3], taglineChars[19],
       ].filter((v): v is HTMLSpanElement => !!v);
       targets = chosen.map((glyph) => {
         const rect = glyph.getBoundingClientRect();
@@ -226,9 +227,10 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       });
       const anchor = targets[0] ?? { x: Math.min(50, width / 2), y: radius + 4 };
       // First and last points coincide: seamless 3-minute loop.
-      points = [ { x: anchor.x - radius * 1.5, y: anchor.y - radius * 1.4 },
-        ...targets.map(({ x, y }) => ({ x, y })),
-        { x: anchor.x - radius * 1.5, y: anchor.y - radius * 1.4 } ];
+      const start = { x: Math.max(radius * 1.9, anchor.x - radius * 1.5),
+        y: Math.max(radius * 1.8, anchor.y - radius * 1.4) };
+      points = [start, ...targets.map(({ x, y }) => ({ x, y })), start];
+      pathTimes = [0, ...ABSORB_AT.slice(0, targets.length), 1];
       resetGlyphs();
       sparks = [];
       fired = new Set();
@@ -268,7 +270,7 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
         fired = new Set();
       }
       const phase = (elapsed % CYCLE_MS) / CYCLE_MS;
-      const orb = pathAt(points, phase);
+      const orb = pathAt(points, pathTimes, phase);
       ABSORB_AT.forEach((fraction, index) => {
         if (phase >= fraction && !fired.has(index) && targets[index]) {
           fired.add(index);
@@ -297,10 +299,13 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
     };
     const onPreference = () => {
       if (preference.matches) {
+        cancelAnimationFrame(frameId);
+        frameId = 0;
         ctx.clearRect(0, 0, width, height);
         resetGlyphs();
       } else {
         measure();
+        if (!frameId) frameId = requestAnimationFrame(tick);
       }
     };
 
