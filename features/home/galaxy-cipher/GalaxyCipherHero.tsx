@@ -54,97 +54,172 @@ function pathAt(points: Point[], times: number[], fraction: number): Point {
     y: catmull(p0.y, p1.y, p2.y, p3.y) };
 }
 
-function drawGalaxy(ctx: CanvasRenderingContext2D, center: Point, radius: number, seconds: number, flash: number) {
+
+type Quat = { w: number; x: number; y: number; z: number };
+type GalaxyStar = { x: number; y: number; z: number; alpha: number; size: number; color: number };
+const INITIAL_ATTITUDE: Quat = { w: 0.983, x: 0.15, y: 0.11, z: 0.02 };
+
+// Spiral arms built once: uneven densities, a central bulge and wispy dust lanes.
+// All stars are projected through the same quaternion, making the disk turn edge-on.
+const GALAXY_STARS: GalaxyStar[] = (() => {
+  const result: GalaxyStar[] = [];
+  const rand = (n: number) => {
+    const v = Math.sin(n * 127.1 + 74.7) * 43758.5453123;
+    return v - Math.floor(v);
+  };
+  for (let i = 0; i < 950; i += 1) {
+    const arm = i % 2;
+    const r = 0.07 + Math.pow(rand(i + 19), 0.83) * 0.83;
+    const armAngle = arm * Math.PI + 5.25 * r + (rand(i * 4 + 15) - 0.5) * (0.21 + r * 0.65);
+    const offset = (rand(i * 7 + 26) - 0.5) * 0.08;
+    result.push({
+      x: Math.cos(armAngle) * r + offset, y: Math.sin(armAngle) * r + offset,
+      z: (rand(i * 5 + 41) - 0.5) * (0.055 + (1 - r) * 0.075),
+      alpha: 0.26 + rand(i * 3 + 33) * 0.73,
+      size: i % 29 === 0 ? 1.4 : i % 9 === 0 ? 0.95 : 0.43,
+      color: i % 15 === 0 ? 2 : i % 7 === 0 ? 1 : 0,
+    });
+  }
+  for (let i = 0; i < 185; i += 1) {
+    const r = Math.pow(rand(i + 1101), 1.8) * 0.38;
+    const a = rand(i + 1320) * TAU;
+    result.push({
+      x: r * Math.cos(a), y: r * Math.sin(a),
+      z: (rand(i * 7 + 1440) - 0.5) * (0.25 - r * 0.3),
+      alpha: 0.36 + rand(i * 2 + 1520) * 0.53,
+      size: i % 13 === 0 ? 1.1 : 0.48,
+      color: i % 6 === 0 ? 2 : 0,
+    });
+  }
+  return result;
+})();
+
+function multiplyQuat(a: Quat, b: Quat): Quat {
+  return {
+    w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+    x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+    y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+    z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+  };
+}
+
+function normalizeQuat(q: Quat): Quat {
+  const length = Math.hypot(q.w, q.x, q.y, q.z) || 1;
+  return { w: q.w / length, x: q.x / length, y: q.y / length, z: q.z / length };
+}
+
+function rotate3(q: Quat, x: number, y: number, z: number): [number, number, number] {
+  const tx = 2 * (q.y * z - q.z * y);
+  const ty = 2 * (q.z * x - q.x * z);
+  const tz = 2 * (q.x * y - q.y * x);
+  return [x + q.w * tx + (q.y * tz - q.z * ty),
+    y + q.w * ty + (q.z * tx - q.x * tz),
+    z + q.w * tz + (q.x * ty - q.y * tx)];
+}
+
+function rollGalaxy(q: Quat, dx: number, dy: number, radius: number): Quat {
+  const distance = Math.hypot(dx, dy);
+  if (distance < 0.001) return q;
+  const angle = Math.min(0.10, distance / Math.max(12, radius) * 0.95);
+  const h = angle / 2;
+  const s = Math.sin(h) / distance;
+  // Sphere rolling without sliding: screen-plane travel produces 3D rotation.
+  return normalizeQuat(multiplyQuat({ w: Math.cos(h), x: dy * s, y: -dx * s, z: 0 }, q));
+}
+
+function drawGalaxy(
+  ctx: CanvasRenderingContext2D, center: Point, radius: number,
+  attitude: Quat, seconds: number, flash: number,
+) {
   const r = radius;
   const x = center.x;
   const y = center.y;
   ctx.save();
 
-  // Light beyond the glass, with no solid rectangle around the orb.
-  const halo = ctx.createRadialGradient(x, y, r * 0.4, x, y, r * 1.9);
-  halo.addColorStop(0, "rgba(105,202,255,0.17)");
-  halo.addColorStop(0.5, "rgba(65,153,240,0.11)");
-  halo.addColorStop(1, "rgba(52,125,235,0)");
+  const halo = ctx.createRadialGradient(x, y, r * 0.2, x, y, r * 2);
+  halo.addColorStop(0, "rgba(135,212,255,0.20)");
+  halo.addColorStop(0.38, "rgba(70,154,251,0.13)");
+  halo.addColorStop(1, "rgba(70,154,251,0)");
   ctx.fillStyle = halo;
-  ctx.beginPath();
-  ctx.arc(x, y, r * 1.9, 0, TAU);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r * 2, 0, TAU); ctx.fill();
 
   ctx.translate(x, y);
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, TAU);
-  ctx.clip();
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.clip();
 
-  const glass = ctx.createRadialGradient(-r * 0.29, -r * 0.37, r * 0.08, 0, 0, r * 1.18);
-  glass.addColorStop(0, "#224a80");
-  glass.addColorStop(0.32, "#071b47");
-  glass.addColorStop(0.7, "#050c2b");
-  glass.addColorStop(1, "#020a14");
-  ctx.fillStyle = glass;
-  ctx.fillRect(-r, -r, r * 2, r * 2);
+  // A transparent sphere with deep-space material, not a decorative flat icon.
+  const glass = ctx.createRadialGradient(-r * 0.34, -r * 0.35, r * 0.06, 0, 0, r * 1.04);
+  glass.addColorStop(0, "#173257");
+  glass.addColorStop(0.45, "#030e25");
+  glass.addColorStop(0.86, "#020713");
+  glass.addColorStop(1, "#05172b");
+  ctx.fillStyle = glass; ctx.fillRect(-r, -r, r * 2, r * 2);
 
-  // Inclined spiral plane; dust arms and stars rotate independently of the orb's path.
-  ctx.save();
-  ctx.rotate(seconds * 0.065);
-  ctx.scale(1, 0.65);
-  for (let arm = 0; arm < 3; arm += 1) {
-    ctx.beginPath();
-    for (let j = 0; j <= 85; j += 1) {
-      const u = j / 85;
-      const a = arm * TAU / 3 + u * 4.9;
-      const radial = (0.1 + u * 0.84) * r;
-      if (j === 0) ctx.moveTo(Math.cos(a) * radial, Math.sin(a) * radial);
-      else ctx.lineTo(Math.cos(a) * radial, Math.sin(a) * radial);
+  // Slow spin about the galaxy's OWN normal, independent of rolling attitude.
+  const spin = seconds * 0.055;
+  const q = multiplyQuat(attitude, { w: Math.cos(spin / 2), x: 0, y: 0, z: Math.sin(spin / 2) });
+
+  // Two broad, uneven photo-like nebulous spiral arms. Project every point
+  // individually; when edge-on this naturally collapses to a thin streak.
+  ctx.globalCompositeOperation = "screen";
+  for (let arm = 0; arm < 2; arm += 1) {
+    for (let stripe = -2; stripe <= 2; stripe += 1) {
+      ctx.beginPath();
+      for (let j = 0; j <= 72; j += 1) {
+        const t = j / 72;
+        const radial = 0.12 + t * 0.72;
+        const angle = arm * Math.PI + 5.25 * radial + stripe * 0.052;
+        const [px, py] = rotate3(q, Math.cos(angle) * radial, Math.sin(angle) * radial, 0);
+        if (j === 0) ctx.moveTo(px * r * 0.91, py * r * 0.91);
+        else ctx.lineTo(px * r * 0.91, py * r * 0.91);
+      }
+      const alpha = stripe === 0 ? 0.23 : stripe === -1 || stripe === 1 ? 0.12 : 0.065;
+      ctx.strokeStyle = arm === 0
+        ? "rgba(104,182,252," + alpha + ")"
+        : "rgba(173,151,255," + alpha + ")";
+      ctx.lineWidth = Math.max(1.4, r * 0.11);
+      ctx.lineCap = "round";
+      ctx.stroke();
     }
-    ctx.strokeStyle = arm === 0 ? "rgba(145,202,255,0.19)" : "rgba(136,110,245,0.13)";
-    ctx.lineWidth = r * 0.2;
-    ctx.lineCap = "round";
-    ctx.stroke();
   }
 
-  // Stable, fine-grained particles: deterministic, no flickering random positions.
-  for (let i = 0; i < 245; i += 1) {
-    const u = (i + 0.5) / 245;
-    const arm = i % 3;
-    const theta = arm * TAU / 3 + u * 5.8 + Math.sin(i * 78.233) * 0.34;
-    const radial = Math.sqrt(u) * r * (0.15 + 0.75 * (0.5 + 0.5 * Math.sin(i * 14.7)));
-    const px = Math.cos(theta) * radial;
-    const py = Math.sin(theta) * radial;
-    const size = (i % 17 === 0 ? 1.15 : 0.44) * Math.max(0.6, r / 20);
-    ctx.fillStyle = i % 8 === 0 ? "rgba(233,214,255,0.85)" :
-      i % 5 === 0 ? "rgba(153,207,255,0.86)" : "rgba(227,243,255,0.67)";
-    ctx.beginPath();
-    ctx.arc(px, py, size, 0, TAU);
-    ctx.fill();
+  // Stars live inside the disk and bulge; all share the same 3D attitude.
+  // A few separate larger bright points prevent the galaxy reading as paint.
+  for (const star of GALAXY_STARS) {
+    const [sx, sy, sz] = rotate3(q, star.x, star.y, star.z);
+    const depth = 1 + sz * 0.13;
+    const px = sx * r * 0.94;
+    const py = sy * r * 0.94;
+    const rr = Math.max(0.3, star.size * (r / 38) * depth);
+    const alpha = Math.max(0.1, Math.min(0.96, star.alpha * (0.8 + sz * 0.22)));
+    ctx.fillStyle = star.color === 2
+      ? "rgba(250,226,236," + alpha + ")"
+      : star.color === 1
+        ? "rgba(160,188,255," + alpha + ")"
+        : "rgba(224,244,255," + alpha + ")";
+    ctx.beginPath(); ctx.arc(px, py, rr, 0, TAU); ctx.fill();
   }
-  ctx.restore();
+  ctx.globalCompositeOperation = "source-over";
 
-  const core = ctx.createRadialGradient(-r * 0.06, -r * 0.07, 0, 0, 0, r * 0.48);
-  core.addColorStop(0, "rgba(250,253,255," + (0.94 + flash * 0.06) + ")");
-  core.addColorStop(0.18, "rgba(175,226,255,0.93)");
-  core.addColorStop(0.48, "rgba(96,169,250,0.28)");
-  core.addColorStop(1, "rgba(66,129,238,0)");
-  ctx.fillStyle = core;
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.5, 0, TAU);
-  ctx.fill();
+  const nucleus = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.32);
+  nucleus.addColorStop(0, "rgba(250,253,255," + (0.92 + flash * 0.07) + ")");
+  nucleus.addColorStop(0.14, "rgba(219,244,255,0.9)");
+  nucleus.addColorStop(0.44, "rgba(135,208,255,0.42)");
+  nucleus.addColorStop(1, "rgba(95,147,246,0)");
+  ctx.fillStyle = nucleus;
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.34, 0, TAU); ctx.fill();
 
-  // Specular highlights / rim refraction make this read as glass, not a blue disk.
+  // Subtle glass lens: keep the silhouette of the disk readable.
+  const rim = ctx.createLinearGradient(-r, -r, r, r);
+  rim.addColorStop(0, "rgba(232,250,255,0.88)");
+  rim.addColorStop(0.3, "rgba(112,199,255,0.14)");
+  rim.addColorStop(0.68, "rgba(53,128,255,0.18)");
+  rim.addColorStop(1, "rgba(229,249,255,0.71)");
+  ctx.strokeStyle = rim;
+  ctx.lineWidth = Math.max(1.1, r * 0.055);
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.955, 0, TAU); ctx.stroke();
   ctx.beginPath();
-  ctx.ellipse(-r * 0.34, -r * 0.47, r * 0.29, r * 0.115, -0.73, 0, TAU);
-  ctx.fillStyle = "rgba(246,254,255,0.45)";
-  ctx.fill();
-  const shade = ctx.createLinearGradient(-r, -r, r, r);
-  shade.addColorStop(0, "rgba(243,253,255,0.73)");
-  shade.addColorStop(0.28, "rgba(138,200,252,0.18)");
-  shade.addColorStop(0.72, "rgba(67,152,235,0.16)");
-  shade.addColorStop(1, "rgba(211,246,255,0.65)");
-  ctx.strokeStyle = shade;
-  ctx.lineWidth = Math.max(0.9, r * 0.075);
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.95, 0, TAU);
-  ctx.stroke();
-
+  ctx.ellipse(-r * 0.41, -r * 0.53, r * 0.25, r * 0.078, -0.69, 0, TAU);
+  ctx.fillStyle = "rgba(251,254,255,0.32)"; ctx.fill();
   ctx.restore();
 }
 
@@ -179,7 +254,10 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
     let frameId = 0;
     let width = 0;
     let height = 0;
-    let radius = 18;
+    let radius = 24;
+    let attitude: Quat = { ...INITIAL_ATTITUDE };
+    let lastOrb: Point | null = null;
+    let influenced = new Set<HTMLSpanElement>();
     let targets: Target[] = [];
     let points: Point[] = [];
     let pathTimes: number[] = [];
@@ -198,6 +276,12 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
         glyph.style.removeProperty("--galaxy-pull-y");
       });
       hidden.clear();
+      for (const node of influenced) {
+        node.classList.remove("galaxy-cipher-glyph--gravity");
+        node.style.removeProperty("--galaxy-gravity-x");
+        node.style.removeProperty("--galaxy-gravity-y");
+      }
+      influenced.clear();
     };
 
     const measure = () => {
@@ -211,7 +295,7 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       const heading = container.querySelector("h1");
       const size = heading ? parseFloat(getComputedStyle(heading).fontSize) : 36;
-      radius = Math.max(10, Math.min(30, size * 0.39));
+      radius = Math.max(20, Math.min(48, size * 0.60));
 
       const chars = Array.from(container.querySelectorAll<HTMLSpanElement>("[data-galaxy-glyph]"));
       const titleChars = chars.filter((node) => node.dataset.galaxyGlyph === "title");
@@ -242,15 +326,19 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       fired = new Set();
       loop = -1;
       begin = performance.now();
+      attitude = { ...INITIAL_ATTITUDE };
+      lastOrb = null;
     };
 
     const absorb = (target: Target, now: number, index: number, orb: Point) => {
       const glyph = target.glyph;
       glyph.style.setProperty("--galaxy-pull-x", (orb.x - target.x) * 0.55 + "px");
       glyph.style.setProperty("--galaxy-pull-y", (orb.y - target.y) * 0.55 + "px");
+      // The glyph remains intact at first, then stretches and gradually
+      // dissolves. Nearby letters are distorted without disappearing.
       glyph.classList.add("galaxy-cipher-glyph--absorbed");
-      hidden.set(glyph, now + 1780);
-      const count = 42;
+      hidden.set(glyph, now + 2400);
+      const count = 88;
       for (let i = 0; i < count; i += 1) {
         // Dust emerges from the original letter's silhouette area.
         const a = Math.sin((i + 3 + index * 9) * 53.517) * 43758.5453;
@@ -277,6 +365,41 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       }
       const phase = (elapsed % CYCLE_MS) / CYCLE_MS;
       const orb = pathAt(points, pathTimes, phase);
+      if (lastOrb) attitude = rollGalaxy(attitude, orb.x - lastOrb.x, orb.y - lastOrb.y, radius);
+      lastOrb = orb;
+
+      // Local gravitational tide: adjacent glyphs lean toward the orb, then
+      // return elastically. Do not alter layout or block links.
+      const nextInfluenced = new Set<HTMLSpanElement>();
+      const activeChars = Array.from(container.querySelectorAll<HTMLSpanElement>("[data-galaxy-glyph]"));
+      for (let i = 0; i < targets.length; i += 1) {
+        const distance = Math.abs(phase - ABSORB_AT[i]);
+        if (distance > 0.022) continue;
+        const strength = Math.sin(Math.PI * (1 - distance / 0.022));
+        const glyphIndex = activeChars.indexOf(targets[i].glyph);
+        for (let offset = -1; offset <= 1; offset += 1) {
+          const neighbor = activeChars[glyphIndex + offset];
+          if (!neighbor || hidden.has(neighbor)) continue;
+          const rect = neighbor.getBoundingClientRect();
+          const host = container.getBoundingClientRect();
+          const gx = rect.left - host.left + rect.width / 2;
+          const gy = rect.top - host.top + rect.height / 2;
+          const scale = offset === 0 ? 0.18 : 0.12;
+          const dx = Math.max(-8, Math.min(8, (orb.x - gx) * scale * strength));
+          const dy = Math.max(-6, Math.min(6, (orb.y - gy) * scale * strength));
+          neighbor.style.setProperty("--galaxy-gravity-x", dx.toFixed(2) + "px");
+          neighbor.style.setProperty("--galaxy-gravity-y", dy.toFixed(2) + "px");
+          neighbor.classList.add("galaxy-cipher-glyph--gravity");
+          nextInfluenced.add(neighbor);
+        }
+      }
+      for (const node of influenced) {
+        if (nextInfluenced.has(node)) continue;
+        node.classList.remove("galaxy-cipher-glyph--gravity");
+        node.style.removeProperty("--galaxy-gravity-x");
+        node.style.removeProperty("--galaxy-gravity-y");
+      }
+      influenced = nextInfluenced;
       ABSORB_AT.forEach((fraction, index) => {
         if (phase >= fraction && !fired.has(index) && targets[index]) {
           fired.add(index);
@@ -293,7 +416,7 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       ctx.clearRect(0, 0, width, height);
       drawSparks(ctx, sparks, orb, now, radius);
       const flash = sparks.length > 0 ? 1 : 0;
-      drawGalaxy(ctx, orb, radius, now / 1000, flash);
+      drawGalaxy(ctx, orb, radius, attitude, now / 1000, flash);
     };
 
     const onVisibility = () => {
