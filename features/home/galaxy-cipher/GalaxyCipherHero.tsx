@@ -229,7 +229,13 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
       // First and last points coincide: seamless 3-minute loop.
       const start = { x: Math.max(radius * 1.9, anchor.x - radius * 1.5),
         y: Math.max(radius * 1.8, anchor.y - radius * 1.4) };
-      points = [start, ...targets.map(({ x, y }) => ({ x, y })), start];
+      points = [start, ...targets.map(({ x, y }, index) => ({
+        // Skim the glyph's edge instead of covering its center, so the
+        // character visibly stretches toward the moving glass sphere.
+        x: Math.max(radius * 1.15, Math.min(width - radius * 1.15,
+          x + (index % 2 === 0 ? 0.62 : -0.62) * radius)),
+        y: Math.max(radius * 1.1, Math.min(height - radius * 1.1, y)),
+      })), start];
       pathTimes = [0, ...ABSORB_AT.slice(0, targets.length), 1];
       resetGlyphs();
       sparks = [];
