@@ -459,7 +459,7 @@ export function GalaxyCipherHero({ title, tagline, teaser }: Props) {
   return (
     <div ref={containerRef} className="galaxy-cipher-field">
       <div className="flex items-start gap-4 sm:gap-5">
-        <h1 aria-label={title} className="galaxy-cipher-title min-w-0 flex-1 text-[clamp(1.75rem,6.2vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
+        <h1 aria-label={title} className="galaxy-cipher-title min-w-0 flex-1 text-[clamp(1.9rem,6.5vw,4.55rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
           {glyphs(title, "title")}
         </h1>
         {teaser}
