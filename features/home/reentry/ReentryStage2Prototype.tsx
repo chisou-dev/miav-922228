@@ -371,7 +371,10 @@ export function ReentryStage2Prototype({
     try {
       if(window.sessionStorage.getItem("miav-stage2-pc-help-v1")==="1")return;
     } catch {/* Private browsing may disable storage. */}
-    setHelp(true);
+    // Defer the initial hint to the next paint; never synchronize React
+    // state directly inside an effect body.
+    const frame=window.requestAnimationFrame(()=>setHelp(true));
+    return()=>window.cancelAnimationFrame(frame);
   },[]);
   const dismissHelp=()=>{
     setHelp(false);
