@@ -603,7 +603,7 @@ export function ReentryStage2Prototype({
         <p className="mt-1">Altitude: drag the pad up or down, or use ↑ / ↓. Release to hold.</p>
         <p className="mt-1">Cruise speed: hold the top or bottom of SPEED, or W / S. Release to maintain speed.</p>
         <p className="mt-1">Optical zoom: + / − buttons or keyboard + / −.</p>
-        <p className="mt-2 text-cyan-100/70">Blood is consumed in flight. The optical monitor closes automatically near a shoreline. Press ? to reopen this guide.</p>
+        <p className="mt-2 text-cyan-100/70">Blood is consumed in flight. The optical monitor closes automatically near a shoreline. Press ? to reopen this guide. On short screens, scroll the right-side panel to reach SPEED.</p>
       </section>
     </div>}
 
@@ -623,10 +623,10 @@ export function ReentryStage2Prototype({
         <span>WIND {wind.arrow} {wind.strength}</span>
         <span>HDG {Math.round(hud.heading)}°</span>
       </div>
-      <div className="flex items-center justify-between px-2 py-1.5">
-        <button type="button" className={ctrl+" px-3 py-1"} onClick={zoomOut} disabled={zoomIndex===0} aria-label="Zoom out">−</button>
-        <span className="font-mono text-[.56rem] text-cyan-100/75">OPTICAL ZOOM</span>
-        <button type="button" className={ctrl+" px-3 py-1"} onClick={zoomIn} disabled={zoomIndex===STAGE2_ZOOMS.length-1} aria-label="Zoom in">+</button>
+      <div className="flex items-center justify-between gap-1 px-1 py-1.5">
+        <button type="button" className={ctrl+" px-2 py-1"} onClick={zoomOut} disabled={zoomIndex===0} aria-label="Zoom out">−</button>
+        <span className="font-mono text-[.56rem] text-cyan-100/75"><span className="hidden sm:inline">OPTICAL ZOOM</span><span className="sm:hidden">ZOOM</span></span>
+        <button type="button" className={ctrl+" px-2 py-1"} onClick={zoomIn} disabled={zoomIndex===STAGE2_ZOOMS.length-1} aria-label="Zoom in">+</button>
       </div>
     </div>
       <div className="pointer-events-none flex w-full shrink-0 items-center gap-2 rounded-md border border-rose-200/45 bg-[#1b0710]/90 px-2 py-2 shadow-xl"
@@ -663,7 +663,7 @@ export function ReentryStage2Prototype({
       )}
     </div>
 
-    <div className="pointer-events-none absolute left-3 top-[7.6rem] z-[92] w-fit max-w-[45%] rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[7.6rem]">
+    <div className="pointer-events-auto absolute left-3 top-[7.6rem] z-[92] w-fit max-w-[45%] max-h-[calc(100%-20rem)] overflow-y-auto rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[7.6rem]">
       <div className="font-semibold tracking-widest text-cyan-50">STAGE 2</div>
       <div>SPD {speed.toFixed(1)} m/s · SET {hud.targetSpeed.toFixed(1)}</div>
       <div>ALT {hud.altitude.toFixed(1)} m · SET {hud.targetAltitude.toFixed(1)}</div>
@@ -692,7 +692,7 @@ export function ReentryStage2Prototype({
 
 
     {!hud.outcome&&<div className="absolute left-3 bottom-[6%] z-[95] flex items-end sm:bottom-[7%] sm:left-8"
-      role="group" aria-label="Two-thumb hovercraft flight controls">
+      role="group" aria-label="Direction and altitude flight pad">
       <div className="rounded-xl border border-cyan-100/20 bg-[#031823]/90 p-2">
         <div className="mb-1 text-center font-mono text-[.50rem] tracking-[.12em] text-cyan-100/70">TURN / ALT</div>
         <div role="group" aria-label="Analog direction pad: left and right turn, up ascends, down descends"
