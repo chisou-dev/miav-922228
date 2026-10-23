@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { SiteShell } from "@/features/shared/SiteShell";
+import { GalaxyCipherHero } from "@/features/home/galaxy-cipher/GalaxyCipherHero";
 import { SfSection } from "@/features/shared/SfSection";
 import { CosmicMorseDivider } from "@/features/shared/cosmic-morse";
 import { gamesLibraryUrl } from "@/features/core/gamesUrl";
@@ -39,15 +40,7 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
 
   const heroCopy = (
     <>
-      <div className="flex items-start gap-4 sm:gap-5">
-        <h1 className="min-w-0 flex-1 text-[clamp(1.75rem,6.2vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
-          {t("home.brand")}
-        </h1>
-        <ReentryHeroTeaser />
-      </div>
-      <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:mt-9 sm:text-lg sm:leading-8">
-        {t("home.tagline")}
-      </p>
+      <GalaxyCipherHero title={t("home.brand")} tagline={t("home.tagline")} teaser={<ReentryHeroTeaser />} />
       <p className="mt-7 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2]">
         {t("home.lead")}
       </p>
