@@ -2989,8 +2989,9 @@ function drawStage1ClearSequence(
     (STAGE1_CLEAR_HOLD_END_S - STAGE1_BOARD_COMPLETE_S));
   const glideT = smoothstep((escapeAge - STAGE1_CLEAR_HOLD_END_S) /
     (STAGE1_GLIDE_END_S - STAGE1_CLEAR_HOLD_END_S));
+  // ESCAPE_EXIT is on the real contact clock; escapeAge is delay-adjusted.
   const dashT = clamp01((escapeAge - STAGE1_GLIDE_END_S) /
-    (STAGE1_ESCAPE_EXIT_S - STAGE1_GLIDE_END_S));
+    (STAGE1_ESCAPE_EXIT_S - STAGE1_ESCAPE_DELAY_S - STAGE1_GLIDE_END_S));
   const dash = dashT * dashT * dashT;
   const minSide = Math.min(w, h);
   const landedTilt = Math.max(-0.16, Math.min(
