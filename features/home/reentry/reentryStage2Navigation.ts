@@ -163,10 +163,12 @@ export function stepStage2(
   const launched=old.launched || targetSpeed>0.06;
   const bank=old.bank+(sx*.18-old.bank)*Math.min(1,step*3.8);
   const speedBefore=Math.hypot(old.vx,old.vy);
-  // A little bow-up posture at speed; stronger when accelerating.
+  // Acceleration changes the bow attitude, NOT the flight altitude.
+  // Limit the tilt to a small 5-degree movement, so POWER feels like
+  // forward thrust rather than an invisible climb command.
+  const forwardAcceleration=Math.max(0,targetSpeed-speedBefore);
   const liftGoal=clamp(
-    (targetSpeed>speedBefore?targetSpeed-speedBefore:0)*.017+
-    targetSpeed/14*.045,0,.15);
+    forwardAcceleration*.006+(targetSpeed/14)*.018,0,.085);
   const noseLift=old.noseLift+(liftGoal-old.noseLift)*Math.min(1,step*2.8);
   if(!launched) {
     return {...old,heading,targetAltitude,bank,noseLift,throttle:0,targetSpeed:0};
@@ -197,10 +199,12 @@ export function stepStage2(
     vy=vy*drag+Math.cos(windRad)*gust*step;
   }
 
-  const wave=Math.sin(seconds*2.9+old.x*0.033)*0.12;
+  // Height follows the vertical stick's altitude setpoint only. In particular,
+  // POWER must not kick off a vertical oscillation when the craft launches.
+  // Water surface movement stays in the visual renderer, not flight height.
   const heightDifference=targetAltitude-old.altitude;
   const verticalAcceleration=old.blood>0
-    ? clamp(heightDifference*1.90-old.verticalSpeed*1.90+wave*.1,-3.8,3.8)
+    ? clamp(heightDifference*1.90-old.verticalSpeed*1.90,-3.8,3.8)
     : -1.50-old.verticalSpeed*0.10;
   const verticalSpeed=clamp(old.verticalSpeed+verticalAcceleration*step,-3.9,3.4);
   const altitude=old.altitude+verticalSpeed*step;
