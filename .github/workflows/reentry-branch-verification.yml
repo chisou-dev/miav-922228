@@ -1,0 +1,21 @@
+name: Reentry branch verification
+on:
+  push:
+    branches:
+      - fix/reentry-stage1-stage2-controls-20261023
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx eslint features/home/reentry/ReentryPresentationCanvas.tsx features/home/reentry/reentryStageTimeline.ts features/home/reentry/ReentryStage2Prototype.tsx
+      - run: npm run build
