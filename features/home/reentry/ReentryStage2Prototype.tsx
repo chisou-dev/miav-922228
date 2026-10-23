@@ -183,13 +183,15 @@ function drawSeascape(
   for(const island of STAGE2_ISLANDS)drawIsland(ctx,w,h,s,island,people,zoom,time,optic);
 }
 
-function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav):void {
+function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav,time:number):void {
   const m=Math.min(w,h);
   // Vessel is the SAME Stage 1 escape skiff (not the damaged landing hull).
   const size=m*.19;
   const speed=Math.hypot(s.vx,s.vy);
   const altitudeShift=clamp((s.altitude-2.05)*h*.038,-h*.055,h*.37);
-  const bob=Math.sin(s.seconds*2.8)*Math.max(.7,2.2-s.altitude*.1);
+  // Ocean bob is continuously animated before and after POWER is pressed.
+  // It must not start suddenly when targetSpeed changes from zero.
+  const bob=Math.sin(time*1.45)*.42;
   const x=w*.50;
   const y=h*.79-altitudeShift+bob;
   const seaY=h*.85;
@@ -249,6 +251,67 @@ function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2N
       }
       ctx.restore();
     }
+  }
+
+  // The same airy departure feeling as the Stage 1 skiff, now driven by
+  // Stage 2's actual forward motion and commanded cruise power (0..14 m/s).
+  // A high POWER setting alone cannot create a stationary full-speed wake:
+  // the translucent ribbons lengthen as the real speed catches up.
+  const cruisePower=clamp(s.targetSpeed/14,0,1);
+  const travel=clamp((speed-0.7)/13.3,0,1);
+  const slip=travel*(.35+.65*cruisePower);
+  if(s.outcome===null && slip>.008){
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    const tailX=x-size*.71;
+    const tailY=y+size*.045;
+    // A soft distortion bloom under the stern; no hard-edged exhaust cone.
+    const wakeGlow=ctx.createRadialGradient(
+      tailX-size*.18,tailY,0,
+      tailX-size*.18,tailY,size*(.28+slip*.95),
+    );
+    wakeGlow.addColorStop(0,"rgba(174,232,240,"+(slip*.115)+")");
+    wakeGlow.addColorStop(.42,"rgba(138,222,236,"+(slip*.035)+")");
+    wakeGlow.addColorStop(1,"rgba(138,222,236,0)");
+    ctx.save();
+    ctx.translate(tailX-size*.20,tailY);
+    ctx.scale(1,.28);
+    ctx.translate(-tailX+size*.20,-tailY);
+    ctx.fillStyle=wakeGlow;
+    ctx.beginPath();
+    ctx.arc(tailX-size*.18,tailY,size*(.28+slip*.95),0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // Each curved streamline evolves at a different phase, matching the
+    // varied, fleeting air currents during the Stage 1 departure.
+    for(let i=0;i<9;i++){
+      const offset=((i*.6180339887+.23)%1)-.5;
+      const phase=(time*(.30+slip*1.50)+i*.173)%1;
+      const trailLength=size*(.18+slip*1.38)*(.75+.42*Math.abs(offset));
+      const startX=tailX-size*(.035+phase*.17);
+      const startY=tailY+offset*size*(.18+slip*.10);
+      const curve=offset*size*(.04+slip*.20);
+      const fade=slip*(1-phase)*(.048+.024*(i%3));
+      const trail=ctx.createLinearGradient(
+        startX,startY,startX-trailLength,startY+curve,
+      );
+      trail.addColorStop(0,"rgba(208,245,246,0)");
+      trail.addColorStop(.18,"rgba(191,239,241,"+fade+")");
+      trail.addColorStop(.62,"rgba(153,221,232,"+(fade*.6)+")");
+      trail.addColorStop(1,"rgba(153,221,232,0)");
+      ctx.beginPath();
+      ctx.moveTo(startX,startY);
+      ctx.bezierCurveTo(
+        startX-trailLength*.25,startY+curve*.32,
+        startX-trailLength*.76,startY+curve*.85,
+        startX-trailLength,startY+curve,
+      );
+      ctx.strokeStyle=trail;
+      ctx.lineWidth=Math.max(.65,m*(.0011+slip*.0016));
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // Both attitudes are smoothed in the physics state. Turning right
@@ -439,7 +502,7 @@ export function ReentryStage2Prototype({
       const c=createCanvasScale(main);
       ctx.setTransform(c.dpr,0,0,c.dpr,0,0);
       drawSeascape(ctx,c.w,c.h,sim,peopleRef.current,1,now/1000,false);
-      drawHovercraft(ctx,c.w,c.h,sim);
+      drawHovercraft(ctx,c.w,c.h,sim,now/1000);
       if(sim.outcome==="NOSE"||sim.outcome==="MOUTH"){
         const entryT=clamp((now-(resultBeganAt.current??now))/1050,0,1);
         ctx.fillStyle="rgba(1,7,17,"+(entryT*.76)+")";
