@@ -4927,6 +4927,7 @@ export function ReentryPresentationCanvas({
     phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
     powerNorm, variant, assistMode,
   });
+  // eslint-disable-next-line react-hooks/refs -- Preserve existing RAF prop synchronization without altering frame cadence.
   presentationRef.current = {
     phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
     powerNorm, variant, assistMode,
