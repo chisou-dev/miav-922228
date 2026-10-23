@@ -40,6 +40,7 @@ import {
   spaceInboundDurationMs,
   successLandingT,
   STAGE1_SPLASH_S,
+  STAGE1_ESCAPE_DELAY_S,
   STAGE1_ABSORB_START_S,
   STAGE1_ABSORB_END_S,
   STAGE1_BOARD_COMPLETE_S,
@@ -1268,26 +1269,42 @@ function drawAlienRaisedTentacle(
   targetY: number,
   alpha: number,
 ): { x: number; y: number } {
-  const p = smoothstep(progress);
+  // Root bends first, elbow follows, and the thinner tip catches up last.
+  // Different phase offsets keep the two arms from forming mirrored rods.
+  const rootP = smoothstep(progress);
+  const tipP = smoothstep((progress - (side === 1 ? 0.12 : 0.22)) /
+    (side === 1 ? 0.88 : 0.78));
   const rootX = x + side * scale * 0.20;
   const rootY = y - scale * 0.13;
-  const endX = mix(x + side * scale * 0.43, targetX, p);
-  const endY = mix(y + scale * 0.20, targetY, p);
+  const endX = mix(x + side * scale * 0.43, targetX, tipP);
+  const endY = mix(y + scale * 0.20, targetY, tipP);
   const rootR = scale * 0.084;
-  const bendX = rootX + (endX - rootX) * 0.40 - side * scale * 0.13;
-  const bendY = rootY + (endY - rootY) * 0.38 + scale * 0.18;
-
-  // Tapered soft arm, not a straight yellow line.
+  const sway = Math.sin(progress * (side === 1 ? 4.1 : 3.3) +
+    (side === 1 ? 0.35 : 1.7)) * scale * 0.065 * rootP;
+  const elbowX = rootX + (endX - rootX) * 0.43 -
+    side * scale * (0.18 + 0.10 * rootP) + sway;
+  const elbowY = rootY + (endY - rootY) * 0.41 +
+    scale * (0.17 - 0.045 * rootP);
   const arm = new Path2D();
   arm.moveTo(rootX - rootR, rootY);
   arm.bezierCurveTo(
-    rootX - rootR * 1.25, rootY - scale * 0.14 * p,
-    bendX - rootR * 0.65, bendY,
+    rootX - rootR * 1.1, rootY + scale * 0.14,
+    elbowX - side * scale * 0.055, elbowY - scale * 0.12,
+    elbowX, elbowY
+  );
+  arm.bezierCurveTo(
+    elbowX + side * scale * 0.13, elbowY + scale * 0.055,
+    endX - side * scale * 0.15, endY + scale * 0.12,
     endX, endY
   );
   arm.bezierCurveTo(
-    bendX + rootR * 0.36, bendY + scale * 0.045,
-    rootX + rootR * 1.26, rootY + scale * 0.11,
+    endX - side * scale * 0.09, endY + scale * 0.035,
+    elbowX + rootR * 0.35, elbowY + scale * 0.13,
+    elbowX + rootR * 0.75, elbowY + scale * 0.08
+  );
+  arm.bezierCurveTo(
+    rootX + rootR * 1.1, rootY + scale * 0.12,
+    rootX + rootR * 1.2, rootY + scale * 0.055,
     rootX + rootR, rootY
   );
   arm.closePath();
@@ -1304,8 +1321,8 @@ function drawAlienRaisedTentacle(
   ctx.save();
   ctx.clip(arm);
   const wet = ctx.createRadialGradient(
-    bendX - side * scale * 0.045, bendY - scale * 0.035, 0,
-    bendX - side * scale * 0.045, bendY - scale * 0.035, scale * 0.23
+    elbowX - side * scale * 0.045, elbowY - scale * 0.035, 0,
+    elbowX - side * scale * 0.045, elbowY - scale * 0.035, scale * 0.23
   );
   wet.addColorStop(0, "rgba(255,200,219,0.43)");
   wet.addColorStop(0.30, "rgba(76,213,245,0.33)");
@@ -1321,6 +1338,7 @@ function drawAlienRaisedTentacle(
   ctx.restore();
   return { x: endX, y: endY };
 }
+
 function drawAlienFluidVehicleFormation(
   ctx: CanvasRenderingContext2D,
   startX: number,
@@ -2947,31 +2965,33 @@ function drawStage1ClearSequence(
    */
   // Stage 1 escape is playback driven: the squid rises, creates the skiff,
   // boards its deck, lifts both arms and draws in the original craft.
-  const hatchOpen = smoothstep((splashAge - 1.2) / 1.4);
-  const alienRise = smoothstep((splashAge - 2.6) / 2.6);
-  const climbCraft = smoothstep((splashAge - 5.2) / 1.6);
-  const pointGesture = smoothstep((splashAge - 6.8) / 0.80) *
-    (1 - smoothstep((splashAge - 9.3) / 0.50));
-  const vehicleFormation = smoothstep((splashAge - 6.8) / 3.0);
+  const escapeAge = splashAge - STAGE1_ESCAPE_DELAY_S;
+  const hatchOpen = smoothstep((escapeAge - 1.2) / 1.4);
+  const alienRise = smoothstep((escapeAge - 2.6) / 2.6);
+  const climbCraft = smoothstep((escapeAge - 5.2) / 1.6);
+  const pointGesture = smoothstep((escapeAge - 6.8) / 0.80) *
+    (1 - smoothstep((escapeAge - 9.3) / 0.50));
+  const vehicleFormation = smoothstep((escapeAge - 6.8) / 3.0);
   // The old 1s move covered most of the distance to the skiff. A longer
   // eased approach prevents the rider appearing to teleport when FPS dips.
-  const boardApproach = smoothstep((splashAge - 9.8) /
+  const boardApproach = smoothstep((escapeAge - 9.8) /
     (STAGE1_ABSORB_START_S - 9.8));
-  const absorbT = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
+  const absorbT = smoothstep((escapeAge - STAGE1_ABSORB_START_S) /
     (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
   // The squid stands ON the skiff and visibly recovers the original hull.
   // Afterwards, feet and then the mantle descend through the black hatch.
-  const enterT = smoothstep((splashAge - STAGE1_ABSORB_END_S) / 1.0);
-  const hatchClose = smoothstep((splashAge - (STAGE1_BOARD_COMPLETE_S - 0.5)) / 0.5);
+  const enterT = smoothstep((escapeAge - STAGE1_ABSORB_END_S) / 1.0);
+  const hatchClose = smoothstep((escapeAge - (STAGE1_BOARD_COMPLETE_S - 0.5)) / 0.5);
 
   // Left near the screen edge, then deliberate travel to its midpoint.
   // The final 1.4s carries the EMPTY exterior rapidly beyond the right edge.
-  const leftT = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) /
+  const leftT = smoothstep((escapeAge - STAGE1_BOARD_COMPLETE_S) /
     (STAGE1_CLEAR_HOLD_END_S - STAGE1_BOARD_COMPLETE_S));
-  const glideT = smoothstep((splashAge - STAGE1_CLEAR_HOLD_END_S) /
+  const glideT = smoothstep((escapeAge - STAGE1_CLEAR_HOLD_END_S) /
     (STAGE1_GLIDE_END_S - STAGE1_CLEAR_HOLD_END_S));
-  const dashT = clamp01((splashAge - STAGE1_GLIDE_END_S) /
-    (STAGE1_ESCAPE_EXIT_S - STAGE1_GLIDE_END_S));
+  // ESCAPE_EXIT is on the real contact clock; escapeAge is delay-adjusted.
+  const dashT = clamp01((escapeAge - STAGE1_GLIDE_END_S) /
+    (STAGE1_ESCAPE_EXIT_S - STAGE1_ESCAPE_DELAY_S - STAGE1_GLIDE_END_S));
   const dash = dashT * dashT * dashT;
   const minSide = Math.min(w, h);
   const landedTilt = Math.max(-0.16, Math.min(
@@ -2979,7 +2999,8 @@ function drawStage1ClearSequence(
   ));
   const skiffRoll = mix(-0.08, -0.21, leftT) +
     glideT * 0.14 - dash * 0.18;
-  const parentTilt = mix(landedTilt, skiffRoll, boardApproach);
+  const parentTilt = mix(landedTilt, skiffRoll, boardApproach) +
+    Math.sin(escapeAge * 1.04 + 0.4) * 0.055 * alienRise * (1 - enterT);
   const flightScale = mix(1, 0.82, dash);
   const alienScale = minSide * 0.034;
 
@@ -2988,8 +3009,10 @@ function drawStage1ClearSequence(
     Math.cos(landedCraftPose.angle) * minSide * 0.041;
   const hatchY = landedCraftPose.y -
     Math.sin(landedCraftPose.angle) * minSide * 0.041;
-  const emergeX = hatchX + Math.sin(landedTilt) * minSide * 0.015;
-  const emergeY = hatchY + minSide * mix(0.036, -0.028, alienRise);
+  const emergeX = hatchX + Math.sin(landedTilt) * minSide * 0.015 +
+    Math.sin(escapeAge * 1.15) * minSide * 0.003 * alienRise;
+  const emergeY = hatchY + minSide * mix(0.036, -0.028, alienRise) +
+    Math.sin(escapeAge * 1.8 + seed * 0.01) * minSide * 0.002 * alienRise;
   const topX = landedCraftPose.x + minSide * 0.028;
   const topY = landedCraftPose.y - minSide * 0.060;
   const sourceAlienX = mix(emergeX, topX, climbCraft);
@@ -2997,7 +3020,7 @@ function drawStage1ClearSequence(
 
   const skiffRestX = craftX + minSide * 0.245;
   const skiffRestY = waterY - minSide * 0.038 +
-    Math.sin(splashAge * 2.2 + seed * 0.002) * minSide * 0.004;
+    Math.sin(escapeAge * 2.2 + seed * 0.002) * minSide * 0.004;
   const leftX = Math.max(minSide * 0.14, w * 0.10);
   const middleX = w * 0.50;
   const glideX = mix(mix(skiffRestX, leftX, leftT), middleX, glideT);
@@ -3015,7 +3038,7 @@ function drawStage1ClearSequence(
   const boardY = mix(sourceAlienY, entranceY, boardApproach) - boardingHop +
     enterT * minSide * 0.138;
   // The actual opening clips the body; no fading or shrinking to disappear.
-  const alienAlpha = alienRise;
+  const alienAlpha = alienRise * hatchOpen;
   const raisedTentacle = (
     side: -1 | 1, progress: number, targetX: number, targetY: number,
   ): { x: number; y: number } => {
@@ -3033,25 +3056,8 @@ function drawStage1ClearSequence(
       y: boardY + tip.x * sin + tip.y * cos };
   };
 
-  // The rear hatch opening and two soft, gripping limbs are connected to
-  // the floating craft. Nothing appears independently in midair.
-  if (hatchOpen > 0 && alienRise > 0 && climbCraft < 0.98) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(105,222,168," +
-      (0.85 * alienRise * (1 - climbCraft)) + ")";
-    ctx.lineWidth = Math.max(0.9, minDim * 0.0038);
-    ctx.lineCap = "round";
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(boardX + side * alienScale * 0.12, boardY + alienScale * 0.15);
-      ctx.quadraticCurveTo(
-        hatchX + side * minDim * 0.028, hatchY - minDim * 0.011,
-        hatchX + side * minDim * 0.012, hatchY + minDim * 0.004,
-      );
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  // The creature levitates under its own power; no appendage anchors it
+  // to the hatch or gives the impression of being pulled out.
 
   // At the rear hatch the creature is occluded by the solid fuselage.
   // At the hovercraft, only the portion above the black entrance is visible:
@@ -3101,7 +3107,7 @@ function drawStage1ClearSequence(
     );
     drawSalvageFilaments(
       ctx, landedCraftPose.x, landedCraftPose.y,
-      leftTip, rightTip, absorbT, splashAge, minDim, seed,
+      leftTip, rightTip, absorbT, escapeAge, minDim, seed,
     );
   }
 
@@ -3163,7 +3169,7 @@ function drawStage1ClearSequence(
   }
 
   // CLEAR appears only on completed boarding, and never fades out.
-  const clearAlpha = smoothstep((splashAge - STAGE1_BOARD_COMPLETE_S) / 0.45);
+  const clearAlpha = smoothstep((escapeAge - STAGE1_BOARD_COMPLETE_S) / 0.45);
 
   if (
     clearAlpha <=
@@ -4921,6 +4927,7 @@ export function ReentryPresentationCanvas({
     phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
     powerNorm, variant, assistMode,
   });
+  // eslint-disable-next-line react-hooks/refs -- Preserve existing RAF prop synchronization without altering frame cadence.
   presentationRef.current = {
     phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
     powerNorm, variant, assistMode,
@@ -5316,7 +5323,7 @@ export function ReentryPresentationCanvas({
         variant === "stage" &&
         phase === "flight" &&
         outcome === "EARTH_REACHED" &&
-        timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S + STAGE1_BOARD_COMPLETE_S
+        timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S + STAGE1_ESCAPE_DELAY_S + STAGE1_BOARD_COMPLETE_S
       ) {
         const clearAudioKey =
           `${result?.seed ?? 0}:stage1-clear`;
@@ -5929,7 +5936,7 @@ const failureTravelT =
       if (outcome === "EARTH_REACHED" && latched && !miss &&
           timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S) {
         const splashAge = timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S;
-        const salvage = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
+        const salvage = smoothstep((splashAge - STAGE1_ESCAPE_DELAY_S - STAGE1_ABSORB_START_S) /
           (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
         // The six liquid filaments first pull the FULL hull up out of the
         // water, before it shrinks toward the two raised hands.
@@ -6037,7 +6044,7 @@ const failureTravelT =
           timeSinceVisualAtmosphereEntryS > STAGE1_SPLASH_S &&
           // Stop sea masking once the recovery threads begin lifting the hull.
           timeSinceVisualAtmosphereEntryS <
-            STAGE1_SPLASH_S + STAGE1_ABSORB_START_S + 0.65;
+            STAGE1_SPLASH_S + STAGE1_ESCAPE_DELAY_S + STAGE1_ABSORB_START_S + 0.65;
 
         ctx.save();
         if (submerging) {
@@ -6055,7 +6062,7 @@ const failureTravelT =
             timeSinceVisualAtmosphereEntryS >= STAGE1_SPLASH_S) {
           const age = timeSinceVisualAtmosphereEntryS - STAGE1_SPLASH_S;
           drawRearCraftHatch(ctx, pose, craftLength,
-            smoothstep((age - 1.2) / 1.4));
+            smoothstep((age - (1.2 + STAGE1_ESCAPE_DELAY_S)) / 1.4));
         }
         ctx.restore();
       }

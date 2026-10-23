@@ -183,13 +183,15 @@ function drawSeascape(
   for(const island of STAGE2_ISLANDS)drawIsland(ctx,w,h,s,island,people,zoom,time,optic);
 }
 
-function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav):void {
+function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2Nav,time:number):void {
   const m=Math.min(w,h);
   // Vessel is the SAME Stage 1 escape skiff (not the damaged landing hull).
   const size=m*.19;
   const speed=Math.hypot(s.vx,s.vy);
   const altitudeShift=clamp((s.altitude-2.05)*h*.038,-h*.055,h*.37);
-  const bob=Math.sin(s.seconds*2.8)*Math.max(.7,2.2-s.altitude*.1);
+  // Ocean bob is continuously animated before and after POWER is pressed.
+  // It must not start suddenly when targetSpeed changes from zero.
+  const bob=Math.sin(time*1.45)*.42;
   const x=w*.50;
   const y=h*.79-altitudeShift+bob;
   const seaY=h*.85;
@@ -251,6 +253,67 @@ function drawHovercraft(ctx:CanvasRenderingContext2D,w:number,h:number,s:Stage2N
     }
   }
 
+  // The same airy departure feeling as the Stage 1 skiff, now driven by
+  // Stage 2's actual forward motion and commanded cruise power (0..14 m/s).
+  // A high POWER setting alone cannot create a stationary full-speed wake:
+  // the translucent ribbons lengthen as the real speed catches up.
+  const cruisePower=clamp(s.targetSpeed/14,0,1);
+  const travel=clamp((speed-0.7)/13.3,0,1);
+  const slip=travel*(.35+.65*cruisePower);
+  if(s.outcome===null && slip>.008){
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    const tailX=x-size*.71;
+    const tailY=y+size*.045;
+    // A soft distortion bloom under the stern; no hard-edged exhaust cone.
+    const wakeGlow=ctx.createRadialGradient(
+      tailX-size*.18,tailY,0,
+      tailX-size*.18,tailY,size*(.28+slip*.95),
+    );
+    wakeGlow.addColorStop(0,"rgba(174,232,240,"+(slip*.115)+")");
+    wakeGlow.addColorStop(.42,"rgba(138,222,236,"+(slip*.035)+")");
+    wakeGlow.addColorStop(1,"rgba(138,222,236,0)");
+    ctx.save();
+    ctx.translate(tailX-size*.20,tailY);
+    ctx.scale(1,.28);
+    ctx.translate(-tailX+size*.20,-tailY);
+    ctx.fillStyle=wakeGlow;
+    ctx.beginPath();
+    ctx.arc(tailX-size*.18,tailY,size*(.28+slip*.95),0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // Each curved streamline evolves at a different phase, matching the
+    // varied, fleeting air currents during the Stage 1 departure.
+    for(let i=0;i<9;i++){
+      const offset=((i*.6180339887+.23)%1)-.5;
+      const phase=(time*(.30+slip*1.50)+i*.173)%1;
+      const trailLength=size*(.18+slip*1.38)*(.75+.42*Math.abs(offset));
+      const startX=tailX-size*(.035+phase*.17);
+      const startY=tailY+offset*size*(.18+slip*.10);
+      const curve=offset*size*(.04+slip*.20);
+      const fade=slip*(1-phase)*(.048+.024*(i%3));
+      const trail=ctx.createLinearGradient(
+        startX,startY,startX-trailLength,startY+curve,
+      );
+      trail.addColorStop(0,"rgba(208,245,246,0)");
+      trail.addColorStop(.18,"rgba(191,239,241,"+fade+")");
+      trail.addColorStop(.62,"rgba(153,221,232,"+(fade*.6)+")");
+      trail.addColorStop(1,"rgba(153,221,232,0)");
+      ctx.beginPath();
+      ctx.moveTo(startX,startY);
+      ctx.bezierCurveTo(
+        startX-trailLength*.25,startY+curve*.32,
+        startX-trailLength*.76,startY+curve*.85,
+        startX-trailLength,startY+curve,
+      );
+      ctx.strokeStyle=trail;
+      ctx.lineWidth=Math.max(.65,m*(.0011+slip*.0016));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   // Both attitudes are smoothed in the physics state. Turning right
   // banks right; accelerating gently raises the nose, then settles level.
   ctx.save();
@@ -302,6 +365,7 @@ export function ReentryStage2Prototype({
   const stickPointerRef=useRef<number|null>(null);
   const [stage3Notice,setStage3Notice]=useState(false);
   const [help,setHelp]=useState(false);
+  const keysHeld=useRef<Set<string>>(new Set());
   const [opticGone,setOpticGone]=useState(false);
   const opticGoneRef=useRef(false);
   const [assistedTestClear,setAssistedTestClear]=useState(false);
@@ -320,6 +384,66 @@ export function ReentryStage2Prototype({
       window.clearTimeout(headerTaps.current.timer);
     stopStage2CabinAudio();
   }, []);
+  // PC keyboard complements pointer controls; neither changes the physics API.
+  // The controls never capture browser modifier shortcuts or text inputs.
+  useEffect(()=>{
+    const flightKeys=new Set([
+      "ArrowLeft","ArrowRight","ArrowUp","ArrowDown",
+      "KeyA","KeyD","KeyW","KeyS",
+    ]);
+    const zoomPlus=new Set(["Equal","NumpadAdd"]);
+    const zoomMinus=new Set(["Minus","NumpadSubtract"]);
+    const keydown=(e:KeyboardEvent)=>{
+      if(e.ctrlKey||e.metaKey||e.altKey)return;
+      const target=e.target;
+      if(target instanceof HTMLElement &&
+         (target.isContentEditable||["INPUT","TEXTAREA","SELECT"].includes(target.tagName)))return;
+      if(flightKeys.has(e.code)){
+        e.preventDefault();keysHeld.current.add(e.code);
+      } else if(zoomPlus.has(e.code)||zoomMinus.has(e.code)){
+        e.preventDefault();
+        if(!e.repeat){
+          resumeStage2CabinAudio();
+          setZoomIndex(i=>clamp(i+(zoomPlus.has(e.code)?1:-1),0,STAGE2_ZOOMS.length-1));
+        }
+      } else if(e.code==="Escape"){
+        setHelp(false);
+      }
+    };
+    const keyup=(e:KeyboardEvent)=>{
+      if(flightKeys.has(e.code)){
+        keysHeld.current.delete(e.code);e.preventDefault();
+      }
+    };
+    const release=()=>{keysHeld.current.clear();};
+    window.addEventListener("keydown",keydown);
+    window.addEventListener("keyup",keyup);
+    window.addEventListener("blur",release);
+    return()=>{
+      release();
+      window.removeEventListener("keydown",keydown);
+      window.removeEventListener("keyup",keyup);
+      window.removeEventListener("blur",release);
+    };
+  },[]);
+  // A tab-local hint only: it does not touch the saved stage or achievements.
+  useEffect(()=>{
+    const desktop=window.matchMedia("(pointer: fine)").matches ||
+      window.innerWidth>=900;
+    if(!desktop)return;
+    try {
+      if(window.sessionStorage.getItem("miav-stage2-pc-help-v1")==="1")return;
+    } catch {/* Private browsing may disable storage. */}
+    // Defer the initial hint to the next paint; never synchronize React
+    // state directly inside an effect body.
+    const frame=window.requestAnimationFrame(()=>setHelp(true));
+    return()=>window.cancelAnimationFrame(frame);
+  },[]);
+  const dismissHelp=()=>{
+    setHelp(false);
+    try{window.sessionStorage.setItem("miav-stage2-pc-help-v1","1");}
+    catch {/* Saving the hint must never affect play. */}
+  };
   useEffect(()=>{zoomRef.current=STAGE2_ZOOMS[zoomIndex];},[zoomIndex]);
   useEffect(()=>{
     const refresh=()=>{
@@ -340,6 +464,15 @@ export function ReentryStage2Prototype({
       if(!previous)previous=now;
       const dt=Math.min(.05,Math.max(0,(now-previous)/1000));
       previous=now;
+      const held=keysHeld.current;
+      if(stickPointerRef.current===null){
+        inputRef.current.steerX=Number(held.has("ArrowRight")||held.has("KeyD"))-
+          Number(held.has("ArrowLeft")||held.has("KeyA"));
+        inputRef.current.steerY=Number(held.has("ArrowUp"))-Number(held.has("ArrowDown"));
+      }
+      if(!pressingThrust.current){
+        inputRef.current.thrust=Number(held.has("KeyW"))-Number(held.has("KeyS"));
+      }
       simRef.current=stepStage2(simRef.current,inputRef.current,dt,peopleRef.current);
       const sim=simRef.current;
       if(sim.outcome) {
@@ -369,7 +502,7 @@ export function ReentryStage2Prototype({
       const c=createCanvasScale(main);
       ctx.setTransform(c.dpr,0,0,c.dpr,0,0);
       drawSeascape(ctx,c.w,c.h,sim,peopleRef.current,1,now/1000,false);
-      drawHovercraft(ctx,c.w,c.h,sim);
+      drawHovercraft(ctx,c.w,c.h,sim,now/1000);
       if(sim.outcome==="NOSE"||sim.outcome==="MOUTH"){
         const entryT=clamp((now-(resultBeganAt.current??now))/1050,0,1);
         ctx.fillStyle="rgba(1,7,17,"+(entryT*.76)+")";
@@ -455,6 +588,7 @@ export function ReentryStage2Prototype({
     stopThrust();
     clearStick();
     inputRef.current={...baseKeys};
+    keysHeld.current.clear();
     simRef.current=initialStage2Nav();
     setHud({...simRef.current});
     opticGoneRef.current=false;
@@ -517,21 +651,32 @@ export function ReentryStage2Prototype({
     </button>
     <div className="absolute left-3 top-[4.35rem] z-[96] flex gap-2 sm:left-5">
       <button type="button" onClick={onClose} className={ctrl+" px-3 py-1.5"}>BACK</button>
-      <button type="button" onClick={()=>setHelp(v=>!v)}
+      <button type="button" onClick={()=>help?dismissHelp():setHelp(true)}
         className={ctrl+" px-3 py-1.5"} aria-label="Controls help">?</button>
     </div>
     {opticGone&&<p className="pointer-events-none absolute right-4 top-[4.65rem] z-[94] rounded border border-cyan-100/30 bg-[#082533]/70 px-2 py-1 font-mono text-[.54rem] tracking-wider">VISUAL CONTACT</p>}
-    {help&&<div className="absolute left-3 top-[7.65rem] z-[97] max-w-[17rem] rounded bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl">
-      Drag the circular pad toward the direction you want to steer.
-      Drag the left stick up and down to change flight altitude, and release
-      to hold that height. Turn sideways to steer. Hold the upper part of
-      SPEED to increase cruise speed, or the lower part to slow down.
-      Release SPEED to maintain that cruising speed. Blood is consumed
-      during flight, faster at high speed and extra when changing height.
-      A fly-by that misses the island is reported as a failed approach.
+    {help&&<div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/25 px-3 py-6 pointer-events-none">
+      <section role="dialog" aria-modal="false" aria-label="Stage 2 controls"
+        className="pointer-events-auto w-[min(94vw,21rem)] max-h-full overflow-y-auto rounded-lg border border-cyan-200/40 bg-[#061f2a]/95 p-4 text-[.73rem] leading-5 text-cyan-50 shadow-2xl backdrop-blur-md">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <strong className="font-mono tracking-[.12em]">FLIGHT CONTROLS</strong>
+          <button type="button" className={ctrl+" px-3 py-1"} onClick={dismissHelp}>CLOSE ×</button>
+        </div>
+        <p>Turn: drag TURN / ALT left or right, or use ← / → or A / D.</p>
+        <p className="mt-1">Altitude: drag the pad up or down, or use ↑ / ↓. Release to hold.</p>
+        <p className="mt-1">Cruise speed: hold the top or bottom of SPEED, or W / S. Release to maintain speed.</p>
+        <p className="mt-1">Optical zoom: + / − buttons or keyboard + / −.</p>
+        <p className="mt-2 text-cyan-100/70">Blood is consumed in flight. The optical monitor closes automatically near a shoreline. Press ? to reopen this guide. On short screens, scroll the right-side panel to reach SPEED.</p>
+      </section>
     </div>}
 
-    <div className={"absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] transition-opacity duration-1000 "+(opticGone?"pointer-events-none opacity-0":"opacity-100")+" sm:right-5"}
+
+
+    {/* One scrollable instrument column keeps optics, blood and speed from
+        ever covering one another, including zoomed and landscape layouts. */}
+    <div role="group" aria-label="Optics, blood and cruise speed"
+      className="absolute right-2 top-[5.2rem] bottom-7 z-[95] flex w-[min(44vw,17rem)] min-w-[8rem] flex-col items-stretch gap-2 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 sm:right-5 sm:w-[min(34vw,17rem)]">
+    <div className={"w-full shrink-0 overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] transition-opacity duration-1000 "+(opticGone?"hidden":"opacity-100")+""}
       aria-hidden={opticGone}>
       <div className="flex items-center justify-between border-b border-cyan-100/20 px-2 py-1 font-mono text-[.52rem] tracking-wider">
         <span>COCKPIT · OPTICS</span><span>{STAGE2_ZOOMS[zoomIndex]}×</span>
@@ -541,14 +686,47 @@ export function ReentryStage2Prototype({
         <span>WIND {wind.arrow} {wind.strength}</span>
         <span>HDG {Math.round(hud.heading)}°</span>
       </div>
-      <div className="flex items-center justify-between px-2 py-1.5">
-        <button type="button" className={ctrl+" px-3 py-1"} onClick={zoomOut} disabled={zoomIndex===0} aria-label="Zoom out">−</button>
-        <span className="font-mono text-[.56rem] text-cyan-100/75">OPTICAL ZOOM</span>
-        <button type="button" className={ctrl+" px-3 py-1"} onClick={zoomIn} disabled={zoomIndex===STAGE2_ZOOMS.length-1} aria-label="Zoom in">+</button>
+      <div className="flex items-center justify-between gap-1 px-1 py-1.5">
+        <button type="button" className={ctrl+" px-2 py-1"} onClick={zoomOut} disabled={zoomIndex===0} aria-label="Zoom out">−</button>
+        <span className="font-mono text-[.56rem] text-cyan-100/75"><span className="hidden sm:inline">OPTICAL ZOOM</span><span className="sm:hidden">ZOOM</span></span>
+        <button type="button" className={ctrl+" px-2 py-1"} onClick={zoomIn} disabled={zoomIndex===STAGE2_ZOOMS.length-1} aria-label="Zoom in">+</button>
       </div>
     </div>
+      <div className="pointer-events-none flex w-full shrink-0 items-center gap-2 rounded-md border border-rose-200/45 bg-[#1b0710]/90 px-2 py-2 shadow-xl"
+        role="meter" aria-label="Blood reserve" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(hud.blood*100)}>
+        <span className="font-mono text-[.55rem] font-bold text-rose-200">BLOOD</span>
+        <div className="relative h-2 min-w-0 flex-1 overflow-hidden rounded-sm border border-rose-200/30 bg-[#2b0915]">
+          <div className="h-full bg-gradient-to-r from-[#7c0f28] via-[#c7304f] to-[#f68489] transition-[width] duration-150"
+            style={{width:(hud.blood*100)+"%"}}/>
+          <div className="absolute inset-y-0 left-[33.33%] border-l border-dashed border-white/65"/>
+        </div>
+        <span className="font-mono text-[.61rem] font-bold tabular-nums text-rose-100">{Math.round(hud.blood*100)}%</span>
+      </div>
+      {!hud.outcome&&(
+      <div className="flex w-full shrink-0 flex-col items-center gap-1 rounded-xl border border-rose-200/25 bg-[#031823]/85 p-2">
+        <div className="font-mono text-[.52rem] tracking-wide text-rose-100/85">CRUISE SPEED</div>
+        <button type="button"
+          className="relative h-28 w-20 touch-none overflow-hidden rounded-xl border border-rose-100/70 bg-gradient-to-b from-[#bc6340] via-[#7e324a] to-[#301536] text-rose-50 shadow-lg active:brightness-125 sm:h-32 sm:w-24"
+          aria-label="Hold upper lever to speed up or lower lever to slow down; release to maintain speed"
+          onPointerDown={startThrust}
+          onPointerMove={e=>{if(pressingThrust.current)updateSpeedLever(e);}}
+          onPointerUp={stopThrust} onPointerCancel={stopThrust}
+          onLostPointerCapture={stopThrust}>
+          <span className="pointer-events-none absolute left-1 top-2 font-mono text-[.48rem]">▲ FASTER</span>
+          <span className="pointer-events-none absolute inset-x-2 top-1/2 border-t border-rose-100/35"/>
+          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold"
+            style={{bottom:"calc("+(thrustView*72+10)+"% - 11px)"}}>●</span>
+          <span className="pointer-events-none absolute bottom-1 left-1 font-mono text-[.48rem]">▼ SLOWER</span>
+        </button>
+        <div className="font-mono text-[.53rem] font-semibold text-rose-100">
+          {hud.targetSpeed.toFixed(1)} m/s
+        </div>
+        <div className="font-mono text-[.46rem] text-cyan-100/70">RELEASE = HOLD SPEED</div>
+      </div>
+      )}
+    </div>
 
-    <div className="pointer-events-none absolute inset-x-3 top-[7.6rem] z-[92] w-fit max-w-[52%] rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[7.6rem]">
+    <div className="pointer-events-auto absolute left-3 top-[7.6rem] z-[92] w-fit max-w-[45%] max-h-[calc(100%-20rem)] overflow-y-auto rounded bg-[#052130]/65 px-2 py-1.5 font-mono text-[.56rem] leading-5 tabular-nums sm:left-5 sm:top-[7.6rem]">
       <div className="font-semibold tracking-widest text-cyan-50">STAGE 2</div>
       <div>SPD {speed.toFixed(1)} m/s · SET {hud.targetSpeed.toFixed(1)}</div>
       <div>ALT {hud.altitude.toFixed(1)} m · SET {hud.targetAltitude.toFixed(1)}</div>
@@ -574,23 +752,10 @@ export function ReentryStage2Prototype({
       </div>
     </div>
 
-    {/* The vital blood reserve is much easier to read as a long vertical
-        column at the right edge. At one third remaining the coast begins
-        to become distinguishable from the empty ocean. */}
-    <div className="pointer-events-none absolute right-1 top-[46%] bottom-[29%] z-[94] flex w-11 flex-col items-center gap-1 rounded-md border border-rose-200/45 bg-[#1b0710]/90 px-1 py-2 shadow-xl sm:right-3 sm:w-14"
-      role="meter" aria-label="Blood reserve" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(hud.blood*100)}>
-      <div className="font-mono text-[.50rem] font-bold tracking-[.05em] text-rose-200">BLOOD</div>
-      <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-sm border border-rose-200/30 bg-[#2b0915]">
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#7c0f28] via-[#c7304f] to-[#f68489] transition-[height] duration-150"
-          style={{height:(hud.blood*100)+"%"}}/>
-        <div className="absolute inset-x-0 top-[66.67%] border-t border-dashed border-white/65"/>
-        <div className="absolute inset-x-0 top-[33.33%] border-t border-white/20"/>
-      </div>
-      <div className="font-mono text-[.70rem] font-bold tabular-nums text-rose-100">{Math.round(hud.blood*100)}%</div>
-    </div>
 
-    {!hud.outcome&&<div className="absolute inset-x-0 bottom-[6%] z-[95] flex items-end justify-between gap-3 px-3 sm:bottom-[7%] sm:px-8"
-      role="group" aria-label="Two-thumb hovercraft flight controls">
+
+    {!hud.outcome&&<div className="absolute left-3 bottom-[6%] z-[95] flex items-end sm:bottom-[7%] sm:left-8"
+      role="group" aria-label="Direction and altitude flight pad">
       <div className="rounded-xl border border-cyan-100/20 bg-[#031823]/90 p-2">
         <div className="mb-1 text-center font-mono text-[.50rem] tracking-[.12em] text-cyan-100/70">TURN / ALT</div>
         <div role="group" aria-label="Analog direction pad: left and right turn, up ascends, down descends"
@@ -610,26 +775,7 @@ export function ReentryStage2Prototype({
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center gap-1 rounded-xl border border-rose-200/25 bg-[#031823]/85 p-2">
-        <div className="font-mono text-[.52rem] tracking-wide text-rose-100/85">CRUISE SPEED</div>
-        <button type="button"
-          className="relative h-28 w-20 touch-none overflow-hidden rounded-xl border border-rose-100/70 bg-gradient-to-b from-[#bc6340] via-[#7e324a] to-[#301536] text-rose-50 shadow-lg active:brightness-125 sm:h-32 sm:w-24"
-          aria-label="Hold upper lever to speed up or lower lever to slow down; release to maintain speed"
-          onPointerDown={startThrust}
-          onPointerMove={e=>{if(pressingThrust.current)updateSpeedLever(e);}}
-          onPointerUp={stopThrust} onPointerCancel={stopThrust}
-          onLostPointerCapture={stopThrust}>
-          <span className="pointer-events-none absolute left-1 top-2 font-mono text-[.48rem]">▲ FASTER</span>
-          <span className="pointer-events-none absolute inset-x-2 top-1/2 border-t border-rose-100/35"/>
-          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 font-mono text-lg font-bold"
-            style={{bottom:"calc("+(thrustView*72+10)+"% - 11px)"}}>●</span>
-          <span className="pointer-events-none absolute bottom-1 left-1 font-mono text-[.48rem]">▼ SLOWER</span>
-        </button>
-        <div className="font-mono text-[.53rem] font-semibold text-rose-100">
-          {hud.targetSpeed.toFixed(1)} m/s
-        </div>
-        <div className="font-mono text-[.46rem] text-cyan-100/70">RELEASE = HOLD SPEED</div>
-      </div>
+
     </div>}
 
     {hud.outcome&&(resultReady || !clear)&&<div className="absolute inset-x-2 bottom-[13%] z-[96] flex flex-col items-center gap-3 text-center">
