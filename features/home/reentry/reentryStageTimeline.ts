@@ -25,12 +25,15 @@ export const SPACE_MISS_DURATION_MS =
 // The craft completes its descent at 15s. Start the spray just before
 // contact (approximately one CSS pixel at normal playback), not 0.85s early.
 export const STAGE1_SPLASH_S = 14.98;
+// Shift only the post-contact escape choreography; keep impact physics untouched.
+// Hatch starts opening 5.0s after water contact (formerly 1.2s).
+export const STAGE1_ESCAPE_DELAY_S = 3.8;
 export const STAGE1_ABSORB_START_S = 12.0;
 export const STAGE1_ABSORB_END_S = 15.4;
 export const STAGE1_BOARD_COMPLETE_S = 16.9;
 export const STAGE1_CLEAR_HOLD_END_S = 18.7;
 export const STAGE1_GLIDE_END_S = 21.2;
-export const STAGE1_ESCAPE_EXIT_S = 22.7;
+export const STAGE1_ESCAPE_EXIT_S = 22.7 + STAGE1_ESCAPE_DELAY_S;
 export const STAGE1_EPILOGUE_DURATION_S = STAGE1_ESCAPE_EXIT_S;
 export const ATMOSPHERE_SUCCESS_MS = Math.round(
   (STAGE1_SPLASH_S + STAGE1_EPILOGUE_DURATION_S) * 1000,
