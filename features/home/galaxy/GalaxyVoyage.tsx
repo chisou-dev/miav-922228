@@ -375,7 +375,7 @@ export function GalaxyVoyage({
         drawGalaxy3D(first.complete && first.naturalWidth ? first : globe,
           viewWidth * 0.51, viewHeight * 0.52, firstSize, firstRotation,
           1 - ease((s - FIRST_STAR_STEP + 2) / 5), 0.2);
-      } else if (s < CLOUD_COMPLETE) {
+      } else if (s < 112) {
         ctx!.fillStyle = "rgba(235,209,255,0.42)";
         ctx!.beginPath();
         ctx!.arc(viewWidth * 0.51, viewHeight * 0.52, 0.7, 0, TAU);
