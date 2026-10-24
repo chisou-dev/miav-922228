@@ -63,6 +63,10 @@ export function GalaxyVoyage({
     if (!ctx) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const motionScale = reduced ? 0 : 1;
+    // Lock scrolling only while the full-screen journey is active; restore
+    // exactly the previous value on return without changing the home layout.
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     let running = true;
     let frame = 0;
     let previous = performance.now();
@@ -381,6 +385,7 @@ export function GalaxyVoyage({
     frame = requestAnimationFrame(tick);
     return () => {
       running = false;
+      document.body.style.overflow = previousBodyOverflow;
       cancelAnimationFrame(frame);
       if (finalTimer !== undefined) clearTimeout(finalTimer);
       if (idleTimer !== undefined) clearTimeout(idleTimer);
