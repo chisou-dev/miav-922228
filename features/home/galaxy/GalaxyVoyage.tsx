@@ -53,6 +53,7 @@ export function GalaxyVoyage({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const exitRef = useRef(onExit);
+  const advanceRef = useRef<() => void>(() => {});
   exitRef.current = onExit;
 
   useEffect(() => {
@@ -293,7 +294,7 @@ export function GalaxyVoyage({
         ctx!.fillRect(0, 0, viewWidth, viewHeight);
         drawShatter(now);
         const emerge = ease((age - 1260) / 910);
-        if (emerge > 0) galaxyImage(first, mix(origin.x, viewWidth * 0.5, emerge),
+        if (emerge > 0) galaxyImage(first.complete && first.naturalWidth ? first : globe, mix(origin.x, viewWidth * 0.5, emerge),
           mix(origin.y, viewHeight * 0.5, emerge),
           mix(origin.radius * 1.6, short * 0.70, emerge),
           firstRotation, emerge);
@@ -313,7 +314,8 @@ export function GalaxyVoyage({
       // screen's short dimension; after ~20 taps it becomes a distant point.
       const firstSize = short * 0.70 * Math.pow(0.77, Math.min(s, SEGMENT_TAPS));
       if (firstSize > short * 0.17 && !reduced) firstRotation += dt * 0.000052;
-      galaxyImage(first, mix(viewWidth * 0.5, viewWidth * 0.30, ease(s / 20)),
+      galaxyImage(first.complete && first.naturalWidth ? first : globe,
+        mix(viewWidth * 0.5, viewWidth * 0.30, ease(s / 20)),
         mix(viewHeight * 0.5, viewHeight * 0.32, ease(s / 20)),
         firstSize, firstRotation, clamp((40 - s) / 16, 0, 1));
 
@@ -356,6 +358,7 @@ export function GalaxyVoyage({
         idleTimer = window.setTimeout(() => exitRef.current(), IDLE_MS);
       }
     }
+    advanceRef.current = stepForward;
     function keydown(event: KeyboardEvent) {
       if (event.key === "Escape") { event.preventDefault(); exitRef.current(); }
       else if (event.key === " " || event.key === "Enter") {
@@ -392,11 +395,8 @@ export function GalaxyVoyage({
       aria-modal="true"
       aria-label="Galaxy voyage. Click to travel through space."
       onClick={(event) => {
-        const root = event.currentTarget;
-        // Dispatch a keyboard activation so pointer and keyboard users share
-        // the same step handler; avoid mouse double click selection.
-        if (event.target === root || event.target === canvasRef.current) {
-          window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: false }));
+        if (event.target === event.currentTarget || event.target === canvasRef.current) {
+          advanceRef.current();
         }
       }}
       className="fixed inset-0 select-none"
