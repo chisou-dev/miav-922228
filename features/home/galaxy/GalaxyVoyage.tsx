@@ -231,66 +231,141 @@ export function GalaxyVoyage({
       ctx!.stroke();
     }
 
-    function drawShatter(now: number) {
-      const age = now - opened;
-      const x = origin.x, y = origin.y, r = origin.radius;
-      if (age < 900) {
-        drawGlass(x, y, r * (1 + 0.035 * Math.sin(age * 0.042) * motionScale), now);
-        const grow = ease((age - 175) / 590);
-        if (grow > 0) {
-          ctx!.save();
-          ctx!.translate(x, y);
-          ctx!.strokeStyle = "rgba(230,246,255," + (grow * 0.88) + ")";
-          ctx!.lineWidth = 1.2;
-          for (const shard of shards) {
-            const a = shard.angle;
-            ctx!.beginPath();
-            ctx!.moveTo(Math.cos(a) * r * 0.11, Math.sin(a) * r * 0.11);
-            ctx!.lineTo(Math.cos(a + 0.10) * r * (0.34 + 0.16 * grow), Math.sin(a + 0.10) * r * (0.34 + 0.16 * grow));
-            ctx!.lineTo(Math.cos(a) * r * grow, Math.sin(a) * r * grow);
-            ctx!.stroke();
-          }
-          ctx!.restore();
-        }
-      } else if (age < 1780) {
-        const p = ease((age - 900) / 870);
-        ctx!.save();
-        ctx!.translate(x, y);
-        ctx!.strokeStyle = "rgba(174,222,255," + ((1-p) * 0.6) + ")";
-        ctx!.fillStyle = "rgba(156,210,250," + ((1-p) * 0.095) + ")";
-        ctx!.lineWidth = 1.05;
-        for (const shard of shards) {
-          const a = shard.angle;
-          const ox = Math.cos(a) * r * shard.distance * p * 1.75;
-          const oy = Math.sin(a) * r * shard.distance * p * 1.75;
-          ctx!.save();
-          ctx!.translate(ox, oy);
-          ctx!.rotate(p * shard.spin);
-          ctx!.beginPath();
-          ctx!.moveTo(0, 0);
-          ctx!.lineTo(Math.cos(a) * r * shard.spread, Math.sin(a) * r * shard.spread);
-          ctx!.lineTo(Math.cos(a + 0.23) * r * shard.spread * 0.62, Math.sin(a + 0.23) * r * shard.spread * 0.62);
-          ctx!.closePath();
-          ctx!.fill();
-          ctx!.stroke();
-          ctx!.restore();
-        }
-        ctx!.restore();
-      }
 
-      // A narrow hourglass-like stream of dust originating in unchanged text.
-      const stream = ease((age - 370) / 1300);
+    function damagedTitle() {
+      if (titleGhost || !titleRect) return titleGhost;
+      const element = document.querySelector<HTMLElement>("[data-galaxy-title]");
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      const w = Math.ceil(Math.min(1200, Math.max(100, titleRect.width)));
+      const h = Math.ceil(Math.max(28, titleRect.height));
+      const output = document.createElement("canvas");
+      output.width = w;
+      output.height = h;
+      const g = output.getContext("2d");
+      if (!g) return null;
+      g.font = style.fontWeight + " " + style.fontSize + " " + style.fontFamily;
+      g.textBaseline = "middle";
+      g.fillStyle = "#f4f6ff";
+      g.fillText((element.textContent || "MIAV-922228").trim(), 0, h * 0.52, w);
+      // Literal perforations in the letters, not scratches in outer space.
+      g.globalCompositeOperation = "destination-out";
+      let seed = 194822;
+      const next = () => {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+      for (let i = 0; i < 470; i++) {
+        const x = next() * w;
+        const y = next() * h;
+        const size = 0.42 + next() * (i % 9 === 0 ? 4.2 : 2.2);
+        g.fillStyle = "rgba(0,0,0," + (0.45 + next() * 0.55) + ")";
+        g.beginPath();
+        g.arc(x, y, size, 0, TAU);
+        g.fill();
+      }
+      g.globalCompositeOperation = "source-over";
+      titleGhost = output;
+      return output;
+    }
+
+    function drawErodedTitle(now: number, strength: number) {
+      if (strength < 0.001 || !titleRect) return;
+      const mask = damagedTitle();
+      if (!mask) return;
+      ctx!.save();
+      ctx!.globalAlpha = strength * (0.87 + 0.13 * Math.sin(now * 0.0019));
+      ctx!.drawImage(mask, titleRect.left, titleRect.top, titleRect.width, titleRect.height);
+      ctx!.restore();
+    }
+
+    function drawSand(now: number, cx: number, cy: number, amount: number) {
+      if (amount <= 0) return;
+      // An independent pinhead of sand follows a bent path to the wandering
+      // galaxy, with individual delay. Never draw straight white streaks.
+      const tNow = (now - opened) / 3400;
       for (const grain of dust) {
-        const t = clamp((stream - grain.t) * grain.speed, 0, 1);
-        if (t <= 0 || t >= 1) continue;
-        const curve = Math.sin(Math.PI * t);
-        const gx = mix(grain.x, x, ease(t)) + grain.drift * curve * (1-t);
-        const gy = mix(grain.y, y, ease(t)) - 22 * curve;
-        ctx!.fillStyle = "rgba(236,247,255," + (Math.sin(Math.PI * t) * 0.7).toFixed(3) + ")";
+        const travel = ((tNow * grain.speed - grain.t + 3.0) % 1);
+        const t = ease(travel);
+        const arc = Math.sin(Math.PI * travel);
+        const dx = cx - grain.x;
+        const dy = cy - grain.y;
+        const swirlX = Math.cos(t * TAU * 1.25 + grain.drift) * arc * 18;
+        const swirlY = Math.sin(t * TAU * 1.25 + grain.drift) * arc * 11;
+        const x = grain.x + dx * t + swirlX;
+        const y = grain.y + dy * t + swirlY;
+        const fade = Math.sin(Math.PI * travel) * amount;
+        const radius = (0.50 + Math.abs(grain.drift / 44) * 0.9) * (1 - 0.45 * t);
+        ctx!.fillStyle = "rgba(239,230,213," + (fade * 0.74).toFixed(3) + ")";
         ctx!.beginPath();
-        ctx!.arc(gx, gy, 0.5 + 0.9 * (1 - t), 0, TAU);
+        ctx!.arc(x, y, radius, 0, TAU);
         ctx!.fill();
       }
+    }
+
+    function drawImplosion(now: number) {
+      const age = now - opened;
+      const p = reduced ? 1 : ease(age / IMPLOSION_MS);
+      const cx = mix(origin.x, viewWidth * 0.55, p);
+      const cy = mix(origin.y, viewHeight * 0.52, p);
+      const short = Math.min(viewWidth, viewHeight);
+      const dark = ease((p - 0.23) / 0.57);
+      ctx!.fillStyle = "rgba(0,2,9," + dark + ")";
+      ctx!.fillRect(0, 0, viewWidth, viewHeight);
+      // Glass contracts, and its galaxy expands, pulling the sphere inward.
+      // There are no fracture lines, shards or polygon fragments.
+      const shellRadius = origin.radius * (1 - 0.97 * ease(p / 0.8));
+      if (shellRadius > 1.5 && p < 0.86) {
+        ctx!.save();
+        ctx!.globalAlpha = 1 - ease((p - 0.31) / 0.52);
+        drawGlass(origin.x, origin.y, shellRadius, now);
+        ctx!.restore();
+      }
+      galaxyImage(first.complete && first.naturalWidth ? first : globe,
+        cx, cy, mix(origin.radius * 1.55, short * 0.57, p),
+        firstRotation, ease((p - 0.05) / 0.55));
+      drawSand(now, cx, cy, ease(p / 0.7));
+      drawErodedTitle(now, ease((p - 0.62) / 0.35) * 0.37);
+    }
+
+    function drawPlanet(planet: Planet, step: number) {
+      if (step < planet.enter || step >= planet.leave) return;
+      const t = clamp((step - planet.enter) / (planet.leave - planet.enter), 0, 1);
+      const pass = Math.pow(Math.sin(Math.PI * t), 1.2);
+      const short = Math.min(viewWidth, viewHeight);
+      const r = short * (0.005 + planet.scale * pass);
+      const x = (planet.reverse ? mix(-0.20, 1.18, t) : mix(1.18, -0.20, t)) * viewWidth;
+      const y = (planet.y + (t - 0.5) * (planet.reverse ? 0.15 : -0.15)) * viewHeight;
+      if (r < 1) return;
+      ctx!.save();
+      ctx!.translate(x, y);
+      const light = ctx!.createRadialGradient(-r * 0.33, -r * 0.4, r * 0.025, r * 0.23, r * 0.13, r * 1.17);
+      light.addColorStop(0, "hsla(" + planet.hue + ",55%,83%,0.99)");
+      light.addColorStop(0.38, "hsla(" + planet.hue + ",55%,48%,0.98)");
+      light.addColorStop(0.74, "hsla(" + (planet.hue + 8) + ",65%,19%,0.99)");
+      light.addColorStop(1, "rgba(2,5,15,1)");
+      ctx!.fillStyle = light;
+      ctx!.beginPath();
+      ctx!.arc(0, 0, r, 0, TAU);
+      ctx!.fill();
+      ctx!.save();
+      ctx!.clip();
+      ctx!.strokeStyle = "hsla(" + (planet.hue + 18) + ",42%,82%,0.12)";
+      ctx!.lineWidth = Math.max(0.5, r * 0.055);
+      for (let band = -3; band <= 3; band++) {
+        ctx!.beginPath();
+        ctx!.ellipse(r * 0.07, band * r * 0.24, r * 1.1, r * 0.23, -0.27, 0, TAU);
+        ctx!.stroke();
+      }
+      ctx!.restore();
+      if (planet.ring && r > 8) {
+        ctx!.strokeStyle = "hsla(" + (planet.hue + 33) + ",37%,85%," + (0.31 * pass).toFixed(3) + ")";
+        ctx!.lineWidth = Math.max(0.8, r * 0.11);
+        ctx!.beginPath();
+        ctx!.ellipse(0, 0, r * 1.67, r * 0.38, -0.24, Math.PI * 0.07, Math.PI * 0.95);
+        ctx!.stroke();
+      }
+      ctx!.restore();
     }
 
     function draw(now: number, dt: number) {
