@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GALAXY } from "./GalaxyHeading";
+import { GalaxyVoyage } from "./GalaxyVoyage";
 
 type Point = { x: number; y: number };
 type Grain = { source: Point; born: number; life: number; angle: number };
@@ -17,6 +18,13 @@ export function GalaxyOrb() {
   const zoomButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const photoCreditRef = useRef<HTMLDivElement>(null);
+  const [voyage, setVoyage] = useState<{ x: number; y: number; radius: number } | null>(null);
+
+  function finishVoyage() {
+    document.documentElement.removeAttribute("data-galaxy-voyage");
+    if (surfaceRef.current) surfaceRef.current.style.visibility = "";
+    setVoyage(null);
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -291,6 +299,14 @@ export function GalaxyOrb() {
     }
 
     function enlargeOneStep() {
+      // New Phase 2: first click cracks the sphere. All further camera steps
+      // are controlled inside GalaxyVoyage, not by the old zoom machinery.
+      const bounds = section!.getBoundingClientRect();
+      document.documentElement.setAttribute("data-galaxy-voyage", "true");
+      surface!.style.visibility = "hidden";
+      setVoyage({ x: bounds.left + orb.x, y: bounds.top + orb.y, radius });
+      return;
+      // Legacy zoom is intentionally unreachable, pending preview approval.
       if (expanded && atMaximum) return;
       if (!expanded) {
         preloadNasa();
@@ -826,10 +842,12 @@ export function GalaxyOrb() {
       window.removeEventListener("keydown", onEscape);
       window.removeEventListener("resize", measure);
       closeExpanded();
+      document.documentElement.removeAttribute("data-galaxy-voyage");
     };
   }, []);
 
   return (
+    <>
     <div ref={surfaceRef} className="pointer-events-none absolute inset-0 z-[2]">
       <canvas ref={canvasRef} aria-hidden="true" className="block h-full w-full" />
       <div
@@ -842,8 +860,8 @@ export function GalaxyOrb() {
       <button
         ref={zoomButtonRef}
         type="button"
-        aria-label="Enlarge galaxy by 30 percent"
-        title="Tap to enlarge galaxy"
+        aria-label="Enter galaxy voyage"
+        title="Enter the galaxy"
         className="pointer-events-auto absolute left-0 top-0 rounded-full border-0 bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-200"
         style={{ touchAction: "manipulation" }}
       />
@@ -857,5 +875,6 @@ export function GalaxyOrb() {
         ×
       </button>
     </div>
-  );
+    {voyage && <GalaxyVoyage origin={voyage} onExit={finishVoyage} />}
+  </>);
 }
