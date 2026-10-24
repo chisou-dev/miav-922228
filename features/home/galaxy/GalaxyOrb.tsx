@@ -88,9 +88,15 @@ export function GalaxyOrb() {
     let expanded = false;
     let atMaximum = false;
     let zoomStep = 0;
-    let voyageStarted = 0;
-    const travelMs = 15_000;
-    const finalHoldMs = 20_000;
+    // The visitor controls the camera. One full recession of an individual
+    // galaxy takes around twenty deliberate taps, never elapsed time.
+    const GALAXY_TAPS = 20;
+    const LAST_TAP = GALAXY_TAPS * 3;
+    let voyageTarget = 0;
+    let voyagePosition = 0;
+    let firstGalaxyAngle = 0;
+    let secondGalaxyAngle = -0.31;
+    const galaxyCutouts = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     // Fixed star locations prevent re-randomising the deep-space background
     // on each frame and stay lightweight on mobile.
     const distantStars = Array.from({ length: 340 }, () => ({
@@ -252,6 +258,8 @@ export function GalaxyOrb() {
       expanded = false;
       atMaximum = false;
       zoomStep = 0;
+      voyageTarget = 0;
+      voyagePosition = 0;
       if (restoreTimer !== undefined) {
         window.clearTimeout(restoreTimer);
         restoreTimer = undefined;
@@ -277,12 +285,9 @@ export function GalaxyOrb() {
 
     function setReturnTimer() {
       if (restoreTimer !== undefined) window.clearTimeout(restoreTimer);
-      // Incomplete zoom: 20 seconds since last tap. At maximum, the actual
-      // journey lasts 15s, then the final Webb galaxy field holds for 20s.
-      restoreTimer = window.setTimeout(
-        closeExpanded,
-        atMaximum ? travelMs + finalHoldMs : 20_000,
-      );
+      // Each tap restarts the idle countdown. The final deep-field view is
+      // deliberately left on screen for 20 seconds, then returns to the orb.
+      restoreTimer = window.setTimeout(closeExpanded, 20_000);
     }
 
     function enlargeOneStep() {
@@ -322,7 +327,10 @@ export function GalaxyOrb() {
       surface!.style.pointerEvents = atMaximum ? "auto" : "none";
       surface!.setAttribute("aria-label", atMaximum ? "Deep space galaxy journey" : "Tap again to enlarge galaxy");
       if (atMaximum) {
-        voyageStarted = performance.now();
+        voyageTarget = 0;
+        voyagePosition = 0;
+        firstGalaxyAngle = 0;
+        secondGalaxyAngle = -0.31;
         photoCredit!.style.display = "block";
         zoomButton!.style.display = "none";
       }
@@ -342,8 +350,19 @@ export function GalaxyOrb() {
     }
 
     function onBackdropClick(event: MouseEvent) {
-      // Clicking outside the sphere closes only once maximum is reached.
-      if (expanded && atMaximum && event.target !== zoomButton) closeExpanded();
+      if (!expanded || !atMaximum || event.target === zoomButton) return;
+      if (event.target === closeButton || closeButton!.contains(event.target as Node)) {
+        closeExpanded();
+        return;
+      }
+      // The current GalaxyOrb button has already finished its 1.3x phase.
+      // Every tap on the cosmic scene advances exactly one camera step.
+      if (voyageTarget < LAST_TAP) voyageTarget += 1;
+      setReturnTimer();
+      if (reduced()) {
+        voyagePosition = voyageTarget;
+        render(performance.now(), 0);
+      }
     }
 
     // The curved motion changes both horizontal and vertical directions.
@@ -592,16 +611,50 @@ export function GalaxyOrb() {
     }
 
 
-    function drawGalaxyPhoto(img: HTMLImageElement, x: number, y: number, diameter: number, alpha: number, rotation: number) {
-      if (!img.complete || img.naturalWidth < 1 || alpha <= 0.001) return;
+
+    function getFeatheredGalaxy(img: HTMLImageElement): HTMLCanvasElement | null {
+      if (!img.complete || img.naturalWidth < 1 || img.naturalHeight < 1) return null;
+      const cached = galaxyCutouts.get(img);
+      if (cached) return cached;
+      // Offscreen alpha feather: unlike 'screen' alone this makes the original
+      // photo's square background TRANSPARENT. Keep it cached per NASA image.
+      const cutout = document.createElement("canvas");
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const size = Math.min(1400, side);
+      cutout.width = size;
+      cutout.height = size;
+      const c = cutout.getContext("2d");
+      if (!c) return null;
+      c.drawImage(img,
+        (img.naturalWidth - side) * 0.5, (img.naturalHeight - side) * 0.5,
+        side, side, 0, 0, size, size);
+      c.globalCompositeOperation = "destination-in";
+      const feather = c.createRadialGradient(size * 0.5, size * 0.5, size * 0.24,
+        size * 0.5, size * 0.5, size * 0.49);
+      feather.addColorStop(0, "rgba(255,255,255,1)");
+      feather.addColorStop(0.55, "rgba(255,255,255,0.94)");
+      feather.addColorStop(0.84, "rgba(255,255,255,0.29)");
+      feather.addColorStop(1, "rgba(255,255,255,0)");
+      c.fillStyle = feather;
+      c.fillRect(0, 0, size, size);
+      c.globalCompositeOperation = "source-over";
+      galaxyCutouts.set(img, cutout);
+      return cutout;
+    }
+
+    function drawGalaxyPhoto(
+      img: HTMLImageElement,
+      x: number, y: number, diameter: number, alpha: number, rotation: number,
+    ) {
+      if (diameter < 1 || alpha <= 0.001) return;
+      const cutout = getFeatheredGalaxy(img);
+      if (!cutout) return;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
       ctx.globalAlpha = clamp(alpha, 0, 1);
-      // Screen compositing removes photographs' black sky rectangles, without
-      // falsely claiming these distant galaxies are physically adjacent.
       ctx.globalCompositeOperation = "screen";
-      ctx.drawImage(img, -diameter * 0.5, -diameter * 0.5, diameter, diameter);
+      ctx.drawImage(cutout, -diameter * 0.5, -diameter * 0.5, diameter, diameter);
       ctx.restore();
     }
 
@@ -611,83 +664,90 @@ export function GalaxyOrb() {
       ctx.globalAlpha = clamp(opacity, 0, 1);
       const iw = img.naturalWidth;
       const ih = img.naturalHeight;
-      const factor = Math.max(width / iw, height / ih) * (1.16 - 0.13 * p);
-      const destW = iw * factor;
-      const destH = ih * factor;
-      ctx.drawImage(img, (width - destW) * 0.5, (height - destH) * 0.5, destW, destH);
+      // True full-screen image: its outer edges are never visible as a pasted
+      // rectangle. Pull back slightly as the final taps are made.
+      const factor = Math.max(width / iw, height / ih) * (1.12 - 0.12 * p);
+      const dw = iw * factor;
+      const dh = ih * factor;
+      ctx.drawImage(img, (width - dw) * 0.5, (height - dh) * 0.5, dw, dh);
       ctx.restore();
     }
 
-    function drawCosmicJourney(now: number) {
-      const age = Math.max(0, now - voyageStarted);
-      const travel = reduced() ? 1 : travelMs;
-      const p = clamp(age / travel, 0, 1);
-      const diagonal = Math.hypot(width, height);
+    function drawCosmicJourney(elapsed: number) {
+      // Progress changes ONLY when tapped; interpolate each individual tap
+      // gently rather than starting an automatic film.
+      const fraction = reduced() ? 1 : Math.min(1, elapsed / 175);
+      voyagePosition = mix(voyagePosition, voyageTarget, fraction);
+      if (Math.abs(voyagePosition - voyageTarget) < 0.006) voyagePosition = voyageTarget;
+      const step = voyagePosition;
       const shortSide = Math.min(width, height);
 
-      // An uninterrupted black-space stage. The normal text remains behind
-      // the modal, and the glass rim disappears after the initial transition.
-      const backdrop = ctx.createRadialGradient(width * 0.46, height * 0.43, 0, width * 0.5, height * 0.5, diagonal * 0.75);
+      const backdrop = ctx.createRadialGradient(
+        width * 0.46, height * 0.43, 0,
+        width * 0.5, height * 0.5, Math.hypot(width, height) * 0.75,
+      );
       backdrop.addColorStop(0, "#0b1025");
       backdrop.addColorStop(0.45, "#020711");
       backdrop.addColorStop(1, "#000209");
       ctx.fillStyle = backdrop;
       ctx.fillRect(0, 0, width, height);
 
+      // Small fixed stars hold their positions in one continuous cosmic space.
       for (const star of distantStars) {
-        const visibility = clamp((p * 2.7 - 0.10) * star.opacity, 0, 1);
-        ctx.fillStyle = `rgba(214,225,255,${visibility.toFixed(3)})`;
+        const visibility = clamp(((step / GALAXY_TAPS) * 1.6 + 0.12) * star.opacity, 0, 1);
+        ctx.fillStyle = "rgba(207,221,255," + visibility.toFixed(3) + ")";
         ctx.beginPath();
         ctx.arc(star.x * width, star.y * height, star.radius, 0, TAU);
         ctx.fill();
       }
 
-      // Stage 1: The real Spitzer observation of M100 retreats into space.
-      // Stage 2: another real galaxy (NGC 2841) and other structures appear.
-      const retreat = smooth(clamp(p / 0.68, 0, 1));
-      const firstSize = mix(diagonal * 1.04, shortSide * 0.22, retreat);
-      const mainX = mix(width * 0.50, width * 0.32, smooth(p));
-      const mainY = mix(height * 0.50, height * 0.36, smooth(p));
-      const firstAlpha = clamp(1 - (p - 0.77) / 0.19, 0, 1);
-      drawGalaxyPhoto(nasaM100, mainX, mainY, firstSize, firstAlpha, p * 0.32);
-
-      const secondAppear = smooth(clamp((p - 0.24) / 0.16, 0, 1));
-      const nextSize = mix(shortSide * 0.47, shortSide * 0.13, smooth(clamp((p - 0.33) / 0.57, 0, 1)));
+      // Phase 1: genuine Spitzer M100 recedes for about 20 taps until it is
+      // a pinpoint. Slow rotation stops while still visibly larger than a star.
+      const firstDiameter = shortSide * 3.1 * Math.pow(0.79, Math.min(step, GALAXY_TAPS));
+      if (!reduced() && firstDiameter > shortSide * 0.19) {
+        firstGalaxyAngle += elapsed * 0.00007;
+      }
+      const firstFade = step < 22 ? 1 : clamp(1 - (step - 22) / 12, 0, 1);
       drawGalaxyPhoto(
-        nasaNGC2841,
-        mix(width * 0.98, width * 0.73, smooth(clamp((p - 0.23) / 0.48, 0, 1))),
-        height * 0.61,
-        nextSize,
-        secondAppear * firstAlpha * 0.88,
-        -0.31,
+        nasaM100,
+        mix(width * 0.50, width * 0.26, smooth(clamp(step / GALAXY_TAPS, 0, 1))),
+        mix(height * 0.51, height * 0.32, smooth(clamp(step / GALAXY_TAPS, 0, 1))),
+        firstDiameter,
+        firstFade,
+        firstGalaxyAngle,
       );
 
-      // A few more distant impressions use the verified NASA images, not
-      // fabricated photorealistic star systems.
-      const group = smooth(clamp((p - 0.48) / 0.22, 0, 1)) * firstAlpha;
-      drawGalaxyPhoto(nasaM100, width * 0.19, height * 0.76, shortSide * 0.12, group * 0.65, 0.91);
-      drawGalaxyPhoto(nasaNGC2841, width * 0.83, height * 0.22, shortSide * 0.11, group * 0.72, -0.43);
-      drawGalaxyPhoto(nasaM100, width * 0.57, height * 0.18, shortSide * 0.075, group * 0.44, 0.22);
+      // Phase 2: a different REAL galaxy appears naturally as M100 reaches
+      // star size. Subsequent taps make that galaxy recede independently.
+      const secondAppear = smooth(clamp((step - 15) / 6, 0, 1));
+      const secondStep = Math.max(0, step - GALAXY_TAPS);
+      const secondDiameter = shortSide * 0.92 * Math.pow(0.80, Math.min(secondStep, GALAXY_TAPS));
+      if (!reduced() && secondDiameter > shortSide * 0.19 && step >= 15) {
+        secondGalaxyAngle += elapsed * 0.000065;
+      }
+      const secondFade = step < 43 ? 1 : clamp(1 - (step - 43) / 11, 0, 1);
+      drawGalaxyPhoto(
+        nasaNGC2841,
+        width * 0.70,
+        height * 0.55,
+        secondDiameter,
+        secondAppear * secondFade,
+        secondGalaxyAngle,
+      );
 
-      // Stage 3: dissolve into a REAL Webb photograph of thousands of
-      // galaxies (SMACS 0723). It is a separate actual observation, not a
-      // continuous map or a scientifically literal zoom-out.
-      const fieldAlpha = smooth(clamp((p - 0.69) / 0.28, 0, 1));
-      drawDeepField(nasaDeepField, fieldAlpha, p);
-      if (p > 0.94 && !nasaDeepField.complete) {
-        // Fallback deep-space particles while NASA's photo is downloading.
+      // During the last twenty deliberate taps the genuine Webb deep-field
+      // photograph replaces the isolated galaxies. This is a fictional
+      // composition of real observations, not a spatially accurate fly-through.
+      const finalP = smooth(clamp((step - GALAXY_TAPS * 2) / GALAXY_TAPS, 0, 1));
+      drawDeepField(nasaDeepField, finalP, finalP);
+      if (!nasaDeepField.complete && finalP > 0) {
+        // A deterministic fallback avoids a blank final stage when offline.
         for (const star of distantStars) {
-          ctx.fillStyle = `rgba(235,197,175,${star.opacity * 0.35})`;
+          ctx.fillStyle = "rgba(238,195,164," + (star.opacity * finalP * 0.55).toFixed(3) + ")";
           ctx.beginPath();
-          ctx.ellipse(star.x * width, star.y * height, star.radius * 1.6, star.radius * 0.7, 0.22, 0, TAU);
+          ctx.ellipse(star.x * width, star.y * height, star.radius * 1.8, star.radius * 0.9, 0.24, 0, TAU);
           ctx.fill();
         }
-      }
-      // Subtle 1-second fade back at the end of the 20-second final view.
-      if (age > travelMs + finalHoldMs - 850) {
-        const fade = clamp((age - (travelMs + finalHoldMs - 850)) / 850, 0, 1);
-        ctx.fillStyle = `rgba(0,3,13,${fade})`;
-        ctx.fillRect(0, 0, width, height);
       }
     }
 
@@ -704,17 +764,7 @@ export function GalaxyOrb() {
         }
         updateZoomGeometry();
         if (atMaximum) {
-          drawCosmicJourney(now);
-          // Brief dissolve from the large glass orb into unframed space.
-          const introOpacity = reduced()
-            ? 0
-            : 1 - smooth(clamp((now - voyageStarted) / 1100, 0, 1));
-          if (introOpacity > 0) {
-            ctx.save();
-            ctx.globalAlpha = introOpacity;
-            drawSphere();
-            ctx.restore();
-          }
+          drawCosmicJourney(elapsed);
         } else {
           drawSphere();
         }
@@ -786,8 +836,8 @@ export function GalaxyOrb() {
         ref={photoCreditRef}
         className="pointer-events-none absolute bottom-3 left-4 right-4 hidden text-center text-[10px] leading-4 tracking-wide text-white/65"
       >
-        NASA observations: Spitzer M100, NGC 2841 — NASA/JPL-Caltech.
-        Webb SMACS 0723 — NASA/ESA/CSA/STScI. Artistic composite, not a literal fly-through.
+        NASA/JPL-Caltech (M100, NGC 2841) · NASA/ESA/CSA/STScI (SMACS 0723)
+        <span className="sr-only">Artistic transition between actual observations, not a literal voyage.</span>
       </div>
       <button
         ref={zoomButtonRef}
