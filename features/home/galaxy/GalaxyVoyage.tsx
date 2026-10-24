@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
+import { drawEscapeSkiff } from "../reentry/reentryEscapeSkiff";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
@@ -55,9 +56,25 @@ export function GalaxyVoyage({
   onExit: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const skiffButtonCanvasRef = useRef<HTMLCanvasElement>(null);
   const exitRef = useRef(onExit);
   const advanceRef = useRef<() => void>(() => {});
   exitRef.current = onExit;
+
+  useEffect(() => {
+    // Reuse the very same painted vessel that carries the squid in the
+    // Stage 1 ocean escape. No emoji, approximation or separate ship asset.
+    const iconCanvas = skiffButtonCanvasRef.current;
+    const g = iconCanvas?.getContext("2d");
+    if (!iconCanvas || !g) return;
+    const dpi = Math.min(2.5, window.devicePixelRatio || 1);
+    iconCanvas.width = Math.round(68 * dpi);
+    iconCanvas.height = Math.round(54 * dpi);
+    g.setTransform(dpi, 0, 0, dpi, 0, 0);
+    g.clearRect(0, 0, 68, 54);
+    // Hatch closed after boarding: the squid is aboard this escape craft.
+    drawEscapeSkiff(g, 33, 29, 34, 1, -0.10, 1);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -582,9 +599,18 @@ export function GalaxyVoyage({
     }
     advanceRef.current = stepForward;
     function keydown(event: KeyboardEvent) {
-      if (event.key === "Escape") { event.preventDefault(); exitRef.current(); }
-      else if (event.key === " " || event.key === "Enter") {
-        event.preventDefault(); stepForward();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        exitRef.current();
+        return;
+      }
+      // Activating the dedicated return-home ship must never also advance the
+      // galaxy camera, and form / link keyboard input keeps working.
+      const element = event.target;
+      if (element instanceof Element && element.closest("button, a, input, textarea, select")) return;
+      if (event.key === " " || event.key === "Enter" || event.key === "ArrowRight") {
+        event.preventDefault();
+        stepForward();
       }
     }
     function tick(now: number) {
@@ -628,13 +654,17 @@ export function GalaxyVoyage({
       <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 block" />
       <button
         type="button"
-        aria-label="Return to MIAV home"
+        aria-label="Return to MIAV home on the Stage 1 squid escape craft"
         title="Return home"
         onClick={(event) => { event.stopPropagation(); onExit(); }}
-        className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-[#071426]/55 text-2xl text-white/90 backdrop-blur-sm hover:bg-[#102944] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+        className="absolute left-3 top-3 flex h-14 w-[4.5rem] items-center justify-center rounded-full border border-white/20 bg-[#071426]/75 shadow-[0_0_12px_rgba(65,150,240,0.12)] backdrop-blur-sm hover:border-sky-200/55 hover:bg-[#102944] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         style={{ zIndex: 2 }}
       >
-        <span aria-hidden="true">🌍</span>
+        <canvas
+          ref={skiffButtonCanvasRef}
+          aria-hidden="true"
+          className="pointer-events-none h-[3.375rem] w-[4.25rem]"
+        />
       </button>
     </div>,
     document.body,
