@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
-import { drawEscapeSkiff } from "../reentry/reentryEscapeSkiff";
+import { drawStage1EntryCraft } from "./drawStage1EntryCraft";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
@@ -18,9 +18,16 @@ const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/p
 // The real Andromeda galaxy (M31), GALEX observation PIA15416.
 // Source: https://science.nasa.gov/photojournal/andromeda/
 const NASA_ANDROMEDA = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15416/PIA15416.jpg?fit=clip&w=1400";
-const FINAL_STEP = 124;
-const SECOND_APPROACH_START = 41;
-const SECOND_FULL_VIEW = 90;
+// Click-controlled recession: initial galaxy, 1st planet, moon/ringed pair,
+// eleven-body system, 100→1000 stellar lights, then a receding full galaxy.
+const FIRST_STAR_STEP = 30;
+const FIRST_PLANET_STEP = 31;
+const SECOND_PLANET_STEP = 54;
+const ELEVEN_STEP = 81;
+const CLOUD_START = 98;
+const CLOUD_COMPLETE = 130;
+const FULL_GALAXY_STEP = 132;
+const FINAL_STEP = 165;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
 const IDLE_MS = 120_000;
@@ -56,15 +63,15 @@ export function GalaxyVoyage({
   onExit: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const skiffButtonCanvasRef = useRef<HTMLCanvasElement>(null);
+  const spacecraftIconRef = useRef<HTMLCanvasElement>(null);
   const exitRef = useRef(onExit);
   const advanceRef = useRef<() => void>(() => {});
   exitRef.current = onExit;
 
   useEffect(() => {
-    // Reuse the very same painted vessel that carries the squid in the
-    // Stage 1 ocean escape. No emoji, approximation or separate ship asset.
-    const iconCanvas = skiffButtonCanvasRef.current;
+    // This is the ORIGINAL Stage 1 atmosphere-entry spaceship, NOT the
+    // squid's later ocean escape skiff. Pure hull, heat and plasma disabled.
+    const iconCanvas = spacecraftIconRef.current;
     const g = iconCanvas?.getContext("2d");
     if (!iconCanvas || !g) return;
     const dpi = Math.min(2.5, window.devicePixelRatio || 1);
@@ -72,8 +79,7 @@ export function GalaxyVoyage({
     iconCanvas.height = Math.round(54 * dpi);
     g.setTransform(dpi, 0, 0, dpi, 0, 0);
     g.clearRect(0, 0, 68, 54);
-    // Hatch closed after boarding: the squid is aboard this escape craft.
-    drawEscapeSkiff(g, 33, 29, 34, 1, -0.10, 1);
+    drawStage1EntryCraft(g, 30, 27, -0.15, 48, 1, 0, false, 0);
   }, []);
 
   useEffect(() => {
@@ -123,37 +129,76 @@ export function GalaxyVoyage({
       ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
       drift: (Math.random() - 0.5) * 44,
     }));
-    // These foreground planets are imaginary visual elements, not
-    // detections of planets in M31. Overlapping passes create parallax.
-    // Ten fictional planets arranged at varied depths like a loose system.
-    // After entering from one side they recede in place with the retreating
-    // camera. They never ping-pong left/right across the entire screen.
-    const planets: Planet[] = [
-      { enter: 9,  x: 0.16, y: 0.69, scale: 0.100, hue: 196, ring: false, tilt: -0.18, clouds: 0.53 },
-      { enter: 13, x: 0.81, y: 0.28, scale: 0.061, hue: 34,  ring: true,  tilt: 0.13, clouds: 0.27 },
-      { enter: 18, x: 0.30, y: 0.20, scale: 0.036, hue: 260, ring: false, tilt: 0.24, clouds: 0.44 },
-      { enter: 22, x: 0.89, y: 0.65, scale: 0.080, hue: 19,  ring: false, tilt: -0.22, clouds: 0.64 },
-      { enter: 27, x: 0.58, y: 0.81, scale: 0.055, hue: 190, ring: false, tilt: 0.12, clouds: 0.58 },
-      { enter: 31, x: 0.11, y: 0.38, scale: 0.048, hue: 43,  ring: false, tilt: -0.34, clouds: 0.29 },
-      { enter: 35, x: 0.75, y: 0.13, scale: 0.069, hue: 223, ring: true,  tilt: 0.25, clouds: 0.22 },
-      { enter: 39, x: 0.39, y: 0.61, scale: 0.039, hue: 335, ring: false, tilt: -0.09, clouds: 0.48 },
-      { enter: 46, x: 0.87, y: 0.43, scale: 0.052, hue: 169, ring: false, tilt: 0.31, clouds: 0.36 },
-      { enter: 52, x: 0.24, y: 0.78, scale: 0.043, hue: 14,  ring: true,  tilt: -0.18, clouds: 0.38 },
-    ];
-    const beacons = [
-      { x: 0.09, y: 0.12, hue: 207, size: 1.7, at: 14 },
-      { x: 0.63, y: 0.11, hue: 31,  size: 2.1, at: 19 },
-      { x: 0.97, y: 0.31, hue: 215, size: 1.8, at: 23 },
-      { x: 0.35, y: 0.44, hue: 0,   size: 1.5, at: 26 },
-      { x: 0.14, y: 0.57, hue: 40,  size: 2.0, at: 32 },
-      { x: 0.70, y: 0.73, hue: 199, size: 2.1, at: 35 },
-      { x: 0.49, y: 0.16, hue: 262, size: 1.5, at: 42 },
-      { x: 0.91, y: 0.86, hue: 27,  size: 1.9, at: 46 },
-      { x: 0.32, y: 0.91, hue: 204, size: 1.7, at: 50 },
-      { x: 0.57, y: 0.62, hue: 43,  size: 2.0, at: 55 },
-      { x: 0.77, y: 0.49, hue: 186, size: 1.5, at: 60 },
-      { x: 0.23, y: 0.28, hue: 12,  size: 1.7, at: 63 },
-    ];
+    // Every body occupies a stable place in a receding field of view.
+    // Planets are fictional visual motifs; distant points are artistic
+    // starlight, not claims of 1000 individually observable exoplanets.
+    const firstPlanet: Planet = {
+      enter: FIRST_PLANET_STEP, x: 0.27, y: 0.58, scale: 0.21,
+      hue: 202, ring: false, tilt: -0.18, clouds: 0.61,
+    };
+    const secondPlanet: Planet = {
+      enter: SECOND_PLANET_STEP, x: 0.78, y: 0.46, scale: 0.20,
+      hue: 34, ring: true, tilt: 0.17, clouds: 0.28,
+    };
+    const satellitePlanet: Planet = {
+      enter: SECOND_PLANET_STEP + 3, x: 0.88, y: 0.63,
+      scale: 0.072, hue: 215, ring: false, tilt: 0.21, clouds: 0.19,
+    };
+    const seed01 = (n: number) => {
+      let v = (Math.imul(n + 1, 0x9e3779b1) ^ 0x5f356495) >>> 0;
+      v = Math.imul(v ^ (v >>> 16), 0x85ebca6b) >>> 0;
+      v = Math.imul(v ^ (v >>> 13), 0xc2b2ae35) >>> 0;
+      return ((v ^ (v >>> 16)) >>> 0) / 4294967295;
+    };
+    const system: Planet[] = Array.from({ length: 11 }, (_, i) => ({
+      enter: ELEVEN_STEP + (i % 4) * 2,
+      x: Math.cos(i * TAU / 11 + 0.31) * (0.13 + seed01(i + 11) * 0.22),
+      y: Math.sin(i * TAU / 11 + 0.31) * (0.16 + seed01(i + 71) * 0.21),
+      scale: 0.034 + seed01(i + 173) * 0.041,
+      hue: [203, 31, 281, 15, 177, 218, 42, 322, 193, 8, 247][i],
+      ring: i === 2 || i === 8,
+      tilt: (seed01(i + 281) - 0.5) * 0.7,
+      clouds: seed01(i + 389) * 0.7,
+    }));
+
+    // A seeded, immutable spiral field. As the camera pulls out we uncover
+    // 11, 100, 300, 500, 700, 800 and 1000 points without rearranging any.
+    // Coordinates do not spin after a resolved galaxy appears.
+    const galaxyPoints = Array.from({ length: 1000 }, (_, i) => {
+      const r = Math.sqrt((i + 0.5) / 1000);
+      const arm = i % 4;
+      const scatter = (seed01(i * 17 + 83) - 0.5) * (0.2 + 0.35 * r);
+      const a = arm * TAU / 4 + r * 5.7 + scatter;
+      const squish = 0.72;
+      return {
+        x: Math.cos(a) * r + (seed01(i * 13 + 113) - 0.5) * 0.018,
+        y: Math.sin(a) * r * squish + (seed01(i * 11 + 517) - 0.5) * 0.018,
+        r: 0.4 + seed01(i * 7 + 131) * 1.15,
+        bright: 0.16 + seed01(i * 19 + 41) * 0.78,
+        hue: [195, 205, 225, 247, 282, 323, 35, 42][i % 8],
+        phase: seed01(i * 13 + 181) * TAU,
+      };
+    });
+    const milestones = [
+      [CLOUD_START, 11],
+      [103, 100],
+      [109, 300],
+      [115, 500],
+      [120, 700],
+      [125, 800],
+      [CLOUD_COMPLETE, 1000],
+    ] as const;
+    function cloudCount(step: number) {
+      if (step < CLOUD_START) return 0;
+      for (let i = 1; i < milestones.length; i++) {
+        const [stop, end] = milestones[i];
+        if (step <= stop) {
+          const [start, from] = milestones[i - 1];
+          return Math.floor(mix(from, end, ease((step - start) / (stop - start))));
+        }
+      }
+      return 1000;
+    }
     const stars: (Star & { reveal: number })[] = Array.from({ length: 650 }, () => ({
       x: Math.random(), y: Math.random(),
       r: 0.35 + Math.random() * 1.24,
@@ -654,14 +699,14 @@ export function GalaxyVoyage({
       <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 block" />
       <button
         type="button"
-        aria-label="Return to MIAV home on the Stage 1 squid escape craft"
+        aria-label="Return to MIAV home using the Stage 1 atmosphere-entry spaceship"
         title="Return home"
         onClick={(event) => { event.stopPropagation(); onExit(); }}
         className="absolute left-3 top-3 flex h-14 w-[4.5rem] items-center justify-center rounded-full border border-white/20 bg-[#071426]/75 shadow-[0_0_12px_rgba(65,150,240,0.12)] backdrop-blur-sm hover:border-sky-200/55 hover:bg-[#102944] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         style={{ zIndex: 2 }}
       >
         <canvas
-          ref={skiffButtonCanvasRef}
+          ref={spacecraftIconRef}
           aria-hidden="true"
           className="pointer-events-none h-[3.375rem] w-[4.25rem]"
         />
