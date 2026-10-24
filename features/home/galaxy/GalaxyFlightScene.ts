@@ -152,7 +152,9 @@ export function createGalaxyFlightScene() {
   function shipPosition(t: number) {
     // Every tap changes the same monotonically increasing camera location.
     // Ahead-of-camera objects expand and slide sideways as their depth falls.
-    const z=Math.max(0,t-31)*9.75;
+    // Start far outside the first encounter. A distant blue glint grows
+    // gradually over many taps before the ship passes beside the planet.
+    const z=-700+Math.max(0,t-31)*24.5;
     return {x:0,y:0,z};
   }
 
@@ -210,11 +212,11 @@ export function createGalaxyFlightScene() {
   }
 
   function externalGalaxy(ctx:CanvasRenderingContext2D,t:number,now:number,w:number,h:number){
-    if(t<100)return;
+    if(t<112)return;
     // Stars in the window transition to a wider *external* view of the
     // galactic disk. Planets never line up or become the spiral's arms.
-    const reveal=smooth((t-100)/25);
-    const zoom=Math.pow(0.82,Math.max(0,t-128));
+    const reveal=smooth((t-112)/21);
+    const zoom=Math.pow(0.82,Math.max(0,t-135));
     const fullRadius=Math.min(w,h)*0.48*zoom;
     const gx=w*0.59,gy=h*.48;
     if(reveal<0.001)return;
@@ -243,7 +245,9 @@ export function createGalaxyFlightScene() {
       const camera=shipPosition(step);
       stars(ctx,step,now,w,h);
       // The 3D world is sorted by depth; far worlds are behind near ones.
-      for(let i=bodies.length-1;i>=0;i--)drawBody(ctx,bodies[i],camera,w,h);
+      if(step>=31){
+        for(let i=bodies.length-1;i>=0;i--)drawBody(ctx,bodies[i],camera,w,h);
+      }
       externalGalaxy(ctx,step,now,w,h);
     }
   };
