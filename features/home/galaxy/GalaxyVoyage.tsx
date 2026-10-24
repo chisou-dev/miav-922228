@@ -90,6 +90,11 @@ export function GalaxyVoyage({
     const first = new Image();
     first.src = NASA_M100;
     const second = new Image();
+    second.onerror = () => {
+      // Backup is the original NASA/JPL Photojournal JPEG. No loop on failure.
+      second.onerror = null;
+      second.src = "https://photojournal.jpl.nasa.gov/jpeg/PIA15416.jpg";
+    };
     second.src = NASA_ANDROMEDA;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
