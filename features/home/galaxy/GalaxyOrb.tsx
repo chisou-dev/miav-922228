@@ -305,8 +305,8 @@ export function GalaxyOrb() {
       document.documentElement.setAttribute("data-galaxy-voyage", "true");
       surface!.style.visibility = "hidden";
       setVoyage({ x: bounds.left + orb.x, y: bounds.top + orb.y, radius });
-      return;
-      // Legacy zoom is intentionally unreachable, pending preview approval.
+      // Preserve the original preview-only zoom code without invoking it.
+      if (surface!.style.visibility === "hidden") return;
       if (expanded && atMaximum) return;
       if (!expanded) {
         preloadNasa();
