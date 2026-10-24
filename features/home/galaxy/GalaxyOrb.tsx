@@ -14,11 +14,15 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
 export function GalaxyOrb() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
+  const zoomButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const surface = surfaceRef.current;
-    if (!canvas || !surface) return;
+    const zoomButton = zoomButtonRef.current;
+    const closeButton = closeButtonRef.current;
+    if (!canvas || !surface || !zoomButton || !closeButton) return;
     const context = canvas.getContext("2d", { alpha: true });
     if (!context) return;
     const ctx = context;
@@ -54,6 +58,10 @@ export function GalaxyOrb() {
     let galaxyRoll = rand(0, TAU);
     let quietUntil = 0;
     let yMax = 220;
+    let expanded = false;
+    let restoreTimer: number | undefined;
+    let oldBodyOverflow = "";
+    let priorFocus: HTMLElement | null = null;
     // Fixed 3-D stars around the disk; an edge-on galaxy is not empty space.
     // Generate once so the stars do not flicker between rendered frames.
     const galaxyHaloStars = Array.from({ length: 82 }, () => {
@@ -101,6 +109,20 @@ export function GalaxyOrb() {
 
     function measure() {
       sectionBounds = section!.getBoundingClientRect();
+      if (expanded) {
+        // Fill the actual viewport rather than stretching the small original
+        // canvas, so both stars and sphere are rendered at full resolution.
+        width = window.innerWidth;
+        height = window.innerHeight;
+        radius = Math.min(width * 0.46, height * 0.43, 440);
+        const dpi = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas!.width = Math.max(1, Math.round(width * dpi));
+        canvas!.height = Math.max(1, Math.round(height * dpi));
+        ctx.setTransform(dpi, 0, 0, dpi, 0, 0);
+        orb = { x: width * 0.5, y: height * 0.5 };
+        frameTime = 0;
+        return;
+      }
       width = sectionBounds.width;
       height = sectionBounds.height;
       if (!width || !height) return;
@@ -150,6 +172,67 @@ export function GalaxyOrb() {
       grains = [];
       frameTime = 0;
       segment = 0;
+      zoomButton!.style.width = `${radius * 2}px`;
+      zoomButton!.style.height = `${radius * 2}px`;
+      zoomButton!.style.transform = `translate3d(${orb.x - radius}px, ${orb.y - radius}px, 0)`;
+    }
+
+    function closeExpanded() {
+      if (!expanded) return;
+      expanded = false;
+      if (restoreTimer !== undefined) {
+        window.clearTimeout(restoreTimer);
+        restoreTimer = undefined;
+      }
+      surface!.style.position = "";
+      surface!.style.inset = "";
+      surface!.style.width = "";
+      surface!.style.height = "";
+      surface!.style.zIndex = "";
+      surface!.style.background = "";
+      surface!.style.pointerEvents = "";
+      surface!.style.touchAction = "";
+      surface!.removeAttribute("role");
+      surface!.removeAttribute("aria-modal");
+      surface!.removeAttribute("aria-label");
+      zoomButton!.style.display = "";
+      closeButton!.style.display = "none";
+      document.body.style.overflow = oldBodyOverflow;
+      measure();
+      priorFocus?.focus({ preventScroll: true });
+    }
+
+    function openExpanded() {
+      if (expanded) return;
+      priorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      expanded = true;
+      oldBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      surface!.style.position = "fixed";
+      surface!.style.inset = "0";
+      surface!.style.width = "100vw";
+      surface!.style.height = "100dvh";
+      surface!.style.zIndex = "99999";
+      surface!.style.background = "rgba(2, 9, 24, 0.975)";
+      surface!.style.pointerEvents = "auto";
+      surface!.style.touchAction = "none";
+      surface!.setAttribute("role", "dialog");
+      surface!.setAttribute("aria-modal", "true");
+      surface!.setAttribute("aria-label", "Enlarged galaxy orb");
+      zoomButton!.style.display = "none";
+      closeButton!.style.display = "grid";
+      measure();
+      closeButton!.focus({ preventScroll: true });
+      restoreTimer = window.setTimeout(closeExpanded, 10_000);
+    }
+
+    function onEscape(event: KeyboardEvent) {
+      if (expanded && event.key === "Escape") closeExpanded();
+    }
+
+    function onBackdropClick(event: MouseEvent) {
+      // The close button also closes through this backdrop click listener.
+      if (expanded && event.target !== canvas) closeExpanded();
     }
 
     // The curved motion changes both horizontal and vertical directions.
@@ -174,12 +257,16 @@ export function GalaxyOrb() {
       const dy = orb.y - prev.y;
       // Roll is visually readable even when the orb travels very slowly.
       rolling += Math.hypot(dx, dy) / Math.max(1, radius) * 2.6 + elapsed * 0.00044;
-      // All three axes rotate slowly and independently (about 57s / 79s / 45s per turn).
-      // The glass ball's roaming speed and rolling animation remain unchanged.
+      rotateGalaxy(elapsed);
+      prev = { ...orb };
+    }
+
+    function rotateGalaxy(elapsed: number) {
+      // The approved independent three-axis rotation remains continuous
+      // during the 10-second close-up.
       galaxyYaw = (galaxyYaw + elapsed * 0.00011) % TAU;
       galaxyPitch = (galaxyPitch + elapsed * 0.00008) % TAU;
       galaxyRoll = (galaxyRoll + elapsed * 0.00014) % TAU;
-      prev = { ...orb };
     }
 
     function emit(now: number, face: number) {
@@ -396,12 +483,23 @@ export function GalaxyOrb() {
     function render(now: number, elapsed: number) {
       if (!width || !height) return;
       ctx.clearRect(0, 0, width, height);
+      if (expanded) {
+        if (!reduced()) {
+          rotateGalaxy(elapsed);
+          rolling += elapsed * 0.00022;
+        }
+        drawSphere();
+        return;
+      }
       if (!reduced()) advance(now, elapsed);
       const face = galaxyOrientation().face;
       if (!reduced()) emit(now, face);
       drawGrains(now, false);
       drawSphere();
       drawGrains(now, true);
+      // Only this circular transparent hit target accepts taps; the
+      // surrounding page and its existing navigation remain interactive.
+      zoomButton!.style.transform = `translate3d(${orb.x - radius}px, ${orb.y - radius}px, 0)`;
     }
 
     function tick(now: number) {
@@ -421,6 +519,10 @@ export function GalaxyOrb() {
     }
 
     measure();
+    zoomButton.addEventListener("click", openExpanded);
+    surface.addEventListener("click", onBackdropClick);
+    window.addEventListener("keydown", onEscape);
+    window.addEventListener("resize", measure);
     const observer = new ResizeObserver(measure);
     observer.observe(section);
     const visibility = new IntersectionObserver((entries) => {
@@ -440,12 +542,34 @@ export function GalaxyOrb() {
       visibility.disconnect();
       media.removeEventListener("change", staticFrame);
       galaxy.removeEventListener("load", staticFrame);
+      zoomButton.removeEventListener("click", openExpanded);
+      surface.removeEventListener("click", onBackdropClick);
+      window.removeEventListener("keydown", onEscape);
+      window.removeEventListener("resize", measure);
+      closeExpanded();
     };
   }, []);
 
   return (
-    <div ref={surfaceRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-[2]">
-      <canvas ref={canvasRef} className="block h-full w-full" />
+    <div ref={surfaceRef} className="pointer-events-none absolute inset-0 z-[2]">
+      <canvas ref={canvasRef} aria-hidden="true" className="block h-full w-full" />
+      <button
+        ref={zoomButtonRef}
+        type="button"
+        aria-label="Enlarge galaxy orb for ten seconds"
+        title="Enlarge galaxy"
+        className="pointer-events-auto absolute left-0 top-0 rounded-full border-0 bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-200"
+        style={{ touchAction: "manipulation" }}
+      />
+      <button
+        ref={closeButtonRef}
+        type="button"
+        aria-label="Close enlarged galaxy"
+        title="Close"
+        className="pointer-events-auto absolute right-5 top-5 hidden h-12 w-12 place-items-center rounded-full border border-white/30 bg-black/40 text-3xl leading-none text-white"
+      >
+        ×
+      </button>
     </div>
   );
 }
