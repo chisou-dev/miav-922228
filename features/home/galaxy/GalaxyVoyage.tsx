@@ -7,7 +7,7 @@ import { GALAXY } from "./GalaxyHeading";
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
 type Dust = { x: number; y: number; t: number; speed: number; drift: number };
-type Planet = { enter: number; leave: number; scale: number; y: number; hue: number; ring: boolean; reverse: boolean };
+type Planet = { enter: number; x: number; y: number; scale: number; hue: number; ring: boolean; tilt: number; clouds: number };
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -17,7 +17,9 @@ const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/p
 // The real Andromeda galaxy (M31), GALEX observation PIA15416.
 // Source: https://science.nasa.gov/photojournal/andromeda/
 const NASA_ANDROMEDA = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15416/PIA15416.jpg?fit=clip&w=1400";
-const FINAL_STEP = 76;
+const FINAL_STEP = 124;
+const SECOND_APPROACH_START = 41;
+const SECOND_FULL_VIEW = 90;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
 const IDLE_MS = 120_000;
@@ -75,8 +77,10 @@ export function GalaxyVoyage({
     let viewHeight = window.innerHeight;
     let progress = 0;
     let target = 0;
-    let firstRotation = Math.random() * TAU;
-    let nextRotation = Math.random() * TAU;
+    // Start both galaxies face-on. Independent rotations are accumulated
+    // only while they are visibly large enough to appreciate the tumbling.
+    let firstRotation = 0.08;
+    let nextRotation = 0.16;
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
     let titleGhost: HTMLCanvasElement | null = null;
@@ -104,13 +108,34 @@ export function GalaxyVoyage({
     }));
     // These foreground planets are imaginary visual elements, not
     // detections of planets in M31. Overlapping passes create parallax.
+    // Ten fictional planets arranged at varied depths like a loose system.
+    // After entering from one side they recede in place with the retreating
+    // camera. They never ping-pong left/right across the entire screen.
     const planets: Planet[] = [
-      { enter: 11, leave: 20, scale: 0.23, y: 0.64, hue: 204, ring: false, reverse: false },
-      { enter: 19, leave: 29, scale: 0.13, y: 0.27, hue: 36, ring: true, reverse: true },
-      { enter: 27, leave: 38, scale: 0.17, y: 0.70, hue: 268, ring: false, reverse: false },
-      { enter: 41, leave: 51, scale: 0.12, y: 0.36, hue: 184, ring: false, reverse: true },
-      { enter: 53, leave: 65, scale: 0.19, y: 0.73, hue: 23, ring: true, reverse: false },
-      { enter: 61, leave: 71, scale: 0.10, y: 0.25, hue: 225, ring: false, reverse: true },
+      { enter: 9,  x: 0.16, y: 0.69, scale: 0.100, hue: 196, ring: false, tilt: -0.18, clouds: 0.53 },
+      { enter: 13, x: 0.81, y: 0.28, scale: 0.061, hue: 34,  ring: true,  tilt: 0.13, clouds: 0.27 },
+      { enter: 18, x: 0.30, y: 0.20, scale: 0.036, hue: 260, ring: false, tilt: 0.24, clouds: 0.44 },
+      { enter: 22, x: 0.89, y: 0.65, scale: 0.080, hue: 19,  ring: false, tilt: -0.22, clouds: 0.64 },
+      { enter: 27, x: 0.58, y: 0.81, scale: 0.055, hue: 190, ring: false, tilt: 0.12, clouds: 0.58 },
+      { enter: 31, x: 0.11, y: 0.38, scale: 0.048, hue: 43,  ring: false, tilt: -0.34, clouds: 0.29 },
+      { enter: 35, x: 0.75, y: 0.13, scale: 0.069, hue: 223, ring: true,  tilt: 0.25, clouds: 0.22 },
+      { enter: 39, x: 0.39, y: 0.61, scale: 0.039, hue: 335, ring: false, tilt: -0.09, clouds: 0.48 },
+      { enter: 46, x: 0.87, y: 0.43, scale: 0.052, hue: 169, ring: false, tilt: 0.31, clouds: 0.36 },
+      { enter: 52, x: 0.24, y: 0.78, scale: 0.043, hue: 14,  ring: true,  tilt: -0.18, clouds: 0.38 },
+    ];
+    const beacons = [
+      { x: 0.09, y: 0.12, hue: 207, size: 1.7, at: 14 },
+      { x: 0.63, y: 0.11, hue: 31,  size: 2.1, at: 19 },
+      { x: 0.97, y: 0.31, hue: 215, size: 1.8, at: 23 },
+      { x: 0.35, y: 0.44, hue: 0,   size: 1.5, at: 26 },
+      { x: 0.14, y: 0.57, hue: 40,  size: 2.0, at: 32 },
+      { x: 0.70, y: 0.73, hue: 199, size: 2.1, at: 35 },
+      { x: 0.49, y: 0.16, hue: 262, size: 1.5, at: 42 },
+      { x: 0.91, y: 0.86, hue: 27,  size: 1.9, at: 46 },
+      { x: 0.32, y: 0.91, hue: 204, size: 1.7, at: 50 },
+      { x: 0.57, y: 0.62, hue: 43,  size: 2.0, at: 55 },
+      { x: 0.77, y: 0.49, hue: 186, size: 1.5, at: 60 },
+      { x: 0.23, y: 0.28, hue: 12,  size: 1.7, at: 63 },
     ];
     const stars: (Star & { reveal: number })[] = Array.from({ length: 650 }, () => ({
       x: Math.random(), y: Math.random(),
@@ -329,42 +354,136 @@ export function GalaxyVoyage({
       drawErodedTitle(now, ease((p - 0.62) / 0.35) * 0.37);
     }
 
-    function drawPlanet(planet: Planet, step: number) {
-      if (step < planet.enter || step >= planet.leave) return;
-      const t = clamp((step - planet.enter) / (planet.leave - planet.enter), 0, 1);
-      const pass = Math.pow(Math.sin(Math.PI * t), 1.2);
-      const short = Math.min(viewWidth, viewHeight);
-      const r = short * (0.005 + planet.scale * pass);
-      const x = (planet.reverse ? mix(-0.20, 1.18, t) : mix(1.18, -0.20, t)) * viewWidth;
-      const y = (planet.y + (t - 0.5) * (planet.reverse ? 0.15 : -0.15)) * viewHeight;
-      if (r < 1) return;
+
+    function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
+      phase: number, alpha: number, depth = 1) {
+      if (diameter < 1 || alpha <= 0.002) return;
+      const texture = preparedGalaxy(img);
+      if (!texture) return;
+      // Orthographic projection of a real disk using three independent axes.
+      // Yaw and pitch each complete full circles; roll is independent too.
+      // The halo and central bulge retain thickness in edge-on views.
+      const yaw = phase * 0.96 + Math.sin(phase * 0.49 + depth) * 0.22;
+      const pitch = phase * 0.70 + Math.sin(phase * 0.61 + depth) * 0.30;
+      const roll = phase * 1.23;
+      const cy = Math.cos(yaw), sy = Math.sin(yaw);
+      const cp = Math.cos(pitch), sp = Math.sin(pitch);
+      const cr = Math.cos(roll), sr = Math.sin(roll);
+      const a = cr * cy - sr * sp * sy;
+      const b = sr * cy + cr * sp * sy;
+      const c = -sr * cp;
+      const d = cr * cp;
+      const face = Math.abs(cy * cp);
+      const edge = 1 - face;
+      const direction = 0.5 * Math.atan2(2 * (a * b + c * d), a * a + c * c - b * b - d * d);
+      const radius = diameter * 0.5;
       ctx!.save();
       ctx!.translate(x, y);
-      const light = ctx!.createRadialGradient(-r * 0.33, -r * 0.4, r * 0.025, r * 0.23, r * 0.13, r * 1.17);
-      light.addColorStop(0, "hsla(" + planet.hue + ",55%,83%,0.99)");
-      light.addColorStop(0.38, "hsla(" + planet.hue + ",55%,48%,0.98)");
-      light.addColorStop(0.74, "hsla(" + (planet.hue + 8) + ",65%,19%,0.99)");
-      light.addColorStop(1, "rgba(2,5,15,1)");
-      ctx!.fillStyle = light;
-      ctx!.beginPath();
-      ctx!.arc(0, 0, r, 0, TAU);
-      ctx!.fill();
+      ctx!.globalAlpha = clamp(alpha, 0, 1);
+      if (edge > 0.05 && radius > 3) {
+        ctx!.save();
+        ctx!.rotate(direction);
+        ctx!.scale(1, 0.31);
+        const disk = ctx!.createRadialGradient(0, 0, 0, 0, 0, radius * 0.90);
+        disk.addColorStop(0, "rgba(241,194,249," + (edge * 0.65) + ")");
+        disk.addColorStop(0.26, "rgba(149,129,226," + (edge * 0.46) + ")");
+        disk.addColorStop(1, "rgba(67,94,177,0)");
+        ctx!.fillStyle = disk;
+        ctx!.beginPath(); ctx!.arc(0, 0, radius * 0.90, 0, TAU); ctx!.fill();
+        ctx!.restore();
+        // The nucleus is a modest three-dimensional bulge, never a flat line.
+        ctx!.save();
+        ctx!.rotate(direction);
+        ctx!.scale(1, 0.56);
+        const nucleus = ctx!.createRadialGradient(0, 0, 0, 0, 0, radius * 0.28);
+        nucleus.addColorStop(0, "rgba(252,224,247," + (edge * 0.72) + ")");
+        nucleus.addColorStop(0.45, "rgba(178,141,227," + (edge * 0.44) + ")");
+        nucleus.addColorStop(1, "rgba(94,83,158,0)");
+        ctx!.fillStyle = nucleus;
+        ctx!.beginPath(); ctx!.arc(0, 0, radius * 0.28, 0, TAU); ctx!.fill();
+        ctx!.restore();
+      }
       ctx!.save();
-      ctx!.clip();
-      ctx!.strokeStyle = "hsla(" + (planet.hue + 18) + ",42%,82%,0.12)";
-      ctx!.lineWidth = Math.max(0.5, r * 0.055);
-      for (let band = -3; band <= 3; band++) {
+      ctx!.transform(a, b, c, d, 0, 0);
+      ctx!.globalCompositeOperation = "screen";
+      ctx!.drawImage(texture, -radius, -radius, diameter, diameter);
+      ctx!.restore();
+      ctx!.restore();
+    }
+
+    function drawBeaconStars(now: number, step: number) {
+      for (const beacon of beacons) {
+        const arrival = ease((step - beacon.at) / 7);
+        if (arrival <= 0) continue;
+        const x = beacon.x * viewWidth;
+        const y = beacon.y * viewHeight;
+        const twinkle = 0.76 + 0.24 * Math.sin(now * (0.0008 + beacon.size * 0.00013) + beacon.x * TAU);
+        const light = arrival * twinkle;
+        const glow = ctx!.createRadialGradient(x, y, 0, x, y, beacon.size * 8);
+        glow.addColorStop(0, "hsla(" + beacon.hue + ",78%,87%," + (light * 0.45) + ")");
+        glow.addColorStop(0.3, "hsla(" + beacon.hue + ",73%,65%," + (light * 0.16) + ")");
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx!.fillStyle = glow;
+        ctx!.beginPath(); ctx!.arc(x, y, beacon.size * 8, 0, TAU); ctx!.fill();
+        ctx!.fillStyle = "hsla(" + beacon.hue + ",62%,91%," + (light * 0.87) + ")";
+        ctx!.beginPath(); ctx!.arc(x, y, beacon.size * 0.72, 0, TAU); ctx!.fill();
+      }
+    }
+
+    function drawPlanet(planet: Planet, step: number) {
+      if (step < planet.enter || step > planet.enter + 74) return;
+      const arrive = ease((step - planet.enter) / 4.0);
+      const retreat = Math.max(0, step - planet.enter - 4);
+      const short = Math.min(viewWidth, viewHeight);
+      // It comes into the side of the view, then recedes at a stable screen
+      // position: retreating camera, not an object endlessly moving sideways.
+      const entryX = planet.x < 0.5 ? -0.10 : 1.10;
+      const screenX = mix(entryX, planet.x, arrive);
+      const screenY = planet.y;
+      const radius = short * planet.scale * (0.55 + arrive * 0.45) * Math.pow(0.917, retreat);
+      if (radius < 0.8) return;
+      const x = screenX * viewWidth;
+      const y = screenY * viewHeight;
+      ctx!.save();
+      ctx!.translate(x, y);
+      const atm = ctx!.createRadialGradient(-radius * 0.3, -radius * 0.4, radius * 0.1, 0, 0, radius * 1.23);
+      atm.addColorStop(0, "hsla(" + planet.hue + ",72%,75%,0.20)");
+      atm.addColorStop(0.7, "hsla(" + planet.hue + ",63%,41%,0.17)");
+      atm.addColorStop(1, "hsla(" + planet.hue + ",58%,35%,0)");
+      ctx!.fillStyle = atm;
+      ctx!.beginPath(); ctx!.arc(0, 0, radius * 1.24, 0, TAU); ctx!.fill();
+      const shadow = ctx!.createRadialGradient(
+        -radius * 0.42, -radius * 0.46, radius * 0.01,
+        radius * 0.20, radius * 0.18, radius * 1.14,
+      );
+      shadow.addColorStop(0, "hsl(" + planet.hue + ",55%,79%)");
+      shadow.addColorStop(0.40, "hsl(" + planet.hue + ",46%,46%)");
+      shadow.addColorStop(0.78, "hsl(" + (planet.hue + 7) + ",49%,22%)");
+      shadow.addColorStop(1, "#030711");
+      ctx!.fillStyle = shadow;
+      ctx!.beginPath(); ctx!.arc(0, 0, radius, 0, TAU); ctx!.fill();
+      // Muted cloud belts on the lit hemisphere, clipped to a spherical limb.
+      ctx!.save();
+      ctx!.beginPath(); ctx!.arc(0, 0, radius * 0.98, 0, TAU); ctx!.clip();
+      ctx!.rotate(planet.tilt);
+      for (let k = -3; k <= 3; k++) {
         ctx!.beginPath();
-        ctx!.ellipse(r * 0.07, band * r * 0.24, r * 1.1, r * 0.23, -0.27, 0, TAU);
+        ctx!.ellipse(-radius * 0.12, k * radius * 0.23, radius * 1.04,
+          radius * (0.12 + planet.clouds * 0.045), 0.17, 0, TAU);
+        ctx!.lineWidth = Math.max(0.7, radius * 0.055);
+        ctx!.strokeStyle = "rgba(230,234,242," + (0.045 + planet.clouds * 0.052) + ")";
         ctx!.stroke();
       }
       ctx!.restore();
-      if (planet.ring && r > 8) {
-        ctx!.strokeStyle = "hsla(" + (planet.hue + 33) + ",37%,85%," + (0.31 * pass).toFixed(3) + ")";
-        ctx!.lineWidth = Math.max(0.8, r * 0.11);
+      if (planet.ring && radius > 3) {
+        ctx!.save();
+        ctx!.rotate(planet.tilt);
+        ctx!.strokeStyle = "hsla(" + (planet.hue + 28) + ",31%,81%," + (0.30 * arrive) + ")";
+        ctx!.lineWidth = Math.max(0.8, radius * 0.10);
         ctx!.beginPath();
-        ctx!.ellipse(0, 0, r * 1.67, r * 0.38, -0.24, Math.PI * 0.07, Math.PI * 0.95);
+        ctx!.ellipse(0, 0, radius * 1.75, radius * 0.43, 0.12, Math.PI * 0.08, Math.PI * 0.94);
         ctx!.stroke();
+        ctx!.restore();
       }
       ctx!.restore();
     }
