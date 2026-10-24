@@ -59,6 +59,12 @@ export function GalaxyOrb() {
     let quietUntil = 0;
     let yMax = 220;
     let expanded = false;
+    let atMaximum = false;
+    let zoomStep = 0;
+    let normalRadius = 46;
+    let targetRadius = 46;
+    let maximumRadius = 180;
+    let zoomOrigin: Point = { x: 0, y: 0 };
     let restoreTimer: number | undefined;
     let oldBodyOverflow = "";
     let priorFocus: HTMLElement | null = null;
@@ -110,16 +116,22 @@ export function GalaxyOrb() {
     function measure() {
       sectionBounds = section!.getBoundingClientRect();
       if (expanded) {
-        // Fill the actual viewport rather than stretching the small original
-        // canvas, so both stars and sphere are rendered at full resolution.
+        // Render at viewport resolution from the first zoom step onward.
+        // The sphere itself, not the entire screen, grows 1.3x per tap.
         width = window.innerWidth;
         height = window.innerHeight;
-        radius = Math.min(width * 0.46, height * 0.43, 440);
+        maximumRadius = Math.min(width * 0.46, height * 0.43, 440);
+        if (atMaximum) {
+          targetRadius = maximumRadius;
+        } else {
+          targetRadius = Math.min(maximumRadius, normalRadius * Math.pow(1.3, zoomStep));
+        }
+        if (reduced()) radius = targetRadius;
         const dpi = Math.min(window.devicePixelRatio || 1, 1.5);
         canvas!.width = Math.max(1, Math.round(width * dpi));
         canvas!.height = Math.max(1, Math.round(height * dpi));
         ctx.setTransform(dpi, 0, 0, dpi, 0, 0);
-        orb = { x: width * 0.5, y: height * 0.5 };
+        updateZoomGeometry();
         frameTime = 0;
         return;
       }
@@ -177,9 +189,32 @@ export function GalaxyOrb() {
       zoomButton!.style.transform = `translate3d(${orb.x - radius}px, ${orb.y - radius}px, 0)`;
     }
 
+
+    function updateZoomGeometry() {
+      if (!expanded) return;
+      // Move progressively from the tapped position toward the viewport
+      // centre; on the final tap the sphere fills the available screen.
+      const progress = clamp(
+        (radius - normalRadius) / Math.max(1, maximumRadius - normalRadius),
+        0, 1,
+      );
+      const centreX = mix(zoomOrigin.x, width * 0.5, smooth(progress));
+      const centreY = mix(zoomOrigin.y, height * 0.5, smooth(progress));
+      orb = {
+        x: clamp(centreX, radius + 3, Math.max(radius + 3, width - radius - 3)),
+        y: clamp(centreY, radius + 3, Math.max(radius + 3, height - radius - 3)),
+      };
+      const hitRadius = Math.max(radius, targetRadius);
+      zoomButton!.style.width = `${hitRadius * 2}px`;
+      zoomButton!.style.height = `${hitRadius * 2}px`;
+      zoomButton!.style.transform = `translate3d(${orb.x - hitRadius}px, ${orb.y - hitRadius}px, 0)`;
+    }
+
     function closeExpanded() {
       if (!expanded) return;
       expanded = false;
+      atMaximum = false;
+      zoomStep = 0;
       if (restoreTimer !== undefined) {
         window.clearTimeout(restoreTimer);
         restoreTimer = undefined;
@@ -202,28 +237,57 @@ export function GalaxyOrb() {
       priorFocus?.focus({ preventScroll: true });
     }
 
-    function openExpanded() {
-      if (expanded) return;
-      priorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      expanded = true;
-      oldBodyOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      surface!.style.position = "fixed";
-      surface!.style.inset = "0";
-      surface!.style.width = "100vw";
-      surface!.style.height = "100dvh";
-      surface!.style.zIndex = "99999";
-      surface!.style.background = "rgba(2, 9, 24, 0.975)";
-      surface!.style.pointerEvents = "auto";
-      surface!.style.touchAction = "none";
-      surface!.setAttribute("role", "dialog");
-      surface!.setAttribute("aria-modal", "true");
-      surface!.setAttribute("aria-label", "Enlarged galaxy orb");
-      zoomButton!.style.display = "none";
-      closeButton!.style.display = "grid";
-      measure();
-      closeButton!.focus({ preventScroll: true });
-      restoreTimer = window.setTimeout(closeExpanded, 10_000);
+    function setReturnTimer() {
+      if (restoreTimer !== undefined) window.clearTimeout(restoreTimer);
+      // The countdown restarts on every intermediate tap. Reaching the
+      // maximum changes it to 10 seconds; otherwise the timeout is 20.
+      restoreTimer = window.setTimeout(closeExpanded, atMaximum ? 10_000 : 20_000);
+    }
+
+    function enlargeOneStep() {
+      if (expanded && atMaximum) return;
+      if (!expanded) {
+        priorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        normalRadius = radius;
+        zoomStep = 0;
+        const bounds = section!.getBoundingClientRect();
+        zoomOrigin = { x: bounds.left + orb.x, y: bounds.top + orb.y };
+        expanded = true;
+        atMaximum = false;
+        oldBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        surface!.style.position = "fixed";
+        surface!.style.inset = "0";
+        surface!.style.width = "100vw";
+        surface!.style.height = "100dvh";
+        surface!.style.zIndex = "99999";
+        surface!.style.pointerEvents = "none";
+        surface!.style.touchAction = "none";
+        surface!.setAttribute("role", "dialog");
+        surface!.setAttribute("aria-modal", "true");
+        surface!.setAttribute("aria-label", "Tap again to enlarge galaxy");
+        closeButton!.style.display = "grid";
+        measure();
+      }
+      zoomStep += 1;
+      const proposed = normalRadius * Math.pow(1.3, zoomStep);
+      // Avoid an almost-invisible extra tap very near the maximum size.
+      atMaximum = proposed >= maximumRadius * 0.92;
+      targetRadius = atMaximum ? maximumRadius : Math.min(maximumRadius, proposed);
+      surface!.style.background = atMaximum
+        ? "rgba(2, 9, 24, 0.975)"
+        : "rgba(2, 9, 24, 0.08)";
+      surface!.style.pointerEvents = atMaximum ? "auto" : "none";
+      surface!.setAttribute("aria-label", atMaximum ? "Full-sized galaxy orb" : "Tap again to enlarge galaxy");
+      if (reduced()) {
+        radius = targetRadius;
+        updateZoomGeometry();
+        render(performance.now(), 0);
+      }
+      // Keep focus on the enlarging sphere to make repeated clicks or
+      // keyboard activation easy. The close button remains available.
+      zoomButton!.focus({ preventScroll: true });
+      setReturnTimer();
     }
 
     function onEscape(event: KeyboardEvent) {
@@ -231,9 +295,8 @@ export function GalaxyOrb() {
     }
 
     function onBackdropClick(event: MouseEvent) {
-      // Do not let the original tap on the moving orb immediately close
-      // the just-opened overlay as that click bubbles to this surface.
-      if (expanded && event.target !== zoomButton) closeExpanded();
+      // Clicking outside the sphere closes only once maximum is reached.
+      if (expanded && atMaximum && event.target !== zoomButton) closeExpanded();
     }
 
     // The curved motion changes both horizontal and vertical directions.
@@ -488,7 +551,11 @@ export function GalaxyOrb() {
         if (!reduced()) {
           rotateGalaxy(elapsed);
           rolling += elapsed * 0.00022;
+          const fraction = Math.min(1, elapsed / 150);
+          radius = mix(radius, targetRadius, fraction);
+          if (Math.abs(radius - targetRadius) < 0.15) radius = targetRadius;
         }
+        updateZoomGeometry();
         drawSphere();
         return;
       }
@@ -520,7 +587,7 @@ export function GalaxyOrb() {
     }
 
     measure();
-    zoomButton.addEventListener("click", openExpanded);
+    zoomButton.addEventListener("click", enlargeOneStep);
     surface.addEventListener("click", onBackdropClick);
     window.addEventListener("keydown", onEscape);
     window.addEventListener("resize", measure);
@@ -543,7 +610,7 @@ export function GalaxyOrb() {
       visibility.disconnect();
       media.removeEventListener("change", staticFrame);
       galaxy.removeEventListener("load", staticFrame);
-      zoomButton.removeEventListener("click", openExpanded);
+      zoomButton.removeEventListener("click", enlargeOneStep);
       surface.removeEventListener("click", onBackdropClick);
       window.removeEventListener("keydown", onEscape);
       window.removeEventListener("resize", measure);
@@ -557,8 +624,8 @@ export function GalaxyOrb() {
       <button
         ref={zoomButtonRef}
         type="button"
-        aria-label="Enlarge galaxy orb for ten seconds"
-        title="Enlarge galaxy"
+        aria-label="Enlarge galaxy by 30 percent"
+        title="Tap to enlarge galaxy"
         className="pointer-events-auto absolute left-0 top-0 rounded-full border-0 bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-200"
         style={{ touchAction: "manipulation" }}
       />
