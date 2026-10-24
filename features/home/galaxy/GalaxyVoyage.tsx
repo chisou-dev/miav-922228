@@ -473,40 +473,11 @@ export function GalaxyVoyage({
       ctx!.restore();
     }
 
-    function drawBeaconStars(now: number, step: number) {
-      for (const beacon of beacons) {
-        const arrival = ease((step - beacon.at) / 7);
-        if (arrival <= 0) continue;
-        const x = beacon.x * viewWidth;
-        const y = beacon.y * viewHeight;
-        const twinkle = 0.76 + 0.24 * Math.sin(now * (0.0008 + beacon.size * 0.00013) + beacon.x * TAU);
-        const light = arrival * twinkle;
-        const glow = ctx!.createRadialGradient(x, y, 0, x, y, beacon.size * 8);
-        glow.addColorStop(0, "hsla(" + beacon.hue + ",78%,87%," + (light * 0.45) + ")");
-        glow.addColorStop(0.3, "hsla(" + beacon.hue + ",73%,65%," + (light * 0.16) + ")");
-        glow.addColorStop(1, "rgba(0,0,0,0)");
-        ctx!.fillStyle = glow;
-        ctx!.beginPath(); ctx!.arc(x, y, beacon.size * 8, 0, TAU); ctx!.fill();
-        ctx!.fillStyle = "hsla(" + beacon.hue + ",62%,91%," + (light * 0.87) + ")";
-        ctx!.beginPath(); ctx!.arc(x, y, beacon.size * 0.72, 0, TAU); ctx!.fill();
-      }
-    }
 
-    function drawPlanet(planet: Planet, step: number) {
-      if (step < planet.enter || step > planet.enter + 74) return;
-      const arrive = ease((step - planet.enter) / 4.0);
-      const retreat = Math.max(0, step - planet.enter - 4);
-      const short = Math.min(viewWidth, viewHeight);
-      // It comes into the side of the view, then recedes at a stable screen
-      // position: retreating camera, not an object endlessly moving sideways.
-      const entryX = planet.x < 0.5 ? -0.10 : 1.10;
-      const screenX = mix(entryX, planet.x, arrive);
-      const screenY = planet.y;
-      const radius = short * planet.scale * (0.55 + arrive * 0.45) * Math.pow(0.917, retreat);
-      if (radius < 0.8) return;
-      const x = screenX * viewWidth;
-      const y = screenY * viewHeight;
+    function drawBody(planet: Planet, x: number, y: number, radius: number, opacity = 1) {
+      if (radius < 0.8 || opacity < 0.01) return;
       ctx!.save();
+      ctx!.globalAlpha = clamp(opacity, 0, 1);
       ctx!.translate(x, y);
       const atm = ctx!.createRadialGradient(-radius * 0.3, -radius * 0.4, radius * 0.1, 0, 0, radius * 1.23);
       atm.addColorStop(0, "hsla(" + planet.hue + ",72%,75%,0.20)");
@@ -516,15 +487,13 @@ export function GalaxyVoyage({
       ctx!.beginPath(); ctx!.arc(0, 0, radius * 1.24, 0, TAU); ctx!.fill();
       const shadow = ctx!.createRadialGradient(
         -radius * 0.42, -radius * 0.46, radius * 0.01,
-        radius * 0.20, radius * 0.18, radius * 1.14,
-      );
+        radius * 0.20, radius * 0.18, radius * 1.14);
       shadow.addColorStop(0, "hsl(" + planet.hue + ",55%,79%)");
       shadow.addColorStop(0.40, "hsl(" + planet.hue + ",46%,46%)");
       shadow.addColorStop(0.78, "hsl(" + (planet.hue + 7) + ",49%,22%)");
       shadow.addColorStop(1, "#030711");
       ctx!.fillStyle = shadow;
       ctx!.beginPath(); ctx!.arc(0, 0, radius, 0, TAU); ctx!.fill();
-      // Muted cloud belts on the lit hemisphere, clipped to a spherical limb.
       ctx!.save();
       ctx!.beginPath(); ctx!.arc(0, 0, radius * 0.98, 0, TAU); ctx!.clip();
       ctx!.rotate(planet.tilt);
@@ -532,7 +501,7 @@ export function GalaxyVoyage({
         ctx!.beginPath();
         ctx!.ellipse(-radius * 0.12, k * radius * 0.23, radius * 1.04,
           radius * (0.12 + planet.clouds * 0.045), 0.17, 0, TAU);
-        ctx!.lineWidth = Math.max(0.7, radius * 0.055);
+        ctx!.lineWidth = Math.max(0.55, radius * 0.05);
         ctx!.strokeStyle = "rgba(230,234,242," + (0.045 + planet.clouds * 0.052) + ")";
         ctx!.stroke();
       }
@@ -540,91 +509,149 @@ export function GalaxyVoyage({
       if (planet.ring && radius > 3) {
         ctx!.save();
         ctx!.rotate(planet.tilt);
-        ctx!.strokeStyle = "hsla(" + (planet.hue + 28) + ",31%,81%," + (0.30 * arrive) + ")";
+        ctx!.strokeStyle = "hsla(" + (planet.hue + 28) + ",31%,81%,0.44)";
         ctx!.lineWidth = Math.max(0.8, radius * 0.10);
         ctx!.beginPath();
-        ctx!.ellipse(0, 0, radius * 1.75, radius * 0.43, 0.12, Math.PI * 0.08, Math.PI * 0.94);
+        ctx!.ellipse(0, 0, radius * 1.75, radius * 0.43, 0.12, Math.PI * 0.07, Math.PI * 0.95);
         ctx!.stroke();
         ctx!.restore();
       }
       ctx!.restore();
     }
 
+    function drawPassingBody(planet: Planet, s: number, shrinkRate: number, fromRight: boolean) {
+      if (s < planet.enter) return;
+      const t = Math.max(0, s - planet.enter);
+      const arrival = ease(t / 4);
+      const px = mix(fromRight ? 1.16 : -0.16, planet.x, arrival);
+      const radius = Math.min(viewWidth, viewHeight) * planet.scale *
+        (0.12 + 0.88 * arrival) * Math.pow(shrinkRate, Math.max(0, t - 4));
+      drawBody(planet, px * viewWidth, planet.y * viewHeight, radius);
+      // At great distance keep a single pinpoint rather than making the
+      // planet instantly disappear.
+      if (radius < 1.1 && t > 7 && t < 112) {
+        ctx!.fillStyle = "rgba(198,214,240,0.36)";
+        ctx!.beginPath();
+        ctx!.arc(px * viewWidth, planet.y * viewHeight, 0.6, 0, TAU);
+        ctx!.fill();
+      }
+    }
+
+    function groupCenter(s: number) {
+      // The second pair moves toward the middle as this new group enters
+      // from the far right. The composition slowly resolves as a fixed field.
+      const t = ease((s - ELEVEN_STEP) / 30);
+      return { x: mix(1.16, 0.61, t) * viewWidth, y: viewHeight * 0.51 };
+    }
+
+    function galaxyField(s: number, now: number) {
+      if (s < ELEVEN_STEP) return;
+      const short = Math.min(viewWidth, viewHeight);
+      const center = groupCenter(s);
+      const hold = ease((s - ELEVEN_STEP) / 14);
+      const shrink = 1 - ease((s - 94) / 37) * 0.92;
+      const groupFade = 1 - ease((s - 109) / 25);
+      for (const item of system) {
+        if (s < item.enter) continue;
+        const settle = ease((s - item.enter) / 5);
+        const x = center.x + item.x * short * 0.8;
+        const y = center.y + item.y * short * 0.85;
+        const radius = short * item.scale * (0.25 + settle * 0.75) * shrink;
+        drawBody(item, x, y, radius, groupFade * Math.max(hold, settle * 0.7));
+      }
+
+      const count = cloudCount(s);
+      if (!count) return;
+      // At the same centre, each subsequent click reveals farther reaches
+      // of this galaxy's distribution. New dots do not leap or rearrange.
+      const fieldFullness = ease((s - CLOUD_START) / (CLOUD_COMPLETE - CLOUD_START));
+      const recession = Math.max(0, s - FULL_GALAXY_STEP);
+      const size = short * mix(0.15, 0.40, fieldFullness) * Math.pow(0.79, recession);
+      const opacity = ease((s - CLOUD_START) / 8);
+      const imgOpacity = 0.47 * ease((s - 113) / 19);
+      const photoDiameter = size * 2.18;
+      // Same real M31 photograph and centre throughout the resolved phase.
+      // It never rotates after the individual positions are established.
+      galaxyImage(second, center.x, center.y, photoDiameter, 0.20, imgOpacity);
+
+      ctx!.save();
+      ctx!.globalCompositeOperation = "screen";
+      for (let i = 0; i < count; i++) {
+        const point = galaxyPoints[i];
+        // Keep a modest pinhead of brightness at great distance.
+        const x = center.x + point.x * size;
+        const y = center.y + point.y * size;
+        if (x < -4 || y < -4 || x > viewWidth + 4 || y > viewHeight + 4) continue;
+        const sparkle = 0.87 + 0.13 * Math.sin(now * 0.0007 + point.phase);
+        ctx!.fillStyle = "hsla(" + point.hue + ",66%," +
+          (75 + Math.round(point.bright * 19)) + "%," +
+          (opacity * point.bright * sparkle).toFixed(3) + ")";
+        ctx!.beginPath();
+        ctx!.arc(x, y, Math.max(0.27, point.r * (0.8 - 0.38 * fieldFullness)), 0, TAU);
+        ctx!.fill();
+      }
+      // Diffuse core strengthens only after hundreds of fixed lights gather.
+      if (count > 350 && size > 3) {
+        const core = ctx!.createRadialGradient(center.x, center.y, 0,
+          center.x, center.y, size * 0.23);
+        core.addColorStop(0, "rgba(239,220,254," + (opacity * 0.48) + ")");
+        core.addColorStop(0.33, "rgba(176,167,235," + (opacity * 0.19) + ")");
+        core.addColorStop(1, "rgba(88,100,171,0)");
+        ctx!.fillStyle = core;
+        ctx!.beginPath(); ctx!.arc(center.x, center.y, size * 0.23, 0, TAU); ctx!.fill();
+      }
+      ctx!.restore();
+    }
 
     function draw(now: number, dt: number) {
       if (!running) return;
       ctx!.clearRect(0, 0, viewWidth, viewHeight);
       const age = now - opened;
       const short = Math.min(viewWidth, viewHeight);
-
-      // The short sphere-implosion continues after the FIRST tap. Every
-      // subsequent change of camera distance is controlled by target taps.
-      if (age < IMPLOSION_MS) {
-        drawImplosion(now);
-        return;
-      }
+      // Only the glass absorption runs automatically after the first click.
+      if (age < IMPLOSION_MS) { drawImplosion(now); return; }
       progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 205));
       if (Math.abs(progress - target) < 0.005) progress = target;
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
 
-      // The initial galaxy is STATIONARY on the screen: no wandering, orbit,
-      // left-right swoop, or translation. It only tumbles on all three axes.
-      // Camera recession begins after the separately tapped title scene.
-      const firstRetreat = Math.max(0, s - 3);
-      const firstSize = short * 0.66 * Math.pow(0.89, Math.min(firstRetreat, 46));
-      if (!reduced && firstSize > short * 0.11) firstRotation += dt * 0.000175;
-
-      // Stars are initially almost absent, then emerge in ones and twos and
-      // gradually fill the same continuous void, including around Andromeda.
-      const starDensity = ease((s - 5) / 112);
-      starscape(now, 0.004 + starDensity * 0.996, s >= FINAL_STEP - 3);
-      drawBeaconStars(now, s);
-
-      const firstFade = 1 - ease((s - 43) / 11);
-      drawGalaxy3D(first.complete && first.naturalWidth ? first : globe,
-        viewWidth * 0.51, viewHeight * 0.52,
-        firstSize, firstRotation, firstFade, 0.2);
-
-      // After ~40 taps, an extremely distant Andromeda enters from the
-      // right edge. More than forty subsequent taps are required before its
-      // complete disk becomes visible. It never pops in as a giant image.
-      if (s >= SECOND_APPROACH_START) {
-        const approach = ease((s - SECOND_APPROACH_START) /
-          (SECOND_FULL_VIEW - SECOND_APPROACH_START));
-        const distanceAfter = Math.max(0, s - SECOND_FULL_VIEW);
-        const approachSize = short * 0.0035 * Math.pow(0.68 / 0.0035, approach);
-        const andromedaSize = approachSize * Math.pow(0.87, distanceAfter);
-        // This is one right-edge field of view, not an abrupt camera cut:
-        // x advances slowly inward while the disk is distant and the full
-        // spiral stays visible at closest approach. Then it shrinks in place.
-        const andromedaX = mix(viewWidth * 1.045, viewWidth * 0.63, approach);
-        const andromedaY = mix(viewHeight * 0.46, viewHeight * 0.51, approach);
-        if (!reduced && andromedaSize > short * 0.13) {
-          nextRotation += dt * 0.00015;
-        }
-        const secondFade = 1 - ease((s - 117) / 7);
-        drawGalaxy3D(second, andromedaX, andromedaY,
-          andromedaSize, nextRotation, secondFade, 1.6);
+      // 0–2: thin, eroded MIAV title with sand leaving it.
+      // 3–30: the first 3D rotating galaxy recedes to one star FIRST.
+      const recession = Math.max(0, s - 3);
+      const firstSize = short * 0.66 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
+      if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
+      if (s < FIRST_PLANET_STEP) {
+        drawGalaxy3D(first.complete && first.naturalWidth ? first : globe,
+          viewWidth * 0.51, viewHeight * 0.52, firstSize, firstRotation,
+          1 - ease((s - FIRST_STAR_STEP + 2) / 5), 0.2);
+      } else if (s < CLOUD_COMPLETE) {
+        ctx!.fillStyle = "rgba(235,209,255,0.42)";
+        ctx!.beginPath();
+        ctx!.arc(viewWidth * 0.51, viewHeight * 0.52, 0.7, 0, TAU);
+        ctx!.fill();
       }
 
-      // Ten planets enter independently from alternating edges; once inside
-      // this retreating view each remains in place and gets smaller instead
-      // of bouncing across the entire screen as the camera backs away.
-      for (const planet of planets) drawPlanet(planet, s);
-
-      // The faint, perforated MIAV name keeps shedding individual sand grains
-      // after the original text has been visually covered, until the NEXT tap.
-      // It is drawn over the intro galaxy but never changes the actual DOM.
       if (s < 2.01) {
         const strength = 0.38 * (1 - ease((s - 0.68) / 1.32));
         drawErodedTitle(now, strength);
         drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
           0.90 * (1 - ease((s - 0.90) / 1.11)));
       }
-      // At step 124 the huge field has become pure twinkling stars. A final
-      // 30-second hold, then automatic home return, is handled by stepForward.
+
+      // First planet appears only after the initial spiral is star-size.
+      // Another ringed body and nearby moon follow at a DIFFERENT side.
+      drawPassingBody(firstPlanet, s, 0.72, false);
+      drawPassingBody(secondPlanet, s, 0.84, true);
+      drawPassingBody(satellitePlanet, s, 0.84, true);
+
+      // Stars accumulate progressively during retreat, not all at once.
+      const starDensity = ease((s - FIRST_PLANET_STEP) / (FINAL_STEP - FIRST_PLANET_STEP));
+      starscape(now, 0.009 + starDensity * 0.991, s >= FINAL_STEP - 3);
+      galaxyField(s, now);
+
+      // By the last click the completed galaxy is a tiny point among stars.
+      // Only the softly scintillating sky remains until the 30s auto-return.
     }
 
     function stepForward() {
