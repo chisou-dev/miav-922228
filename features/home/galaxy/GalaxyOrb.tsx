@@ -231,8 +231,9 @@ export function GalaxyOrb() {
     }
 
     function onBackdropClick(event: MouseEvent) {
-      // The close button also closes through this backdrop click listener.
-      if (expanded && event.target !== canvas) closeExpanded();
+      // Do not let the original tap on the moving orb immediately close
+      // the just-opened overlay as that click bubbles to this surface.
+      if (expanded && event.target !== zoomButton) closeExpanded();
     }
 
     // The curved motion changes both horizontal and vertical directions.
