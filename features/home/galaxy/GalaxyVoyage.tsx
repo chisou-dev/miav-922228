@@ -4,29 +4,18 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
 import { drawStage1EntryCraft } from "./drawStage1EntryCraft";
+import { createGalaxyFlightScene } from "./GalaxyFlightScene";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
 type Dust = { x: number; y: number; t: number; speed: number; drift: number };
-type Planet = { enter: number; x: number; y: number; scale: number; hue: number; ring: boolean; tilt: number; clouds: number };
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => { const v = clamp(t, 0, 1); return v * v * (3 - 2 * v); };
 const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15910/PIA15910.jpg?fit=clip&w=1200";
-// The real Andromeda galaxy (M31), GALEX observation PIA15416.
-// Source: https://science.nasa.gov/photojournal/andromeda/
-const NASA_ANDROMEDA = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15416/PIA15416.jpg?fit=clip&w=1400";
-// Click-controlled recession: initial galaxy, 1st planet, moon/ringed pair,
-// eleven-body system, 100→1000 stellar lights, then a receding full galaxy.
 const FIRST_STAR_STEP = 30;
-const FIRST_PLANET_STEP = 31;
-const SECOND_PLANET_STEP = 54;
-const ELEVEN_STEP = 81;
-const CLOUD_START = 98;
-const CLOUD_COMPLETE = 130;
-const FULL_GALAXY_STEP = 132;
 const FINAL_STEP = 165;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
@@ -116,98 +105,13 @@ export function GalaxyVoyage({
     globe.src = GALAXY;
     const first = new Image();
     first.src = NASA_M100;
-    const second = new Image();
-    second.onerror = () => {
-      // Backup is the original NASA/JPL Photojournal JPEG. No loop on failure.
-      second.onerror = null;
-      second.src = "https://photojournal.jpl.nasa.gov/jpeg/PIA15416.jpg";
-    };
-    second.src = NASA_ANDROMEDA;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
     const dust: Dust[] = selectedText.slice(0, 300).map((p) => ({
       ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
       drift: (Math.random() - 0.5) * 44,
     }));
-    // Every body occupies a stable place in a receding field of view.
-    // Planets are fictional visual motifs; distant points are artistic
-    // starlight, not claims of 1000 individually observable exoplanets.
-    const firstPlanet: Planet = {
-      enter: FIRST_PLANET_STEP, x: 0.27, y: 0.58, scale: 0.21,
-      hue: 202, ring: false, tilt: -0.18, clouds: 0.61,
-    };
-    const secondPlanet: Planet = {
-      enter: SECOND_PLANET_STEP, x: 0.78, y: 0.46, scale: 0.20,
-      hue: 34, ring: true, tilt: 0.17, clouds: 0.28,
-    };
-    const satellitePlanet: Planet = {
-      enter: SECOND_PLANET_STEP + 3, x: 0.88, y: 0.63,
-      scale: 0.072, hue: 215, ring: false, tilt: 0.21, clouds: 0.19,
-    };
-    const seed01 = (n: number) => {
-      let v = (Math.imul(n + 1, 0x9e3779b1) ^ 0x5f356495) >>> 0;
-      v = Math.imul(v ^ (v >>> 16), 0x85ebca6b) >>> 0;
-      v = Math.imul(v ^ (v >>> 13), 0xc2b2ae35) >>> 0;
-      return ((v ^ (v >>> 16)) >>> 0) / 4294967295;
-    };
-    const system: Planet[] = Array.from({ length: 11 }, (_, i) => ({
-      enter: ELEVEN_STEP + (i % 4) * 2,
-      x: Math.cos(i * TAU / 11 + 0.31) * (0.13 + seed01(i + 11) * 0.22),
-      y: Math.sin(i * TAU / 11 + 0.31) * (0.16 + seed01(i + 71) * 0.21),
-      scale: 0.034 + seed01(i + 173) * 0.041,
-      hue: [203, 31, 281, 15, 177, 218, 42, 322, 193, 8, 247][i],
-      ring: i === 2 || i === 8,
-      tilt: (seed01(i + 281) - 0.5) * 0.7,
-      clouds: seed01(i + 389) * 0.7,
-    }));
-
-    // A seeded, immutable spiral field. As the camera pulls out we uncover
-    // 11, 100, 300, 500, 700, 800 and 1000 points without rearranging any.
-    // Coordinates do not spin after a resolved galaxy appears.
-    const galaxyPoints = Array.from({ length: 1000 }, (_, i) => {
-      const r = Math.sqrt((i + 0.5) / 1000);
-      const arm = i % 4;
-      const scatter = (seed01(i * 17 + 83) - 0.5) * (0.2 + 0.35 * r);
-      const a = arm * TAU / 4 + r * 5.7 + scatter;
-      const squish = 0.72;
-      return {
-        x: Math.cos(a) * r + (seed01(i * 13 + 113) - 0.5) * 0.018,
-        y: Math.sin(a) * r * squish + (seed01(i * 11 + 517) - 0.5) * 0.018,
-        r: 0.4 + seed01(i * 7 + 131) * 1.15,
-        bright: 0.16 + seed01(i * 19 + 41) * 0.78,
-        hue: [195, 205, 225, 247, 282, 323, 35, 42][i % 8],
-        phase: seed01(i * 13 + 181) * TAU,
-      };
-    });
-    const milestones = [
-      [CLOUD_START, 11],
-      [103, 100],
-      [109, 300],
-      [115, 500],
-      [120, 700],
-      [125, 800],
-      [CLOUD_COMPLETE, 1000],
-    ] as const;
-    function cloudCount(step: number) {
-      if (step < CLOUD_START) return 0;
-      for (let i = 1; i < milestones.length; i++) {
-        const [stop, end] = milestones[i];
-        if (step <= stop) {
-          const [start, from] = milestones[i - 1];
-          return Math.floor(mix(from, end, ease((step - start) / (stop - start))));
-        }
-      }
-      return 1000;
-    }
-    const stars: (Star & { reveal: number })[] = Array.from({ length: 650 }, () => ({
-      x: Math.random(), y: Math.random(),
-      r: 0.35 + Math.random() * 1.24,
-      alpha: 0.22 + Math.random() * 0.70,
-      speed: 0.00043 + Math.random() * 0.0017,
-      phase: Math.random() * TAU,
-      hue: [0, 12, 30, 46, 190, 205, 225, 268][Math.floor(Math.random() * 8)],
-      reveal: Math.random(),
-    }));
+    const flightScene = createGalaxyFlightScene();
 
     function resize() {
       viewWidth = window.innerWidth;
@@ -258,32 +162,6 @@ export function GalaxyVoyage({
       ctx!.globalCompositeOperation = "screen";
       ctx!.drawImage(source, -size / 2, -size / 2, size, size);
       ctx!.restore();
-    }
-
-    function starscape(now: number, density: number, final: boolean) {
-      const amount = clamp(density, 0, 1);
-      for (const star of stars) {
-        if (star.reveal > amount) continue;
-        const x = star.x * viewWidth;
-        const y = star.y * viewHeight;
-        const shimmer = 0.66 + 0.34 * Math.sin(now * star.speed + star.phase);
-        const a = Math.min(1, star.alpha * shimmer * (final ? 1 : 0.63));
-        ctx!.fillStyle = "hsla(" + star.hue + ",78%," +
-          (star.hue === 225 ? 88 : 82) + "%," + a.toFixed(3) + ")";
-        ctx!.beginPath();
-        ctx!.arc(x, y, star.r * (final ? 1 : 0.72), 0, TAU);
-        ctx!.fill();
-        if (final && star.r > 1.22 && a > 0.48) {
-          ctx!.strokeStyle = "hsla(" + star.hue + ",75%,89%," + (a * 0.21).toFixed(3) + ")";
-          ctx!.lineWidth = 0.50;
-          ctx!.beginPath();
-          ctx!.moveTo(x - star.r * 2.1, y);
-          ctx!.lineTo(x + star.r * 2.1, y);
-          ctx!.moveTo(x, y - star.r * 2.1);
-          ctx!.lineTo(x, y + star.r * 2.1);
-          ctx!.stroke();
-        }
-      }
     }
 
     function drawGlass(x: number, y: number, r: number, now: number) {
@@ -474,135 +352,6 @@ export function GalaxyVoyage({
     }
 
 
-    function drawBody(planet: Planet, x: number, y: number, radius: number, opacity = 1) {
-      if (radius < 0.8 || opacity < 0.01) return;
-      ctx!.save();
-      ctx!.globalAlpha = clamp(opacity, 0, 1);
-      ctx!.translate(x, y);
-      const atm = ctx!.createRadialGradient(-radius * 0.3, -radius * 0.4, radius * 0.1, 0, 0, radius * 1.23);
-      atm.addColorStop(0, "hsla(" + planet.hue + ",72%,75%,0.20)");
-      atm.addColorStop(0.7, "hsla(" + planet.hue + ",63%,41%,0.17)");
-      atm.addColorStop(1, "hsla(" + planet.hue + ",58%,35%,0)");
-      ctx!.fillStyle = atm;
-      ctx!.beginPath(); ctx!.arc(0, 0, radius * 1.24, 0, TAU); ctx!.fill();
-      const shadow = ctx!.createRadialGradient(
-        -radius * 0.42, -radius * 0.46, radius * 0.01,
-        radius * 0.20, radius * 0.18, radius * 1.14);
-      shadow.addColorStop(0, "hsl(" + planet.hue + ",55%,79%)");
-      shadow.addColorStop(0.40, "hsl(" + planet.hue + ",46%,46%)");
-      shadow.addColorStop(0.78, "hsl(" + (planet.hue + 7) + ",49%,22%)");
-      shadow.addColorStop(1, "#030711");
-      ctx!.fillStyle = shadow;
-      ctx!.beginPath(); ctx!.arc(0, 0, radius, 0, TAU); ctx!.fill();
-      ctx!.save();
-      ctx!.beginPath(); ctx!.arc(0, 0, radius * 0.98, 0, TAU); ctx!.clip();
-      ctx!.rotate(planet.tilt);
-      for (let k = -3; k <= 3; k++) {
-        ctx!.beginPath();
-        ctx!.ellipse(-radius * 0.12, k * radius * 0.23, radius * 1.04,
-          radius * (0.12 + planet.clouds * 0.045), 0.17, 0, TAU);
-        ctx!.lineWidth = Math.max(0.55, radius * 0.05);
-        ctx!.strokeStyle = "rgba(230,234,242," + (0.045 + planet.clouds * 0.052) + ")";
-        ctx!.stroke();
-      }
-      ctx!.restore();
-      if (planet.ring && radius > 3) {
-        ctx!.save();
-        ctx!.rotate(planet.tilt);
-        ctx!.strokeStyle = "hsla(" + (planet.hue + 28) + ",31%,81%,0.44)";
-        ctx!.lineWidth = Math.max(0.8, radius * 0.10);
-        ctx!.beginPath();
-        ctx!.ellipse(0, 0, radius * 1.75, radius * 0.43, 0.12, Math.PI * 0.07, Math.PI * 0.95);
-        ctx!.stroke();
-        ctx!.restore();
-      }
-      ctx!.restore();
-    }
-
-    function drawPassingBody(planet: Planet, s: number, shrinkRate: number, fromRight: boolean) {
-      if (s < planet.enter) return;
-      const t = Math.max(0, s - planet.enter);
-      const arrival = ease(t / 4);
-      const px = mix(fromRight ? 1.16 : -0.16, planet.x, arrival);
-      const radius = Math.min(viewWidth, viewHeight) * planet.scale *
-        (0.12 + 0.88 * arrival) * Math.pow(shrinkRate, Math.max(0, t - 4));
-      drawBody(planet, px * viewWidth, planet.y * viewHeight, radius);
-      // At great distance keep a single pinpoint rather than making the
-      // planet instantly disappear.
-      if (radius < 1.1 && t > 7 && t < 112) {
-        ctx!.fillStyle = "rgba(198,214,240,0.36)";
-        ctx!.beginPath();
-        ctx!.arc(px * viewWidth, planet.y * viewHeight, 0.6, 0, TAU);
-        ctx!.fill();
-      }
-    }
-
-    function groupCenter(s: number) {
-      // The second pair moves toward the middle as this new group enters
-      // from the far right. The composition slowly resolves as a fixed field.
-      const t = ease((s - ELEVEN_STEP) / 30);
-      return { x: mix(1.16, 0.61, t) * viewWidth, y: viewHeight * 0.51 };
-    }
-
-    function galaxyField(s: number, now: number) {
-      if (s < ELEVEN_STEP) return;
-      const short = Math.min(viewWidth, viewHeight);
-      const center = groupCenter(s);
-      const hold = ease((s - ELEVEN_STEP) / 14);
-      const shrink = 1 - ease((s - 94) / 37) * 0.92;
-      const groupFade = 1 - ease((s - 109) / 25);
-      for (const item of system) {
-        if (s < item.enter) continue;
-        const settle = ease((s - item.enter) / 5);
-        const x = center.x + item.x * short * 0.8;
-        const y = center.y + item.y * short * 0.85;
-        const radius = short * item.scale * (0.25 + settle * 0.75) * shrink;
-        drawBody(item, x, y, radius, groupFade * Math.max(hold, settle * 0.7));
-      }
-
-      const count = cloudCount(s);
-      if (!count) return;
-      // At the same centre, each subsequent click reveals farther reaches
-      // of this galaxy's distribution. New dots do not leap or rearrange.
-      const fieldFullness = ease((s - CLOUD_START) / (CLOUD_COMPLETE - CLOUD_START));
-      const recession = Math.max(0, s - FULL_GALAXY_STEP);
-      const size = short * mix(0.15, 0.40, fieldFullness) * Math.pow(0.79, recession);
-      const opacity = ease((s - CLOUD_START) / 8);
-      const imgOpacity = 0.47 * ease((s - 113) / 19);
-      const photoDiameter = size * 2.18;
-      // Same real M31 photograph and centre throughout the resolved phase.
-      // It never rotates after the individual positions are established.
-      galaxyImage(second, center.x, center.y, photoDiameter, 0.20, imgOpacity);
-
-      ctx!.save();
-      ctx!.globalCompositeOperation = "screen";
-      for (let i = 0; i < count; i++) {
-        const point = galaxyPoints[i];
-        // Keep a modest pinhead of brightness at great distance.
-        const x = center.x + point.x * size;
-        const y = center.y + point.y * size;
-        if (x < -4 || y < -4 || x > viewWidth + 4 || y > viewHeight + 4) continue;
-        const sparkle = 0.87 + 0.13 * Math.sin(now * 0.0007 + point.phase);
-        ctx!.fillStyle = "hsla(" + point.hue + ",66%," +
-          (75 + Math.round(point.bright * 19)) + "%," +
-          (opacity * point.bright * sparkle).toFixed(3) + ")";
-        ctx!.beginPath();
-        ctx!.arc(x, y, Math.max(0.27, point.r * (0.8 - 0.38 * fieldFullness)), 0, TAU);
-        ctx!.fill();
-      }
-      // Diffuse core strengthens only after hundreds of fixed lights gather.
-      if (count > 350 && size > 3) {
-        const core = ctx!.createRadialGradient(center.x, center.y, 0,
-          center.x, center.y, size * 0.23);
-        core.addColorStop(0, "rgba(239,220,254," + (opacity * 0.48) + ")");
-        core.addColorStop(0.33, "rgba(176,167,235," + (opacity * 0.19) + ")");
-        core.addColorStop(1, "rgba(88,100,171,0)");
-        ctx!.fillStyle = core;
-        ctx!.beginPath(); ctx!.arc(center.x, center.y, size * 0.23, 0, TAU); ctx!.fill();
-      }
-      ctx!.restore();
-    }
-
     function draw(now: number, dt: number) {
       if (!running) return;
       ctx!.clearRect(0, 0, viewWidth, viewHeight);
@@ -639,19 +388,12 @@ export function GalaxyVoyage({
           0.90 * (1 - ease((s - 0.90) / 1.11)));
       }
 
-      // First planet appears only after the initial spiral is star-size.
-      // Another ringed body and nearby moon follow at a DIFFERENT side.
-      drawPassingBody(firstPlanet, s, 0.72, false);
-      drawPassingBody(secondPlanet, s, 0.84, true);
-      drawPassingBody(satellitePlanet, s, 0.84, true);
-
-      // Stars accumulate progressively during retreat, not all at once.
-      const starDensity = ease((s - FIRST_PLANET_STEP) / (FINAL_STEP - FIRST_PLANET_STEP));
-      starscape(now, 0.009 + starDensity * 0.991, s >= FINAL_STEP - 3);
-      galaxyField(s, now);
-
-      // By the last click the completed galaxy is a tiny point among stars.
-      // Only the softly scintillating sky remains until the 30s auto-return.
+      // The same camera advances through one continuous fixed 3D scene.
+      // Planet position and apparent radius depend on depth, rather than
+      // popping in from a prescribed screen edge and stopping.
+      if (s >= FIRST_STAR_STEP - 5) {
+        flightScene.draw(ctx!, s, now, viewWidth, viewHeight);
+      }
     }
 
     function stepForward() {
