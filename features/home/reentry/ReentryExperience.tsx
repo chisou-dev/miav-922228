@@ -23,6 +23,7 @@ import type { ReentryOutcome } from "./reentryTypes";
 import { getReentryUserVolume, startReentryAmbience, stopReentryAudio } from "./reentryAudio";
 import { startStage2CabinAudio } from "./reentryStage2CabinAudio";
 import { ReentryAudioControl } from "./ReentryAudioControl";
+import { GalaxyOrb } from "../galaxy/GalaxyOrb";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
@@ -261,10 +262,11 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     <ReentryShellProvider openStage={openExpanded}>
       <section
         aria-label="MIAV Stage 1 — atmospheric reentry"
-        className="scroll-mt-24"
+        className="relative scroll-mt-24"
       >
+        <GalaxyOrb />
         <div
-          className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-10 xl:gap-14"
+          className="relative z-[1] grid items-center gap-10 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-10 xl:gap-14"
         >
           <div className="min-w-0">{heroCopy}</div>
 

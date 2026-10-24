@@ -9,6 +9,7 @@ import { gamesLibraryUrl } from "@/features/core/gamesUrl";
 import { ReentryErrorBoundary } from "@/features/home/reentry/ReentryErrorBoundary";
 import { ReentryExperience } from "@/features/home/reentry/ReentryExperience";
 import { ReentryHeroTeaser } from "@/features/home/reentry/reentryShellContext";
+import { GalaxyHeading } from "@/features/home/galaxy/GalaxyHeading";
 import { useT } from "@/features/shared/i18n";
 
 const primaryLinkClassName =
@@ -41,7 +42,7 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
     <>
       <div className="flex items-start gap-4 sm:gap-5">
         <h1 className="min-w-0 flex-1 text-[clamp(1.75rem,6.2vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
-          {t("home.brand")}
+          <GalaxyHeading>{t("home.brand")}</GalaxyHeading>
         </h1>
         <ReentryHeroTeaser />
       </div>
@@ -189,6 +190,9 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
           </SfSection>
         </div>
       </main>
+      <p className="mt-4 mb-3 text-center text-[0.65rem] leading-relaxed tracking-wide text-[var(--foreground-muted)] opacity-60">
+        Galaxy observation: NASA/JPL-Caltech (M100). Planet surfaces and distant Milky Way vista are artistic simulations.
+      </p>
     </SiteShell>
   );
 }
