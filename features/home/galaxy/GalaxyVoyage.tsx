@@ -7,19 +7,20 @@ import { GALAXY } from "./GalaxyHeading";
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
 type Dust = { x: number; y: number; t: number; speed: number; drift: number };
-type Shard = { angle: number; spread: number; distance: number; spin: number };
+type Planet = { enter: number; leave: number; scale: number; y: number; hue: number; ring: boolean; reverse: boolean };
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => { const v = clamp(t, 0, 1); return v * v * (3 - 2 * v); };
 const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15910/PIA15910.jpg?fit=clip&w=1200";
-const NASA_NGC2841 = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia12/pia12001/PIA12001.jpg?fit=clip&w=1200";
-const SEGMENT_TAPS = 20;
-const FINAL_STEP = 60;
-const SHATTER_MS = 2250;
+// The real Andromeda galaxy (M31), GALEX observation PIA15416.
+// Source: https://science.nasa.gov/photojournal/andromeda/
+const NASA_ANDROMEDA = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15416/PIA15416.jpg?fit=clip&w=1400";
+const FINAL_STEP = 76;
+const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
-const IDLE_MS = 45_000;
+const IDLE_MS = 120_000;
 
 function sampleTextLocations(): Point[] {
   const root = document.querySelector("[data-galaxy-title]")?.closest("section");
@@ -79,6 +80,9 @@ export function GalaxyVoyage({
     let nextRotation = Math.random() * TAU;
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
+    let introEnd = false;
+    let titleGhost: HTMLCanvasElement | null = null;
+    const titleRect = document.querySelector("[data-galaxy-title]")?.getBoundingClientRect() ?? null;
     let lastAdvanceAt = 0;
 
     // The NASA images really are telescope observations. They are composited
@@ -88,26 +92,31 @@ export function GalaxyVoyage({
     const first = new Image();
     first.src = NASA_M100;
     const second = new Image();
-    second.src = NASA_NGC2841;
+    second.src = NASA_ANDROMEDA;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
     const dust: Dust[] = selectedText.slice(0, 170).map((p) => ({
       ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
       drift: (Math.random() - 0.5) * 44,
     }));
-    const shards: Shard[] = Array.from({ length: 11 }, (_, i) => ({
-      angle: (i / 11) * TAU + (Math.random() - 0.5) * 0.21,
-      spread: 0.23 + Math.random() * 0.32,
-      distance: 0.7 + Math.random() * 0.65,
-      spin: (Math.random() - 0.5) * 0.9,
-    }));
-    const stars: Star[] = Array.from({ length: 540 }, () => ({
+    // These foreground planets are imaginary visual elements, not
+    // detections of planets in M31. Overlapping passes create parallax.
+    const planets: Planet[] = [
+      { enter: 11, leave: 20, scale: 0.23, y: 0.64, hue: 204, ring: false, reverse: false },
+      { enter: 19, leave: 29, scale: 0.13, y: 0.27, hue: 36, ring: true, reverse: true },
+      { enter: 27, leave: 38, scale: 0.17, y: 0.70, hue: 268, ring: false, reverse: false },
+      { enter: 41, leave: 51, scale: 0.12, y: 0.36, hue: 184, ring: false, reverse: true },
+      { enter: 53, leave: 65, scale: 0.19, y: 0.73, hue: 23, ring: true, reverse: false },
+      { enter: 61, leave: 71, scale: 0.10, y: 0.25, hue: 225, ring: false, reverse: true },
+    ];
+    const stars: (Star & { reveal: number })[] = Array.from({ length: 650 }, () => ({
       x: Math.random(), y: Math.random(),
       r: 0.35 + Math.random() * 1.24,
       alpha: 0.22 + Math.random() * 0.70,
       speed: 0.00043 + Math.random() * 0.0017,
       phase: Math.random() * TAU,
       hue: [0, 12, 30, 46, 190, 205, 225, 268][Math.floor(Math.random() * 8)],
+      reveal: Math.random(),
     }));
 
     function resize() {
