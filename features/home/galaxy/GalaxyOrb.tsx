@@ -47,7 +47,11 @@ export function GalaxyOrb() {
     let duration = 29000;
     let segment = 0;
     let rolling = rand(0, TAU);
-    let galaxySpin = rand(0, TAU);
+    // Three independent full-circle axes; unlike the glass roll, these govern
+    // the galaxy disk itself. Different slow rates prevent repetitive rocking.
+    let galaxyYaw = rand(-0.45, 0.45);
+    let galaxyPitch = rand(-0.25, 0.25);
+    let galaxyRoll = rand(0, TAU);
     let quietUntil = 0;
     let yMax = 220;
     const reduced = () => media.matches;
@@ -155,8 +159,11 @@ export function GalaxyOrb() {
       const dy = orb.y - prev.y;
       // Roll is visually readable even when the orb travels very slowly.
       rolling += Math.hypot(dx, dy) / Math.max(1, radius) * 2.6 + elapsed * 0.00044;
-      // The galaxy spins independently and noticeably faster (~16 seconds per turn).
-      galaxySpin += elapsed * 0.00039;
+      // All three axes rotate slowly and independently (about 57s / 79s / 45s per turn).
+      // The glass ball's roaming speed and rolling animation remain unchanged.
+      galaxyYaw = (galaxyYaw + elapsed * 0.00011) % TAU;
+      galaxyPitch = (galaxyPitch + elapsed * 0.00008) % TAU;
+      galaxyRoll = (galaxyRoll + elapsed * 0.00014) % TAU;
       prev = { ...orb };
     }
 
@@ -194,6 +201,28 @@ export function GalaxyOrb() {
       }
     }
 
+
+    function galaxyOrientation() {
+      // Orthographic projection of Rz(roll) * Rx(pitch) * Ry(yaw) applied to
+      // a textured galaxy disk (its initial plane is XY). This rotates through
+      // genuine front, oblique, edge-on and back-facing orientations instead
+      // of merely oscillating a flat image.
+      const cy = Math.cos(galaxyYaw);
+      const sy = Math.sin(galaxyYaw);
+      const cp = Math.cos(galaxyPitch);
+      const sp = Math.sin(galaxyPitch);
+      const cr = Math.cos(galaxyRoll);
+      const sr = Math.sin(galaxyRoll);
+      const a = cr * cy - sr * sp * sy;
+      const b = sr * cy + cr * sp * sy;
+      const c = -sr * cp;
+      const d = cr * cp;
+      const longAxis = Math.hypot(a, b) >= Math.hypot(c, d)
+        ? Math.atan2(b, a)
+        : Math.atan2(d, c);
+      return { a, b, c, d, longAxis, face: Math.abs(cy * cp) };
+    }
+
     function drawSphere() {
       const { x, y } = orb;
       const r = radius;
@@ -217,12 +246,10 @@ export function GalaxyOrb() {
       ctx.fillStyle = glass;
       ctx.fillRect(-r, -r, r * 2, r * 2);
 
-      const face = Math.abs(Math.cos(rolling * 0.82));
-      const slant = 0.20 * Math.sin(rolling * 0.37);
+      const orientation = galaxyOrientation();
+      const face = orientation.face;
       ctx.save();
-      ctx.rotate(slant);
-      ctx.scale(1, Math.max(0.15, face));
-      ctx.rotate(galaxySpin);
+      ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
       if (galaxy.complete && galaxy.naturalWidth > 0) {
         ctx.globalCompositeOperation = "screen";
         ctx.drawImage(galaxy, -r * 0.76, -r * 0.76, r * 1.52, r * 1.52);
@@ -234,7 +261,7 @@ export function GalaxyOrb() {
       const edge = 1 - face;
       if (edge > 0.14) {
         ctx.save();
-        ctx.rotate(slant);
+        ctx.rotate(orientation.longAxis);
         ctx.globalAlpha = edge * 0.82;
         ctx.scale(1, 0.30);
         const disk = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 0.75);
@@ -288,7 +315,7 @@ export function GalaxyOrb() {
       if (!width || !height) return;
       ctx.clearRect(0, 0, width, height);
       if (!reduced()) advance(now, elapsed);
-      const face = Math.abs(Math.cos(rolling * 0.82));
+      const face = galaxyOrientation().face;
       if (!reduced()) emit(now, face);
       drawGrains(now, false);
       drawSphere();
