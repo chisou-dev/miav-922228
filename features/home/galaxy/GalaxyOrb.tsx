@@ -54,6 +54,21 @@ export function GalaxyOrb() {
     let galaxyRoll = rand(0, TAU);
     let quietUntil = 0;
     let yMax = 220;
+    // Fixed 3-D stars around the disk; an edge-on galaxy is not empty space.
+    // Generate once so the stars do not flicker between rendered frames.
+    const galaxyHaloStars = Array.from({ length: 82 }, () => {
+      const angle = rand(0, TAU);
+      const altitude = rand(-1, 1);
+      const distance = Math.cbrt(Math.random()) * 0.88;
+      const across = Math.sqrt(1 - altitude * altitude) * distance;
+      return {
+        x: Math.cos(angle) * across,
+        y: Math.sin(angle) * across,
+        z: altitude * distance,
+        brightness: rand(0.12, 0.44),
+        size: rand(0.36, 0.86),
+      };
+    });
     const reduced = () => media.matches;
 
     const pointDistance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -217,10 +232,16 @@ export function GalaxyOrb() {
       const b = sr * cy + cr * sp * sy;
       const c = -sr * cp;
       const d = cr * cp;
-      const longAxis = Math.hypot(a, b) >= Math.hypot(c, d)
-        ? Math.atan2(b, a)
-        : Math.atan2(d, c);
-      return { a, b, c, d, longAxis, face: Math.abs(cy * cp) };
+      // Project the 3-D halo, which occupies space above/below the disk.
+      const e = cr * sy + sr * sp * cy;
+      const f = sr * sy - cr * sp * cy;
+      // True major axis of the projected circular disk; this stays steady
+      // as it passes from face-on to edge-on.
+      const xx = a * a + c * c;
+      const xy = a * b + c * d;
+      const yy = b * b + d * d;
+      const longAxis = 0.5 * Math.atan2(2 * xy, xx - yy);
+      return { a, b, c, d, e, f, longAxis, face: Math.abs(cy * cp) };
     }
 
     function drawSphere() {
@@ -248,6 +269,61 @@ export function GalaxyOrb() {
 
       const orientation = galaxyOrientation();
       const face = orientation.face;
+      const edge = 1 - face;
+
+      // A galaxy has a thick stellar disk, a brighter central bulge and a
+      // surrounding halo. Draw their volume BEHIND the sharp spiral texture,
+      // becoming more visible as the disk turns edge-on. Keep the sphere size
+      // unchanged and avoid the previous flat pink line / empty dark bubble.
+      if (edge > 0.05) {
+        ctx.save();
+        ctx.rotate(orientation.longAxis);
+
+        // Very diffuse stars above and below the thin disk.
+        ctx.save();
+        ctx.scale(1, 0.62);
+        const halo = ctx.createRadialGradient(0, 0, r * 0.06, 0, 0, r * 0.93);
+        halo.addColorStop(0, `rgba(116,115,212,${0.24 * edge})`);
+        halo.addColorStop(0.42, `rgba(71,94,177,${0.19 * edge})`);
+        halo.addColorStop(1, "rgba(32,52,108,0)");
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.93, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
+        // Thick but still recognisably flattened stellar disk.
+        ctx.save();
+        ctx.scale(1, 0.30 + 0.12 * face);
+        const thickDisk = ctx.createRadialGradient(0, 0, r * 0.015, 0, 0, r * 0.83);
+        thickDisk.addColorStop(0, `rgba(219,180,246,${0.30 * edge})`);
+        thickDisk.addColorStop(0.26, `rgba(142,115,224,${0.34 * edge})`);
+        thickDisk.addColorStop(0.72, `rgba(75,109,192,${0.22 * edge})`);
+        thickDisk.addColorStop(1, "rgba(46,72,134,0)");
+        ctx.fillStyle = thickDisk;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.83, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
+        // Gently enlarged nucleus: lens-shaped when seen sideways, never a dot.
+        ctx.save();
+        ctx.scale(1, 0.67);
+        const bulge = ctx.createRadialGradient(0, 0, r * 0.008, 0, 0, r * 0.32);
+        bulge.addColorStop(0, `rgba(250,224,245,${0.62 * edge})`);
+        bulge.addColorStop(0.28, `rgba(209,166,244,${0.54 * edge})`);
+        bulge.addColorStop(0.76, `rgba(142,111,221,${0.20 * edge})`);
+        bulge.addColorStop(1, "rgba(89,87,172,0)");
+        ctx.fillStyle = bulge;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.32, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        ctx.restore();
+      }
+
+      // Existing approved spiral image: preserve all face-on details and the
+      // actual three-axis projection, rather than replacing it with a cloud.
       ctx.save();
       ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
       if (galaxy.complete && galaxy.naturalWidth > 0) {
@@ -257,22 +333,28 @@ export function GalaxyOrb() {
       }
       ctx.restore();
 
-      // Visible side-on bulge and faint surrounding halo, not just a luminous line.
-      const edge = 1 - face;
-      if (edge > 0.14) {
+      // A soft, faintly textured continuation of the real spiral disk adds
+      // physical thickness when edge-on, without making it look face-on.
+      if (edge > 0.27 && galaxy.complete && galaxy.naturalWidth > 0) {
         ctx.save();
         ctx.rotate(orientation.longAxis);
-        ctx.globalAlpha = edge * 0.82;
         ctx.scale(1, 0.30);
-        const disk = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 0.75);
-        disk.addColorStop(0, "rgba(225,181,246,0.73)");
-        disk.addColorStop(0.3, "rgba(114,104,213,0.42)");
-        disk.addColorStop(1, "rgba(36,54,116,0)");
-        ctx.fillStyle = disk;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.74, 0, TAU);
-        ctx.fill();
+        ctx.globalAlpha = 0.21 * Math.pow((edge - 0.27) / 0.73, 1.2);
+        ctx.globalCompositeOperation = "screen";
+        ctx.drawImage(galaxy, -r * 0.70, -r * 0.70, r * 1.40, r * 1.40);
         ctx.restore();
+      }
+
+      // Independent 3-D stellar halo. Remains visible off the disk plane and
+      // rotates coherently with the galaxy in all directions.
+      for (const star of galaxyHaloStars) {
+        const sx = (orientation.a * star.x + orientation.c * star.y + orientation.e * star.z) * r;
+        const sy = (orientation.b * star.x + orientation.d * star.y + orientation.f * star.z) * r;
+        if (sx * sx + sy * sy > r * r * 0.88) continue;
+        ctx.fillStyle = `rgba(177,199,249,${star.brightness * (0.56 + 0.38 * edge)})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, star.size, 0, TAU);
+        ctx.fill();
       }
 
       const shade = ctx.createLinearGradient(-r, -r, r, r);
