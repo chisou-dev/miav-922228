@@ -854,7 +854,7 @@ export function GalaxyOrb() {
         ref={photoCreditRef}
         className="pointer-events-none absolute bottom-3 left-4 right-4 hidden text-center text-[10px] leading-4 tracking-wide text-white/65"
       >
-        NASA/JPL-Caltech (M100, NGC 2841) · NASA/ESA/CSA/STScI (SMACS 0723)
+        NASA/JPL-Caltech (M100, M31 Andromeda). Artistic space journey.
         <span className="sr-only">Artistic transition between actual observations, not a literal voyage.</span>
       </div>
       <button
