@@ -126,7 +126,7 @@ export function GalaxyHeading({ children }: { children: ReactNode }) {
       ctx.globalAlpha = 1;
     }
 
-    function render(now: number) {
+    function render(now: number, deltaMs: number) {
       if (!width || !height) return;
       ctx.clearRect(0, 0, width, height);
       if (now - segmentStarted >= segmentDuration) {
@@ -139,7 +139,7 @@ export function GalaxyHeading({ children }: { children: ReactNode }) {
       orb = { x: blend(start.x, goal.x, k), y: blend(start.y, goal.y, k) };
       const dx = orb.x - lastOrb.x;
       const dy = orb.y - lastOrb.y;
-      roll += dx / Math.max(1, radius) * 0.90 + dy / Math.max(1, radius) * 0.18 + (now - lastTick) * 0.000055;
+      roll += dx / Math.max(1, radius) * 0.90 + dy / Math.max(1, radius) * 0.18 + deltaMs * 0.000055;
       lastOrb = { ...orb };
       tilt = roll * 1.04;
       const face = Math.abs(Math.cos(tilt));
@@ -252,15 +252,14 @@ export function GalaxyHeading({ children }: { children: ReactNode }) {
       if (document.hidden || !visible || media.matches || now - lastTick < 38) return;
       const previous = lastTick || now - 38;
       lastTick = now;
-      render(now);
-      void previous;
+      render(now, now - previous);
     }
     function onMediaChange() {
       if (media.matches) {
         grains = [];
         ctx.clearRect(0, 0, width, height);
         // Keep an unobtrusive static sphere for motion-sensitive visitors.
-        render(performance.now());
+        render(performance.now(), 40);
       }
     }
 
