@@ -63,8 +63,7 @@ export function GalaxyVoyage({
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const motionScale = reduced ? 0 : 1;
-    // Lock scrolling only while the full-screen journey is active; restore
+     // Lock scrolling only while the full-screen journey is active; restore
     // exactly the previous value on return without changing the home layout.
     const previousBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -80,7 +79,6 @@ export function GalaxyVoyage({
     let nextRotation = Math.random() * TAU;
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
-    let introEnd = false;
     let titleGhost: HTMLCanvasElement | null = null;
     const titleRect = document.querySelector("[data-galaxy-title]")?.getBoundingClientRect() ?? null;
     let lastAdvanceAt = 0;
@@ -95,7 +93,7 @@ export function GalaxyVoyage({
     second.src = NASA_ANDROMEDA;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
-    const dust: Dust[] = selectedText.slice(0, 170).map((p) => ({
+    const dust: Dust[] = selectedText.slice(0, 300).map((p) => ({
       ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
       drift: (Math.random() - 0.5) * 44,
     }));
@@ -170,29 +168,27 @@ export function GalaxyVoyage({
       ctx!.restore();
     }
 
-    function starscape(now: number, visible: number, final: boolean) {
-      // A dark sky can appear in early stages, while the final scene is only
-      // many tiny lights in varied hues with independent gentle scintillation.
+    function starscape(now: number, density: number, final: boolean) {
+      const amount = clamp(density, 0, 1);
       for (const star of stars) {
+        if (star.reveal > amount) continue;
         const x = star.x * viewWidth;
         const y = star.y * viewHeight;
-        const phase = (now * star.speed + star.phase);
-        const shimmer = 0.66 + 0.34 * Math.sin(phase);
-        const a = Math.min(1, star.alpha * shimmer * visible * (final ? 1 : 0.54));
-        if (a <= 0.012) continue;
+        const shimmer = 0.66 + 0.34 * Math.sin(now * star.speed + star.phase);
+        const a = Math.min(1, star.alpha * shimmer * (final ? 1 : 0.63));
         ctx!.fillStyle = "hsla(" + star.hue + ",78%," +
           (star.hue === 225 ? 88 : 82) + "%," + a.toFixed(3) + ")";
         ctx!.beginPath();
-        ctx!.arc(x, y, star.r * (final ? 1 : 0.68), 0, TAU);
+        ctx!.arc(x, y, star.r * (final ? 1 : 0.72), 0, TAU);
         ctx!.fill();
-        if (final && star.r > 1.2 && a > 0.54) {
-          ctx!.strokeStyle = "hsla(" + star.hue + ",75%,89%," + (a * 0.28).toFixed(3) + ")";
-          ctx!.lineWidth = 0.55;
+        if (final && star.r > 1.22 && a > 0.48) {
+          ctx!.strokeStyle = "hsla(" + star.hue + ",75%,89%," + (a * 0.21).toFixed(3) + ")";
+          ctx!.lineWidth = 0.50;
           ctx!.beginPath();
-          ctx!.moveTo(x - star.r * 2.2, y);
-          ctx!.lineTo(x + star.r * 2.2, y);
-          ctx!.moveTo(x, y - star.r * 2.2);
-          ctx!.lineTo(x, y + star.r * 2.2);
+          ctx!.moveTo(x - star.r * 2.1, y);
+          ctx!.lineTo(x + star.r * 2.1, y);
+          ctx!.moveTo(x, y - star.r * 2.1);
+          ctx!.lineTo(x, y + star.r * 2.1);
           ctx!.stroke();
         }
       }
@@ -374,66 +370,89 @@ export function GalaxyVoyage({
       const age = now - opened;
       const short = Math.min(viewWidth, viewHeight);
 
-      if (age < SHATTER_MS) {
-        // Original text and site remain visible under this transparent
-        // layer. The last half-second darkens the stage into black space.
-        const cover = ease((age - 1250) / 950);
-        ctx!.fillStyle = "rgba(0,3,12," + cover.toFixed(3) + ")";
-        ctx!.fillRect(0, 0, viewWidth, viewHeight);
-        drawShatter(now);
-        const emerge = ease((age - 1260) / 910);
-        if (emerge > 0) galaxyImage(first.complete && first.naturalWidth ? first : globe, mix(origin.x, viewWidth * 0.5, emerge),
-          mix(origin.y, viewHeight * 0.5, emerge),
-          mix(origin.radius * 1.6, short * 0.70, emerge),
-          firstRotation, emerge);
+      // Only the implosion animates on its own. All subsequent scene changes
+      // require an explicit click / tap / keyboard activation.
+      if (age < IMPLOSION_MS) {
+        drawImplosion(now);
         return;
       }
 
-      ctx!.fillStyle = "#01040c";
-      ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 210));
+      progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 180));
       if (Math.abs(progress - target) < 0.005) progress = target;
       const s = progress;
+      ctx!.fillStyle = "#01040c";
+      ctx!.fillRect(0, 0, viewWidth, viewHeight);
 
-      const finalFactor = ease((s - 44) / 16);
-      starscape(now, 0.35 + 0.65 * ease(s / FINAL_STEP), finalFactor > 0.98);
+      // Stage 0–1: a quiet wandering galaxy drinks individual specks of
+      // sand from the home text. The DOM behind the overlay is not modified.
+      if (s < 2.75) {
+        const wanderX = reduced ? 0 : Math.sin(now * 0.00031) * short * 0.027 +
+          Math.cos(now * 0.00018) * short * 0.016;
+        const wanderY = reduced ? 0 : Math.cos(now * 0.00029) * short * 0.024;
+        const gx = viewWidth * 0.55 + wanderX;
+        const gy = viewHeight * 0.52 + wanderY;
+        if (!reduced) firstRotation += dt * 0.000055;
+        galaxyImage(first.complete && first.naturalWidth ? first : globe,
+          gx, gy, short * mix(0.57, 0.67, ease(s / 2)),
+          firstRotation, 1 - ease((s - 2.0) / 0.75));
+        const titleOpacity = (s <= 1 ? mix(0.35, 0.17, ease(s)) : 0.17 * (1 - ease(s - 1)));
+        drawErodedTitle(now, titleOpacity);
+        drawSand(now, gx, gy, 1 - ease((s - 1.6) / 1.15));
+        if (s < 2.04) return;
+      }
 
-      // First galaxy: starts with its ENTIRE spiral visible at 70% of the
-      // screen's short dimension; after ~20 taps it becomes a distant point.
-      const firstSize = short * 0.70 * Math.pow(0.77, Math.min(s, SEGMENT_TAPS));
-      if (firstSize > short * 0.17 && !reduced) firstRotation += dt * 0.000052;
+      // Step 2: the title has vanished from the *overlay*, revealing a single
+      // intact spiral. Steps 3–25 then pull the camera away from the galaxy.
+      const recession = Math.max(0, s - 2);
+      const firstSize = short * 0.70 * Math.pow(0.79, Math.min(24, recession));
+      if (firstSize > short * 0.15 && !reduced) {
+        firstRotation += dt * 0.000050;
+      }
+      const p1 = ease(clamp(recession / 24, 0, 1));
+      const firstX = mix(viewWidth * 0.55, viewWidth * 0.29, p1);
+      const firstY = mix(viewHeight * 0.52, viewHeight * 0.32, p1);
+      const firstFade = 1 - ease((s - 46) / 10);
       galaxyImage(first.complete && first.naturalWidth ? first : globe,
-        mix(viewWidth * 0.5, viewWidth * 0.30, ease(s / 20)),
-        mix(viewHeight * 0.5, viewHeight * 0.32, ease(s / 20)),
-        firstSize, firstRotation, clamp((40 - s) / 16, 0, 1));
+        firstX, firstY, firstSize, firstRotation, firstFade);
 
-      // Another real galaxy is first a tiny distant object (never a large
-      // sudden fade-in). It grows as the camera passes it, then recedes.
-      let secondSize = 0;
-      if (s >= 14 && s < 35) {
-        secondSize = short * 0.008 * Math.pow(0.70 / 0.008, ease((s - 14) / 21));
-      } else if (s >= 35) {
-        secondSize = short * 0.70 * Math.pow(0.76, Math.min(25, s - 35));
-      }
-      if (secondSize > short * 0.17 && !reduced) nextRotation += dt * 0.000046;
-      const near = ease((s - 14) / 21);
-      const flyBy = ease((s - 35) / 25);
-      galaxyImage(second,
-        mix(viewWidth * 0.86, viewWidth * 0.56, near) + flyBy * viewWidth * 0.32,
-        mix(viewHeight * 0.35, viewHeight * 0.53, near) - flyBy * viewHeight * 0.21,
-        secondSize, nextRotation, clamp((60 - s) / 10, 0, 1));
+      // Stars arrive gradually, tied to distance rather than to elapsed time.
+      // Passing planets are fictionally illustrated foreground objects.
+      const starsAdded = clamp(ease((s - 3) / 69), 0, 1);
+      starscape(now, 0.018 + starsAdded * 0.982, s >= FINAL_STEP - 1);
 
-      // Final stage: the NASA deep field is intentionally NOT shown.
-      // Only multi-colour independent sparkling stars survive.
-      if (finalFactor > 0) {
-        ctx!.fillStyle = "rgba(0,1,7," + (0.15 * finalFactor).toFixed(3) + ")";
-        ctx!.fillRect(0, 0, viewWidth, viewHeight);
+      // Move through the outskirts of the first galaxy. Each planet moves
+      // laterally across the frame, gets larger near closest approach, then
+      // shrinks behind the viewer, conveying real parallax in the illustration.
+      for (const planet of planets) drawPlanet(planet, s);
+
+      // Andromeda appears far to the lower right as a tiny point. The camera
+      // follows a curved flyby through its outer edge, rather than making a
+      // nearby photograph suddenly bloom at a fixed spot.
+      if (s >= 31) {
+        const incoming = ease(clamp((s - 31) / 24, 0, 1));
+        const outgoing = ease(clamp((s - 55) / 20, 0, 1));
+        const approachSize = short * 0.004 * Math.pow(0.54 / 0.004, incoming);
+        const secondSize = approachSize * Math.pow(0.76, Math.max(0, s - 55));
+        const andromedaX =
+          mix(viewWidth * 0.92, viewWidth * 0.57, incoming) -
+          outgoing * viewWidth * 0.63;
+        const andromedaY =
+          mix(viewHeight * 0.64, viewHeight * 0.51, incoming) -
+          outgoing * viewHeight * 0.24;
+        if (secondSize > short * 0.16 && !reduced) {
+          nextRotation += dt * 0.000041;
+        }
+        const fade = 1 - ease((s - 71) / 5);
+        galaxyImage(second, andromedaX, andromedaY,
+          secondSize, nextRotation, fade);
       }
+      // The ending is only gently multicoloured points of light, never the
+      // previous NASA deep-field photograph or a pasted star-background plate.
     }
 
     function stepForward() {
       const now = performance.now();
-      if (now - lastAdvanceAt < 120 || now - opened < SHATTER_MS - 80) return;
+      if (now - lastAdvanceAt < 120 || now - opened < IMPLOSION_MS - 80) return;
       lastAdvanceAt = now;
       if (target >= FINAL_STEP) return;
       target += 1;
