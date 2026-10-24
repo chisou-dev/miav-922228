@@ -488,90 +488,81 @@ export function GalaxyVoyage({
       ctx!.restore();
     }
 
+
     function draw(now: number, dt: number) {
       if (!running) return;
       ctx!.clearRect(0, 0, viewWidth, viewHeight);
       const age = now - opened;
       const short = Math.min(viewWidth, viewHeight);
 
-      // Only the implosion animates on its own. All subsequent scene changes
-      // require an explicit click / tap / keyboard activation.
+      // The short sphere-implosion continues after the FIRST tap. Every
+      // subsequent change of camera distance is controlled by target taps.
       if (age < IMPLOSION_MS) {
         drawImplosion(now);
         return;
       }
-
-      progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 180));
+      progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 205));
       if (Math.abs(progress - target) < 0.005) progress = target;
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
 
-      // Stage 0–1: a quiet wandering galaxy drinks individual specks of
-      // sand from the home text. The DOM behind the overlay is not modified.
-      if (s < 2.75) {
-        const wanderX = reduced ? 0 : Math.sin(now * 0.00031) * short * 0.027 +
-          Math.cos(now * 0.00018) * short * 0.016;
-        const wanderY = reduced ? 0 : Math.cos(now * 0.00029) * short * 0.024;
-        const gx = viewWidth * 0.55 + wanderX;
-        const gy = viewHeight * 0.52 + wanderY;
-        if (!reduced) firstRotation += dt * 0.000055;
-        galaxyImage(first.complete && first.naturalWidth ? first : globe,
-          gx, gy, short * mix(0.57, 0.67, ease(s / 2)),
-          firstRotation, 1 - ease((s - 2.0) / 0.75));
-        const titleOpacity = (s <= 1 ? mix(0.35, 0.17, ease(s)) : 0.17 * (1 - ease(s - 1)));
-        drawErodedTitle(now, titleOpacity);
-        drawSand(now, gx, gy, 1 - ease((s - 1.6) / 1.15));
-        if (s < 2.04) return;
+      // The initial galaxy is STATIONARY on the screen: no wandering, orbit,
+      // left-right swoop, or translation. It only tumbles on all three axes.
+      // Camera recession begins after the separately tapped title scene.
+      const firstRetreat = Math.max(0, s - 3);
+      const firstSize = short * 0.66 * Math.pow(0.89, Math.min(firstRetreat, 46));
+      if (!reduced && firstSize > short * 0.11) firstRotation += dt * 0.000175;
+
+      // Stars are initially almost absent, then emerge in ones and twos and
+      // gradually fill the same continuous void, including around Andromeda.
+      const starDensity = ease((s - 5) / 112);
+      starscape(now, 0.004 + starDensity * 0.996, s >= FINAL_STEP - 3);
+      drawBeaconStars(now, s);
+
+      const firstFade = 1 - ease((s - 43) / 11);
+      drawGalaxy3D(first.complete && first.naturalWidth ? first : globe,
+        viewWidth * 0.51, viewHeight * 0.52,
+        firstSize, firstRotation, firstFade, 0.2);
+
+      // After ~40 taps, an extremely distant Andromeda enters from the
+      // right edge. More than forty subsequent taps are required before its
+      // complete disk becomes visible. It never pops in as a giant image.
+      if (s >= SECOND_APPROACH_START) {
+        const approach = ease((s - SECOND_APPROACH_START) /
+          (SECOND_FULL_VIEW - SECOND_APPROACH_START));
+        const distanceAfter = Math.max(0, s - SECOND_FULL_VIEW);
+        const approachSize = short * 0.0035 * Math.pow(0.68 / 0.0035, approach);
+        const andromedaSize = approachSize * Math.pow(0.87, distanceAfter);
+        // This is one right-edge field of view, not an abrupt camera cut:
+        // x advances slowly inward while the disk is distant and the full
+        // spiral stays visible at closest approach. Then it shrinks in place.
+        const andromedaX = mix(viewWidth * 1.045, viewWidth * 0.63, approach);
+        const andromedaY = mix(viewHeight * 0.46, viewHeight * 0.51, approach);
+        if (!reduced && andromedaSize > short * 0.13) {
+          nextRotation += dt * 0.00015;
+        }
+        const secondFade = 1 - ease((s - 117) / 7);
+        drawGalaxy3D(second, andromedaX, andromedaY,
+          andromedaSize, nextRotation, secondFade, 1.6);
       }
 
-      // Step 2: the title has vanished from the *overlay*, revealing a single
-      // intact spiral. Steps 3–25 then pull the camera away from the galaxy.
-      const recession = Math.max(0, s - 2);
-      const firstSize = short * 0.70 * Math.pow(0.79, Math.min(24, recession));
-      if (firstSize > short * 0.15 && !reduced) {
-        firstRotation += dt * 0.000050;
-      }
-      const p1 = ease(clamp(recession / 24, 0, 1));
-      const firstX = mix(viewWidth * 0.55, viewWidth * 0.29, p1);
-      const firstY = mix(viewHeight * 0.52, viewHeight * 0.32, p1);
-      const firstFade = 1 - ease((s - 46) / 10);
-      galaxyImage(first.complete && first.naturalWidth ? first : globe,
-        firstX, firstY, firstSize, firstRotation, firstFade);
-
-      // Stars arrive gradually, tied to distance rather than to elapsed time.
-      // Passing planets are fictionally illustrated foreground objects.
-      const starsAdded = clamp(ease((s - 3) / 69), 0, 1);
-      starscape(now, 0.018 + starsAdded * 0.982, s >= FINAL_STEP - 1);
-
-      // Move through the outskirts of the first galaxy. Each planet moves
-      // laterally across the frame, gets larger near closest approach, then
-      // shrinks behind the viewer, conveying real parallax in the illustration.
+      // Ten planets enter independently from alternating edges; once inside
+      // this retreating view each remains in place and gets smaller instead
+      // of bouncing across the entire screen as the camera backs away.
       for (const planet of planets) drawPlanet(planet, s);
 
-      // Andromeda appears far to the lower right as a tiny point. The camera
-      // follows a curved flyby through its outer edge, rather than making a
-      // nearby photograph suddenly bloom at a fixed spot.
-      if (s >= 31) {
-        const incoming = ease(clamp((s - 31) / 24, 0, 1));
-        const outgoing = ease(clamp((s - 55) / 20, 0, 1));
-        const approachSize = short * 0.004 * Math.pow(0.54 / 0.004, incoming);
-        const secondSize = approachSize * Math.pow(0.76, Math.max(0, s - 55));
-        const andromedaX =
-          mix(viewWidth * 0.92, viewWidth * 0.57, incoming) -
-          outgoing * viewWidth * 0.63;
-        const andromedaY =
-          mix(viewHeight * 0.64, viewHeight * 0.51, incoming) -
-          outgoing * viewHeight * 0.24;
-        if (secondSize > short * 0.16 && !reduced) {
-          nextRotation += dt * 0.000041;
-        }
-        const fade = 1 - ease((s - 71) / 5);
-        galaxyImage(second, andromedaX, andromedaY,
-          secondSize, nextRotation, fade);
+      // The faint, perforated MIAV name keeps shedding individual sand grains
+      // after the original text has been visually covered, until the NEXT tap.
+      // It is drawn over the intro galaxy but never changes the actual DOM.
+      if (s < 2.01) {
+        const strength = 0.38 * (1 - ease((s - 0.68) / 1.32));
+        drawErodedTitle(now, strength);
+        drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
+          0.90 * (1 - ease((s - 0.90) / 1.11)));
       }
-      // The ending is only gently multicoloured points of light, never the
-      // previous NASA deep-field photograph or a pasted star-background plate.
+      // At step 124 the huge field has become pure twinkling stars. A final
+      // 30-second hold, then automatic home return, is handled by stepForward.
     }
 
     function stepForward() {
