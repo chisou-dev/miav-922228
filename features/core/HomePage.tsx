@@ -190,6 +190,9 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
           </SfSection>
         </div>
       </main>
+      <p className="mt-4 mb-3 text-center text-[0.65rem] leading-relaxed tracking-wide text-[var(--foreground-muted)] opacity-60">
+        Galaxy imagery: NASA/JPL-Caltech (M100 and NGC 2841). Artistic composite.
+      </p>
     </SiteShell>
   );
 }
