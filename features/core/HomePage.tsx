@@ -191,7 +191,7 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
         </div>
       </main>
       <p className="mt-4 mb-3 text-center text-[0.65rem] leading-relaxed tracking-wide text-[var(--foreground-muted)] opacity-60">
-        Galaxy imagery: NASA/JPL-Caltech (M100 and Andromeda / M31). Planets and journey are artistic illustrations.
+        Galaxy observation: NASA/JPL-Caltech (M100). Planet surfaces and distant Milky Way vista are artistic simulations.
       </p>
     </SiteShell>
   );
