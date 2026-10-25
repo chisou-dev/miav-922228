@@ -497,26 +497,27 @@ export function createGalaxyFlightScene() {
     };
   }
 
-  // Three separate Saturn-like bands are drawn in two depth passes:
-  // the rear halves behind the world, then the front halves in front.
-  // Keeping the orbital plane fixed makes the SURFACE rotation readable
-  // without making the entire ring wobble like a spinning 2-D icon.
+  // Three INDEPENDENT orbital hoops, staggered by ~45 degrees.
+  // Unlike concentric parallel Saturn bands, each ring circles the planet
+  // along a DIFFERENT screen-space axis: -18°, +27°, and +72°.
+  // Rear arcs are behind the planet; front arcs cross in front.
+  // Ring planes remain steady while the planet's clouds rotate on their own.
   function drawThreeRings(ctx:CanvasRenderingContext2D,x:number,y:number,
     radius:number,front:boolean,hue:number) {
-    const bands=[
-      {a:1.40,b:.285,stroke:.088,shade:86,opacity:.47},
-      {a:1.74,b:.352,stroke:.082,shade:70,opacity:.51},
-      {a:2.09,b:.427,stroke:.072,shade:58,opacity:.38},
+    const hoops=[
+      {axis:-18*Math.PI/180,major:1.57,minor:.48,stroke:.088,shade:83,opacity:.58},
+      {axis: 27*Math.PI/180,major:1.70,minor:.50,stroke:.077,shade:69,opacity:.53},
+      {axis: 72*Math.PI/180,major:1.83,minor:.49,stroke:.071,shade:58,opacity:.48},
     ];
     ctx.save();
     ctx.lineCap="round";
-    for(const band of bands){
+    for(const hoop of hoops){
       ctx.beginPath();
-      ctx.ellipse(x,y,radius*band.a,radius*band.b,-.22,
+      ctx.ellipse(x,y,radius*hoop.major,radius*hoop.minor,hoop.axis,
         front?0:Math.PI,front?Math.PI:TAU);
-      ctx.lineWidth=Math.max(.56,radius*band.stroke);
-      ctx.strokeStyle="hsla("+hue+",26%,"+band.shade+"%,"+
-        (band.opacity*(front?1:.60)).toFixed(3)+")";
+      ctx.lineWidth=Math.max(.7,radius*hoop.stroke);
+      ctx.strokeStyle="hsla("+hue+",29%,"+hoop.shade+"%,"+
+        (hoop.opacity*(front?1:.71)).toFixed(3)+")";
       ctx.stroke();
     }
     ctx.restore();
