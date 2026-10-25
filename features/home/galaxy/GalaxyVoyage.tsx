@@ -274,30 +274,33 @@ export function GalaxyVoyage({
       ctx!.restore();
     }
 
-    function drawGlassPerimeterGrains(now: number, x: number, y: number,
+    function drawGlassPerimeterGrains(now: number, cx: number, cy: number,
       radius: number, fading: number) {
-      if (fading <= 0.005) return;
-      // A shell dissolving into hundreds of distinct slow-moving sand grains.
-      // Each grain begins on the same visible circumference, then curves
-      // towards the galaxy nucleus. Nothing cracks or explodes outward.
-      const elapsed=(now-opened)/2400;
-      for(let i=0;i<330;i++){
-        const angle=i*2.399963229728653;
-        const seed=((i*97)%331)/331;
-        const travel=(elapsed*(.34+seed*.17)+seed*.69)%1;
-        const t=ease(travel);
-        const startX=x+Math.cos(angle)*radius*(.976+.022*seed);
-        const startY=y+Math.sin(angle)*radius*(.976+.022*seed);
-        const swirl=Math.sin(Math.PI*t)*(8+radius*.08)*Math.sin(angle*2+t*4);
-        const px=startX+(x-startX)*t-Math.sin(angle)*swirl;
-        const py=startY+(y-startY)*t+Math.cos(angle)*swirl;
-        const alpha=fading*(.22+.5*Math.sin(Math.PI*t));
-        if(alpha<.03)continue;
-        ctx!.fillStyle="rgba(214,235,252,"+alpha.toFixed(3)+")";
-        ctx!.beginPath();
-        ctx!.arc(px,py,.42+seed*.75,0,TAU);
-        ctx!.fill();
+      if(fading<=.005)return;
+      const p=clamp((now-opened)/IMPLOSION_MS,0,1);
+      // Glass skin scatters into independent irregular pinpricks. No
+      // rotating spokes, uniform rings or fan-blade-shaped tracks.
+      ctx!.save();
+      for(let i=0;i<670;i++){
+        const seed=((Math.imul(i+31,2654435761)>>>0)/4294967295);
+        const angle=TAU*((i*.618033988749895+seed*.21)%1);
+        const delay=.31+seed*.39;
+        const t=clamp((p-delay)/(1-delay),0,1);
+        if(t<=0||t>=1)continue;
+        const a=ease(t);
+        const sx=cx+Math.cos(angle)*radius*(.973+.045*seed);
+        const sy=cy+Math.sin(angle)*radius*(.973+.045*seed);
+        const vibration=(1-a)*Math.sin(t*(13+seed*9)+i*.73)*
+          Math.sin(t*Math.PI)*radius*.035;
+        const x=sx+(cx-sx)*a+Math.cos(angle*2.1+seed*4)*vibration;
+        const y=sy+(cy-sy)*a+Math.sin(angle*1.7+seed*6)*vibration;
+        const alpha=fading*(.16+.38*seed)*Math.sin(Math.PI*t);
+        if(alpha<.025)continue;
+        ctx!.fillStyle="rgba(218,233,247,"+alpha.toFixed(3)+")";
+        const r=.20+seed*.50;
+        ctx!.fillRect(x,y,r,r);
       }
+      ctx!.restore();
     }
 
     function titleFontSize() {
