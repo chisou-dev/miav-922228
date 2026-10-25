@@ -17,7 +17,7 @@ const ease = (t: number) => { const v = clamp(t, 0, 1); return v * v * (3 - 2 * 
 const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15910/PIA15910.jpg?fit=clip&w=1200";
 const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
-const FINAL_STEP = 226;
+const FINAL_STEP = 235;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
 const IDLE_MS = 120_000;
