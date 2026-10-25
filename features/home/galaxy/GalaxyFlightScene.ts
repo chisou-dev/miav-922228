@@ -114,7 +114,7 @@ export function createGalaxyFlightScene() {
     const short=Math.min(w,h);
     // Central star concentration precedes partial arm tips, then full disk.
     const blend=smooth((step-145)/49);
-    const recession=Math.max(0,step-197);
+    const recession=Math.max(0,step-205);
     // The resolved galaxy never exceeds the original glass orb's visual
     // scale. After the full shape is revealed it only becomes smaller.
     const r=short*.245*Math.exp(-.245*recession);
