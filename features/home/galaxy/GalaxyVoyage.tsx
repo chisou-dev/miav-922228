@@ -24,7 +24,7 @@ const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
 // End when all nearby worlds have dwindled to star-like points.
 const FINAL_STEP = 130;
-const IMPLOSION_MS = 1650;
+const IMPLOSION_MS = 2650;
 const FINAL_HOLD_MS = 30_000;
 const FINAL_TITLE_FADE_MS = 3_200;
 const IDLE_MS = 120_000;
@@ -336,62 +336,78 @@ export function GalaxyVoyage({
 
     function drawSand(now: number, cx: number, cy: number, amount: number) {
       if (amount <= .001) return;
-      // Each letter sheds pinpricks in uneven bursts. Vary emission timing,
-      // speed, size and orbital curvature. Nearby grains follow arcs into
-      // the nucleus; other letters are sampled independently.
-      const seconds=(now-opened)/1000;
+      // Fine, irregular, LETTER-SOURCED dust -- not 11 radial blades.
+      // Every speck has its own release instant, turbulence, curl and
+      // lifetime. There is no repeating group wave or rotating fan pattern.
+      const passed=clamp((now-opened)/IMPLOSION_MS,0,1);
       ctx!.save();
-      for (const grain of dust) {
-        const wave=Math.pow(Math.max(0,Math.sin(
-          seconds*1.38+grain.group*2.35+grain.phase*.33)),3);
-        // Groups detach at different moments, rather than a simultaneous
-        // symmetrical halo or a repetitive, equally-spaced sandstorm.
-        if(wave<.14 && grain.t>.19)continue;
-        const travel=((seconds*(.29+grain.speed*.34)+grain.t)%1+1)%1;
-        const t=ease(travel);
-        const turn=Math.sin(Math.PI*t);
+      for(const grain of dust){
+        const local=(passed-grain.delay)*grain.speed/
+          Math.max(.19,1-grain.delay);
+        if(local<=0||local>=1)continue;
+        const t=clamp(local,0,1);
+        const travel=ease(t);
         const dx=cx-grain.x,dy=cy-grain.y;
-        const ang=Math.atan2(dy,dx);
-        const swirl=(17+Math.abs(grain.drift)*1.05)*turn*(1-t*.36);
-        const x=grain.x+dx*t-Math.sin(ang+grain.curl)*swirl;
-        const y=grain.y+dy*t+Math.cos(ang+grain.curl)*swirl;
-        const alpha=amount*(.17+.83*wave)*Math.sin(Math.PI*travel)*
-          (.55+.45*Math.sin(grain.phase+seconds*.91)**2);
-        if(alpha<.036)continue;
-        const size=grain.radius*(1-.58*t);
-        ctx!.fillStyle=grain.group%5===0
-          ? "rgba(218,230,252,"+Math.min(.95,alpha).toFixed(3)+")"
-          : "rgba(244,236,225,"+Math.min(.95,alpha).toFixed(3)+")";
-        // Distinct, sharp tiny grains, never a smeared line or particle trail.
+        const length=Math.max(6,Math.hypot(dx,dy));
+        const sideways=Math.sin(Math.PI*t);
+        const slowNoise=Math.sin(t*(6.3+grain.speed*2.1)+grain.phase);
+        const fastNoise=Math.sin(t*25+grain.wobble);
+        const chaotic=grain.drift*(.30*slowNoise+.18*fastNoise)*
+          sideways*(.70+.30*(1-t));
+        const x=grain.x+dx*travel+(-dy/length)*chaotic+
+          2.3*Math.sin(t*31+grain.phase*2.4)*(1-t);
+        const y=grain.y+dy*travel+(dx/length)*chaotic+
+          1.8*Math.cos(t*29+grain.wobble)*(1-t);
+        const fadeIn=ease(t/.095);
+        const fadeOut=1-ease((t-.67)/.32);
+        const alpha=amount*grain.brightness*fadeIn*fadeOut*
+          (.73+.27*Math.sin(grain.phase+t*39)**2);
+        if(alpha<.025)continue;
+        const size=Math.max(.12,grain.radius*(1-.56*t));
+        ctx!.fillStyle=grain.phase>3.8
+          ? "rgba(205,223,248,"+Math.min(.86,alpha).toFixed(3)+")"
+          : "rgba(246,240,230,"+Math.min(.86,alpha).toFixed(3)+")";
         ctx!.fillRect(x,y,size,size);
       }
       ctx!.restore();
     }
 
     function drawImplosion(now: number) {
-      const age = now - opened;
-      const p = reduced ? 1 : ease(age / IMPLOSION_MS);
-      const cx = mix(origin.x, viewWidth * 0.51, p);
-      const cy = mix(origin.y, viewHeight * 0.52, p);
-      const short = Math.min(viewWidth, viewHeight);
-      ctx!.fillStyle = "rgba(0,2,9," + ease((p - 0.14) / 0.55) + ")";
-      ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // The sphere NEVER implodes or cracks. Its shell stays in place,
-      // becoming transparent as the galaxy itself fills the scene.
-      if (p < 0.99) {
+      const age=now-opened;
+      const p=reduced?1:clamp(age/IMPLOSION_MS,0,1);
+      const glide=ease(p);
+      const cx=mix(origin.x,viewWidth*.51,glide);
+      const cy=mix(origin.y,viewHeight*.52,glide);
+      const short=Math.min(viewWidth,viewHeight);
+      // The actual homepage letters still exist during this phase. They
+      // erode ONLY NOW and NEVER return as a second canvas-generated title.
+      consumeOriginalText(p);
+
+      // FIRST the real glyphs turn into fine dust. Only AFTER most letters
+      // have disappeared do the glass and background fade into deep space.
+      const darkness=ease((p-.56)/.44);
+      if(darkness>0){
+        ctx!.fillStyle="rgba(0,2,9,"+darkness.toFixed(4)+")";
+        ctx!.fillRect(0,0,viewWidth,viewHeight);
+      }
+      const glassOpacity=1-ease((p-.60)/.37);
+      if(glassOpacity>.002){
         ctx!.save();
-        ctx!.globalAlpha = 1 - ease((p - 0.05) / 0.9);
-        drawGlass(cx, cy, origin.radius * (1 + 0.04 * p), now);
+        ctx!.globalAlpha=glassOpacity;
+        drawGlass(cx,cy,origin.radius*(1+.045*glide),now);
         ctx!.restore();
       }
-      galaxyImage(first.complete && first.naturalWidth ? first : globe,
-        cx, cy, mix(origin.radius * 1.52, short * 0.66, p),
-        firstRotation, ease((p - 0.02) / 0.8));
-      // Both the perimeter of the glass and the nearby letters turn to
-      // tiny grains that drift inward. The title/galaxy are left intact.
-      drawGlassPerimeterGrains(now, cx, cy,
-        origin.radius * (1 + .04 * p), 1-ease((p-.28)/.72));
-      drawSand(now, cx, cy, ease((p-.08)/.62) * 0.98);
+      // Galaxy continues moving out of its glass shell; its size and
+      // position carry seamlessly into the starless voyage start.
+      galaxyImage(first.complete&&first.naturalWidth?first:globe,
+        cx,cy,mix(origin.radius*1.48,short*.66,glide),
+        firstRotation,.32+.68*ease((p-.38)/.50));
+      drawGlassPerimeterGrains(now,cx,cy,
+        origin.radius*(1+.04*glide),1-ease((p-.48)/.48));
+      // Draw sand AFTER the dark overlay so the grains are visible until
+      // they actually enter the galaxy, instead of vanishing into the dark.
+      drawSand(now,cx,cy,(.29+.71*ease((p-.07)/.24))*
+        (1-ease((p-.84)/.15)));
     }
 
     function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
@@ -459,8 +475,9 @@ export function GalaxyVoyage({
       ctx!.clearRect(0, 0, viewWidth, viewHeight);
       const age = now - opened;
       const short = Math.min(viewWidth, viewHeight);
-      // Only the glass absorption runs automatically after the first click.
+      // Consume the real homepage lettering before covering it in darkness.
       if (age < IMPLOSION_MS) { drawImplosion(now); return; }
+      consumeOriginalText(1);
       progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 205));
       if (Math.abs(progress - target) < 0.005) progress = target;
       const s = progress;
@@ -487,19 +504,8 @@ export function GalaxyVoyage({
         ctx!.fill();
       }
 
-      if (s < 2.02) {
-        drawVoyageTitle(now, s);
-        // Galaxy dust and glowing arms also pass IN FRONT of the title:
-        // letters sit within its volume rather than on a flat UI overlay.
-        // Keep this faint to preserve the MIAV name's readability.
-        ctx!.save();
-        ctx!.globalCompositeOperation = "source-over";
-        drawGalaxy3D(firstTexture, viewWidth * 0.51, viewHeight * 0.52,
-          firstSize, firstRotation, firstOpacity * 0.44, 0.2, true);
-        ctx!.restore();
-        drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
-          1.35 * (1 - ease((s - 1.70) / 1.10)));
-      }
+      // The homepage letters have already been consumed during the opening
+      // transition. Do not draw a second MIAV title or another dust sequence.
 
       // Off-axis worlds shrink continuously to star-sized points.
       flightScene.drawForeground(ctx!, s, viewWidth, viewHeight, now);
@@ -577,6 +583,10 @@ export function GalaxyVoyage({
     return () => {
       running = false;
       document.body.style.overflow = previousBodyOverflow;
+      for(const saved of savedTextStyles){
+        saved.el.style.opacity=saved.opacity;
+        saved.el.style.transition=saved.transition;
+      }
       cancelAnimationFrame(frame);
       if (finalTimer !== undefined) clearTimeout(finalTimer);
       if (idleTimer !== undefined) clearTimeout(idleTimer);
