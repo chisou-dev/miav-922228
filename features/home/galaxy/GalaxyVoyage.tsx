@@ -26,7 +26,7 @@ const FIRST_PLANET_STEP = 31;
 // End when all nearby worlds have dwindled to star-like points.
 const FINAL_STEP = 166;
 const IMPLOSION_MS = 2650;
-const FINAL_HOLD_MS = 30_000;
+const FINAL_HOLD_MS = 180_000;
 const IDLE_MS = 120_000;
 
 function sampleTextLocations(): Point[] {
@@ -450,8 +450,8 @@ export function GalaxyVoyage({
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
       flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
-      // Previously omitted: without this call M31 could never appear.
-      // Telescope photography crossfades with the existing stellar haze.
+      // Never paste a second, central spiral over the starfield. This pass
+      // adds only a soft irregular glow along the very same retreating stars.
       flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight);
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
         flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
@@ -479,8 +479,8 @@ export function GalaxyVoyage({
 
       // Planets remain off-axis in the same sky throughout the pull-back.
       flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
-      // A faint web of other galaxies resolves around the last pinprick;
-      // only afterward does the curved glass boundary become recognisable.
+      // Other galaxies resolve along the receding upper-right sightline.
+      // The sphere boundary emerges later, enclosing those same galaxies.
       clusterOrb.draw(ctx!, viewWidth, viewHeight, s, now,
         finalReachedAt === null ? null : now - finalReachedAt);
     }
@@ -489,14 +489,17 @@ export function GalaxyVoyage({
       const now = performance.now();
       if (now - lastAdvanceAt < 150 || now - opened < IMPLOSION_MS - 80) return;
       lastAdvanceAt = now;
-      // Once the last orb is visible, another tap may return home early.
-      if (target >= FINAL_STEP) { exitRef.current(); return; }
+      // The last orb is a contemplative scene, not a tap-to-exit button.
+      // Only the existing spaceship control (or Escape) returns home early.
+      if (target >= FINAL_STEP) return;
       target += 1;
       if (idleTimer !== undefined) clearTimeout(idleTimer);
       if (target >= FINAL_STEP) {
         finalReachedAt = now;
-        // The glass orb wanders and draws in tiny grains for thirty seconds.
-        // There is no final overlaid title: return to the REAL homepage.
+        // Continue drifting, rolling and absorbing fine stars for three
+        // minutes regardless of more taps. Leave the safety idle timeout
+        // disabled while here; the dedicated spaceship remains available.
+        // Afterwards return to the actual home without a title overlay.
         finalTimer = window.setTimeout(() => exitRef.current(), FINAL_HOLD_MS);
       } else {
         // Intermediate scenes remain entirely tap-driven. This is a safety
