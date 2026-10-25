@@ -113,10 +113,20 @@ export function createGalaxyFlightScene() {
     // far wider than our field of view. As the camera retreats its dust lanes
     // and edges naturally become visible. No sudden spawn or centripetal
     // motion of existing stars.
-    const framing=smooth((step-134)/79);
-    const recession=Math.max(0,step-213);
-    const r=short*.245*Math.exp((1-framing)*3.3)*Math.exp(-.285*recession);
-    return {x:w*.51,y:h*.49,r};
+    // Logarithmic camera zoom over MANY taps, rather than a steep smoothstep
+    // that made the full galaxy suddenly snap into view near the end.
+    const framing=clamp((step-125)/94,0,1);
+    const recession=Math.max(0,step-219);
+    const r=short*.245*Math.exp((1-framing)*3.45)*Math.exp(-.285*recession);
+    // At first we are looking through an outer arm, not down the exact
+    // middle of the nucleus. The camera gently widens and recentres during
+    // retreat, so first one arm, then the other, then the galactic body fit.
+    const outerView=1-smooth((step-138)/70);
+    return {
+      x:w*(.51+.31*outerView),
+      y:h*(.49-.12*outerView),
+      r
+    };
   }
 
   function ensureNebula(){
@@ -134,10 +144,10 @@ export function createGalaxyFlightScene() {
     g.save();g.translate(middle,middle);
     g.scale(1,.66);
     const haze=g.createRadialGradient(0,0,0,0,0,n*.47);
-    haze.addColorStop(0,"rgba(204,203,233,.23)");
-    haze.addColorStop(.12,"rgba(159,167,208,.13)");
-    haze.addColorStop(.35,"rgba(85,112,175,.095)");
-    haze.addColorStop(.80,"rgba(43,77,127,.025)");
+    haze.addColorStop(0,"rgba(223,215,237,.26)");
+    haze.addColorStop(.12,"rgba(159,176,221,.18)");
+    haze.addColorStop(.35,"rgba(88,123,187,.12)");
+    haze.addColorStop(.80,"rgba(43,92,155,.035)");
     haze.addColorStop(1,"rgba(27,50,96,0)");
     g.fillStyle=haze;
     g.beginPath();g.arc(0,0,n*.47,0,TAU);g.fill();
@@ -145,17 +155,17 @@ export function createGalaxyFlightScene() {
 
     // Deliberately broken spiral: asymmetric branches, dust lanes and an
     // uneven light envelope prevent a white dotted pinwheel appearance.
-    for(let i=0;i<1250;i++){
+    for(let i=0;i<1950;i++){
       const radial=Math.sqrt(rnd(i*37+191))*.92;
       const arm=i%4;
       const theta=arm*TAU/4+radial*4.75+
         (rnd(i*71+51)-.5)*(.42+.45*radial);
       const cx=middle+Math.cos(theta)*radial*n*.42;
       const cy=middle+Math.sin(theta)*radial*n*.27;
-      const rad=5+rnd(i*17+109)*22;
+      const rad=8+rnd(i*17+109)*31;
       const q=g.createRadialGradient(cx,cy,0,cx,cy,rad);
       const blue=i%9<6;
-      q.addColorStop(0,blue?"rgba(143,166,221,.080)":"rgba(240,176,191,.066)");
+      q.addColorStop(0,blue?"rgba(128,170,231,.10)":"rgba(231,171,202,.083)");
       q.addColorStop(1,"rgba(85,110,160,0)");
       g.fillStyle=q;
       g.beginPath();g.arc(cx,cy,rad,0,TAU);g.fill();
@@ -163,7 +173,7 @@ export function createGalaxyFlightScene() {
     // Stars are much less orderly than the old four perfect spiral tracks:
     // 40% are in the diffuse elliptical disc, the rest clustered along the
     // irregular arms. A radial limit softly blends away the last pixels.
-    for(let i=0;i<19500;i++){
+    for(let i=0;i<26500;i++){
       const radial=Math.sqrt(rnd(i*23+23))*.94;
       const diffuse=rnd(i*61+17)<.46;
       const arm=i%4;
@@ -565,11 +575,12 @@ export function createGalaxyFlightScene() {
     // gradually during a long recession. The low-opacity wide field comes
     // first; denser spiral features are only resolvable much later.
     // There is NO second overlay that suddenly appears on a fixed screen.
-    const hazeStrength=
-        .016*smooth((step-113)/34)
-      + .080*smooth((step-140)/43)
-      + .245*smooth((step-160)/54)
-      + .405*smooth((step-181)/48);
+    // One gradually resolving galaxy: begin with barely visible dusty star
+    // concentrations, let the outer filaments become legible, and reveal the
+    // complete spiral only after a long retreat. The source never swaps.
+    const p=clamp((step-119)/104,0,1);
+    const hazeStrength=.012*smooth((step-113)/22)
+      + .94*Math.pow(p,1.18);
     if(hazeStrength<.0003 || g.r<2)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
