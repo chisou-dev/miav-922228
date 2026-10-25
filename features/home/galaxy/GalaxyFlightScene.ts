@@ -65,22 +65,27 @@ export function createGalaxyFlightScene() {
   // bearings persist for the whole trip; the viewer simply pulls farther
   // away from a pre-existing, much larger star system.
   const SKY_STARS=1370;
-  const DEEP_STARS=570;
-  // Exact early counts requested: tap 2 = 10, tap 3 = 30, tap 5 = 100.
-  // The same deterministic star identities persist throughout the voyage.
+  // The voyage begins with ONLY the MIAV lettering and one galaxy.
+  // Its retreat reveals a few distant stars at a time. The entire sky is
+  // populated BEFORE the first nearby planet can slide into the frame.
+  // After the planets become pinpoints, the same vast stellar background
+  // steadily thins as the far galaxy resolves. No abrupt scene changes.
   const countStops: readonly [number, number][] = [
-    [0,0],[1,3],[2,10],[3,30],[4,60],[5,100],
-    [8,250],[12,630],[18,1150],[22,SKY_STARS]
+    [0,0],[3,0],[5,9],[8,35],[12,108],[16,255],
+    [20,470],[25,895],[31,SKY_STARS],[138,SKY_STARS],
+    [153,1300],[167,1050],[181,710],[195,340],
+    [208,155],[218,95],[235,95]
   ];
   function visibleStarCount(step:number){
     for(let k=1;k<countStops.length;k++){
       const [end,total]=countStops[k];
       if(step<=end){
         const [start,previous]=countStops[k-1];
-        return previous+(total-previous)*clamp((step-start)/(end-start),0,1);
+        const t=smooth((step-start)/(end-start));
+        return previous+(total-previous)*t;
       }
     }
-    return SKY_STARS;
+    return 95;
   }
   const skyStars=Array.from({length:SKY_STARS},(_,i)=>({
     x:rnd(i*11+17),y:rnd(i*17+37),
@@ -98,13 +103,6 @@ export function createGalaxyFlightScene() {
   }));
   // Much fainter, fixed, separately distributed points become resolvable
   // at intergalactic distances. They never inherit spiral coordinates.
-  const deepStars=Array.from({length:DEEP_STARS},(_,i)=>({
-    x:rnd(i*29+110017),y:rnd(i*37+170043),
-    radius:.32+rnd(i*13+70131)*.94,
-    hue:[204,225,242,270,33,39,55][i%7],
-    power:.25+rnd(i*19+9901)*.50,
-    phase:rnd(i*23+23111)*TAU,
-  }));
   let nebulaCache:HTMLCanvasElement|null=null;
 
   function galaxyGeometry(step:number,w:number,h:number){
@@ -513,9 +511,8 @@ export function createGalaxyFlightScene() {
     // Stars stay in their own positions at all distances. The old parallax
     // formula moved every point inward and gave the impression that somebody
     // was manufacturing a galaxy by collecting them at the centre.
-    const outerWeight=1-.16*smooth((step-172)/35)
-      +.16*smooth((step-214)/18);
-    const tiny=step>=228;
+    const outerWeight=1-.08*smooth((step-150)/58);
+    const tiny=step>=230;
     for(let i=0;i<Math.ceil(count);i++){
       const p=skyStars[i];
       const x=w*p.x;
@@ -528,22 +525,11 @@ export function createGalaxyFlightScene() {
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
 
-    // Wider cosmic space: additional pinpoints appear at independent fixed
-    // bearings once the FULL galaxy has been revealed, then sparkle gently
-    // throughout the final thirty seconds.
-    const deepWeight=smooth((step-205)/25);
-    if(deepWeight>0.001){
-      for(const p of deepStars){
-        const pulse=.63+.37*Math.sin(now*.00145+p.phase+step*.035);
-        const alpha=p.power*deepWeight*pulse;
-        if(alpha<.01)continue;
-        const x=p.x*w,y=p.y*h;
-        ctx.fillStyle="hsla("+p.hue+",52%,90%,"+alpha.toFixed(3)+")";
-        ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
-      }
-    }
+    // Keep a sparse handful of distant lights even at galaxy scale,
+    // rather than switching to an empty black screen or respawning a new sky.
     // A handful of bright stars twinkle softly in different colours.
-    const bright=Math.floor(34*clamp((step-5)/15,0,1));
+    const bright=Math.floor(34*smooth((step-9)/23)*
+      (1-.67*smooth((step-153)/58)));
     for(let i=0;i<bright;i++){
       const p=skyBright[i];
       const x=w*p.x,y=h*p.y;
@@ -557,24 +543,8 @@ export function createGalaxyFlightScene() {
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
-    // Last view: a few different-coloured points brighten and fade in place.
-    // The galaxy becomes only one of the distant lights while all the other
-    // stars remain scattered. No moving star trails or flashing wallpaper.
-    const finale=smooth((step-215)/17);
-    if(finale>0.002){
-      for(let i=0;i<24;i++){
-        const p=skyBright[i];
-        const shimmer=Math.pow(Math.max(0,Math.sin(now*.0016+p.phase+i*.13)),5);
-        const intensity=finale*shimmer*(.23+.28*p.power);
-        if(intensity<.014)continue;
-        const x=w*p.x,y=h*p.y,radius=3.5+p.radius*5;
-        const corona=ctx.createRadialGradient(x,y,0,x,y,radius);
-        corona.addColorStop(0,"hsla("+p.hue+",76%,92%,"+intensity.toFixed(3)+")");
-        corona.addColorStop(1,"hsla("+p.hue+",70%,72%,0)");
-        ctx.fillStyle=corona;
-        ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
-      }
-    }
+    // The ending stays restrained: the now-distant galaxy is one tiny
+    // point within a naturally sparse intergalactic sky.
     // Short, sparse glints respond to each tap during the long flight through
     // the starfield. Their positions vary without scrambling the fixed sky;
     // the subtle apparent recession still comes from the parallax above.
@@ -611,10 +581,14 @@ export function createGalaxyFlightScene() {
     // One gradually resolving galaxy: begin with barely visible dusty star
     // concentrations, let the outer filaments become legible, and reveal the
     // complete spiral only after a long retreat. The source never swaps.
-    const p=clamp((step-119)/104,0,1);
-    const hazeStrength=.012*smooth((step-113)/22)
-      + .94*Math.pow(p,1.18);
-    if(hazeStrength<.0003 || g.r<2)return;
+    // The galactic texture does not appear during the planet flybys.
+    // It is the fixed distant population underneath the same stars that
+    // gets resolved slowly as the view recedes. Begin as very faint haze,
+    // then let the existing population acquire a recognisable spiral shape.
+    const wisps=smooth((step-138)/29);
+    const resolved=smooth((step-159)/56);
+    const hazeStrength=.026*wisps+.93*resolved;
+    if(hazeStrength<.0003 || g.r<1.15)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.globalAlpha=hazeStrength;
