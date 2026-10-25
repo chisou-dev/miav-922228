@@ -696,7 +696,7 @@ export function createGalaxyFlightScene() {
     ctx.restore();
   }
 
-  // The final thirty seconds do NOT replay a fixed blink pattern. Each
+  // The final three minutes do NOT replay a fixed blink pattern. Each
   // transient glow chooses a different star from the existing sky, so the
   // stars themselves remain in place while the sparkling locations wander.
   // Event indices permute the 1370 stars without revisiting one position
@@ -704,7 +704,7 @@ export function createGalaxyFlightScene() {
   function drawFinalSparkles(
     ctx:CanvasRenderingContext2D, elapsedMs:number,w:number,h:number,
   ) {
-    const elapsed=clamp(elapsedMs,0,30000);
+    const elapsed=Math.max(0,elapsedMs);
     const interval=300;
     const last=Math.floor(elapsed/interval);
     const hues=[210,197,225,251,281,330,14,37,49,176];
