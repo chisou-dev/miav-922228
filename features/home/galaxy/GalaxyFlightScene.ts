@@ -104,6 +104,43 @@ export function createGalaxyFlightScene() {
   // Much fainter, fixed, separately distributed points become resolvable
   // at intergalactic distances. They never inherit spiral coordinates.
   let nebulaCache:HTMLCanvasElement|null=null;
+  // NASA/JPL-Caltech's real M31 (Andromeda) infrared observation, 2024.
+  // A cached, feathered copy blends into the EXACT SAME sky position as the
+  // early synthetic stellar haze. The observation is not pasted as a square.
+  const m31Image = new Image();
+  m31Image.decoding = "async";
+  m31Image.src = "https://www.spitzer.caltech.edu/system/avm_images/binaries/30/largest/M31_IRAC-MIPS.jpg";
+  let m31Cache:HTMLCanvasElement|null=null;
+  function observedAndromeda():HTMLCanvasElement|null {
+    if(m31Cache)return m31Cache;
+    if(!m31Image.complete || !m31Image.naturalWidth)return null;
+    const n=1120,h=482;
+    const source=document.createElement("canvas");
+    source.width=n;source.height=h;
+    const g=source.getContext("2d");
+    if(!g)return null;
+    g.drawImage(m31Image,0,0,n,h);
+    // The elliptical light envelope ends at zero alpha on EVERY edge.
+    g.globalCompositeOperation="destination-in";
+    g.save();
+    g.translate(n/2,h/2);
+    g.scale(1,h/n);
+    const veil=g.createRadialGradient(0,0,n*.19,0,0,n*.492);
+    veil.addColorStop(0,"rgba(255,255,255,1)");
+    veil.addColorStop(.48,"rgba(255,255,255,.96)");
+    veil.addColorStop(.75,"rgba(255,255,255,.47)");
+    veil.addColorStop(1,"rgba(255,255,255,0)");
+    g.fillStyle=veil;
+    g.fillRect(-n/2,-n/2,n,n);
+    g.restore();
+    const output=document.createElement("canvas");
+    output.width=n;output.height=n;
+    output.getContext("2d")?.drawImage(source,0,(n-h)/2);
+    m31Cache=output;
+    return output;
+  }
+
+
 
   function galaxyGeometry(step:number,w:number,h:number){
     const short=Math.min(w,h);
@@ -592,22 +629,26 @@ export function createGalaxyFlightScene() {
     if(hazeStrength<.0003 || g.r<1.15)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
-    ctx.globalAlpha=hazeStrength;
-    const texture=ensureNebula();
-    // At early stages this galaxy is many screens wide. Crop its source to
-    // the visible camera window instead of rasterising a huge offscreen image
-    // each frame; it also gives perfectly smooth continuity while zooming.
+    const photo=observedAndromeda();
+    const photoWeight=photo?smooth((step-173)/42):0;
+    // Even before the M31 details resolve, diffuse stars have existed in
+    // the exact same region. Their opacity transfers gradually to the
+    // feathered telescope data without moving the galaxy's centre or shape.
     const side=g.r*2;
     const left=g.x-g.r,top=g.y-g.r;
     const x0=Math.max(0,left),y0=Math.max(0,top);
     const x1=Math.min(w,left+side),y1=Math.min(h,top+side);
-    if(x1>x0 && y1>y0){
-      const sx=(x0-left)/side*texture.width;
-      const sy=(y0-top)/side*texture.height;
-      const sw=(x1-x0)/side*texture.width;
-      const sh=(y1-y0)/side*texture.height;
-      ctx.drawImage(texture,sx,sy,sw,sh,x0,y0,x1-x0,y1-y0);
+    function project(source:HTMLCanvasElement,opacity:number){
+      if(opacity<=.0001||x1<=x0||y1<=y0)return;
+      const sx=(x0-left)/side*source.width;
+      const sy=(y0-top)/side*source.height;
+      const sw=(x1-x0)/side*source.width;
+      const sh=(y1-y0)/side*source.height;
+      ctx.globalAlpha=opacity;
+      ctx.drawImage(source,sx,sy,sw,sh,x0,y0,x1-x0,y1-y0);
     }
+    project(ensureNebula(),hazeStrength*(1-.64*photoWeight));
+    if(photo)project(photo,hazeStrength*.90*photoWeight);
     ctx.restore();
   }
 
