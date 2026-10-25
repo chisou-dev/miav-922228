@@ -108,7 +108,15 @@ export function GalaxyVoyage({
     first.src = NASA_M100;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
-    const dust: Dust[] = selectedText.slice(0, 300).map((p) => ({
+    // The real homepage is hidden during the trip, so the DOM may no longer
+    // have measurable glyph pixels. Supply guaranteed points from the on-screen
+    // MIAV lettering: visible separate sand grains, not streaks or scratches.
+    const titleGrains: Point[] = Array.from({ length: 190 }, (_, i) => ({
+      x: viewWidth * (0.29 + ((i * 73) % 190) / 190 * 0.42),
+      y: viewHeight * (viewWidth < 680 ? 0.24 : 0.23)
+        + (((i * 47) % 29) - 14) * Math.min(1.5, viewWidth / 700),
+    }));
+    const dust: Dust[] = [...titleGrains, ...selectedText.slice(0, 110)].map((p) => ({
       ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
       drift: (Math.random() - 0.5) * 44,
     }));
@@ -200,33 +208,34 @@ export function GalaxyVoyage({
 
 
     function damagedTitle() {
-      if (titleGhost || !titleRect) return titleGhost;
-      const element = document.querySelector<HTMLElement>("[data-galaxy-title]");
-      if (!element) return null;
-      const style = getComputedStyle(element);
-      const w = Math.ceil(Math.min(1200, Math.max(100, titleRect.width)));
-      const h = Math.ceil(Math.max(28, titleRect.height));
+      if (titleGhost) return titleGhost;
+      // Draw independently of the hidden homepage layout. The title must
+      // remain readable on desktop AND on a narrow Android screen.
+      const size = Math.min(57, Math.max(23, viewWidth * 0.055));
+      const w = Math.ceil(Math.min(850, viewWidth * 0.88));
+      const h = Math.ceil(size * 1.45);
       const output = document.createElement("canvas");
       output.width = w;
       output.height = h;
       const g = output.getContext("2d");
       if (!g) return null;
-      g.font = style.fontWeight + " " + style.fontSize + " " + style.fontFamily;
+      g.font = "500 " + size + "px Georgia, serif";
+      g.textAlign = "center";
       g.textBaseline = "middle";
-      g.fillStyle = "#f4f6ff";
-      g.fillText((element.textContent || "MIAV-922228").trim(), 0, h * 0.52, w);
-      // Literal perforations in the letters, not scratches in outer space.
+      g.fillStyle = "#f5f6ff";
+      g.fillText("MIAV-922228", w * 0.5, h * 0.52, w * 0.95);
+      // Actually subtract small ragged holes from the glyph pixels.
       g.globalCompositeOperation = "destination-out";
       let seed = 194822;
       const next = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
         return seed / 4294967296;
       };
-      for (let i = 0; i < 470; i++) {
+      for (let i = 0; i < 490; i++) {
         const x = next() * w;
         const y = next() * h;
-        const size = 0.42 + next() * (i % 9 === 0 ? 4.2 : 2.2);
-        g.fillStyle = "rgba(0,0,0," + (0.45 + next() * 0.55) + ")";
+        const size = 0.6 + next() * (i % 9 === 0 ? 4.2 : 2.5);
+        g.fillStyle = "rgba(0,0,0," + (0.48 + next() * 0.52) + ")";
         g.beginPath();
         g.arc(x, y, size, 0, TAU);
         g.fill();
