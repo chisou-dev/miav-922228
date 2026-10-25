@@ -91,22 +91,31 @@ export function createGalaxyFlightScene() {
     }
     return SKY_STARS;
   }
-  // No camera cut: the whole sightline is pulled back on each tap.
-  const stellarRecession=(step:number)=>smooth((step-121)/104);
+  // One camera move, not a picture swap: the galaxy first enters from
+  // the RIGHT as a faint edge, reveals half its asymmetric disc, then drifts
+  // UP and out as the rearward sightline changes. Unrelated stars persist.
+  const stellarRecession=(step:number)=>smooth((step-120)/95);
+  function galaxySightline(step:number,w:number,h:number){
+    const reveal=smooth((step-126)/88);
+    const depart=smooth((step-216)/49);
+    return {
+      x:w*(1.29-.47*reveal),
+      y:h*(.39-1.18*depart),
+      scale:1-.34*depart,
+      depart,
+    };
+  }
   function projectedStar(
     p:{x:number;y:number},member:boolean,step:number,w:number,h:number,
   ){
     if(!member)return {x:w*p.x,y:h*p.y};
     const recession=stellarRecession(step);
-    // The nearby population has a wide, irregular, slightly tilted disk,
-    // NOT a centred mathematically perfect four-armed spiral photograph.
-    // At the beginning the projection is exactly the original star position.
     const short=Math.min(w,h);
-    const spread=1-.35*smooth((step-219)/48);
-    const targetX=w*.79+(p.x-.5)*short*.91*spread+
-      Math.sin(p.y*7.9+p.x*2.3)*short*.085*spread;
-    const targetY=h*.275+(p.y-.5)*short*.31*spread+
-      Math.sin(p.x*5.6+p.y*2.2)*short*.043*spread;
+    const sight=galaxySightline(step,w,h);
+    const targetX=sight.x+(p.x-.5)*short*1.12*sight.scale+
+      Math.sin(p.y*7.9+p.x*2.3)*short*.083*sight.scale;
+    const targetY=sight.y+(p.y-.5)*short*.43*sight.scale+
+      Math.sin(p.x*5.6+p.y*2.2)*short*.054*sight.scale;
     return {
       x:w*p.x+(targetX-w*p.x)*recession,
       y:h*p.y+(targetY-h*p.y)*recession,
@@ -666,31 +675,36 @@ export function createGalaxyFlightScene() {
   }
 
   function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
-    // The photographed, centred M31 layer caused the sudden pasted-on
-    // spiral in mobile screenshots. Do not switch to it. A *very* faint,
-    // irregular stellar mist now accompanies the SAME projected stars above.
-    // It is lens-like scattered light, not another opaque galaxy image.
-    const strength=smooth((step-147)/82)*(1-smooth((step-224)/55));
-    if(strength<.002)return;
+    // Only diffuse light co-located with the SAME receding stars. Let its
+    // edge appear, its half-disc become recognisable, and then carry it
+    // off the TOP of the frame. Never spawn a separate full spiral photo.
+    const sight=galaxySightline(step,w,h);
+    const strength=smooth((step-153)/66)*(1-smooth((step-237)/39));
+    if(strength<.003)return;
     const short=Math.min(w,h);
     ctx.save();
     ctx.globalCompositeOperation="screen";
-    const pockets=[
-      {x:.765,y:.263,sx:.71,sy:.21,h:214,a:.065},
-      {x:.655,y:.299,sx:.40,sy:.14,h:233,a:.045},
-      {x:.891,y:.245,sx:.33,sy:.16,h:29,a:.037},
+    const wisps=[
+      {dx:0,dy:0,sx:.81,sy:.29,hue:215,opacity:.105},
+      {dx:-.24,dy:.039,sx:.44,sy:.16,hue:236,opacity:.054},
+      {dx:.18,dy:-.051,sx:.34,sy:.15,hue:33,opacity:.061},
+      {dx:-.07,dy:.087,sx:.28,sy:.12,hue:205,opacity:.047},
     ];
-    for(const p of pockets){
-      const rad=short*p.sx;
+    for(const p of wisps){
+      const radius=short*p.sx*sight.scale;
       ctx.save();
-      ctx.translate(w*p.x,h*p.y);
-      ctx.rotate(-.19);
+      ctx.translate(sight.x+p.dx*short*sight.scale,
+        sight.y+p.dy*short*sight.scale);
+      ctx.rotate(-.14);
       ctx.scale(1,p.sy/p.sx);
-      const haze=ctx.createRadialGradient(0,0,0,0,0,rad);
-      haze.addColorStop(0,"hsla("+p.h+",50%,78%,"+(p.a*strength).toFixed(4)+")");
-      haze.addColorStop(.53,"hsla("+p.h+",43%,55%,"+(p.a*strength*.33).toFixed(4)+")");
-      haze.addColorStop(1,"hsla("+p.h+",45%,42%,0)");
-      ctx.fillStyle=haze;ctx.beginPath();ctx.arc(0,0,rad,0,TAU);ctx.fill();
+      const fog=ctx.createRadialGradient(0,0,0,0,0,radius);
+      fog.addColorStop(0,"hsla("+p.hue+",46%,84%,"+
+        (p.opacity*strength).toFixed(4)+")");
+      fog.addColorStop(.52,"hsla("+p.hue+",42%,58%,"+
+        (p.opacity*strength*.27).toFixed(4)+")");
+      fog.addColorStop(1,"hsla("+p.hue+",42%,48%,0)");
+      ctx.fillStyle=fog;
+      ctx.beginPath();ctx.arc(0,0,radius,0,TAU);ctx.fill();
       ctx.restore();
     }
     ctx.restore();
