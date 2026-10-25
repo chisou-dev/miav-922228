@@ -55,54 +55,49 @@ const bodies: Body[] = [
 
 export function createGalaxyFlightScene() {
   const textures = new Map<number, HTMLCanvasElement>();
-  // The background is a permanent celestial sphere. It never fades away,
-  // even when the nearby galaxy and planets shrink to single light points.
-  const skyStars=Array.from({length:1950},(_,i)=>({
-    x:rnd(i*11+17), y:rnd(i*17+37),
-    radius:.34+rnd(i*13+47)*1.10,
-    hue:[205,211,221,240,26,36,49,287][i%8],
-    power:.22+rnd(i*7+113)*.64,
+  // Sky stars have stable positions for the entire voyage. A *subset of the
+  // very same stars* later resolves into a spiral-shaped distant star system:
+  // no second sky image ever pops in from an edge.
+  const SKY_STARS=1370;
+  const MEMBERS=650;
+  const skyStars=Array.from({length:SKY_STARS},(_,i)=>({
+    x:rnd(i*11+17),y:rnd(i*17+37),
+    radius:.31+rnd(i*13+47)*.86,
+    hue:[204,212,223,239,31,40,50,285][i%8],
+    power:.19+rnd(i*7+113)*.57,
     phase:rnd(i*23+19)*TAU,
   }));
-  const skyBright=Array.from({length:75},(_,i)=>({
+  const skyBright=Array.from({length:34},(_,i)=>({
     x:rnd(i*31+251),y:rnd(i*43+91),
-    radius:.8+rnd(i*11+117)*.85,
-    hue:[210,222,42,36,255,194][i%6],
-    power:.48+rnd(i*13+61)*.34,
+    radius:.55+rnd(i*11+117)*.79,
+    hue:[205,222,42,36,255,194][i%6],
+    power:.42+rnd(i*13+61)*.37,
     phase:rnd(i*17+129)*TAU,
   }));
-  let skyCache:HTMLCanvasElement|null=null;
-  let cachedWidth=0,cachedHeight=0;
+  const galaxyMembers=Array.from({length:MEMBERS},(_,i)=>{
+    // Flattened, uneven arms: the stars already existed in the all-sky view.
+    // Their apparent grouping changes through a continuous camera pullback.
+    const radial=Math.sqrt((i+.5)/MEMBERS);
+    const arm=i%4;
+    const theta=arm*TAU/4+radial*4.92+
+      (rnd(i*53+79)-.5)*(.44+.68*radial);
+    const wander=(rnd(i*73+33)-.5)*.11;
+    return {
+      u:Math.cos(theta)*(radial+wander)*.84,
+      v:Math.sin(theta)*(radial+wander)*.58,
+      sourceIndex:i*2,
+    };
+  });
   let nebulaCache:HTMLCanvasElement|null=null;
 
-  function ensureSky(w:number,h:number) {
-    if(skyCache && cachedWidth===w && cachedHeight===h)return skyCache;
-    cachedWidth=w;cachedHeight=h;
-    const c=document.createElement("canvas");
-    // Render a consistent dense sky without reallocating on every click.
-    c.width=Math.max(1,Math.round(w));
-    c.height=Math.max(1,Math.round(h));
-    const g=c.getContext("2d");
-    if(!g)return c;
-    for(const p of skyStars){
-      const x=p.x*w,y=p.y*h;
-      g.fillStyle="hsla("+p.hue+",43%,87%,"+p.power.toFixed(3)+")";
-      g.beginPath();g.arc(x,y,p.radius,0,TAU);g.fill();
-    }
-    for(const p of skyBright){
-      const x=p.x*w,y=p.y*h;
-      const radius=p.radius*8;
-      const halo=g.createRadialGradient(x,y,0,x,y,radius);
-      halo.addColorStop(0,"hsla("+p.hue+",63%,84%,"+(p.power*.32).toFixed(3)+")");
-      halo.addColorStop(.26,"hsla("+p.hue+",61%,68%,"+(p.power*.12).toFixed(3)+")");
-      halo.addColorStop(1,"hsla("+p.hue+",56%,57%,0)");
-      g.fillStyle=halo;
-      g.beginPath();g.arc(x,y,radius,0,TAU);g.fill();
-      g.fillStyle="hsla("+p.hue+",28%,95%,"+p.power.toFixed(3)+")";
-      g.beginPath();g.arc(x,y,p.radius,0,TAU);g.fill();
-    }
-    skyCache=c;
-    return c;
+  function galaxyGeometry(step:number,w:number,h:number){
+    const short=Math.min(w,h);
+    const blend=smooth((step-98)/38);
+    const recession=Math.max(0,step-138);
+    // The resolved galaxy never exceeds the original glass orb's visual
+    // scale. After the full shape is revealed it only becomes smaller.
+    const r=short*.245*Math.exp(-.235*recession);
+    return {blend,x:w*.51,y:h*.49,r};
   }
 
   function ensureNebula(){
@@ -303,40 +298,68 @@ export function createGalaxyFlightScene() {
     }
   }
 
-  function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number) {
-    const sky=ensureSky(w,h);
-    // Complete edge-to-edge coverage from the first moment to the last.
-    ctx.drawImage(sky,0,0,w,h);
-    for(const p of skyBright) {
-      const x=p.x*w,y=p.y*h;
-      const flicker=.84+.16*Math.sin(now*.00065+p.phase);
-      ctx.fillStyle="hsla("+p.hue+",35%,96%,"+(p.power*flicker).toFixed(3)+")";
-      ctx.beginPath();
-      ctx.arc(x,y,p.radius*.72,0,TAU);ctx.fill();
+  function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,step:number) {
+    // Almost empty black space at first. By the time the first spiral is a
+    // pinprick, the SAME sky is fully populated, before any planet flies by.
+    const reveal=smooth((step-3)/26);
+    if(reveal<=.0001)return;
+    const g=galaxyGeometry(step,w,h);
+    const outerWeight=1-.75*smooth((step-105)/35);
+    const tiny=g.blend>.99 && g.r<4;
+    for(let i=0;i<skyStars.length;i++){
+      const p=skyStars[i];
+      const member=i%2===0 && i/2<MEMBERS;
+      if(member && tiny)continue;
+      const field=member?galaxyMembers[i/2]:null;
+      const x=field
+        ?w*p.x+(g.x+field.u*g.r-w*p.x)*g.blend
+        :w*p.x;
+      const y=field
+        ?h*p.y+(g.y+field.v*g.r-h*p.y)*g.blend
+        :h*p.y;
+      const visibility=member
+        ?reveal*(1-.15*g.blend)
+        :reveal*outerWeight;
+      const alpha=Math.min(.96,p.power*visibility*
+        (.91+.09*Math.sin(now*.00035+p.phase)));
+      if(alpha<.008)continue;
+      ctx.fillStyle="hsla("+p.hue+",43%,87%,"+alpha.toFixed(3)+")";
+      const px=field?Math.max(.30,p.radius*(1-.24*g.blend)):p.radius;
+      ctx.beginPath();ctx.arc(x,y,px,0,TAU);ctx.fill();
+    }
+    // Sparse larger luminous stars survive around the fully formed galaxy.
+    for(const p of skyBright){
+      const x=w*p.x,y=h*p.y;
+      const a=reveal*outerWeight*p.power*
+        (.84+.16*Math.sin(now*.00064+p.phase));
+      if(a<.008)continue;
+      const radius=p.radius*6;
+      const glow=ctx.createRadialGradient(x,y,0,x,y,radius);
+      glow.addColorStop(0,"hsla("+p.hue+",65%,86%,"+(a*.19).toFixed(3)+")");
+      glow.addColorStop(1,"hsla("+p.hue+",51%,62%,0)");
+      ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+      ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
+      ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
+    }
+    if(tiny){
+      // An almost infinitely remote Andromeda-like galaxy reads as one star,
+      // with the same surrounding sky as the rest of the journey.
+      ctx.fillStyle="rgba(222,218,249,.79)";
+      ctx.beginPath();ctx.arc(g.x,g.y,.73,0,TAU);ctx.fill();
     }
   }
 
   function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
-    // A field of stars fills the view while the vessel looks backward. The
-    // field slowly resolves into a spiral as its angular extent contracts.
-    // There are no appearing images, separate star rectangles, or fade cuts.
-    const short=Math.min(w,h);
-    const recession=Math.max(0,step-30);
-    const r=short*3.2*Math.exp(-.046*recession-.070*Math.max(0,step-129));
-    const x=w*.53,y=h*.48;
-    if(r<.40){
-      ctx.fillStyle="rgba(220,223,250,.82)";
-      ctx.beginPath();ctx.arc(x,y,.72,0,TAU);ctx.fill();
-      return;
-    }
-    const texture=ensureNebula();
-    const alpha=.095+.88*smooth((step-30)/84);
+    const g=galaxyGeometry(step,w,h);
+    // The nebula is only diffuse dust around the 650 EXISTING sky stars.
+    // It is not a newly appearing photograph or a separate ring of dots.
+    const hazeStrength=.46*smooth((g.blend-.16)/.72);
+    if(hazeStrength<.001 || g.r<2)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
-    ctx.globalAlpha=alpha;
-    // Texture always has the same stars and positions. The transparent
-    // boundary and nebula's radial dust mask leave the permanent sky visible.
-    ctx.drawImage(texture,x-r,y-r,r*2,r*2);
+    ctx.globalAlpha=hazeStrength;
+    const texture=ensureNebula();
+    ctx.drawImage(texture,g.x-g.r,g.y-g.r,g.r*2,g.r*2);
     ctx.restore();
   }
 
