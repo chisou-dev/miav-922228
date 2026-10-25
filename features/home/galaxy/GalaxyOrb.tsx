@@ -775,11 +775,9 @@ export function GalaxyOrb() {
           if (Math.abs(radius - targetRadius) < 0.15) radius = targetRadius;
         }
         updateZoomGeometry();
-        if (atMaximum) {
-          drawCosmicJourney(elapsed);
-        } else {
-          drawSphere();
-        }
+        // Keep the GLASS sphere visible through the final 1.3x zoom.
+        // The separate space voyage begins only on the following tap.
+        drawSphere();
         return;
       }
       if (!reduced()) advance(now, elapsed);
