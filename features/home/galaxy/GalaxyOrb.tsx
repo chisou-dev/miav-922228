@@ -489,10 +489,11 @@ export function GalaxyOrb() {
       ctx.arc(0, 0, r, 0, TAU);
       ctx.clip();
 
+      // Dark transparent optical body, not an opaque circular tunnel.
       const glass = ctx.createRadialGradient(-r * 0.32, -r * 0.4, r * 0.02, r * 0.20, r * 0.25, r * 1.35);
-      glass.addColorStop(0, "#1c365a");
-      glass.addColorStop(0.49, "#111e35");
-      glass.addColorStop(1, "#030915");
+      glass.addColorStop(0, "rgba(47,82,131,0.32)");
+      glass.addColorStop(0.49, "rgba(23,43,80,0.25)");
+      glass.addColorStop(1, "rgba(3,10,27,0.42)");
       ctx.fillStyle = glass;
       ctx.fillRect(-r, -r, r * 2, r * 2);
 
@@ -616,9 +617,14 @@ export function GalaxyOrb() {
 
       ctx.restore();
       ctx.beginPath();
-      ctx.arc(x, y, r * 0.985, 0, TAU);
-      ctx.strokeStyle = "rgba(138,197,246,0.32)";
-      ctx.lineWidth = Math.max(0.7, r * 0.016);
+      ctx.arc(x, y, r * 0.994, 0, TAU);
+      ctx.strokeStyle = "rgba(172,220,251,0.25)";
+      ctx.lineWidth = Math.max(0.6, Math.min(1.3, r * 0.004));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.994, Math.PI * 1.13, Math.PI * 1.59);
+      ctx.strokeStyle = "rgba(239,252,255,0.48)";
+      ctx.lineWidth = Math.max(0.6, Math.min(1.05, r * 0.003));
       ctx.stroke();
     }
 
