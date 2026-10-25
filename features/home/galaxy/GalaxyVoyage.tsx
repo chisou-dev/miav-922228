@@ -273,28 +273,51 @@ export function GalaxyVoyage({
     function drawImplosion(now: number) {
       const age = now - opened;
       const p = reduced ? 1 : ease(age / IMPLOSION_MS);
-      const cx = mix(origin.x, viewWidth * 0.55, p);
+      const cx = mix(origin.x, viewWidth * 0.51, p);
       const cy = mix(origin.y, viewHeight * 0.52, p);
       const short = Math.min(viewWidth, viewHeight);
-      const dark = ease((p - 0.23) / 0.57);
-      ctx!.fillStyle = "rgba(0,2,9," + dark + ")";
+      ctx!.fillStyle = "rgba(0,2,9," + ease((p - 0.14) / 0.55) + ")";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // Glass contracts, and its galaxy expands, pulling the sphere inward.
-      // There are no fracture lines, shards or polygon fragments.
-      const shellRadius = origin.radius * (1 - 0.97 * ease(p / 0.8));
-      if (shellRadius > 1.5 && p < 0.86) {
+      // The sphere NEVER implodes or cracks. Its shell stays in place,
+      // becoming transparent as the galaxy itself fills the scene.
+      if (p < 0.99) {
         ctx!.save();
-        ctx!.globalAlpha = 1 - ease((p - 0.31) / 0.52);
-        drawGlass(origin.x, origin.y, shellRadius, now);
+        ctx!.globalAlpha = 1 - ease((p - 0.05) / 0.9);
+        drawGlass(cx, cy, origin.radius * (1 + 0.04 * p), now);
         ctx!.restore();
       }
       galaxyImage(first.complete && first.naturalWidth ? first : globe,
-        cx, cy, mix(origin.radius * 1.55, short * 0.57, p),
-        firstRotation, ease((p - 0.05) / 0.55));
-      drawSand(now, cx, cy, ease(p / 0.7));
-      drawErodedTitle(now, ease((p - 0.62) / 0.35) * 0.37);
+        cx, cy, mix(origin.radius * 1.52, short * 0.66, p),
+        firstRotation, ease((p - 0.02) / 0.8));
+      // An occasional sand grain spirals into the galactic disk while
+      // the original page gently disappears below the dark viewport.
+      drawSand(now, cx, cy, ease((p - 0.22) / 0.7) * 0.56);
     }
 
+    function drawVoyageTitle(now: number, s: number) {
+      // First tap after the glass fades: strong WHITE letters.
+      // Next tap: visibly perforated/fading letters. Next: they are gone.
+      const strength = 1 - ease((s - 0.08) / 1.93);
+      if (strength < 0.003) return;
+      const mask = damagedTitle();
+      const x = viewWidth * 0.5;
+      const y = viewHeight * (viewWidth < 680 ? 0.24 : 0.23);
+      ctx!.save();
+      ctx!.globalAlpha = strength;
+      if (s < 0.48) {
+        const fontSize = Math.min(57, Math.max(23, viewWidth * 0.055));
+        ctx!.font = "500 " + fontSize + "px Georgia, serif";
+        ctx!.textBaseline = "middle";
+        ctx!.textAlign = "center";
+        ctx!.fillStyle = "rgba(248,249,255,.97)";
+        ctx!.fillText("MIAV-922228", x, y);
+      } else if (mask) {
+        const size = Math.min(mask.width, viewWidth * 0.84);
+        const height = size * mask.height / mask.width;
+        ctx!.drawImage(mask, x - size / 2, y - height / 2, size, height);
+      }
+      ctx!.restore();
+    }
 
     function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
       phase: number, alpha: number, depth = 1) {
@@ -390,11 +413,10 @@ export function GalaxyVoyage({
         ctx!.fill();
       }
 
-      if (s < 2.01) {
-        const strength = 0.38 * (1 - ease((s - 0.68) / 1.32));
-        drawErodedTitle(now, strength);
+      if (s < 2.02) {
+        drawVoyageTitle(now, s);
         drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
-          0.90 * (1 - ease((s - 0.90) / 1.11)));
+          0.96 * (1 - ease((s - 0.85) / 1.13)));
       }
 
       // Off-axis planets are fixed behind the ship. The rear-facing camera
