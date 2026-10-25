@@ -663,3 +663,288 @@ export function createGalaxyFlightScene() {
     },
   };
 }
+
+
+/**
+ * Second half of the voyage: the apparently infinite cosmic web is visually
+ * reinterpreted as a transparent water flea's interior. This is a poetic
+ * scale transition, NOT a literal claim about the structure of the cosmos.
+ * The same graph is retained throughout: no tiles, pop-in or image swaps.
+ */
+export function createPondScaleScene() {
+  const N=195;
+  const nodes=Array.from({length:N},(_,i)=>{
+    const layer=i%5;
+    const x=rnd(i*31+603);
+    const y=rnd(i*17+1701);
+    return {x,y, layer, phase:rnd(i*29+837)*TAU,
+      size:.5+rnd(i*23+1601)*1.32};
+  });
+  const edges:{a:number;b:number}[]=[];
+  for(let i=0;i<N;i++){
+    let best=-1,dist=Infinity;
+    // Find one nearby neighbour, producing delicate irregular organic
+    // filaments instead of a rigid square grid or central funnel.
+    for(let j=Math.max(0,i-32);j<i;j++){
+      const a=nodes[i],b=nodes[j];
+      const d=(a.x-b.x)*(a.x-b.x)+.88*(a.y-b.y)*(a.y-b.y);
+      if(d<dist){dist=d;best=j;}
+    }
+    if(best>=0 && dist<.056) edges.push({a:i,b:best});
+    if(i>3 && i%4===0)edges.push({a:i,b:i-3});
+  }
+
+  function drawWeb(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    s:number,opacity:number) {
+    if(opacity<=.002)return;
+    const organic=smooth((s-161)/35);
+    const large=smooth((s-184)/24);
+    const scale=1+large*.40;
+    const cx=w*.51,cy=h*.50;
+    const drift=Math.sin(now*.00034)*3.1*organic;
+    const xy=(p:{x:number;y:number;phase:number})=>({
+      x:cx+(p.x-.5)*w*scale+drift*Math.cos(p.phase),
+      y:cy+(p.y-.5)*h*scale+drift*Math.sin(p.phase*.9)
+    });
+    ctx.save();
+    ctx.globalAlpha=opacity;
+    ctx.lineWidth=.5+organic*.48;
+    for(let i=0;i<edges.length;i++){
+      const edge=edges[i],a=xy(nodes[edge.a]),b=xy(nodes[edge.b]);
+      const bend=Math.sin(i*.79+now*.00014*organic)*h*.014;
+      const midpointX=(a.x+b.x)*.5-bend;
+      const midpointY=(a.y+b.y)*.5+bend*.58;
+      ctx.strokeStyle=organic>.5
+        ? "rgba(146,224,210,.19)" : "rgba(143,174,222,.20)";
+      ctx.beginPath();ctx.moveTo(a.x,a.y);
+      ctx.quadraticCurveTo(midpointX,midpointY,b.x,b.y);ctx.stroke();
+    }
+    for(let i=0;i<N;i++){
+      const p=nodes[i],v=xy(p);
+      const pulse=.63+.37*Math.sin(now*.001+p.phase);
+      const r=p.size*(1+organic*.28);
+      const tint=i%9===0?"230,205,173":organic>.47?"133,219,197":"164,197,249";
+      ctx.fillStyle="rgba("+tint+","+(opacity*.66*pulse).toFixed(3)+")";
+      ctx.beginPath();ctx.arc(v.x,v.y,r,0,TAU);ctx.fill();
+      if(i%13===0){
+        const glow=ctx.createRadialGradient(v.x,v.y,0,v.x,v.y,13);
+        glow.addColorStop(0,"rgba(143,220,225,"+(.16*pulse).toFixed(3)+")");
+        glow.addColorStop(1,"rgba(143,220,225,0)");
+        ctx.fillStyle=glow;ctx.fillRect(v.x-13,v.y-13,26,26);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPond(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    s:number) {
+    const water=smooth((s-201)/23);
+    if(water<=.001)return;
+    ctx.save();ctx.globalAlpha=water;
+    const day=ctx.createLinearGradient(0,0,0,h);
+    day.addColorStop(0,"#e4f3ec");
+    day.addColorStop(.18,"#b3d4ce");
+    day.addColorStop(.42,"#568f90");
+    day.addColorStop(.78,"#183f4e");
+    day.addColorStop(1,"#082935");
+    ctx.fillStyle=day;ctx.fillRect(0,0,w,h);
+    // A still, sheltered POND seen just under its rippling surface.
+    // The pale daylight band is intentionally small, not an ocean horizon.
+    const surfaceY=h*.175;
+    const shore=ctx.createLinearGradient(0,0,0,surfaceY+35);
+    shore.addColorStop(0,"rgba(231,240,221,.18)");
+    shore.addColorStop(.55,"rgba(230,230,203,.30)");
+    shore.addColorStop(1,"rgba(234,241,228,0)");
+    ctx.fillStyle=shore;ctx.fillRect(0,0,w,surfaceY+35);
+    // Refracted shafts extend downward but remain subtle.
+    for(let k=0;k<7;k++){
+      const x=w*((k+.5)/7)+Math.sin(now*.00020+k*1.7)*17;
+      const shaft=ctx.createLinearGradient(x-65,surfaceY,x+70,h*.9);
+      shaft.addColorStop(0,"rgba(255,245,198,.11)");
+      shaft.addColorStop(.6,"rgba(224,246,225,.025)");
+      shaft.addColorStop(1,"rgba(239,250,244,0)");
+      ctx.fillStyle=shaft;
+      ctx.beginPath();
+      ctx.moveTo(x-12,surfaceY);
+      ctx.lineTo(x+12,surfaceY);
+      ctx.lineTo(x+170,h*.95);
+      ctx.lineTo(x+15,h*.95);
+      ctx.closePath();ctx.fill();
+    }
+    ctx.lineCap="round";
+    for(let j=0;j<25;j++){
+      const y=surfaceY-20+j*2.45;
+      ctx.beginPath();
+      const offset=(j%3)*.9;
+      for(let x=-5;x<=w+5;x+=9){
+        const wave=Math.sin(x*.019+now*.0015+j*.75)*(.9+j*.065)
+         +Math.sin(x*.044-now*.0012+j*.33)*(.45+j*.04);
+        if(x<0)ctx.moveTo(x,y+wave+offset);
+        else ctx.lineTo(x,y+wave+offset);
+      }
+      ctx.lineWidth=.65+(j%5)*.16;
+      ctx.strokeStyle=j%4===0?"rgba(255,255,224,.39)":"rgba(225,248,243,.13)";
+      ctx.stroke();
+    }
+    // Plants at the edge of a quiet shallow freshwater pool.
+    const bed=smooth((s-216)/12);
+    ctx.globalAlpha*=bed*.7;
+    for(let i=0;i<19;i++){
+      const x=w*rnd(i*41+67);
+      const len=(.12+.23*rnd(i*19+95))*h;
+      const baseY=h*(.95+.10*rnd(i*17+31));
+      const sway=Math.sin(now*.00068+i*.73)*8;
+      ctx.strokeStyle=i%3===0?"rgba(143,180,120,.38)":"rgba(91,147,123,.28)";
+      ctx.lineWidth=1.3+rnd(i*11+81)*2.1;
+      ctx.beginPath();ctx.moveTo(x,baseY);
+      ctx.quadraticCurveTo(x+sway-22,baseY-len*.62,x+sway,baseY-len);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=water;
+    // Suspended microbubbles and drifting grains in sunlit water.
+    for(let i=0;i<170;i++){
+      const x=(rnd(i*17+33)*w+Math.sin(now*.00016+i)*4+w)%w;
+      const y=(rnd(i*29+73)*h+now*.0025*(.2+rnd(i*7+94)))%h;
+      const r=.35+rnd(i*41+27)*1.22;
+      const a=.11+.35*Math.sin(i+now*.0008)**2;
+      ctx.fillStyle="rgba(240,246,221,"+a.toFixed(3)+")";
+      ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();
+    }
+    // Sunlight glints on tiny ripples, without a blinding flare.
+    for(let i=0;i<67;i++){
+      const x=w*rnd(i*43+105);
+      const y=surfaceY+(.04+.5*rnd(i*37+71))*h;
+      const t=.5+.5*Math.sin(now*.0013+i*2.53);
+      const bright=Math.pow(t,6)*(.07+.43*rnd(i*13+89));
+      if(bright<.02)continue;
+      ctx.save();ctx.translate(x,y);
+      ctx.strokeStyle="rgba(255,250,208,"+bright.toFixed(3)+")";
+      ctx.lineWidth=.7;
+      const spread=2.6+5*rnd(i*3+13);
+      ctx.beginPath();ctx.moveTo(-spread,0);ctx.lineTo(spread,0);
+      ctx.moveTo(0,-spread*.47);ctx.lineTo(0,spread*.47);ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawDaphnia(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    s:number) {
+    // Until a tap opens the pond view, the creature is only an enormous
+    // moving shape. The eye / appendages / outline resolve as we zoom out.
+    const first=smooth((s-181)/17);
+    const reveal=smooth((s-207)/15);
+    if(first<=.001)return;
+    const zoom=smooth((s-191)/39);
+    const size=Math.min(w,h)*(3.8*Math.pow(.078,zoom));
+    const cx=w*(.58-.09*zoom)+Math.sin(now*.00055)*Math.min(13,w*.024);
+    const cy=h*(.62-.32*zoom)+Math.sin(now*.00082)*Math.min(9,h*.014);
+    const swim=Math.sin(now*.0011)*.028;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(-.23+swim);
+    ctx.scale(size,size);
+    // The outer contour resembles a transparent water flea carapace,
+    // tapered towards its tail spine. First only interior movement is seen.
+    const outline=new Path2D();
+    outline.moveTo(-.25,-.42);
+    outline.bezierCurveTo(.07,-.57,.40,-.27,.42,.04);
+    outline.bezierCurveTo(.46,.37,.17,.53,-.04,.51);
+    outline.bezierCurveTo(-.34,.46,-.43,.15,-.37,-.17);
+    outline.quadraticCurveTo(-.37,-.34,-.25,-.42);
+    ctx.save();ctx.clip(outline);
+    const shell=ctx.createRadialGradient(-.16,-.22,.01,.07,.02,.66);
+    shell.addColorStop(0,"rgba(249,255,228,.17)");
+    shell.addColorStop(.5,"rgba(186,238,224,.11)");
+    shell.addColorStop(1,"rgba(95,172,184,.06)");
+    ctx.fillStyle=shell;ctx.fillRect(-.6,-.7,1.2,1.4);
+    // The mesh of organs is still the same branching language as the
+    // preceding cosmic net. No distinct pre-rendered animal photograph.
+    ctx.lineWidth=.0027;
+    for(let i=0;i<46;i++){
+      const xx=-.30+(i%11)*.060;
+      const yy=-.36+Math.floor(i/11)*.19;
+      ctx.strokeStyle=i%5===0?"rgba(207,170,126,.27)":"rgba(137,206,191,.27)";
+      ctx.beginPath();ctx.moveTo(xx,yy);
+      ctx.bezierCurveTo(xx+.043,yy+.065,xx-.052,yy+.115,xx+.06,yy+.18);
+      ctx.stroke();
+    }
+    // Curving digestive tract, small heart and egg-like internal shapes.
+    ctx.lineWidth=.022;
+    ctx.strokeStyle="rgba(197,143,83,.28)";
+    ctx.beginPath();ctx.moveTo(-.13,-.26);
+    ctx.bezierCurveTo(.18,-.20,-.03,.04,.12,.14);
+    ctx.bezierCurveTo(.28,.26,-.06,.35,-.09,.43);ctx.stroke();
+    const heart=.018+.006*Math.sin(now*.0062);
+    ctx.fillStyle="rgba(219,143,101,.42)";
+    ctx.beginPath();ctx.ellipse(-.04,-.17,heart,heart*.65,-.3,0,TAU);ctx.fill();
+    for(let i=0;i<5;i++){
+      const ex=.19+.10*Math.cos(i*2.3);
+      const ey=.07+.12*Math.sin(i*2.3);
+      ctx.fillStyle="rgba(181,167,119,.19)";
+      ctx.beginPath();ctx.ellipse(ex,ey,.036,.043,0,0,TAU);ctx.fill();
+    }
+    ctx.restore();
+    ctx.save();ctx.globalAlpha=reveal;
+    ctx.strokeStyle="rgba(233,255,247,.82)";
+    ctx.lineWidth=.0045;ctx.stroke(outline);
+    ctx.strokeStyle="rgba(114,200,193,.40)";
+    ctx.lineWidth=.0028;
+    ctx.beginPath();ctx.moveTo(-.24,-.34);
+    ctx.bezierCurveTo(-.29,.11,-.22,.30,-.04,.47);ctx.stroke();
+    // One dark compound eye near the front, rather than cartoon eyes.
+    ctx.fillStyle="rgba(25,44,40,.84)";
+    ctx.beginPath();ctx.arc(-.29,-.326,.041,0,TAU);ctx.fill();
+    ctx.fillStyle="rgba(218,241,224,.85)";
+    ctx.beginPath();ctx.arc(-.305,-.342,.008,0,TAU);ctx.fill();
+    for(let antenna=0;antenna<2;antenna++){
+      const lean=Math.sin(now*.0025+antenna*1.4)*.075;
+      const ax=-.34,ay=-.36;
+      const tipX=-.70+lean,tipY=-.59+antenna*.24;
+      ctx.lineWidth=.004;
+      ctx.strokeStyle="rgba(208,247,231,.68)";
+      ctx.beginPath();ctx.moveTo(ax,ay);
+      ctx.quadraticCurveTo(-.59,-.55+antenna*.21,tipX,tipY);ctx.stroke();
+      for(let k=0;k<6;k++){
+        const t=.18+.105*k;
+        const bx=ax+(tipX-ax)*t,by=ay+(tipY-ay)*t;
+        const len=.09*(1-t*.55);
+        ctx.lineWidth=.0016;
+        ctx.beginPath();ctx.moveTo(bx,by);
+        ctx.lineTo(bx-len,by+((k%2)?1:-1)*len*.68);ctx.stroke();
+      }
+    }
+    for(let k=0;k<5;k++){
+      const x=-.30+k*.05,y=.03+k*.072;
+      ctx.beginPath();ctx.moveTo(x,y);
+      ctx.quadraticCurveTo(x-.12,y+.045,x-.23,y+.07+.025*Math.sin(now*.004+k));ctx.stroke();
+    }
+    ctx.beginPath();ctx.moveTo(.06,.49);ctx.quadraticCurveTo(.22,.57,.20,.67);ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  return {
+    draw(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,step:number) {
+      if(step<135)return;
+      const entrance=smooth((step-135)/24);
+      if(entrance<.001)return;
+      ctx.save();
+      ctx.globalAlpha=entrance;
+      // Preserve black cosmic space until the biological transparency
+      // becomes gradually discernible; daylight is introduced only later.
+      const waterTint=smooth((step-176)/36);
+      if(waterTint>.001){
+        const water=ctx.createLinearGradient(0,0,0,h);
+        water.addColorStop(0,"#071b26");
+        water.addColorStop(.5,"#16404d");
+        water.addColorStop(1,"#28586a");
+        ctx.globalAlpha=waterTint*.81;
+        ctx.fillStyle=water;ctx.fillRect(0,0,w,h);
+        ctx.globalAlpha=entrance;
+      }
+      drawWeb(ctx,now,w,h,step,(1-smooth((step-189)/27))*.92);
+      drawDaphnia(ctx,now,w,h,step);
+      drawPond(ctx,now,w,h,step);
+      ctx.restore();
+    }
+  };
+}
