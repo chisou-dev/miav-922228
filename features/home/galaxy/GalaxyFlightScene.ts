@@ -71,8 +71,8 @@ export function createGalaxyFlightScene() {
   // After the planets become pinpoints, the same vast stellar background
   // steadily thins as the far galaxy resolves. No abrupt scene changes.
   const countStops: readonly [number, number][] = [
-    [0,0],[3,0],[5,9],[8,35],[12,108],[16,255],
-    [20,470],[25,895],[31,SKY_STARS],[138,SKY_STARS],
+    [0,0],[3,0],[5,9],[8,35],[12,130],[16,420],
+    [20,930],[24,SKY_STARS],[138,SKY_STARS],
     [153,1300],[167,1050],[181,710],[195,340],
     [208,155],[218,95],[235,95]
   ];
@@ -115,16 +115,13 @@ export function createGalaxyFlightScene() {
     // that made the full galaxy suddenly snap into view near the end.
     const framing=clamp((step-125)/94,0,1);
     const recession=Math.max(0,step-219);
-    const r=short*.245*Math.exp((1-framing)*3.45)*Math.exp(-.285*recession);
-    // At first we are looking through an outer arm, not down the exact
-    // middle of the nucleus. The camera gently widens and recentres during
-    // retreat, so first one arm, then the other, then the galactic body fit.
-    const outerView=1-smooth((step-138)/70);
-    return {
-      x:w*(.51+.31*outerView),
-      y:h*(.49-.12*outerView),
-      r
-    };
+    // The final whole-galaxy view is intentionally modest: close to the
+    // original glass-orb spiral's apparent size, not a full-screen photo.
+    // Keep the centre on the SAME sightline as the dense surrounding stars.
+    // There is no galaxy coming in from the right or a camera jump.
+    const r=short*.12*Math.exp((1-framing)*3.80)*
+      Math.exp(-.285*recession);
+    return {x:w*.515,y:h*.515,r};
   }
 
   function ensureNebula(){
