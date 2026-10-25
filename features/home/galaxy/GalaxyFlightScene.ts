@@ -194,20 +194,36 @@ export function createGalaxyFlightScene() {
     return c;
   }
 
+  function noise(x:number,y:number,seed:number){
+    const ix=Math.floor(x),iy=Math.floor(y);
+    const fx=x-ix,fy=y-iy;
+    const wx=fx*fx*(3-2*fx),wy=fy*fy*(3-2*fy);
+    const sample=(a:number,b:number)=>
+      rnd(Math.imul(a,1619)^Math.imul(b,31337)^Math.imul(seed,6971));
+    const lo=sample(ix,iy)*(1-wx)+sample(ix+1,iy)*wx;
+    const hi=sample(ix,iy+1)*(1-wx)+sample(ix+1,iy+1)*wx;
+    return lo*(1-wy)+hi*wy;
+  }
+  function terrain(x:number,y:number,seed:number){
+    let sum=0,amplitude=.56,frequency=1;
+    for(let o=0;o<4;o++){
+      sum+=amplitude*noise(x*frequency,y*frequency,seed+o*31);
+      amplitude*=.48;frequency*=2.13;
+    }
+    return sum/.995;
+  }
+
   function texturedWorld(world:Body): HTMLCanvasElement {
     const old=textures.get(world.id);
     if(old)return old;
-    const n=328;
+    const n=264;
     const c=document.createElement("canvas");
     c.width=c.height=n;
     const g=c.getContext("2d",{alpha:true});
     if(!g)return c;
     const data=g.createImageData(n,n);
     const pixels=data.data;
-    const seed=world.id*2.41;
-    // Whole surface is rendered once. Lighting comes from the upper left;
-    // layered storms vary with spherical longitude rather than stripes drawn
-    // across the flat screen.
+    const seed=world.id*17;
     for(let py=0;py<n;py++){
       const v=(py-n*.5)/(n*.485);
       for(let px=0;px<n;px++){
@@ -216,61 +232,119 @@ export function createGalaxyFlightScene() {
         const o=(py*n+px)*4;
         if(squared>=1)continue;
         const z=Math.sqrt(1-squared);
-        const lon=Math.atan2(u,Math.max(.035,z));
+        const lon=Math.atan2(u,Math.max(.04,z));
         const lat=Math.asin(clamp(v,-1,1));
-        const f1=Math.sin(lon*6.3+lat*17+seed)*Math.cos(lat*3);
-        const f2=Math.sin(lon*18.7-lat*32+seed*2.8);
-        const f3=Math.cos(lon*41.4+lat*61+seed*1.6);
-        const curl=lat+.065*Math.sin(lon*6.1+f2*.3+seed)+.023*f3;
-        const belt=Math.sin(curl*25.5+f1*.8)+.44*Math.sin(curl*61+lon*5);
-        let hue=world.hue, sat=.44,lum=.56;
+        const broad=terrain(lon*1.4+2.4,lat*2.2+3.3,seed);
+        let hue=world.hue,sat=.40,lum=.52;
         if(world.kind==="jovian"||world.kind==="storm"){
-          hue+=12*f1+6*f2;
-          sat=clamp(.40+.10*belt+.06*f3,.23,.67);
-          lum=clamp(.58+.13*belt+.07*f2+.027*f3,.25,.85);
-          // A rotating Jupiter-like vortex (elliptical storm cell with
-          // curved bands). It is not just a uniformly striped coloured ball.
-          const sx=u+.26, sy=v-.24;
-          const stormCell=(sx*sx)/(.26*.26)+(sy*sy)/(.15*.15);
-          if(stormCell<1.25){
-            const fade=1-smooth(stormCell/1.25);
-            const swirl=Math.cos(Math.atan2(sy,sx)*2.3+4*Math.hypot(sx,sy));
-            hue=hue*(1-fade*.7)+16*fade*.7;
-            lum=lum*(1-fade*.63)+(.48+.08*swirl)*fade*.63;
-            sat+=fade*.13;
+          // Fluid layers follow latitude and bend smoothly around vortices,
+          // unlike high-frequency woven stripes on a spherical garment.
+          const warp=(broad-.5)*.29+
+            .036*Math.sin(lon*3.2+lat*5.4+seed);
+          const layered=Math.sin((lat+warp)*19)+
+            .42*Math.sin((lat+warp)*42+2.1*broad);
+          const thin=terrain(lon*5.5+12,lat*16+7,seed+73)-.5;
+          hue=world.hue+(world.kind==="storm"?13:5)*layered+thin*8;
+          sat=clamp(.33+.075*layered+thin*.13,.17,.58);
+          lum=clamp(.60+.15*layered+.065*thin,.29,.85);
+          // Oval cyclone with a subtle rotational cloud boundary (Jupiter
+          // Great-Red-Spot inspired, not a pasted circle).
+          const sx=u+.28,sy=v-.24;
+          const ellipse=sx*sx/(.25*.25)+sy*sy/(.13*.13);
+          if(world.kind==="jovian" && ellipse<1.75){
+            const swirl=Math.atan2(sy/.13,sx/.25)+
+              4.6*Math.sqrt(ellipse);
+            const fading=1-smooth((ellipse-.55)/1.2);
+            const rim=.5+.5*Math.cos(swirl*2+ellipse*5.3);
+            hue=hue*(1-fading*.7)+13*fading*.7;
+            sat+=fading*.17;
+            lum=lum*(1-fading*.6)+(.49+rim*.10)*fading*.6;
           }
         }else if(world.kind==="rock"){
-          const tectonic=Math.sin(lon*13+lat*21+seed)+
-            .62*Math.cos(lon*37-lat*29)+.23*f3;
-          let crater=0;
-          for(let k=0;k<5;k++){
-            const cx=Math.sin(seed*4+k*6.2)*.68;
-            const cy=Math.cos(seed*3+k*5.4)*.65;
-            const rad=Math.hypot(u-cx,v-cy);
-            crater+=.10*Math.exp(-Math.pow((rad-(.08+k*.017))/.018,2));
-            crater-=.10*Math.exp(-Math.pow(rad/(.06+k*.012),2));
+          // Large irregular highlands, dry basins and small impact craters.
+          // No latitudinal bands whatsoever on rocky worlds.
+          const relief=terrain(lon*3.6+4,lat*3.7-3,seed)-.5;
+          const sediments=terrain(lon*11+7,lat*11+9,seed+39)-.5;
+          let craters=0;
+          for(let k=0;k<6;k++){
+            const cx=Math.sin(seed*.67+k*2.6)*.78;
+            const cy=Math.cos(seed*.49+k*3.3)*.77;
+            const d=Math.hypot(u-cx,v-cy);
+            const rad=.045+.023*(k%3);
+            craters+=.13*Math.exp(-Math.pow((d-rad)/(.013+.003*k),2));
+            craters-=.15*Math.exp(-Math.pow(d/(rad*.78),2));
           }
-          hue+=11*tectonic;
-          sat=.20+.08*tectonic;
-          lum=.47+.15*tectonic+crater;
-        }else{
-          const flow=Math.sin(lat*43+lon*7+f2*.7);
-          hue+=7*f1;
-          sat=.36+.08*flow;
-          lum=.53+.10*flow+.06*f2;
+          hue=world.hue+relief*22;
+          sat=.21+relief*.13;
+          lum=clamp(.47+relief*.40+sediments*.12+craters,.23,.78);
+        }else if(world.kind==="ice"){
+          // Broad Neptune-like atmosphere: smooth blue gradients with just a
+          // few wispy high clouds instead of repeated stripes.
+          const mist=terrain(lon*2.4+3,lat*2.8+7,seed+117)-.5;
+          const highCloud=terrain(lon*8+21,lat*5+11,seed+39)-.5;
+          hue=world.hue+mist*10;
+          sat=.50+mist*.13;
+          lum=.51+mist*.15+highCloud*.055;
+          const airy=smooth((highCloud-.15)*4.0);
+          lum+=airy*.12;
+          sat-=airy*.10;
+        }else if(world.kind==="cloud"){
+          // Venus-like pale reflective cloud deck, broad swirls instead of
+          // highly repetitive garment-pattern bands.
+          const cloud=terrain(lon*3.7+4,lat*3.4+3,seed)-.5;
+          const wisps=terrain(lon*9,lat*7,seed+77)-.5;
+          hue=world.hue+cloud*11;
+          sat=.25+cloud*.08;
+          lum=.67+cloud*.18+wisps*.035;
         }
-        const illumination=clamp(.13+.86*Math.max(0,z*.84-u*.29-v*.38),.08,1);
-        const limb=smooth((1-squared)*18);
-        const [r,gc,b]=rgb((hue+360)%360,clamp(sat,.1,.8),clamp(lum,.11,.9));
-        pixels[o]=Math.round(r*illumination);
-        pixels[o+1]=Math.round(gc*illumination);
-        pixels[o+2]=Math.round(b*illumination);
+        const illumination=clamp(.15+.83*Math.max(0,z*.85-u*.30-v*.36),.10,1);
+        const limb=smooth((1-squared)*19);
+        const [red,green,blue]=rgb((hue+360)%360,clamp(sat,.09,.8),clamp(lum,.11,.92));
+        pixels[o]=Math.round(red*illumination);
+        pixels[o+1]=Math.round(green*illumination);
+        pixels[o+2]=Math.round(blue*illumination);
         pixels[o+3]=Math.round(255*limb);
       }
     }
     g.putImageData(data,0,0);
     textures.set(world.id,c);
     return c;
+  }
+
+  function drawSun(ctx:CanvasRenderingContext2D,x:number,y:number,r:number){
+    if(r<1){
+      ctx.fillStyle="rgba(255,224,159,.69)";
+      ctx.beginPath();ctx.arc(x,y,Math.max(.5,r),0,TAU);ctx.fill();
+      return;
+    }
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    const corona=ctx.createRadialGradient(x,y,0,x,y,r*4.4);
+    corona.addColorStop(0,"rgba(255,248,222,.78)");
+    corona.addColorStop(.18,"rgba(255,206,120,.50)");
+    corona.addColorStop(.35,"rgba(255,136,48,.13)");
+    corona.addColorStop(.64,"rgba(255,107,40,.045)");
+    corona.addColorStop(1,"rgba(238,90,18,0)");
+    ctx.fillStyle=corona;
+    ctx.beginPath();ctx.arc(x,y,r*4.4,0,TAU);ctx.fill();
+    const photosphere=ctx.createRadialGradient(x-r*.26,y-r*.23,r*.04,x,y,r*1.02);
+    photosphere.addColorStop(0,"#fffbe4");
+    photosphere.addColorStop(.40,"#fff3ac");
+    photosphere.addColorStop(.78,"#ffb34d");
+    photosphere.addColorStop(1,"#b94320");
+    ctx.fillStyle=photosphere;
+    ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();
+    ctx.save();
+    ctx.beginPath();ctx.arc(x,y,r*.97,0,TAU);ctx.clip();
+    for(let k=0;k<110;k++){
+      const a=rnd(k*13+32)*TAU;
+      const d=Math.sqrt(rnd(k*17+44))*r*.88;
+      const px=x+Math.cos(a)*d,py=y+Math.sin(a)*d;
+      ctx.fillStyle=k%3===0?"rgba(255,244,166,.14)":"rgba(146,36,16,.14)";
+      ctx.beginPath();ctx.arc(px,py,Math.max(.42,r*.045),0,TAU);ctx.fill();
+    }
+    ctx.restore();
+    ctx.restore();
   }
 
   function projection(body:Body,step:number,w:number,h:number) {
@@ -298,24 +372,31 @@ export function createGalaxyFlightScene() {
 
   function body(ctx:CanvasRenderingContext2D,world:Body,step:number,w:number,h:number) {
     const {x,y,r}=projection(world,step,w,h);
-    // Conservative culling: the world is allowed to slide in from OFFSCREEN;
-    // no alpha pop or instant transition at an arbitrary tick number.
-    if(r<.22||x+r*1.8<0||x-r*1.8>w||y+r*1.8<0||y-r*1.8>h)return;
+    // In a rear-facing window, the near planets slide into view from behind
+    // the window frame, then shrink. They never jump or pause in the centre.
+    if(r<.22||x+r*2<0||x-r*2>w||y+r*2<0||y-r*2>h)return;
+    if(world.kind==="sun"){ drawSun(ctx,x,y,r);return; }
     if(r<1.6){
-      ctx.fillStyle="hsla("+world.hue+",38%,79%,.38)";
-      ctx.beginPath();ctx.arc(x,y,Math.max(.3,r),0,TAU);ctx.fill();
+      ctx.fillStyle="hsla("+world.hue+",34%,84%,.48)";
+      ctx.beginPath();ctx.arc(x,y,Math.max(.34,r),0,TAU);ctx.fill();
       return;
     }
-    if(world.ring&&r>4){
-      ctx.strokeStyle="hsla("+world.hue+",32%,71%,.38)";
-      ctx.lineWidth=Math.max(.8,r*.10);
-      ctx.beginPath();ctx.ellipse(x,y,r*1.77,r*.39,-.22,Math.PI,TAU);ctx.stroke();
+    if(world.ring && r>3.7){
+      ctx.strokeStyle="hsla("+world.hue+",25%,77%,.30)";
+      ctx.lineWidth=Math.max(.9,r*.18);
+      ctx.beginPath();ctx.ellipse(x,y,r*1.79,r*.37,-.22,Math.PI,TAU);ctx.stroke();
+      ctx.strokeStyle="hsla("+world.hue+",27%,55%,.28)";
+      ctx.lineWidth=Math.max(.5,r*.055);
+      ctx.beginPath();ctx.ellipse(x,y,r*2.06,r*.42,-.22,Math.PI,TAU);ctx.stroke();
     }
     ctx.drawImage(texturedWorld(world),x-r,y-r,r*2,r*2);
-    if(world.ring&&r>4){
-      ctx.strokeStyle="hsla("+world.hue+",36%,82%,.57)";
-      ctx.lineWidth=Math.max(.8,r*.11);
-      ctx.beginPath();ctx.ellipse(x,y,r*1.77,r*.39,-.22,0,Math.PI);ctx.stroke();
+    if(world.ring && r>3.7){
+      ctx.strokeStyle="hsla("+world.hue+",33%,85%,.56)";
+      ctx.lineWidth=Math.max(.85,r*.14);
+      ctx.beginPath();ctx.ellipse(x,y,r*1.79,r*.37,-.22,0,Math.PI);ctx.stroke();
+      ctx.strokeStyle="hsla("+world.hue+",34%,64%,.31)";
+      ctx.lineWidth=Math.max(.5,r*.045);
+      ctx.beginPath();ctx.ellipse(x,y,r*2.07,r*.42,-.22,0,Math.PI);ctx.stroke();
     }
   }
 
