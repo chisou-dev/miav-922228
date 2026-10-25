@@ -104,6 +104,7 @@ export function createGalaxyFlightScene() {
     return {
       u:Math.cos(theta)*(radial+wander)*.84,
       v:Math.sin(theta)*(radial+wander)*.58,
+      radius:radial,
       sourceIndex:i*2,
     };
   });
@@ -111,13 +112,12 @@ export function createGalaxyFlightScene() {
 
   function galaxyGeometry(step:number,w:number,h:number){
     const short=Math.min(w,h);
-    // Planetary passage ends before gathering starts: 130–144 quiet distant
-    // stars, 145–160 denser core, 161–180 partial arms to full galaxy.
-    const blend=smooth((step-145)/38);
-    const recession=Math.max(0,step-185);
+    // Central star concentration precedes partial arm tips, then full disk.
+    const blend=smooth((step-145)/49);
+    const recession=Math.max(0,step-197);
     // The resolved galaxy never exceeds the original glass orb's visual
     // scale. After the full shape is revealed it only becomes smaller.
-    const r=short*.245*Math.exp(-.180*recession);
+    const r=short*.245*Math.exp(-.245*recession);
     return {blend,x:w*.51,y:h*.49,r};
   }
 
@@ -416,6 +416,7 @@ export function createGalaxyFlightScene() {
       const member=i%2===0 && i/2<MEMBERS;
       if(member && tiny)continue;
       const field=member?galaxyMembers[i/2]:null;
+      const localBlend=field?smooth((step-(143+field.radius*18))/39):0;
       // Gentle parallax/foreshortening on EVERY tap; near and far pinpoints
       // move by slightly different amounts. No scrolling stars as wallpaper.
       const recede=1-(.04+.13*rnd(i*19+333))*
@@ -424,10 +425,10 @@ export function createGalaxyFlightScene() {
       const ux=.5+(p.x-.5)*recede+drift*(p.y-.5);
       const uy=.5+(p.y-.5)*recede-drift*(p.x-.5);
       const x=field
-        ?w*ux+(g.x+field.u*g.r-w*ux)*g.blend
+        ?w*ux+(g.x+field.u*g.r-w*ux)*localBlend
         :w*ux;
       const y=field
-        ?h*uy+(g.y+field.v*g.r-h*uy)*g.blend
+        ?h*uy+(g.y+field.v*g.r-h*uy)*localBlend
         :h*uy;
       const appearing=clamp(count-i,0,1);
       const visibility=(member?(1-.05*g.blend):outerWeight)*appearing;
@@ -435,7 +436,7 @@ export function createGalaxyFlightScene() {
       const alpha=Math.min(.97,p.power*visibility*sparkle);
       if(alpha<.007)continue;
       ctx.fillStyle="hsla("+p.hue+",43%,88%,"+alpha.toFixed(3)+")";
-      const px=field?Math.max(.28,p.radius*(1-.26*g.blend)):p.radius;
+      const px=field?Math.max(.28,p.radius*(1-.26*localBlend)):p.radius;
       ctx.beginPath();ctx.arc(x,y,px,0,TAU);ctx.fill();
     }
     // Only a few bright stars softly twinkle; no random position resets.
@@ -465,8 +466,8 @@ export function createGalaxyFlightScene() {
     // It is not a newly appearing photograph or a separate ring of dots.
     // First the stars become denser, then only the tip of a spiral arm is
     // suggested. A recognisable full disk comes much later, with no planets.
-    const hazeStrength=.10*smooth((g.blend-.28)/.24)
-      +.34*smooth((g.blend-.70)/.28);
+    const hazeStrength=.075*smooth((step-167)/14)
+      +.39*smooth((step-186)/13);
     if(hazeStrength<.001 || g.r<2)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
