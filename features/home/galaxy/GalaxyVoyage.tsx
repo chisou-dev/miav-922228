@@ -24,7 +24,7 @@ const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/p
 const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
 // End when all nearby worlds have dwindled to star-like points.
-const FINAL_STEP = 166;
+const FINAL_STEP = 184;
 const IMPLOSION_MS = 2650;
 const FINAL_HOLD_MS = 180_000;
 const IDLE_MS = 120_000;
@@ -32,20 +32,24 @@ const IDLE_MS = 120_000;
 function sampleTextLocations(): Point[] {
   // Sample visible individual GLYPHS, not the bounding rectangle of a whole
   // paragraph. Rectangular random sources looked like evenly spread static.
-  const hero = document.querySelector("[data-galaxy-title]")?.closest("section");
-  if (!hero) return [];
+  // Include top navigation as well as all visible hero lettering, rather
+  // than releasing dust only from the lower half of the mobile screen.
   const points: Point[] = [];
-  const elements = hero.querySelectorAll("h1, p, nav a, aside span");
+  const elements = document.querySelectorAll(
+    "header a, header button, header span, main section:first-of-type h1, " +
+    "main section:first-of-type p, main section:first-of-type nav a, " +
+    "main section:first-of-type aside span"
+  );
   const range = document.createRange();
   for (const el of elements) {
-    if (points.length >= 680) break;
+    if (points.length >= 1200) break;
     const style = getComputedStyle(el);
     if (style.visibility === "hidden" || style.display === "none") continue;
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     let node: Node | null;
-    while ((node = walker.nextNode()) !== null && points.length < 680) {
+    while ((node = walker.nextNode()) !== null && points.length < 1200) {
       const text = node.textContent ?? "";
-      for (let i=0;i<text.length && points.length<680;i++) {
+      for (let i=0;i<text.length && points.length<1200;i++) {
         if (!text[i].trim()) continue;
         if (Math.random() > .68) continue;
         range.setStart(node, i);
@@ -118,7 +122,7 @@ export function GalaxyVoyage({
     let nextRotation = 0.16;
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
-    // Reaching the enclosing glass orb begins the 30-second quiet ending.
+    // Reaching the enclosing glass orb begins the three-minute quiet ending.
     let finalReachedAt: number | null = null;
     let lastAdvanceAt = 0;
 
@@ -134,6 +138,50 @@ export function GalaxyVoyage({
     // rasterised or brought back after the dark transition.
     const sourcePoints=selectedText.length ? selectedText :
       [{x:viewWidth*.51,y:viewHeight*.52}];
+    // Keep the REAL title as the last text to be consumed. After the opening
+    // glass has vanished, the visitor deliberately dissolves it in THREE
+    // taps. Sample actual text glyph rectangles across the entire title,
+    // not an artificial line of dust from the bottom edge.
+    const titleSpan=document.querySelector<HTMLElement>("[data-galaxy-title]");
+    const titleBox=titleSpan?.getBoundingClientRect() ?? null;
+    const titleStyle=titleSpan ? getComputedStyle(titleSpan) : null;
+    const titleLabel=titleSpan?.textContent?.trim() || "MIAV-922228";
+    const titleFont=titleStyle
+      ? titleStyle.fontWeight+" "+titleStyle.fontSize+" "+titleStyle.fontFamily
+      : '500 44px Georgia, serif';
+    const titleGlyphs: Point[]=[];
+    if(titleSpan){
+      const range=document.createRange();
+      const walker=document.createTreeWalker(titleSpan,NodeFilter.SHOW_TEXT);
+      let node:Node|null;
+      while((node=walker.nextNode())!==null){
+        const letters=node.textContent??"";
+        for(let i=0;i<letters.length;i++){
+          if(!letters[i].trim())continue;
+          range.setStart(node,i);range.setEnd(node,i+1);
+          const glyph=range.getBoundingClientRect();
+          if(glyph.width<1||glyph.height<1)continue;
+          for(let j=0;j<9;j++)titleGlyphs.push({
+            x:glyph.left+glyph.width*(.10+.80*Math.random()),
+            y:glyph.top+glyph.height*(.14+.72*Math.random()),
+          });
+        }
+      }
+      range.detach();
+    }
+    const titleDust=Array.from({length:1800},(_,i)=>{
+      const p=titleGlyphs.length
+        ? titleGlyphs[i%titleGlyphs.length]
+        : {x:viewWidth*.5,y:viewHeight*.5};
+      return {
+        x:p.x+(Math.random()-.5)*2,
+        y:p.y+(Math.random()-.5)*2,
+        delay:Math.random()*.73,
+        bend:(Math.random()-.5)*54,
+        radius:.32+Math.random()*.7,
+        phase:Math.random()*TAU,
+      };
+    });
     const dust: Dust[] = Array.from({length:3600},(_,i)=>{
       const p=sourcePoints[i%sourcePoints.length];
       return {
@@ -162,7 +210,11 @@ export function GalaxyVoyage({
     }
     function consumeOriginalText(p:number){
       const opacity=1-ease((p-.16)/.74);
-      for(const saved of savedTextStyles)saved.el.style.opacity=String(opacity);
+      for(const saved of savedTextStyles){
+        // The heading survives the automatic opening: it only dissolves
+        // when the viewer taps through the first three voyage steps.
+        saved.el.style.opacity=saved.el.matches("h1")?"1":String(opacity);
+      }
     }
     const flightScene = createGalaxyFlightScene();
     const clusterOrb = createGalaxyClusterOrb();
@@ -370,6 +422,49 @@ export function GalaxyVoyage({
         (1-ease((p-.84)/.15)));
     }
 
+    function drawRemainingTitle(step:number) {
+      if(step>=3 || !titleBox)return;
+      const fade=1-ease(step/3);
+      const textX=titleBox.left;
+      const textY=titleBox.top+titleBox.height*.53;
+      ctx!.save();
+      ctx!.font=titleFont;
+      ctx!.textAlign="left";
+      ctx!.textBaseline="middle";
+      const measure=Math.max(1,ctx!.measureText(titleLabel).width);
+      ctx!.translate(textX,textY);
+      ctx!.scale(Math.min(1.03,titleBox.width/measure),1);
+      ctx!.fillStyle="rgba(245,240,230,"+(fade*.92).toFixed(3)+")";
+      ctx!.shadowColor="rgba(203,225,255,"+(fade*.12).toFixed(3)+")";
+      ctx!.shadowBlur=4;
+      ctx!.fillText(titleLabel,0,0);
+      ctx!.restore();
+    }
+
+    function drawRemainingTitleDust(step:number,cx:number,cy:number){
+      if(step<=0||step>=3.05)return;
+      const fraction=clamp(step/3,0,1);
+      ctx!.save();
+      for(const grain of titleDust){
+        const local=clamp((fraction-grain.delay)/Math.max(.15,1-grain.delay),0,1);
+        if(local<=0||local>=1)continue;
+        const t=ease(local);
+        const dx=cx-grain.x,dy=cy-grain.y;
+        const length=Math.max(1,Math.hypot(dx,dy));
+        const curving=grain.bend*Math.sin(Math.PI*t);
+        const x=grain.x+dx*t-dy/length*curving;
+        const y=grain.y+dy*t+dx/length*curving;
+        const alpha=(1-ease((t-.68)/.32))*Math.sin(Math.PI*t)*.88;
+        if(alpha<.018)continue;
+        const radius=grain.radius*(1-.65*t);
+        ctx!.fillStyle=grain.phase>Math.PI
+          ?"rgba(207,227,253,"+alpha.toFixed(3)+")"
+          :"rgba(255,243,225,"+alpha.toFixed(3)+")";
+        ctx!.fillRect(x,y,radius,radius);
+      }
+      ctx!.restore();
+    }
+
     function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
       phase: number, alpha: number, depth = 1, foregroundOcclusion = false) {
       if (diameter < 1 || alpha <= 0.002) return;
@@ -445,8 +540,8 @@ export function GalaxyVoyage({
       // the huge intergalactic distances into a manageable number of taps.
       // All scenes share this camera distance; none are timed slide changes.
       const sceneStep = s <= 100 ? s
-        : s <= 134 ? 100 + (s - 100) * 3.5
-        : 219 + (s - 134) * 2;
+        : s <= 160 ? 100 + (s - 100) * 3
+        : 280 + (s - 160) * 1.2;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
       flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
@@ -457,8 +552,12 @@ export function GalaxyVoyage({
         flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
       }
 
-      // Each phase advances ONLY on user tap: intact letters / erosion /
-      // letters gone / 3+ gradually more distant stars / then the planets.
+      // The actual homepage title persists for three deliberate taps
+      // after the glass dissolves. Its grains depart from every glyph,
+      // while the same first galaxy remains visible behind the text.
+      drawRemainingTitle(s);
+      // Each phase advances ONLY on user tap: 3 title taps, faint stars,
+      // close planetary passes, galaxy edge/half/exit, then the glass orb.
       const recession = Math.max(0, s - 3);
       const firstSize = short * 0.66 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
       if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
@@ -474,8 +573,8 @@ export function GalaxyVoyage({
         ctx!.fill();
       }
 
-      // The homepage letters have already been consumed during the opening
-      // transition. Do not draw a second MIAV title or another dust sequence.
+      // The final text disappears only by the third voyage tap.
+      drawRemainingTitleDust(s,viewWidth*.51,viewHeight*.52);
 
       // Planets remain off-axis in the same sky throughout the pull-back.
       flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
