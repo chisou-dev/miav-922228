@@ -1,254 +1,295 @@
 /**
- * MIAV galaxy flight, cinematic perspective simulation.
+ * Continuous rear-window view for MIAV's imaginary spaceship journey.
  *
- * Objects are fixed in world space; ONLY the virtual camera advances when
- * clicked. Screen positions and apparent radii come from perspective.
- * The planets are fictional art, and the distant Milky Way view is an
- * artistic logarithmic-scale transition, not a measured astrophysical route.
+ * The vessel travels AWAY from the local planetary system while the camera
+ * looks BACK at fixed objects. Their angular diameter decreases with distance.
+ * Edge-clipped planets slide *into* view as the field of view opens behind us;
+ * they then shrink, never suddenly stop or reverse. The same star population
+ * gradually resolves from a bright edge of sky into a distant Milky-Way-like
+ * disc. Planet and galaxy distances are cinematic, not an astronomical map.
  */
-type BodyKind = "jovian" | "storm" | "ice" | "rock" | "cloud";
+type Kind = "jovian" | "storm" | "ice" | "rock" | "cloud";
+type Side = "left" | "right" | "top" | "bottom";
 type Body = {
-  x: number; y: number; z: number; radius: number; hue: number;
-  kind: BodyKind; seed: number; ring?: boolean; moon?: boolean;
+  id: number; peek: number; depth: number; radius: number;
+  side: Side; transverse: number; kind: Kind; hue: number;
+  ring?: boolean; moon?: boolean;
 };
-type Spark = { x: number; y: number; z: number; hue: number; strength: number; size: number; phase: number };
+type Spark = {
+  x: number; y: number; z: number; u: number; v: number;
+  radius: number; hue: number; power: number; phase: number;
+};
 const TAU = Math.PI * 2;
-const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-const smooth = (v: number) => { const u=clamp(v,0,1); return u*u*(3-2*u); };
-const lerp = (a: number,b: number,t: number) => a+(b-a)*t;
-function hash(n: number) {
+const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+const smooth = (v: number) => { const t=clamp(v,0,1);return t*t*(3-2*t); };
+function rnd(n: number) {
   let v = Math.imul(n + 1, 0x9e3779b1) >>> 0;
   v = Math.imul(v ^ (v >>> 16), 0x85ebca6b) >>> 0;
   v = Math.imul(v ^ (v >>> 13), 0xc2b2ae35) >>> 0;
   return ((v ^ (v >>> 16)) >>> 0) / 4294967295;
 }
-function color(h: number, sat: number, lum: number) {
-  const a = sat * Math.min(lum,1-lum);
-  const f = (n: number) => {
-    const k=(n+h/30)%12;
-    return Math.round((lum-a*Math.max(-1,Math.min(k-3,9-k,1)))*255);
-  };
+function rgb(h: number,s: number,l: number) {
+  const a=s*Math.min(l,1-l);
+  const k=(n:number)=>(n+h/30)%12;
+  const f=(n:number)=>Math.round(255*(l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1))));
   return [f(0),f(8),f(4)] as const;
 }
+function retreat(step: number) {
+  const s=Math.max(0,step-31);
+  const back=92*(Math.exp(s*0.043)-1);
+  // Once the entire galaxy is in view, continue moving AWAY, faster at huge
+  // scale, until the SAME distant object is only a pinprick.
+  return back*(step>145?Math.pow(1.21,step-145):1);
+}
+const bodies: Body[] = [
+  {id:1,peek:32,depth:105,radius:20,side:"right",transverse:.37,kind:"jovian",hue:27},
+  {id:2,peek:45,depth:155,radius:23,side:"left",transverse:.72,kind:"ice",hue:202},
+  {id:3,peek:55,depth:230,radius:24,side:"top",transverse:.64,kind:"storm",hue:13},
+  {id:4,peek:65,depth:270,radius:29,side:"right",transverse:.73,kind:"jovian",hue:32,ring:true},
+  {id:5,peek:67,depth:284,radius:6,side:"right",transverse:.53,kind:"rock",hue:212,moon:true},
+  {id:6,peek:75,depth:330,radius:15,side:"bottom",transverse:.26,kind:"rock",hue:20},
+  {id:7,peek:84,depth:375,radius:24,side:"left",transverse:.31,kind:"cloud",hue:182},
+  {id:8,peek:91,depth:430,radius:21,side:"top",transverse:.22,kind:"ice",hue:235},
+  {id:9,peek:98,depth:485,radius:27,side:"bottom",transverse:.78,kind:"jovian",hue:41},
+];
 
 export function createGalaxyFlightScene() {
-  // One coherent itinerary: each body is pinned to a 3D world coordinate.
-  // Bodies are NOT prearranged in a ring or an eleven-planet UI layout.
-  // Camera advances on the positive Z axis, never reversing.
-  const bodies: Body[] = [
-    { x:-28,y:6,z:152,radius:7.8,hue:195,kind:"ice",seed:1 },
-    { x:31,y:-14,z:255,radius:14,hue:30,kind:"jovian",seed:2,ring:true },
-    { x:38,y:-8,z:265,radius:3.0,hue:205,kind:"rock",seed:3,moon:true },
-    { x:-17,y:-21,z:352,radius:8.5,hue:16,kind:"storm",seed:4 },
-    { x:26,y:20,z:468,radius:10.5,hue:219,kind:"ice",seed:5 },
-    { x:-36,y:10,z:559,radius:5.3,hue:29,kind:"rock",seed:6 },
-    { x:30,y:-26,z:663,radius:12,hue:38,kind:"jovian",seed:7 },
-    { x:44,y:-29,z:676,radius:2.7,hue:190,kind:"rock",seed:8,moon:true },
-    { x:-30,y:-17,z:768,radius:8.4,hue:250,kind:"storm",seed:9,ring:true },
-    { x:20,y:24,z:883,radius:9.1,hue:173,kind:"cloud",seed:10 },
-    { x:-40,y:18,z:962,radius:6.4,hue:15,kind:"rock",seed:11 },
-    { x:30,y:-6,z:1072,radius:12.8,hue:25,kind:"jovian",seed:12 },
-    { x:-26,y:-24,z:1142,radius:6.0,hue:192,kind:"ice",seed:13 },
-  ];
-  const distant: Spark[] = Array.from({length:2250},(_,i)=>({
-    x:(hash(i*11+17)-0.5)*2400,
-    y:(hash(i*13+211)-0.5)*1500,
-    z:180+hash(i*19+617)*18000,
-    hue:[200,208,215,236,37,33,2,271][i%8],
-    strength:0.22+hash(i*31+19)*0.65,
-    size:0.37+hash(i*17+31)*0.9,
-    phase:hash(i*73+9)*TAU,
+  const textures = new Map<number, HTMLCanvasElement>();
+  // The field is seeded once. Nothing is newly generated at a stage boundary.
+  const background = Array.from({length:1900},(_,i):Spark=>({
+    x:(rnd(i*11+17)-.5)*4200,
+    y:(rnd(i*17+11)-.5)*2500,
+    z:450+rnd(i*19+33)*8000,
+    u:0,v:0,radius:.32+rnd(i*37+9)*1.02,
+    hue:[200,210,222,245,34,42,7,285][i%8],
+    power:.21+rnd(i*7+18)*.64,
+    phase:rnd(i*13+97)*TAU,
   }));
-  // A nonrotating, preseeded four-armed Milky-Way-like stellar disk.
-  // These are STARS, not the small planets collected into an orbit.
-  const galaxy: (Spark & { u:number;v:number })[] = Array.from({length:2400},(_,i)=>{
-    const r=Math.sqrt((i+0.5)/2400);
-    const a=(i%4)*TAU/4+r*6.4+(hash(i*97+17)-0.5)*(0.18+0.4*r);
+
+  // A single physical spiral population ALWAYS exists beyond the planetary
+  // system. Seen from nearby, one only glimpses its star-rich OUTER EDGE at
+  // the right. Backing away reveals the remaining arms and nucleus gradually.
+  const disk=Array.from({length:2600},(_,i):Spark=>{
+    const r=Math.sqrt((i+.5)/2600);
+    const a=i%4*TAU/4+r*5.9+(rnd(i*71+33)-.5)*(.23+.32*r);
+    const scatter=.045*(rnd(i*17+113)-.5);
     return {
-      x:0,y:0,z:0,hue:[216,205,230,265,322,39][i%6],
-      strength:0.15+hash(i*31+7)*0.84,
-      size:0.42+hash(i*17+41)*1.03,
-      phase:hash(i*53+13)*TAU,
-      u:r*Math.cos(a)+(hash(i*23+251)-0.5)*0.04,
-      v:r*Math.sin(a)*0.64+(hash(i*29+151)-0.5)*0.028,
+      x:0,y:0,z:0,
+      u:r*Math.cos(a)+scatter,
+      v:r*Math.sin(a)*.62+(rnd(i*23+41)-.5)*.030,
+      radius:.35+rnd(i*61+9)*.90,
+      hue:[208,222,242,265,305,340,34,42][i%8],
+      power:.19+rnd(i*31+7)*.79,
+      phase:rnd(i*29+61)*TAU,
     };
   });
-  const textures = new Map<string,HTMLCanvasElement>();
 
-  function texture(body: Body) {
-    const key=body.kind+"-"+body.hue+"-"+body.seed;
-    const saved=textures.get(key);
-    if(saved)return saved;
-    const side=320;
-    const canvas=document.createElement("canvas");
-    canvas.width=canvas.height=side;
-    const g=canvas.getContext("2d");
-    if(!g)return canvas;
-    const data=g.createImageData(side,side);
-    const pix=data.data;
-    const spotX=-0.12+0.04*Math.sin(body.seed),spotY=0.30;
-    for(let j=0;j<side;j++){
-      const ny=(j-side/2)/(side*0.49);
-      for(let i=0;i<side;i++){
-        const nx=(i-side/2)/(side*0.49);
-        const rr=nx*nx+ny*ny;
-        const index=(j*side+i)*4;
-        if(rr>=1){pix[index+3]=0;continue;}
-        const depth=Math.sqrt(1-rr);
-        const latitude=Math.asin(ny);
-        const longitude=Math.atan2(nx,Math.max(0.07,depth));
-        const turbulence=
-          0.52*Math.sin(longitude*8+body.seed*1.9+ny*11)+
-          0.27*Math.sin(longitude*19+ny*28+body.seed*2.3)+
-          0.14*Math.cos(longitude*37-ny*52);
-        const wavy=latitude+0.050*Math.sin(longitude*5+ny*14+body.seed)+
-          0.017*turbulence;
-        const belts=Math.sin(wavy*29+0.6*Math.sin(longitude*8))+0.45*Math.sin(wavy*67+longitude*4);
-        let hue=body.hue, sat=0.40, lum=0.51;
-        if(body.kind==="jovian"||body.kind==="storm"){
-          // Multi-scale atmospheric belts, nonparallel eddies and one
-          // elliptical Great-Red-Spot-like cyclone on storm giants.
-          hue=body.hue+9*Math.sin(wavy*17)+11*Math.sin(wavy*48+longitude*4);
-          sat=clamp(0.31+0.11*belts+0.06*turbulence,0.18,0.66);
-          lum=clamp(0.58+0.16*belts+0.07*turbulence,0.24,0.84);
-          const dx=(nx-spotX)*1.1,dy=ny-spotY;
-          const spiral= Math.atan2(dy,dx)+3.1*Math.hypot(dx,dy);
-          const patch=(dx*dx/(0.29*0.29)+dy*dy/(0.15*0.15));
-          if(body.kind==="jovian"&&patch<1.2){
-            const inward=1-smooth(patch/1.2);
-            const stormBand=Math.cos(spiral*2.8)*0.07;
-            hue=lerp(hue,13+stormBand*26,inward*0.8);
-            sat+=0.21*inward;
-            lum=lerp(lum,0.53+stormBand,inward*0.65);
+  function texturedWorld(world:Body): HTMLCanvasElement {
+    const old=textures.get(world.id);
+    if(old)return old;
+    const n=328;
+    const c=document.createElement("canvas");
+    c.width=c.height=n;
+    const g=c.getContext("2d",{alpha:true});
+    if(!g)return c;
+    const data=g.createImageData(n,n);
+    const pixels=data.data;
+    const seed=world.id*2.41;
+    // Whole surface is rendered once. Lighting comes from the upper left;
+    // layered storms vary with spherical longitude rather than stripes drawn
+    // across the flat screen.
+    for(let py=0;py<n;py++){
+      const v=(py-n*.5)/(n*.485);
+      for(let px=0;px<n;px++){
+        const u=(px-n*.5)/(n*.485);
+        const squared=u*u+v*v;
+        const o=(py*n+px)*4;
+        if(squared>=1)continue;
+        const z=Math.sqrt(1-squared);
+        const lon=Math.atan2(u,Math.max(.035,z));
+        const lat=Math.asin(clamp(v,-1,1));
+        const f1=Math.sin(lon*6.3+lat*17+seed)*Math.cos(lat*3);
+        const f2=Math.sin(lon*18.7-lat*32+seed*2.8);
+        const f3=Math.cos(lon*41.4+lat*61+seed*1.6);
+        const curl=lat+.065*Math.sin(lon*6.1+f2*.3+seed)+.023*f3;
+        const belt=Math.sin(curl*25.5+f1*.8)+.44*Math.sin(curl*61+lon*5);
+        let hue=world.hue, sat=.44,lum=.56;
+        if(world.kind==="jovian"||world.kind==="storm"){
+          hue+=12*f1+6*f2;
+          sat=clamp(.40+.10*belt+.06*f3,.23,.67);
+          lum=clamp(.58+.13*belt+.07*f2+.027*f3,.25,.85);
+          // A rotating Jupiter-like vortex (elliptical storm cell with
+          // curved bands). It is not just a uniformly striped coloured ball.
+          const sx=u+.26, sy=v-.24;
+          const stormCell=(sx*sx)/(.26*.26)+(sy*sy)/(.15*.15);
+          if(stormCell<1.25){
+            const fade=1-smooth(stormCell/1.25);
+            const swirl=Math.cos(Math.atan2(sy,sx)*2.3+4*Math.hypot(sx,sy));
+            hue=hue*(1-fade*.7)+16*fade*.7;
+            lum=lum*(1-fade*.63)+(.48+.08*swirl)*fade*.63;
+            sat+=fade*.13;
           }
-        }else if(body.kind==="ice"||body.kind==="cloud"){
-          hue=body.hue+8*turbulence;
-          sat=0.42+0.12*Math.sin(wavy*35+longitude*4);
-          lum=0.55+0.11*Math.sin(wavy*43+3*Math.sin(longitude*3));
+        }else if(world.kind==="rock"){
+          const tectonic=Math.sin(lon*13+lat*21+seed)+
+            .62*Math.cos(lon*37-lat*29)+.23*f3;
+          let crater=0;
+          for(let k=0;k<5;k++){
+            const cx=Math.sin(seed*4+k*6.2)*.68;
+            const cy=Math.cos(seed*3+k*5.4)*.65;
+            const rad=Math.hypot(u-cx,v-cy);
+            crater+=.10*Math.exp(-Math.pow((rad-(.08+k*.017))/.018,2));
+            crater-=.10*Math.exp(-Math.pow(rad/(.06+k*.012),2));
+          }
+          hue+=11*tectonic;
+          sat=.20+.08*tectonic;
+          lum=.47+.15*tectonic+crater;
         }else{
-          // Cratered rocky world: longitude noise, basin depressions and
-          // high-frequency albedo differences instead of a striped sphere.
-          const land=Math.sin(longitude*19+body.seed)*Math.cos(latitude*27)+
-            0.55*Math.sin(longitude*49+latitude*31);
-          const impact=(Math.sin(longitude*24+latitude*17)*Math.cos(longitude*12-latitude*38));
-          hue=body.hue+7*land;
-          sat=0.19+0.10*land;
-          lum=0.44+0.15*land+0.07*impact;
+          const flow=Math.sin(lat*43+lon*7+f2*.7);
+          hue+=7*f1;
+          sat=.36+.08*flow;
+          lum=.53+.10*flow+.06*f2;
         }
-        const light=clamp(0.23+0.77*Math.max(0,nx*-0.44+ny*-0.31+depth*0.82),0.16,1);
-        const edge=clamp((1-rr)*8,0,1);
-        const [red,green,blue]=color(((hue%360)+360)%360,clamp(sat,0.09,0.79),clamp(lum,0.12,0.88));
-        pix[index]=Math.round(red*light);
-        pix[index+1]=Math.round(green*light);
-        pix[index+2]=Math.round(blue*light);
-        pix[index+3]=Math.round(255*edge);
+        const illumination=clamp(.13+.86*Math.max(0,z*.84-u*.29-v*.38),.08,1);
+        const limb=smooth((1-squared)*18);
+        const [r,gc,b]=rgb((hue+360)%360,clamp(sat,.1,.8),clamp(lum,.11,.9));
+        pixels[o]=Math.round(r*illumination);
+        pixels[o+1]=Math.round(gc*illumination);
+        pixels[o+2]=Math.round(b*illumination);
+        pixels[o+3]=Math.round(255*limb);
       }
     }
     g.putImageData(data,0,0);
-    textures.set(key,canvas);
-    return canvas;
+    textures.set(world.id,c);
+    return c;
   }
 
-  function shipPosition(t: number) {
-    // Every tap changes the same monotonically increasing camera location.
-    // Ahead-of-camera objects expand and slide sideways as their depth falls.
-    // Start far outside the first encounter. A distant blue glint grows
-    // gradually over many taps before the ship passes beside the planet.
-    const z=-700+Math.max(0,t-31)*24.5;
-    return {x:0,y:0,z};
-  }
-
-  function stars(ctx:CanvasRenderingContext2D,t:number,now:number,w:number,h:number){
-    const camera=shipPosition(t);
-    const focal=Math.min(w,h)*0.82;
-    for(const star of distant){
-      const dz=star.z-camera.z;
-      if(dz<=2)continue;
-      const x=w*.5+focal*(star.x-camera.x)/dz;
-      const y=h*.5+focal*(star.y-camera.y)/dz;
-      if(x<-2||y<-2||x>w+2||y>h+2)continue;
-      const shimmer=0.84+0.16*Math.sin(now*0.00064+star.phase);
-      const a=star.strength*shimmer;
-      ctx.fillStyle="hsla("+star.hue+",42%,85%,"+a.toFixed(3)+")";
-      ctx.beginPath();
-      ctx.arc(x,y,star.size,0,TAU);
-      ctx.fill();
+  function projection(body:Body,step:number,w:number,h:number) {
+    const focus=Math.min(w,h)*.89;
+    // Place each body where a portion of its limb is already barely visible
+    // at its individual "peek" distance. It is never opacity-spawned.
+    const depthAtPeek=body.depth+retreat(body.peek);
+    const margin=.80*body.radius;
+    let wx=0,wy=0;
+    if(body.side==="right"||body.side==="left"){
+      wx=(body.side==="right"?1:-1)*(w*.5*depthAtPeek/focus+margin);
+      wy=(body.transverse-.5)*h*depthAtPeek/focus;
+    }else{
+      wy=(body.side==="bottom"?1:-1)*(h*.5*depthAtPeek/focus+margin);
+      wx=(body.transverse-.5)*w*depthAtPeek/focus;
     }
+    const distance=body.depth+retreat(step);
+    return {
+      x:w/2+focus*wx/distance,
+      y:h/2+focus*wy/distance,
+      r:focus*body.radius/distance,
+      distance,
+    };
   }
 
-  function drawBody(ctx:CanvasRenderingContext2D,body:Body,camera:{x:number;y:number;z:number},w:number,h:number) {
-    const dz=body.z-camera.z;
-    if(dz<=1.7) return;
-    const focal=Math.min(w,h)*0.82;
-    const x=w/2+(body.x-camera.x)*focal/dz;
-    const y=h/2+(body.y-camera.y)*focal/dz;
-    const r=body.radius*focal/dz;
-    if(x+r*1.9<0||x-r*1.9>w||y+r*1.9<0||y-r*1.9>h)return;
-    if(r<1.7) {
-      const a=clamp(r/1.7,0.1,0.8);
-      ctx.fillStyle="hsla("+body.hue+",52%,85%,"+a.toFixed(3)+")";
-      ctx.beginPath();ctx.arc(x,y,Math.max(0.4,r),0,TAU);ctx.fill();
+  function body(ctx:CanvasRenderingContext2D,world:Body,step:number,w:number,h:number) {
+    const {x,y,r}=projection(world,step,w,h);
+    // Conservative culling: the world is allowed to slide in from OFFSCREEN;
+    // no alpha pop or instant transition at an arbitrary tick number.
+    if(r<.22||x+r*1.8<0||x-r*1.8>w||y+r*1.8<0||y-r*1.8>h)return;
+    if(r<1.6){
+      ctx.fillStyle="hsla("+world.hue+",38%,79%,.38)";
+      ctx.beginPath();ctx.arc(x,y,Math.max(.3,r),0,TAU);ctx.fill();
       return;
     }
-    const halo=ctx.createRadialGradient(x,y,r*.4,x,y,r*1.24);
-    halo.addColorStop(0,"hsla("+body.hue+",64%,72%,0.0)");
-    halo.addColorStop(.82,"hsla("+body.hue+",63%,53%,0.0)");
-    halo.addColorStop(1,"hsla("+body.hue+",50%,49%,0)");
-    ctx.fillStyle=halo;
-    ctx.fillRect(x-r*1.3,y-r*1.3,r*2.6,r*2.6);
-    // Ring rear arc goes behind the spherical body and the front arc
-    // over its lower limb. No plasma and no cartoon orbit strokes.
-    if(body.ring&&r>3){
-      ctx.strokeStyle="hsla("+body.hue+",40%,76%,0.46)";
-      ctx.lineWidth=Math.max(0.75,r*.09);
-      ctx.beginPath();ctx.ellipse(x,y,r*1.75,r*.35,-0.19,Math.PI,TAU);ctx.stroke();
-    }
-    ctx.drawImage(texture(body),x-r,y-r,r*2,r*2);
-    if(body.ring&&r>3){
-      ctx.strokeStyle="hsla("+body.hue+",38%,81%,0.55)";
+    if(world.ring&&r>4){
+      ctx.strokeStyle="hsla("+world.hue+",32%,71%,.38)";
       ctx.lineWidth=Math.max(.8,r*.10);
-      ctx.beginPath();ctx.ellipse(x,y,r*1.75,r*.35,-0.19,0,Math.PI);ctx.stroke();
+      ctx.beginPath();ctx.ellipse(x,y,r*1.77,r*.39,-.22,Math.PI,TAU);ctx.stroke();
+    }
+    ctx.drawImage(texturedWorld(world),x-r,y-r,r*2,r*2);
+    if(world.ring&&r>4){
+      ctx.strokeStyle="hsla("+world.hue+",36%,82%,.57)";
+      ctx.lineWidth=Math.max(.8,r*.11);
+      ctx.beginPath();ctx.ellipse(x,y,r*1.77,r*.39,-.22,0,Math.PI);ctx.stroke();
     }
   }
 
-  function externalGalaxy(ctx:CanvasRenderingContext2D,t:number,now:number,w:number,h:number){
-    if(t<112)return;
-    // Stars in the window transition to a wider *external* view of the
-    // galactic disk. Planets never line up or become the spiral's arms.
-    const reveal=smooth((t-112)/21);
-    const zoom=Math.pow(0.82,Math.max(0,t-135));
-    const fullRadius=Math.min(w,h)*0.48*zoom;
-    const gx=w*0.59,gy=h*.48;
-    if(reveal<0.001)return;
+  function distantStars(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
+    const focus=Math.min(w,h)*.89;
+    const back=retreat(step);
+    for(const st of background){
+      const z=st.z+back;
+      const x=w*.5+focus*st.x/z;
+      const y=h*.5+focus*st.y/z;
+      if(x<0||x>w||y<0||y>h)continue;
+      const a=st.power*(.83+.17*Math.sin(now*.00053+st.phase));
+      ctx.fillStyle="hsla("+st.hue+",48%,85%,"+a.toFixed(3)+")";
+      ctx.beginPath();ctx.arc(x,y,st.radius,0,TAU);ctx.fill();
+    }
+  }
+
+  function galaxy(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
+    const focus=Math.min(w,h)*.89;
+    const initialDistance=250+retreat(112);
+    // A fixed world-space centre lies outside the RIGHT edge until the
+    // field of view widens enough to catch its outermost stars.
+    const cxWorld=initialDistance*w/focus*1.00;
+    const worldRadius=initialDistance*w/focus*.66;
+    const dyWorld=-initialDistance*h/focus*.06;
+    const distance=250+retreat(step);
+    const x=w*.5+cxWorld*focus/distance;
+    const y=h*.5+dyWorld*focus/distance;
+    const r=worldRadius*focus/distance;
+    if(x-r>w+4||x+r<0||y-r*.75>h||y+r*.75<0)return;
+
     ctx.save();
+    // The same stellar density is seen closer first; as it shrinks the viewer
+    // recognizes it as the outer disk of a spiral, then its complete shape.
+    // There is NO galaxy picture, fade-in time or rotation after formation.
     ctx.globalCompositeOperation="screen";
-    const core=ctx.createRadialGradient(gx,gy,0,gx,gy,Math.max(1,fullRadius*.42));
-    core.addColorStop(0,"rgba(245,226,255,"+(0.32*reveal)+")");
-    core.addColorStop(.32,"rgba(164,139,218,"+(0.16*reveal)+")");
-    core.addColorStop(1,"rgba(61,83,152,0)");
-    ctx.fillStyle=core;
-    ctx.beginPath();ctx.arc(gx,gy,Math.max(1,fullRadius*.42),0,TAU);ctx.fill();
-    for(const p of galaxy){
-      const x=gx+p.u*fullRadius,y=gy+p.v*fullRadius;
-      if(x<-2||y<-2||x>w+2||y>h+2)continue;
-      const glitter=.89+.11*Math.sin(now*.0004+p.phase);
-      ctx.fillStyle="hsla("+p.hue+",48%,83%,"+(p.strength*reveal*glitter).toFixed(3)+")";
+    if(r>1.6){
+      const halo=ctx.createRadialGradient(x,y,0,x,y,Math.max(r,1));
+      halo.addColorStop(0,"rgba(210,184,232,.10)");
+      halo.addColorStop(.35,"rgba(105,105,194,.075)");
+      halo.addColorStop(.76,"rgba(57,92,158,.038)");
+      halo.addColorStop(1,"rgba(36,53,124,0)");
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.scale(1,.66);
+      ctx.fillStyle=halo;
+      ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();
+      ctx.restore();
+    }
+    for(const st of disk){
+      const px=x+st.u*r, py=y+st.v*r;
+      if(px<0||px>w||py<0||py>h)continue;
+      const glimmer=.87+.13*Math.sin(now*.00047+st.phase);
+      const opacity=st.power*glimmer;
+      ctx.fillStyle="hsla("+st.hue+",51%,84%,"+opacity.toFixed(3)+")";
       ctx.beginPath();
-      ctx.arc(x,y,Math.max(.26,p.size*(.84-.15*reveal)),0,TAU);
+      const size=Math.max(.26,st.radius*Math.min(1,r/65));
+      ctx.arc(px,py,size,0,TAU);
       ctx.fill();
+    }
+    if(r>2){
+      const core=ctx.createRadialGradient(x,y,0,x,y,r*.13);
+      core.addColorStop(0,"rgba(255,237,245,.48)");
+      core.addColorStop(.36,"rgba(194,169,236,.23)");
+      core.addColorStop(1,"rgba(115,115,183,0)");
+      ctx.fillStyle=core;
+      ctx.beginPath();ctx.arc(x,y,r*.13,0,TAU);ctx.fill();
+    }else{
+      ctx.fillStyle="rgba(220,214,255,.7)";
+      ctx.beginPath();ctx.arc(x,y,.8,0,TAU);ctx.fill();
     }
     ctx.restore();
   }
 
   return {
-    draw(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number){
-      const camera=shipPosition(step);
-      stars(ctx,step,now,w,h);
-      // The 3D world is sorted by depth; far worlds are behind near ones.
+    draw(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
+      // Nothing changes position on a timer except star scintillation:
+      // tap count is the only camera control.
+      distantStars(ctx,step,now,w,h);
+      galaxy(ctx,step,now,w,h);
+      // Distant bodies behind nearer ones; no planet tunnel or tidy ring.
       if(step>=31){
-        for(let i=bodies.length-1;i>=0;i--)drawBody(ctx,bodies[i],camera,w,h);
+        for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h);
       }
-      externalGalaxy(ctx,step,now,w,h);
-    }
+    },
   };
 }
