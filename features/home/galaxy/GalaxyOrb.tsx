@@ -298,18 +298,25 @@ export function GalaxyOrb() {
       restoreTimer = window.setTimeout(closeExpanded, 20_000);
     }
 
-    function enlargeOneStep() {
-      // New Phase 2: first click cracks the sphere. All further camera steps
-      // are controlled inside GalaxyVoyage, not by the old zoom machinery.
-      const bounds = section!.getBoundingClientRect();
+    function enterVoyage() {
+      if (!expanded || !atMaximum) return;
+      const capture = { x: orb.x, y: orb.y, radius: Math.min(radius, maximumRadius) };
+      // Hide only the animation layer; leave original homepage untouched.
+      // The real ship, title and NASA/planetary journey stay in GalaxyVoyage.
+      closeExpanded();
       document.documentElement.setAttribute("data-galaxy-voyage", "true");
       surface!.style.visibility = "hidden";
-      setVoyage({ x: bounds.left + orb.x, y: bounds.top + orb.y, radius });
-      // Preserve the original preview-only zoom code without invoking it.
-      if (surface!.style.visibility === "hidden") return;
-      if (expanded && atMaximum) return;
+      setVoyage(capture);
+    }
+
+    function enlargeOneStep() {
+      // Original approved interaction restored: every tap expands the GLASS
+      // sphere by 1.3x. The tap AFTER reaching full size enters the journey.
+      if (expanded && atMaximum) {
+        enterVoyage();
+        return;
+      }
       if (!expanded) {
-        preloadNasa();
         priorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         normalRadius = radius;
         zoomStep = 0;
@@ -328,35 +335,29 @@ export function GalaxyOrb() {
         surface!.style.touchAction = "none";
         surface!.setAttribute("role", "dialog");
         surface!.setAttribute("aria-modal", "true");
-        surface!.setAttribute("aria-label", "Tap again to enlarge galaxy");
+        surface!.setAttribute("aria-label", "Tap the glass galaxy to enlarge it");
         closeButton!.style.display = "grid";
         measure();
       }
       zoomStep += 1;
       const proposed = normalRadius * Math.pow(1.3, zoomStep);
-      // Avoid an almost-invisible extra tap very near the maximum size.
       atMaximum = proposed >= maximumRadius * 0.92;
       targetRadius = atMaximum ? maximumRadius : Math.min(maximumRadius, proposed);
       surface!.style.background = atMaximum
-        ? "rgba(2, 9, 24, 0.975)"
-        : "rgba(2, 9, 24, 0.08)";
+        ? "rgba(2, 9, 24, .95)"
+        : "rgba(2, 9, 24, .06)";
       surface!.style.pointerEvents = atMaximum ? "auto" : "none";
-      surface!.setAttribute("aria-label", atMaximum ? "Deep space galaxy journey" : "Tap again to enlarge galaxy");
-      if (atMaximum) {
-        voyageTarget = 0;
-        voyagePosition = 0;
-        firstGalaxyAngle = 0;
-        secondGalaxyAngle = -0.31;
-        photoCredit!.style.display = "block";
-        zoomButton!.style.display = "none";
-      }
+      surface!.setAttribute("aria-label", atMaximum
+        ? "One more tap to enter the galaxy"
+        : "Tap again to enlarge the glass galaxy");
+      // Keep the orb/button displayed all the way through maximum zoom.
+      zoomButton!.style.display = "block";
+      photoCredit!.style.display = "none";
       if (reduced()) {
         radius = targetRadius;
         updateZoomGeometry();
         render(performance.now(), 0);
       }
-      // Keep focus on the enlarging sphere to make repeated clicks or
-      // keyboard activation easy. The close button remains available.
       zoomButton!.focus({ preventScroll: true });
       setReturnTimer();
     }
@@ -371,14 +372,9 @@ export function GalaxyOrb() {
         closeExpanded();
         return;
       }
-      // The current GalaxyOrb button has already finished its 1.3x phase.
-      // Every tap on the cosmic scene advances exactly one camera step.
-      if (voyageTarget < LAST_TAP) voyageTarget += 1;
-      setReturnTimer();
-      if (reduced()) {
-        voyagePosition = voyageTarget;
-        render(performance.now(), 0);
-      }
+      // Maximum glass size: tapping the dark area may also begin the trip.
+      // This is not a separate, automatically playing movie.
+      enterVoyage();
     }
 
     // The curved motion changes both horizontal and vertical directions.
