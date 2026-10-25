@@ -43,7 +43,7 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   for(let i=0;i<1030;i++){
     const rad=Math.sqrt(random(i*13+variant*397+9));
     let theta=TAU*random(i*41+variant*29+11);
-    const arm=i%arms;
+    const arm=arms ? i%arms : 0;
     if(arms){
       theta=TAU*arm/arms+rad*5.2+(random(i*27+variant*37)-.5)*(.85+.3*rad);
     }
