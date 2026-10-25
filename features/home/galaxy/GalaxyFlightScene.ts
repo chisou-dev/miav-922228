@@ -153,6 +153,39 @@ export function createGalaxyFlightScene() {
     g.beginPath();g.arc(0,0,n*.47,0,TAU);g.fill();
     g.restore();
 
+    // Wide translucent interstellar gas wisps have their own scale and hue.
+    // They are baked into the SAME fixed galaxy as the star points, so they
+    // gradually come into view during zoom-out instead of fading in as a
+    // separate stage picture.
+    g.save();
+    g.globalCompositeOperation="screen";
+    for(let i=0;i<240;i++){
+      const radial=.10+rnd(i*43+117)*.79;
+      const arm=i%4;
+      const theta=arm*TAU/4+radial*4.75
+        +(rnd(i*79+19)-.5)*(.48+.30*radial);
+      const x=middle+Math.cos(theta)*radial*n*.42;
+      const y=middle+Math.sin(theta)*radial*n*.275;
+      const radius=29+rnd(i*37+101)*81;
+      const q=g.createRadialGradient(x,y,0,x,y,radius);
+      if(i%7<3){
+        q.addColorStop(0,"rgba(86,152,231,.048)");
+        q.addColorStop(.42,"rgba(83,142,214,.018)");
+        q.addColorStop(1,"rgba(55,112,191,0)");
+      }else if(i%7<5){
+        q.addColorStop(0,"rgba(235,154,202,.038)");
+        q.addColorStop(.40,"rgba(214,130,177,.014)");
+        q.addColorStop(1,"rgba(194,107,159,0)");
+      }else{
+        q.addColorStop(0,"rgba(211,222,247,.034)");
+        q.addColorStop(.44,"rgba(179,205,242,.012)");
+        q.addColorStop(1,"rgba(135,157,208,0)");
+      }
+      g.fillStyle=q;
+      g.beginPath();g.arc(x,y,radius,0,TAU);g.fill();
+    }
+    g.restore();
+
     // Deliberately broken spiral: asymmetric branches, dust lanes and an
     // uneven light envelope prevent a white dotted pinwheel appearance.
     for(let i=0;i<1950;i++){
