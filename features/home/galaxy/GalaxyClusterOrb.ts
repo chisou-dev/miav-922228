@@ -134,9 +134,8 @@ export function createGalaxyClusterOrb() {
       ctx.fillStyle=halo;
       ctx.beginPath();ctx.arc(cx,cy,r*1.11,0,TAU);ctx.fill();
     }
-    if(sphereVisibility>.25){
-      ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
-    }
+    // Do not suddenly clip a galaxy as the glass becomes visible. Distant
+    // members fade gradually at the emerging edge as the field contracts.
     const rotated=points.map((p,i)=>{
       const ax=p.x*Math.cos(yaw)+p.z*Math.sin(yaw);
       const az=p.z*Math.cos(yaw)-p.x*Math.sin(yaw);
@@ -153,8 +152,15 @@ export function createGalaxyClusterOrb() {
       // each individual cluster member emerges softly at its own distance.
       const local=alpha*smooth((reveal-.025-random(p.i*11+7)*.16)/.30);
       if(local<.002)continue;
-      const size=Math.max(.9,r*(.025+p.size*.033)*zoom*perspective);
-      const opacity=local*p.opacity*(.72+.08*Math.sin(now*.00061+p.phase));
+      // A few nearby spirals have enough apparent diameter for their arms to
+      // remain visible on a phone; the rest stay as tiny galaxies.
+      const prominent=p.i%29===0?1.8:1;
+      const size=Math.max(.9,r*(.025+p.size*.033)*zoom*perspective*prominent);
+      const radial=Math.hypot((x-cx)/r,(y-cy)/r);
+      const feather=1-sphereVisibility*smooth((radial-.84)/.32);
+      const opacity=local*p.opacity*feather*
+        (.72+.08*Math.sin(now*.00061+p.phase));
+      if(opacity<.003)continue;
       ctx.globalAlpha=opacity;
       ctx.save();
       ctx.translate(x,y);
