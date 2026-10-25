@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
 import { drawStage1EntryCraft } from "./drawStage1EntryCraft";
 import { createGalaxyFlightScene } from "./GalaxyFlightScene";
+import { createGalaxyClusterOrb } from "./GalaxyClusterOrb";
 import { isolatedSpiral } from "./isolatedSpiral";
 
 type Point = { x: number; y: number };
@@ -23,10 +24,9 @@ const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/p
 const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
 // End when all nearby worlds have dwindled to star-like points.
-const FINAL_STEP = 130;
+const FINAL_STEP = 166;
 const IMPLOSION_MS = 2650;
 const FINAL_HOLD_MS = 30_000;
-const FINAL_TITLE_FADE_MS = 3_200;
 const IDLE_MS = 120_000;
 
 function sampleTextLocations(): Point[] {
@@ -118,18 +118,8 @@ export function GalaxyVoyage({
     let nextRotation = 0.16;
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
-    // Final sky holds for 30 seconds. Only then does the MIAV name slowly
-    // materialise; the normal homepage returns after the fade-in completes.
+    // Reaching the enclosing glass orb begins the 30-second quiet ending.
     let finalReachedAt: number | null = null;
-    let titleRevealAt: number | null = null;
-    let titleGhost: HTMLCanvasElement | null = null;
-    const titleNode = document.querySelector("[data-galaxy-title]")?.closest("h1");
-    const homeTitleStyle = titleNode ? getComputedStyle(titleNode) : null;
-    const homeTitleFamily = homeTitleStyle?.fontFamily ??
-      'Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif';
-    const homeTitleWeight = homeTitleStyle?.fontWeight ?? "500";
-    const homeTitleTracking = homeTitleStyle?.letterSpacing ?? "normal";
-    const titleRect = titleNode?.getBoundingClientRect() ?? null;
     let lastAdvanceAt = 0;
 
     // The NASA images really are telescope observations. They are composited
@@ -175,6 +165,7 @@ export function GalaxyVoyage({
       for(const saved of savedTextStyles)saved.el.style.opacity=String(opacity);
     }
     const flightScene = createGalaxyFlightScene();
+    const clusterOrb = createGalaxyClusterOrb();
 
     function resize() {
       viewWidth = window.innerWidth;
@@ -301,40 +292,6 @@ export function GalaxyVoyage({
         ctx!.fillRect(x,y,r,r);
       }
       ctx!.restore();
-    }
-
-    function titleFontSize() {
-      // A restrained typographic mark, rather than a large display headline:
-      // slender letterforms and lining figures keep 922228 visually uniform.
-      return Math.min(66, Math.max(28, viewWidth * 0.041));
-    }
-
-    function drawTitleLetters(g: CanvasRenderingContext2D, x: number, y: number) {
-      const label = "MIAV-922228";
-      const size = titleFontSize();
-      const tracking = Number.parseFloat(homeTitleTracking);
-      const spacing = Number.isFinite(tracking) ? tracking * (size /
-        Math.max(1, Number.parseFloat(homeTitleStyle?.fontSize ?? "64"))) : size * 0.04;
-      g.save();
-      // Match the actual homepage MIAV-922228 headline, including serif
-      // numerals and weight; no thin sans-serif substitute.
-      g.font = homeTitleWeight + " " + size + "px " + homeTitleFamily;
-      g.textBaseline = "middle";
-      g.textAlign = "left";
-      const widths = [...label].map((letter) => g.measureText(letter).width);
-      const fullWidth = widths.reduce((a, b) => a + b, 0) + spacing * (label.length - 1);
-      const fit = Math.min(1, viewWidth * 0.84 / Math.max(1, fullWidth));
-      g.translate(x, y);
-      g.scale(fit, 1);
-      g.fillStyle = "rgba(241,239,231,0.91)";
-      g.shadowColor = "rgba(4,8,23,0.85)";
-      g.shadowBlur = 6;
-      let pen = -fullWidth / 2;
-      for (let i = 0; i < label.length; i++) {
-        g.fillText(label[i], pen, 0);
-        pen += widths[i] + spacing;
-      }
-      g.restore();
     }
 
     function drawSand(now: number, cx: number, cy: number, amount: number) {
@@ -484,11 +441,21 @@ export function GalaxyVoyage({
       progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 205));
       if (Math.abs(progress - target) < 0.005) progress = target;
       const s = progress;
+      // Keep the existing ~100 taps of planetary travel, then compress only
+      // the huge intergalactic distances into a manageable number of taps.
+      // All scenes share this camera distance; none are timed slide changes.
+      const sceneStep = s <= 100 ? s
+        : s <= 134 ? 100 + (s - 100) * 3.5
+        : 219 + (s - 134) * 2;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // Keep the completed first galaxy, stars, and planetary flyby.
-      // Do not introduce a second galaxy or microscopic scenery.
-      flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
+      flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
+      // Previously omitted: without this call M31 could never appear.
+      // Telescope photography crossfades with the existing stellar haze.
+      flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight);
+      if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
+        flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
+      }
 
       // Each phase advances ONLY on user tap: intact letters / erosion /
       // letters gone / 3+ gradually more distant stars / then the planets.
@@ -510,43 +477,27 @@ export function GalaxyVoyage({
       // The homepage letters have already been consumed during the opening
       // transition. Do not draw a second MIAV title or another dust sequence.
 
-      // Off-axis worlds shrink continuously to star-sized points.
-      flightScene.drawForeground(ctx!, s, viewWidth, viewHeight, now);
-
-      if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
-        // Distinct stars light up in different colours across the whole sky;
-        // their positions do not jump and no sparkle repeats in one cycle.
-        flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
-        if (titleRevealAt !== null) {
-          const appear = reduced ? 1 : ease((now - titleRevealAt) / FINAL_TITLE_FADE_MS);
-          ctx!.save();
-          // Keep the final starfield visible behind the lettering.
-          ctx!.fillStyle = "rgba(0,3,12," + (appear * 0.25).toFixed(3) + ")";
-          ctx!.fillRect(0, 0, viewWidth, viewHeight);
-          ctx!.globalAlpha = appear;
-          drawTitleLetters(ctx!, viewWidth * 0.5, viewHeight * 0.5);
-          ctx!.restore();
-        }
-      }
+      // Planets remain off-axis in the same sky throughout the pull-back.
+      flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
+      // A faint web of other galaxies resolves around the last pinprick;
+      // only afterward does the curved glass boundary become recognisable.
+      clusterOrb.draw(ctx!, viewWidth, viewHeight, s, now,
+        finalReachedAt === null ? null : now - finalReachedAt);
     }
 
     function stepForward() {
       const now = performance.now();
       if (now - lastAdvanceAt < 150 || now - opened < IMPLOSION_MS - 80) return;
       lastAdvanceAt = now;
-      if (target >= FINAL_STEP) return;
+      // Once the last orb is visible, another tap may return home early.
+      if (target >= FINAL_STEP) { exitRef.current(); return; }
       target += 1;
       if (idleTimer !== undefined) clearTimeout(idleTimer);
       if (target >= FINAL_STEP) {
         finalReachedAt = now;
-        // No automatic journey progression. Hold the final glittering sky for
-        // a full 30 seconds, slowly reveal MIAV-922228, then return home.
-        finalTimer = window.setTimeout(() => {
-          titleRevealAt = performance.now();
-          finalTimer = window.setTimeout(
-            () => exitRef.current(), FINAL_TITLE_FADE_MS + 400,
-          );
-        }, FINAL_HOLD_MS);
+        // The glass orb wanders and draws in tiny grains for thirty seconds.
+        // There is no final overlaid title: return to the REAL homepage.
+        finalTimer = window.setTimeout(() => exitRef.current(), FINAL_HOLD_MS);
       } else {
         // Intermediate scenes remain entirely tap-driven. This is a safety
         // return for an abandoned modal, not automatic camera movement.
@@ -602,7 +553,7 @@ export function GalaxyVoyage({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Tap to watch the galaxy recede and the planets shrink into a distant starfield."
+      aria-label="Tap to travel through stars and planets, then discover galaxies inside a drifting glass orb."
       onClick={(event) => {
         if (event.target === event.currentTarget || event.target === canvasRef.current) {
           advanceRef.current();
