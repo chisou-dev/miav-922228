@@ -17,7 +17,7 @@ const ease = (t: number) => { const v = clamp(t, 0, 1); return v * v * (3 - 2 * 
 const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15910/PIA15910.jpg?fit=clip&w=1200";
 const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
-const FINAL_STEP = 165;
+const FINAL_STEP = 226;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
 const IDLE_MS = 120_000;
@@ -365,9 +365,10 @@ export function GalaxyVoyage({
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // First: isolated galaxy + damaged MIAV title against black.
-      // As it retreats, a wide starfield gradually fills the entire sky.
-      // Those same sky stars eventually resolve into a faraway spiral.
+      // Begin on nearly empty black with the original galaxy and title.
+      // Tap 2/3/5 reveal 10/30/100 real distant star points. By the time
+      // the galaxy is tiny a complete starfield fills the window; planets
+      // have their own perspective before any final spiral can be recognised.
       flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
       // Only diffuse haze supplements those same sky stars; no new photo or
       // rectangle of particles pops into existence.
