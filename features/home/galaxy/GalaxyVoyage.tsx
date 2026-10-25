@@ -180,38 +180,69 @@ export function GalaxyVoyage({
     }
 
     function drawGlass(x: number, y: number, r: number, now: number) {
+      // Glass is transparent: the edge refracts light, but it is NOT a
+      // thick circular hole filled with an opaque navy background.
       ctx!.save();
       ctx!.translate(x, y);
-      ctx!.beginPath();
-      ctx!.arc(0, 0, r, 0, TAU);
-      ctx!.clip();
-      const shell = ctx!.createRadialGradient(-r * 0.28, -r * 0.38, 0, r * 0.18, r * 0.25, r * 1.28);
-      shell.addColorStop(0, "#1a3157");
-      shell.addColorStop(0.52, "#0e1b30");
-      shell.addColorStop(1, "#020714");
-      ctx!.fillStyle = shell;
-      ctx!.fillRect(-r, -r, 2 * r, 2 * r);
+      ctx!.beginPath();ctx!.arc(0, 0, r, 0, TAU);ctx!.clip();
+      const translucent = ctx!.createRadialGradient(
+        -r * 0.43, -r * 0.48, r * 0.06, r * 0.24, r * 0.21, r * 1.25);
+      translucent.addColorStop(0, "rgba(72,123,176,0.18)");
+      translucent.addColorStop(0.67, "rgba(41,74,116,0.085)");
+      translucent.addColorStop(1, "rgba(11,22,42,0.20)");
+      ctx!.fillStyle = translucent;
+      ctx!.fillRect(-r,-r,2*r,2*r);
       ctx!.save();
       ctx!.rotate(now * 0.000065);
       ctx!.globalCompositeOperation = "screen";
       if (globe.complete && globe.naturalWidth) {
-        ctx!.drawImage(globe, -r * 0.78, -r * 0.78, r * 1.56, r * 1.56);
+        ctx!.drawImage(globe,-r*.78,-r*.78,r*1.56,r*1.56);
       }
       ctx!.restore();
-      const shine = ctx!.createRadialGradient(-r * 0.42, -r * 0.55, 0, -r * 0.42, -r * 0.55, r * 0.23);
-      shine.addColorStop(0, "rgba(240,250,255,0.9)");
-      shine.addColorStop(0.24, "rgba(153,210,255,0.55)");
-      shine.addColorStop(1, "rgba(153,210,255,0)");
-      ctx!.fillStyle = shine;
-      ctx!.fillRect(-r, -r, r * 2, r * 2);
+      const shine = ctx!.createRadialGradient(
+        -r*.46,-r*.55,0,-r*.46,-r*.55,r*.24);
+      shine.addColorStop(0,"rgba(244,253,255,.90)");
+      shine.addColorStop(.18,"rgba(177,224,255,.55)");
+      shine.addColorStop(1,"rgba(137,201,250,0)");
+      ctx!.fillStyle=shine;ctx!.fillRect(-r,-r,2*r,2*r);
       ctx!.restore();
-      ctx!.strokeStyle = "rgba(159,207,245,0.57)";
-      ctx!.lineWidth = Math.max(1, r * 0.013);
-      ctx!.beginPath();
-      ctx!.arc(x, y, r, 0, TAU);
-      ctx!.stroke();
+      // Two barely visible refraction strokes, with a stronger short upper
+      // highlight; no opaque thick unbroken metal-looking border.
+      ctx!.save();
+      ctx!.strokeStyle="rgba(168,217,248,.26)";
+      ctx!.lineWidth=Math.min(1.2,Math.max(.55,r*.0038));
+      ctx!.beginPath();ctx!.arc(x,y,r-.7,0,TAU);ctx!.stroke();
+      ctx!.strokeStyle="rgba(232,249,255,.44)";
+      ctx!.lineWidth=Math.max(.5,Math.min(.95,r*.0028));
+      ctx!.beginPath();ctx!.arc(x,y,r-.75,Math.PI*1.12,Math.PI*1.60);ctx!.stroke();
+      ctx!.restore();
     }
 
+    function drawGlassPerimeterGrains(now: number, x: number, y: number,
+      radius: number, fading: number) {
+      if (fading <= 0.005) return;
+      // A shell dissolving into hundreds of distinct slow-moving sand grains.
+      // Each grain begins on the same visible circumference, then curves
+      // towards the galaxy nucleus. Nothing cracks or explodes outward.
+      const elapsed=(now-opened)/2400;
+      for(let i=0;i<330;i++){
+        const angle=i*2.399963229728653;
+        const seed=((i*97)%331)/331;
+        const travel=(elapsed*(.34+seed*.17)+seed*.69)%1;
+        const t=ease(travel);
+        const startX=x+Math.cos(angle)*radius*(.976+.022*seed);
+        const startY=y+Math.sin(angle)*radius*(.976+.022*seed);
+        const swirl=Math.sin(Math.PI*t)*(8+radius*.08)*Math.sin(angle*2+t*4);
+        const px=startX+(x-startX)*t-Math.sin(angle)*swirl;
+        const py=startY+(y-startY)*t+Math.cos(angle)*swirl;
+        const alpha=fading*(.22+.5*Math.sin(Math.PI*t));
+        if(alpha<.03)continue;
+        ctx!.fillStyle="rgba(214,235,252,"+alpha.toFixed(3)+")";
+        ctx!.beginPath();
+        ctx!.arc(px,py,.42+seed*.75,0,TAU);
+        ctx!.fill();
+      }
+    }
 
     function titleFontSize() {
       // A restrained typographic mark, rather than a large display headline:
@@ -330,9 +361,11 @@ export function GalaxyVoyage({
       galaxyImage(first.complete && first.naturalWidth ? first : globe,
         cx, cy, mix(origin.radius * 1.52, short * 0.66, p),
         firstRotation, ease((p - 0.02) / 0.8));
-      // An occasional sand grain spirals into the galactic disk while
-      // the original page gently disappears below the dark viewport.
-      drawSand(now, cx, cy, ease((p - 0.22) / 0.7) * 0.56);
+      // Both the perimeter of the glass and the nearby letters turn to
+      // tiny grains that drift inward. The title/galaxy are left intact.
+      drawGlassPerimeterGrains(now, cx, cy,
+        origin.radius * (1 + .04 * p), 1-ease((p-.28)/.72));
+      drawSand(now, cx, cy, ease((p-.12)/.7) * 0.56);
     }
 
     function drawVoyageTitle(now: number, s: number) {
