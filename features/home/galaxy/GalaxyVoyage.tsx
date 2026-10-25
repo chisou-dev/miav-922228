@@ -365,6 +365,12 @@ export function GalaxyVoyage({
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
+      // An unchanged full-screen celestial background remains visible even
+      // while the first orb galaxy recedes to a single point.
+      flightScene.drawSky(ctx!, now, viewWidth, viewHeight);
+      // The next galaxy is a continuously receding patch of this same sky,
+      // never a separate rectangle of stars or a late appearing image.
+      flightScene.drawGalaxy(ctx!, s, viewWidth, viewHeight);
 
       // 0–2: thin, eroded MIAV title with sand leaving it.
       // 3–30: the first 3D rotating galaxy recedes to one star FIRST.
@@ -389,12 +395,9 @@ export function GalaxyVoyage({
           0.90 * (1 - ease((s - 0.90) / 1.11)));
       }
 
-      // The same camera advances through one continuous fixed 3D scene.
-      // Planet position and apparent radius depend on depth, rather than
-      // popping in from a prescribed screen edge and stopping.
-      if (s >= FIRST_STAR_STEP - 5) {
-        flightScene.draw(ctx!, s, now, viewWidth, viewHeight);
-      }
+      // Off-axis planets are fixed behind the ship. The rear-facing camera
+      // makes them slide inward from the window edge as they grow more distant.
+      flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
     }
 
     function stepForward() {
