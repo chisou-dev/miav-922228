@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
 import { drawStage1EntryCraft } from "./drawStage1EntryCraft";
-import { createGalaxyFlightScene } from "./GalaxyFlightScene";
+import { createGalaxyFlightScene, createPondScaleScene } from "./GalaxyFlightScene";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
@@ -127,6 +127,7 @@ export function GalaxyVoyage({
       drift: (Math.random() - 0.5) * 44,
     }));
     const flightScene = createGalaxyFlightScene();
+    const pondScene = createPondScaleScene();
 
     function resize() {
       viewWidth = window.innerWidth;
@@ -459,14 +460,22 @@ export function GalaxyVoyage({
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // Begin on nearly empty black with the original galaxy and title.
-      // Tap 2/3/5 reveal 10/30/100 real distant star points. By the time
-      // the galaxy is tiny a complete starfield fills the window; planets
-      // have their own perspective before any final spiral can be recognised.
-      flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
-      // Only diffuse haze supplements those same sky stars; no new photo or
-      // rectangle of particles pops into existence.
-      flightScene.drawGalaxy(ctx!, s, viewWidth, viewHeight);
+      // The early taps reveal faraway stars gradually; later taps reveal
+      // a cosmic web, a mysterious moving transparent organism and the
+      // sunlit water surface of a small sheltered freshwater pond.
+      // The starfield dissolves into the SAME filament language as the
+      // transparent organism. This changes scale, not location or viewpoint.
+      const outerSpaceOpacity = 1 - ease((s - 137) / 24);
+      if (outerSpaceOpacity > 0.002) {
+        ctx!.save();
+        ctx!.globalAlpha = outerSpaceOpacity;
+        flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
+        flightScene.drawGalaxy(ctx!, s, viewWidth, viewHeight);
+        ctx!.restore();
+      }
+      if (s >= 135) {
+        pondScene.draw(ctx!, now, viewWidth, viewHeight, s);
+      }
 
       // 0–2: thin, eroded MIAV title with sand leaving it.
       // 3–30: the first 3D rotating galaxy recedes to one star FIRST.
@@ -499,9 +508,14 @@ export function GalaxyVoyage({
           0.96 * (1 - ease((s - 0.85) / 1.13)));
       }
 
-      // Off-axis planets are fixed behind the ship. The rear-facing camera
-      // makes them slide inward from the window edge as they grow more distant.
-      flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
+      // Local planets fade out as the view recedes into the wider cosmic web.
+      // A second isolated galaxy is no longer the destination.
+      if (s < 137) {
+        ctx!.save();
+        ctx!.globalAlpha = 1 - ease((s - 126) / 11);
+        flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
+        ctx!.restore();
+      }
     }
 
     function stepForward() {
@@ -564,7 +578,7 @@ export function GalaxyVoyage({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Galaxy voyage. Click to travel through space."
+      aria-label="Journey through the cosmic web into a microscopic freshwater pond. Tap to advance."
       onClick={(event) => {
         if (event.target === event.currentTarget || event.target === canvasRef.current) {
           advanceRef.current();
