@@ -575,7 +575,20 @@ export function createGalaxyFlightScene() {
     ctx.globalCompositeOperation="screen";
     ctx.globalAlpha=hazeStrength;
     const texture=ensureNebula();
-    ctx.drawImage(texture,g.x-g.r,g.y-g.r,g.r*2,g.r*2);
+    // At early stages this galaxy is many screens wide. Crop its source to
+    // the visible camera window instead of rasterising a huge offscreen image
+    // each frame; it also gives perfectly smooth continuity while zooming.
+    const side=g.r*2;
+    const left=g.x-g.r,top=g.y-g.r;
+    const x0=Math.max(0,left),y0=Math.max(0,top);
+    const x1=Math.min(w,left+side),y1=Math.min(h,top+side);
+    if(x1>x0 && y1>y0){
+      const sx=(x0-left)/side*texture.width;
+      const sy=(y0-top)/side*texture.height;
+      const sw=(x1-x0)/side*texture.width;
+      const sh=(y1-y0)/side*texture.height;
+      ctx.drawImage(texture,sx,sy,sw,sh,x0,y0,x1-x0,y1-y0);
+    }
     ctx.restore();
   }
 
