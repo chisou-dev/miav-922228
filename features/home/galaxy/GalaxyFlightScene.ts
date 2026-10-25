@@ -55,34 +55,128 @@ const bodies: Body[] = [
 
 export function createGalaxyFlightScene() {
   const textures = new Map<number, HTMLCanvasElement>();
-  // The field is seeded once. Nothing is newly generated at a stage boundary.
-  const background = Array.from({length:1900},(_,i):Spark=>({
-    x:(rnd(i*11+17)-.5)*4200,
-    y:(rnd(i*17+11)-.5)*2500,
-    z:450+rnd(i*19+33)*8000,
-    u:0,v:0,radius:.32+rnd(i*37+9)*1.02,
-    hue:[200,210,222,245,34,42,7,285][i%8],
-    power:.21+rnd(i*7+18)*.64,
-    phase:rnd(i*13+97)*TAU,
+  // The background is a permanent celestial sphere. It never fades away,
+  // even when the nearby galaxy and planets shrink to single light points.
+  const skyStars=Array.from({length:1950},(_,i)=>({
+    x:rnd(i*11+17), y:rnd(i*17+37),
+    radius:.34+rnd(i*13+47)*1.10,
+    hue:[205,211,221,240,26,36,49,287][i%8],
+    power:.22+rnd(i*7+113)*.64,
+    phase:rnd(i*23+19)*TAU,
   }));
+  const skyBright=Array.from({length:75},(_,i)=>({
+    x:rnd(i*31+251),y:rnd(i*43+91),
+    radius:.8+rnd(i*11+117)*.85,
+    hue:[210,222,42,36,255,194][i%6],
+    power:.48+rnd(i*13+61)*.34,
+    phase:rnd(i*17+129)*TAU,
+  }));
+  let skyCache:HTMLCanvasElement|null=null;
+  let cachedWidth=0,cachedHeight=0;
+  let nebulaCache:HTMLCanvasElement|null=null;
 
-  // A single physical spiral population ALWAYS exists beyond the planetary
-  // system. Seen from nearby, one only glimpses its star-rich OUTER EDGE at
-  // the right. Backing away reveals the remaining arms and nucleus gradually.
-  const disk=Array.from({length:2600},(_,i):Spark=>{
-    const r=Math.sqrt((i+.5)/2600);
-    const a=i%4*TAU/4+r*5.9+(rnd(i*71+33)-.5)*(.23+.32*r);
-    const scatter=.045*(rnd(i*17+113)-.5);
-    return {
-      x:0,y:0,z:0,
-      u:r*Math.cos(a)+scatter,
-      v:r*Math.sin(a)*.62+(rnd(i*23+41)-.5)*.030,
-      radius:.35+rnd(i*61+9)*.90,
-      hue:[208,222,242,265,305,340,34,42][i%8],
-      power:.19+rnd(i*31+7)*.79,
-      phase:rnd(i*29+61)*TAU,
-    };
-  });
+  function ensureSky(w:number,h:number) {
+    if(skyCache && cachedWidth===w && cachedHeight===h)return skyCache;
+    cachedWidth=w;cachedHeight=h;
+    const c=document.createElement("canvas");
+    // Render a consistent dense sky without reallocating on every click.
+    c.width=Math.max(1,Math.round(w));
+    c.height=Math.max(1,Math.round(h));
+    const g=c.getContext("2d");
+    if(!g)return c;
+    for(const p of skyStars){
+      const x=p.x*w,y=p.y*h;
+      g.fillStyle="hsla("+p.hue+",43%,87%,"+p.power.toFixed(3)+")";
+      g.beginPath();g.arc(x,y,p.radius,0,TAU);g.fill();
+    }
+    for(const p of skyBright){
+      const x=p.x*w,y=p.y*h;
+      const radius=p.radius*8;
+      const halo=g.createRadialGradient(x,y,0,x,y,radius);
+      halo.addColorStop(0,"hsla("+p.hue+",63%,84%,"+(p.power*.32).toFixed(3)+")");
+      halo.addColorStop(.26,"hsla("+p.hue+",61%,68%,"+(p.power*.12).toFixed(3)+")");
+      halo.addColorStop(1,"hsla("+p.hue+",56%,57%,0)");
+      g.fillStyle=halo;
+      g.beginPath();g.arc(x,y,radius,0,TAU);g.fill();
+      g.fillStyle="hsla("+p.hue+",28%,95%,"+p.power.toFixed(3)+")";
+      g.beginPath();g.arc(x,y,p.radius,0,TAU);g.fill();
+    }
+    skyCache=c;
+    return c;
+  }
+
+  function ensureNebula(){
+    if(nebulaCache)return nebulaCache;
+    // High-resolution, completely transparent radial image. Unlike the old
+    // star rectangles and mathematical spiral lines, thousands of irregular
+    // dust clouds and stars form the *same* three-dimensional-looking region.
+    // The changing view is just a zoom of this already-present source.
+    const n=1120;
+    const c=document.createElement("canvas");
+    c.width=c.height=n;
+    const g=c.getContext("2d",{alpha:true});
+    if(!g)return c;
+    const middle=n/2;
+    g.save();g.translate(middle,middle);
+    g.scale(1,.66);
+    const haze=g.createRadialGradient(0,0,0,0,0,n*.47);
+    haze.addColorStop(0,"rgba(204,203,233,.23)");
+    haze.addColorStop(.12,"rgba(159,167,208,.13)");
+    haze.addColorStop(.35,"rgba(85,112,175,.095)");
+    haze.addColorStop(.80,"rgba(43,77,127,.025)");
+    haze.addColorStop(1,"rgba(27,50,96,0)");
+    g.fillStyle=haze;
+    g.beginPath();g.arc(0,0,n*.47,0,TAU);g.fill();
+    g.restore();
+
+    // Deliberately broken spiral: asymmetric branches, dust lanes and an
+    // uneven light envelope prevent a white dotted pinwheel appearance.
+    for(let i=0;i<1250;i++){
+      const radial=Math.sqrt(rnd(i*37+191))*.92;
+      const arm=i%4;
+      const theta=arm*TAU/4+radial*4.75+
+        (rnd(i*71+51)-.5)*(.42+.45*radial);
+      const cx=middle+Math.cos(theta)*radial*n*.42;
+      const cy=middle+Math.sin(theta)*radial*n*.27;
+      const rad=5+rnd(i*17+109)*22;
+      const q=g.createRadialGradient(cx,cy,0,cx,cy,rad);
+      const blue=i%9<6;
+      q.addColorStop(0,blue?"rgba(143,166,221,.080)":"rgba(240,176,191,.066)");
+      q.addColorStop(1,"rgba(85,110,160,0)");
+      g.fillStyle=q;
+      g.beginPath();g.arc(cx,cy,rad,0,TAU);g.fill();
+    }
+    // Stars are much less orderly than the old four perfect spiral tracks:
+    // 40% are in the diffuse elliptical disc, the rest clustered along the
+    // irregular arms. A radial limit softly blends away the last pixels.
+    for(let i=0;i<19500;i++){
+      const radial=Math.sqrt(rnd(i*23+23))*.94;
+      const diffuse=rnd(i*61+17)<.46;
+      const arm=i%4;
+      const theta=diffuse
+        ?rnd(i*41+27)*TAU
+        :arm*TAU/4+radial*4.75+(rnd(i*53+79)-.5)*(.35+.65*radial);
+      const wobble=(rnd(i*73+33)-.5)*.10;
+      const x=middle+Math.cos(theta)*(radial+wobble)*n*.43;
+      const y=middle+Math.sin(theta)*(radial+wobble)*n*.275;
+      const alpha=(.18+.62*rnd(i*19+47))*
+        (diffuse?.52:1)*(1-smooth((radial-.73)/.27));
+      const hue=[210,218,232,250,275,328,32,39][i%8];
+      g.fillStyle="hsla("+hue+",38%,"+(76+Math.round(rnd(i*13+17)*17))+"%,"+alpha.toFixed(3)+")";
+      g.beginPath();
+      g.arc(x,y,.22+rnd(i*29+31)*1.18,0,TAU);g.fill();
+    }
+    // Soft luminous nucleus with a faint surrounding bulge.
+    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.075);
+    core.addColorStop(0,"rgba(255,244,242,.89)");
+    core.addColorStop(.17,"rgba(227,212,235,.60)");
+    core.addColorStop(.54,"rgba(152,152,205,.21)");
+    core.addColorStop(1,"rgba(95,121,180,0)");
+    g.fillStyle=core;
+    g.beginPath();g.arc(middle,middle,n*.075,0,TAU);g.fill();
+    nebulaCache=c;
+    return c;
+  }
 
   function texturedWorld(world:Body): HTMLCanvasElement {
     const old=textures.get(world.id);
@@ -209,90 +303,51 @@ export function createGalaxyFlightScene() {
     }
   }
 
-  function distantStars(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
-    const focus=Math.min(w,h)*.89;
-    const back=retreat(step);
-    const entrance=smooth((step-26)/18);
-    if(entrance<=0)return;
-    for(const st of background){
-      const z=st.z+back;
-      const x=w*.5+focus*st.x/z;
-      const y=h*.5+focus*st.y/z;
-      if(x<0||x>w||y<0||y>h)continue;
-      const a=entrance*st.power*(.83+.17*Math.sin(now*.00053+st.phase));
-      ctx.fillStyle="hsla("+st.hue+",48%,85%,"+a.toFixed(3)+")";
-      ctx.beginPath();ctx.arc(x,y,st.radius,0,TAU);ctx.fill();
+  function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number) {
+    const sky=ensureSky(w,h);
+    // Complete edge-to-edge coverage from the first moment to the last.
+    ctx.drawImage(sky,0,0,w,h);
+    for(const p of skyBright) {
+      const x=p.x*w,y=p.y*h;
+      const flicker=.84+.16*Math.sin(now*.00065+p.phase);
+      ctx.fillStyle="hsla("+p.hue+",35%,96%,"+(p.power*flicker).toFixed(3)+")";
+      ctx.beginPath();
+      ctx.arc(x,y,p.radius*.72,0,TAU);ctx.fill();
     }
   }
 
-  function galaxy(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
-    const focus=Math.min(w,h)*.89;
-    const initialDistance=250+retreat(112);
-    // A fixed world-space centre lies outside the RIGHT edge until the
-    // field of view widens enough to catch its outermost stars.
-    const span=Math.min(w,h*1.5);
-    const cxWorld=initialDistance*w/focus*.68;
-    const worldRadius=initialDistance*span/focus*.29;
-    const dyWorld=-initialDistance*h/focus*.06;
-    const distance=250+retreat(step);
-    const x=w*.5+cxWorld*focus/distance;
-    const y=h*.5+dyWorld*focus/distance;
-    const r=worldRadius*focus/distance;
-    if(x-r>w+4||x+r<0||y-r*.75>h||y+r*.75<0)return;
-
+  function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
+    // A field of stars fills the view while the vessel looks backward. The
+    // field slowly resolves into a spiral as its angular extent contracts.
+    // There are no appearing images, separate star rectangles, or fade cuts.
+    const short=Math.min(w,h);
+    const recession=Math.max(0,step-30);
+    const r=short*3.2*Math.exp(-.046*recession-.070*Math.max(0,step-129));
+    const x=w*.53,y=h*.48;
+    if(r<.40){
+      ctx.fillStyle="rgba(220,223,250,.82)";
+      ctx.beginPath();ctx.arc(x,y,.72,0,TAU);ctx.fill();
+      return;
+    }
+    const texture=ensureNebula();
+    const alpha=.095+.88*smooth((step-30)/84);
     ctx.save();
-    // The same stellar density is seen closer first; as it shrinks the viewer
-    // recognizes it as the outer disk of a spiral, then its complete shape.
-    // There is NO galaxy picture, fade-in time or rotation after formation.
     ctx.globalCompositeOperation="screen";
-    if(r>1.6){
-      ctx.save();
-      ctx.translate(x,y);
-      ctx.scale(1,.66);
-      const halo=ctx.createRadialGradient(0,0,0,0,0,Math.max(r,1));
-      halo.addColorStop(0,"rgba(210,184,232,.10)");
-      halo.addColorStop(.35,"rgba(105,105,194,.075)");
-      halo.addColorStop(.76,"rgba(57,92,158,.038)");
-      halo.addColorStop(1,"rgba(36,53,124,0)");
-      ctx.fillStyle=halo;
-      ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();
-      ctx.restore();
-    }
-    for(const st of disk){
-      const px=x+st.u*r, py=y+st.v*r;
-      if(px<0||px>w||py<0||py>h)continue;
-      const glimmer=.87+.13*Math.sin(now*.00047+st.phase);
-      const opacity=st.power*glimmer;
-      ctx.fillStyle="hsla("+st.hue+",51%,84%,"+opacity.toFixed(3)+")";
-      ctx.beginPath();
-      const size=Math.max(.26,st.radius*Math.min(1,r/65));
-      ctx.arc(px,py,size,0,TAU);
-      ctx.fill();
-    }
-    if(r>2){
-      const core=ctx.createRadialGradient(x,y,0,x,y,r*.13);
-      core.addColorStop(0,"rgba(255,237,245,.48)");
-      core.addColorStop(.36,"rgba(194,169,236,.23)");
-      core.addColorStop(1,"rgba(115,115,183,0)");
-      ctx.fillStyle=core;
-      ctx.beginPath();ctx.arc(x,y,r*.13,0,TAU);ctx.fill();
-    }else{
-      ctx.fillStyle="rgba(220,214,255,.7)";
-      ctx.beginPath();ctx.arc(x,y,.8,0,TAU);ctx.fill();
-    }
+    ctx.globalAlpha=alpha;
+    // Texture always has the same stars and positions. The transparent
+    // boundary and nebula's radial dust mask leave the permanent sky visible.
+    ctx.drawImage(texture,x-r,y-r,r*2,r*2);
     ctx.restore();
   }
 
   return {
-    draw(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
-      // Nothing changes position on a timer except star scintillation:
-      // tap count is the only camera control.
-      distantStars(ctx,step,now,w,h);
-      galaxy(ctx,step,now,w,h);
-      // Distant bodies behind nearer ones; no planet tunnel or tidy ring.
-      if(step>=31){
-        for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h);
-      }
+    drawSky,
+    drawForeground(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
+      // Different off-axis worlds remain in fixed positions behind the ship.
+      if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h);
+    },
+    drawGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
+      drawDistantGalaxy(ctx,step,w,h);
     },
   };
 }
