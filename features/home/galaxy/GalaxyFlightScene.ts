@@ -496,6 +496,24 @@ export function createGalaxyFlightScene() {
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
+    // Last view: a few different-coloured points brighten and fade in place.
+    // The galaxy becomes only one of the distant lights while all the other
+    // stars remain scattered. No moving star trails or flashing wallpaper.
+    const finale=smooth((step-215)/17);
+    if(finale>0.002){
+      for(let i=0;i<24;i++){
+        const p=skyBright[i];
+        const shimmer=Math.pow(Math.max(0,Math.sin(now*.0016+p.phase+i*.13)),5);
+        const intensity=finale*shimmer*(.23+.28*p.power);
+        if(intensity<.014)continue;
+        const x=w*p.x,y=h*p.y,radius=3.5+p.radius*5;
+        const corona=ctx.createRadialGradient(x,y,0,x,y,radius);
+        corona.addColorStop(0,"hsla("+p.hue+",76%,92%,"+intensity.toFixed(3)+")");
+        corona.addColorStop(1,"hsla("+p.hue+",70%,72%,0)");
+        ctx.fillStyle=corona;
+        ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+      }
+    }
     // Short, sparse glints respond to each tap during the long flight through
     // the starfield. Their positions vary without scrambling the fixed sky;
     // the subtle apparent recession still comes from the parallax above.
