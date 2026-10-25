@@ -497,6 +497,31 @@ export function createGalaxyFlightScene() {
     };
   }
 
+  // Three separate Saturn-like bands are drawn in two depth passes:
+  // the rear halves behind the world, then the front halves in front.
+  // Keeping the orbital plane fixed makes the SURFACE rotation readable
+  // without making the entire ring wobble like a spinning 2-D icon.
+  function drawThreeRings(ctx:CanvasRenderingContext2D,x:number,y:number,
+    radius:number,front:boolean,hue:number) {
+    const bands=[
+      {a:1.40,b:.285,stroke:.088,shade:86,opacity:.47},
+      {a:1.74,b:.352,stroke:.082,shade:70,opacity:.51},
+      {a:2.09,b:.427,stroke:.072,shade:58,opacity:.38},
+    ];
+    ctx.save();
+    ctx.lineCap="round";
+    for(const band of bands){
+      ctx.beginPath();
+      ctx.ellipse(x,y,radius*band.a,radius*band.b,-.22,
+        front?0:Math.PI,front?Math.PI:TAU);
+      ctx.lineWidth=Math.max(.56,radius*band.stroke);
+      ctx.strokeStyle="hsla("+hue+",26%,"+band.shade+"%,"+
+        (band.opacity*(front?1:.60)).toFixed(3)+")";
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function body(ctx:CanvasRenderingContext2D,world:Body,step:number,w:number,h:number,now:number) {
     const {x,y,r}=projection(world,step,w,h);
     // In a rear-facing window, the near planets slide into view from behind
@@ -509,22 +534,21 @@ export function createGalaxyFlightScene() {
       return;
     }
     if(world.ring && r>3.7){
-      ctx.strokeStyle="hsla("+world.hue+",25%,77%,.30)";
-      ctx.lineWidth=Math.max(.9,r*.18);
-      ctx.beginPath();ctx.ellipse(x,y,r*1.79,r*.37,-.22,Math.PI,TAU);ctx.stroke();
-      ctx.strokeStyle="hsla("+world.hue+",27%,55%,.28)";
-      ctx.lineWidth=Math.max(.5,r*.055);
-      ctx.beginPath();ctx.ellipse(x,y,r*2.06,r*.42,-.22,Math.PI,TAU);ctx.stroke();
+      drawThreeRings(ctx,x,y,r,false,world.hue);
     }
-    // One slow spin per world, with different periods and axes. As a body
-    // becomes a tiny point its surface motion is no longer resolved.
-    const spinVisible=r>7;
-    const turns=spinVisible ? (now*(.000014+world.id*.0000016)+world.id*.071) : 0;
+    // Rotation runs continuously even while the user is NOT tapping.
+    // Each planet completes one slow turn in about 45–65 seconds.
+    // It is a longitude/texture rotation, not a flat disk rotation.
+    // Under 8 screen pixels the surface is no longer distinguishable:
+    // stop spending render work on movement at that distance.
+    const spinVisible=r>8;
+    const angularSpeed=.000092+world.id*.000005;
+    const turns=spinVisible ? now*angularSpeed+world.id*.071 : 0;
     const movingFrame=spinVisible ? ((turns*12)%12) : 0;
     const frame=Math.floor(movingFrame);
     const blend=spinVisible ? movingFrame-frame : 0;
     ctx.drawImage(texturedWorld(world,frame),x-r,y-r,r*2,r*2);
-    if(spinVisible && blend>.025 && r>12) {
+    if(spinVisible && blend>.025) {
       ctx.save();ctx.globalAlpha=blend;
       ctx.drawImage(texturedWorld(world,(frame+1)%12),x-r,y-r,r*2,r*2);
       ctx.restore();
@@ -549,12 +573,7 @@ export function createGalaxyFlightScene() {
       }
     }
     if(world.ring && r>3.7){
-      ctx.strokeStyle="hsla("+world.hue+",33%,85%,.56)";
-      ctx.lineWidth=Math.max(.85,r*.14);
-      ctx.beginPath();ctx.ellipse(x,y,r*1.79,r*.37,-.22,0,Math.PI);ctx.stroke();
-      ctx.strokeStyle="hsla("+world.hue+",34%,64%,.31)";
-      ctx.lineWidth=Math.max(.5,r*.045);
-      ctx.beginPath();ctx.ellipse(x,y,r*2.07,r*.42,-.22,0,Math.PI);ctx.stroke();
+      drawThreeRings(ctx,x,y,r,true,world.hue);
     }
   }
 
