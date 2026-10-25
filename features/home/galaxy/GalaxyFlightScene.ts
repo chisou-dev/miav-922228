@@ -941,9 +941,11 @@ export function createPondScaleScene() {
         ctx.fillStyle=water;ctx.fillRect(0,0,w,h);
         ctx.globalAlpha=entrance;
       }
+      // Paint pond illumination BEHIND the transparent organism; otherwise
+      // its full-screen background would hide the very reveal we want.
+      drawPond(ctx,now,w,h,step);
       drawWeb(ctx,now,w,h,step,(1-smooth((step-189)/27))*.92);
       drawDaphnia(ctx,now,w,h,step);
-      drawPond(ctx,now,w,h,step);
       ctx.restore();
     }
   };
