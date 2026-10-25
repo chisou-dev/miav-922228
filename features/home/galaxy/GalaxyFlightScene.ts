@@ -109,12 +109,13 @@ export function createGalaxyFlightScene() {
 
   function galaxyGeometry(step:number,w:number,h:number){
     const short=Math.min(w,h);
-    // A single immense, already-existing galactic disc is initially far
-    // larger than the window. With each outward tap MORE of its perimeter
-    // fits the view. Nothing assembles from stars travelling to one point.
-    const framing=smooth((step-151)/54);
-    const recession=Math.max(0,step-205);
-    const r=short*.245*Math.exp((1-framing)*3.3)*Math.exp(-.245*recession);
+    // Continuous wide-angle recession: the existing star system is initially
+    // far wider than our field of view. As the camera retreats its dust lanes
+    // and edges naturally become visible. No sudden spawn or centripetal
+    // motion of existing stars.
+    const framing=smooth((step-134)/79);
+    const recession=Math.max(0,step-213);
+    const r=short*.245*Math.exp((1-framing)*3.3)*Math.exp(-.285*recession);
     return {x:w*.51,y:h*.49,r};
   }
 
@@ -466,22 +467,16 @@ export function createGalaxyFlightScene() {
     const count=visibleStarCount(step);
     if(count<=0)return;
     const g=galaxyGeometry(step,w,h);
-    // When a galaxy first becomes readable the surrounding sky is quieter,
-    // but never black. The little stars return in depth as it recedes.
-    const outerWeight=1-.30*smooth((step-170)/29)
-      +.29*smooth((step-211)/19);
+    // Stars stay in their own positions at all distances. The old parallax
+    // formula moved every point inward and gave the impression that somebody
+    // was manufacturing a galaxy by collecting them at the centre.
+    const outerWeight=1-.16*smooth((step-172)/35)
+      +.16*smooth((step-214)/18);
     const tiny=step>=228;
     for(let i=0;i<Math.ceil(count);i++){
       const p=skyStars[i];
-      // Only gentle rear-view parallax: this NEVER lerps stars into a
-      // central cluster or a mathematically arranged pinwheel.
-      const recede=1-(.04+.13*rnd(i*19+333))*
-        smooth((step-5)/118);
-      const drift=step<145 ? .013*Math.sin(step*.084+p.phase) : 0;
-      const ux=.5+(p.x-.5)*recede+drift*(p.y-.5);
-      const uy=.5+(p.y-.5)*recede-drift*(p.x-.5);
-      const x=w*ux;
-      const y=h*uy;
+      const x=w*p.x;
+      const y=h*p.y;
       const appearing=clamp(count-i,0,1);
       const sparkle=.73+.27*Math.sin(now*.00145+p.phase+step*.18);
       const alpha=Math.min(.95,p.power*outerWeight*appearing*sparkle);
@@ -547,8 +542,8 @@ export function createGalaxyFlightScene() {
         for(let j=0;j<5;j++){
           const starIndex=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
           const p=skyStars[starIndex];
-          const x=w*(.5+(p.x-.5)*(1-.08*smooth((step-5)/118)));
-          const y=h*(.5+(p.y-.5)*(1-.08*smooth((step-5)/118)));
+          const x=w*p.x;
+          const y=h*p.y;
           const glow=ctx.createRadialGradient(x,y,0,x,y,5+p.radius*4);
           glow.addColorStop(0,"hsla("+p.hue+",55%,91%,"+(pulse*.31).toFixed(3)+")");
           glow.addColorStop(1,"hsla("+p.hue+",55%,72%,0)");
@@ -565,16 +560,17 @@ export function createGalaxyFlightScene() {
 
   function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
     const g=galaxyGeometry(step,w,h);
-    // The nebula is only diffuse dust around the 650 EXISTING sky stars.
-    // It is not a newly appearing photograph or a separate ring of dots.
-    // First the stars become denser, then only the tip of a spiral arm is
-    // suggested. A recognisable full disk comes much later, with no planets.
-    // At first we are too close to discern spiral arms: the same diffuse
-    // region fills the window. A slow pullback reveals the whole disc as a
-    // consequence of perspective, NEVER of loose stars flying inward.
-    const hazeStrength=.065*smooth((step-173)/13)
-      +.67*smooth((step-186)/19);
-    if(hazeStrength<.001 || g.r<2)return;
+    // A single, large galactic star population is already present while
+    // nearby planets are tiny. Its very faint outer haze becomes perceptible
+    // gradually during a long recession. The low-opacity wide field comes
+    // first; denser spiral features are only resolvable much later.
+    // There is NO second overlay that suddenly appears on a fixed screen.
+    const hazeStrength=
+        .016*smooth((step-113)/34)
+      + .080*smooth((step-140)/43)
+      + .245*smooth((step-160)/54)
+      + .405*smooth((step-181)/48);
+    if(hazeStrength<.0003 || g.r<2)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.globalAlpha=hazeStrength;
