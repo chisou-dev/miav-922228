@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
 import { drawStage1EntryCraft } from "./drawStage1EntryCraft";
-import { createGalaxyFlightScene, createPondScaleScene } from "./GalaxyFlightScene";
+import { createGalaxyFlightScene } from "./GalaxyFlightScene";
+import { isolatedSpiral } from "./isolatedSpiral";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
@@ -17,7 +18,8 @@ const ease = (t: number) => { const v = clamp(t, 0, 1); return v * v * (3 - 2 * 
 const NASA_M100 = "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia15/pia15910/PIA15910.jpg?fit=clip&w=1200";
 const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
-const FINAL_STEP = 235;
+// End when all nearby worlds have dwindled to star-like points.
+const FINAL_STEP = 130;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
 const IDLE_MS = 120_000;
@@ -127,7 +129,6 @@ export function GalaxyVoyage({
       drift: (Math.random() - 0.5) * 44,
     }));
     const flightScene = createGalaxyFlightScene();
-    const pondScene = createPondScaleScene();
 
     function resize() {
       viewWidth = window.innerWidth;
@@ -194,10 +195,18 @@ export function GalaxyVoyage({
       ctx!.fillStyle = translucent;
       ctx!.fillRect(-r,-r,2*r,2*r);
       ctx!.save();
-      ctx!.rotate(now * 0.000065);
       ctx!.globalCompositeOperation = "screen";
-      if (globe.complete && globe.naturalWidth) {
-        ctx!.drawImage(globe,-r*.78,-r*.78,r*1.56,r*1.56);
+      // The glass holds a 3D-turning spiral with no rectangular JPEG sky.
+      const spiral = isolatedSpiral(globe);
+      if (spiral) {
+        const yaw = Math.sin(now * .00017) * .55;
+        const pitch = Math.sin(now * .00013 + .5) * .42;
+        const roll = now * .000095;
+        const cy = Math.cos(yaw), sy = Math.sin(yaw);
+        const cp = Math.cos(pitch), sp = Math.sin(pitch);
+        const cr = Math.cos(roll), sr = Math.sin(roll);
+        ctx!.transform(cr*cy-sr*sp*sy, sr*cy+cr*sp*sy, -sr*cp, cr*cp, 0, 0);
+        ctx!.drawImage(spiral,-r*.78,-r*.78,r*1.56,r*1.56);
       }
       ctx!.restore();
       const shine = ctx!.createRadialGradient(
@@ -391,7 +400,7 @@ export function GalaxyVoyage({
     function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
       phase: number, alpha: number, depth = 1, foregroundOcclusion = false) {
       if (diameter < 1 || alpha <= 0.002) return;
-      const texture = preparedGalaxy(img);
+      const texture = img === globe ? isolatedSpiral(globe) : preparedGalaxy(img);
       if (!texture) return;
       // Orthographic projection of a real disk using three independent axes.
       // Yaw and pitch each complete full circles; roll is independent too.
@@ -460,22 +469,9 @@ export function GalaxyVoyage({
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // The early taps reveal faraway stars gradually; later taps reveal
-      // a cosmic web, a mysterious moving transparent organism and the
-      // sunlit water surface of a small sheltered freshwater pond.
-      // The starfield dissolves into the SAME filament language as the
-      // transparent organism. This changes scale, not location or viewpoint.
-      const outerSpaceOpacity = 1 - ease((s - 137) / 24);
-      if (outerSpaceOpacity > 0.002) {
-        ctx!.save();
-        ctx!.globalAlpha = outerSpaceOpacity;
-        flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
-        flightScene.drawGalaxy(ctx!, s, viewWidth, viewHeight);
-        ctx!.restore();
-      }
-      if (s >= 135) {
-        pondScene.draw(ctx!, now, viewWidth, viewHeight, s);
-      }
+      // Keep the completed first galaxy, stars, and planetary flyby.
+      // Do not introduce a second galaxy or microscopic scenery.
+      flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
 
       // 0–2: thin, eroded MIAV title with sand leaving it.
       // 3–30: the first 3D rotating galaxy recedes to one star FIRST.
@@ -508,14 +504,8 @@ export function GalaxyVoyage({
           0.96 * (1 - ease((s - 0.85) / 1.13)));
       }
 
-      // Local planets fade out as the view recedes into the wider cosmic web.
-      // A second isolated galaxy is no longer the destination.
-      if (s < 137) {
-        ctx!.save();
-        ctx!.globalAlpha = 1 - ease((s - 126) / 11);
-        flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
-        ctx!.restore();
-      }
+      // Off-axis worlds shrink continuously to star-sized points.
+      flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
     }
 
     function stepForward() {
@@ -578,7 +568,7 @@ export function GalaxyVoyage({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Journey through the cosmic web into a microscopic freshwater pond. Tap to advance."
+      aria-label="Tap to watch the galaxy recede and the planets shrink into a distant starfield."
       onClick={(event) => {
         if (event.target === event.currentTarget || event.target === canvasRef.current) {
           advanceRef.current();
