@@ -510,11 +510,15 @@ export function createGalaxyFlightScene() {
     // was manufacturing a galaxy by collecting them at the centre.
     const outerWeight=1-.08*smooth((step-150)/58);
     const tiny=step>=230;
-    for(let i=0;i<Math.ceil(count);i++){
+    // Fade each existing star over several taps, rather than abruptly
+    // inserting or erasing dozens of points when the count changes.
+    const fadeSpan=step<31?36:84;
+    for(let i=0;i<skyStars.length;i++){
+      const appearing=smooth((count-i)/fadeSpan);
+      if(appearing<=0.0001)continue;
       const p=skyStars[i];
       const x=w*p.x;
       const y=h*p.y;
-      const appearing=clamp(count-i,0,1);
       const sparkle=.73+.27*Math.sin(now*.00145+p.phase+step*.18);
       const alpha=Math.min(.95,p.power*outerWeight*appearing*sparkle);
       if(alpha<.007)continue;
