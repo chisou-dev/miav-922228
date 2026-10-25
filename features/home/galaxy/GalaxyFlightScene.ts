@@ -658,8 +658,60 @@ export function createGalaxyFlightScene() {
     ctx.restore();
   }
 
+  // The final thirty seconds do NOT replay a fixed blink pattern. Each
+  // transient glow chooses a different star from the existing sky, so the
+  // stars themselves remain in place while the sparkling locations wander.
+  // Event indices permute the 1370 stars without revisiting one position
+  // during a single ending. Warm, cool and violet stars occur irregularly.
+  function drawFinalSparkles(
+    ctx:CanvasRenderingContext2D, elapsedMs:number,w:number,h:number,
+  ) {
+    const elapsed=clamp(elapsedMs,0,30000);
+    const interval=300;
+    const last=Math.floor(elapsed/interval);
+    const hues=[210,197,225,251,281,330,14,37,49,176];
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    for(let event=Math.max(0,last-7);event<=last;event++){
+      const age=elapsed-event*interval;
+      const lifetime=920+rnd(event*79+13)*1010;
+      if(age<0||age>=lifetime)continue;
+      const rise=smooth(age/Math.max(150,lifetime*.24));
+      const fall=1-smooth((age-lifetime*.44)/(lifetime*.56));
+      const pulse=rise*fall;
+      if(pulse<.012)continue;
+      // 271 is coprime with 1370; the first 101 events all hit distinct
+      // fixed sky stars. Consecutive glints are far apart on the screen.
+      const star=skyStars[(event*271+71)%SKY_STARS];
+      const x=star.x*w,y=star.y*h;
+      const hue=hues[(event*7+Math.floor(rnd(event*51+5)*10))%hues.length];
+      const power=(.55+.45*rnd(event*37+29))*pulse;
+      const radius=5+rnd(event*19+3)*9;
+      const glow=ctx.createRadialGradient(x,y,0,x,y,radius);
+      glow.addColorStop(0,"hsla("+hue+",77%,91%,"+(power*.53).toFixed(3)+")");
+      glow.addColorStop(.21,"hsla("+hue+",76%,72%,"+(power*.22).toFixed(3)+")");
+      glow.addColorStop(1,"hsla("+hue+",65%,52%,0)");
+      ctx.fillStyle=glow;
+      ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+      ctx.fillStyle="hsla("+hue+",53%,97%,"+(power*.95).toFixed(3)+")";
+      ctx.beginPath();ctx.arc(x,y,.48+rnd(event*41+17)*.78,0,TAU);ctx.fill();
+      // Only an occasional delicate diffraction cross; not a comet tail,
+      // decorative firework or a synchronized Christmas-light pattern.
+      if(event%5===0){
+        ctx.strokeStyle="hsla("+hue+",69%,84%,"+(power*.37).toFixed(3)+")";
+        ctx.lineWidth=.5;
+        ctx.beginPath();
+        ctx.moveTo(x-radius*.58,y);ctx.lineTo(x+radius*.58,y);
+        ctx.moveTo(x,y-radius*.58);ctx.lineTo(x,y+radius*.58);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   return {
     drawSky,
+    drawFinalSparkles,
     drawForeground(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
       // Different off-axis worlds remain in fixed positions behind the ship.
       if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h);
