@@ -71,8 +71,8 @@ export function createGalaxyFlightScene() {
   // After the planets become pinpoints, the same vast stellar background
   // steadily thins as the far galaxy resolves. No abrupt scene changes.
   const countStops: readonly [number, number][] = [
-    [0,0],[3,0],[5,9],[8,35],[12,130],[16,420],
-    [20,930],[24,SKY_STARS],[138,SKY_STARS],
+    [0,0],[1,0],[2,0],[3,12],[4,34],[5,68],[6,105],
+    [8,185],[12,395],[16,700],[20,1060],[24,SKY_STARS],[138,SKY_STARS],
     [153,1300],[167,1050],[181,710],[195,340],
     [208,155],[218,95],[235,95]
   ];
@@ -292,10 +292,15 @@ export function createGalaxyFlightScene() {
     return sum/.995;
   }
 
-  function texturedWorld(world:Body): HTMLCanvasElement {
-    const old=textures.get(world.id);
+  function texturedWorld(world:Body, rotationFrame=0): HTMLCanvasElement {
+    // Only the cloud-bearing surface rotates. The limb/shading/rings retain
+    // their spatial orientation so the planet reads as a rotating sphere,
+    // not a flat disc spinning like a graphic.
+    const frame=((rotationFrame%12)+12)%12;
+    const key=world.id*20+frame;
+    const old=textures.get(key);
     if(old)return old;
-    const n=264;
+    const n=204;
     const c=document.createElement("canvas");
     c.width=c.height=n;
     const g=c.getContext("2d",{alpha:true});
@@ -311,7 +316,7 @@ export function createGalaxyFlightScene() {
         const o=(py*n+px)*4;
         if(squared>=1)continue;
         const z=Math.sqrt(1-squared);
-        const lon=Math.atan2(u,Math.max(.04,z));
+        const lon=Math.atan2(u,Math.max(.04,z))+frame*TAU/12;
         const lat=Math.asin(clamp(v,-1,1));
         const broad=terrain(lon*1.4+2.4,lat*2.2+3.3,seed);
         let hue=world.hue,sat=.40,lum=.52;
@@ -429,7 +434,7 @@ export function createGalaxyFlightScene() {
       }
     }
     g.putImageData(data,0,0);
-    textures.set(world.id,c);
+    textures.set(key,c);
     return c;
   }
 
@@ -492,7 +497,7 @@ export function createGalaxyFlightScene() {
     };
   }
 
-  function body(ctx:CanvasRenderingContext2D,world:Body,step:number,w:number,h:number) {
+  function body(ctx:CanvasRenderingContext2D,world:Body,step:number,w:number,h:number,now:number) {
     const {x,y,r}=projection(world,step,w,h);
     // In a rear-facing window, the near planets slide into view from behind
     // the window frame, then shrink. They never jump or pause in the centre.
@@ -511,7 +516,19 @@ export function createGalaxyFlightScene() {
       ctx.lineWidth=Math.max(.5,r*.055);
       ctx.beginPath();ctx.ellipse(x,y,r*2.06,r*.42,-.22,Math.PI,TAU);ctx.stroke();
     }
-    ctx.drawImage(texturedWorld(world),x-r,y-r,r*2,r*2);
+    // One slow spin per world, with different periods and axes. As a body
+    // becomes a tiny point its surface motion is no longer resolved.
+    const spinVisible=r>7;
+    const turns=spinVisible ? (now*(.000014+world.id*.0000016)+world.id*.071) : 0;
+    const movingFrame=spinVisible ? ((turns*12)%12) : 0;
+    const frame=Math.floor(movingFrame);
+    const blend=spinVisible ? movingFrame-frame : 0;
+    ctx.drawImage(texturedWorld(world,frame),x-r,y-r,r*2,r*2);
+    if(spinVisible && blend>.025 && r>12) {
+      ctx.save();ctx.globalAlpha=blend;
+      ctx.drawImage(texturedWorld(world,(frame+1)%12),x-r,y-r,r*2,r*2);
+      ctx.restore();
+    }
     if(world.moon && r>6.0) {
       // A separate, cratered satellite: small, irregular, darker than its
       // parent and offset beside it, NOT just a second identical sphere.
@@ -712,9 +729,9 @@ export function createGalaxyFlightScene() {
   return {
     drawSky,
     drawFinalSparkles,
-    drawForeground(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
+    drawForeground(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
       // Different off-axis worlds remain in fixed positions behind the ship.
-      if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h);
+      if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h,now);
     },
     drawGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
       drawDistantGalaxy(ctx,step,w,h);
