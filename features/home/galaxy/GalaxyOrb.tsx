@@ -344,8 +344,11 @@ export function GalaxyOrb() {
       const proposed = normalRadius * Math.pow(1.3, zoomStep);
       atMaximum = proposed >= maximumRadius * 0.92;
       targetRadius = atMaximum ? maximumRadius : Math.min(maximumRadius, proposed);
+      // Do not black out the homepage when the sphere reaches full size.
+      // Existing lettering must remain visible for the following
+      // dust-absorption sequence; darkness comes only AFTER it is consumed.
       surface!.style.background = atMaximum
-        ? "rgba(2, 9, 24, .95)"
+        ? "rgba(2, 9, 24, .12)"
         : "rgba(2, 9, 24, .06)";
       surface!.style.pointerEvents = atMaximum ? "auto" : "none";
       surface!.setAttribute("aria-label", atMaximum
