@@ -8,7 +8,7 @@
  * gradually resolves from a bright edge of sky into a distant Milky-Way-like
  * disc. Planet and galaxy distances are cinematic, not an astronomical map.
  */
-type Kind = "jovian" | "storm" | "ice" | "rock" | "cloud" | "sun";
+type Kind = "jovian" | "storm" | "vortex" | "ice" | "rock" | "cloud" | "sun";
 type Side = "left" | "right" | "top" | "bottom";
 type Body = {
   id: number; peek: number; depth: number; radius: number;
@@ -47,13 +47,13 @@ function retreat(step: number) {
 const bodies: Body[] = [
   {id:1,peek:32,depth:106,radius:29,side:"right",transverse:.34,kind:"jovian",hue:28},
   {id:2,peek:44,depth:185,radius:13,side:"left",transverse:.78,kind:"ice",hue:209},
-  {id:3,peek:54,depth:235,radius:28,side:"top",transverse:.66,kind:"storm",hue:19},
-  {id:4,peek:65,depth:285,radius:22,side:"right",transverse:.68,kind:"jovian",hue:34,ring:true},
+  {id:3,peek:54,depth:235,radius:28,side:"top",transverse:.66,kind:"vortex",hue:214},
+  {id:4,peek:65,depth:285,radius:22,side:"right",transverse:.68,kind:"jovian",hue:34,ring:true,moon:true},
   {id:5,peek:67,depth:290,radius:5,side:"right",transverse:.49,kind:"rock",hue:212,moon:true},
   {id:6,peek:74,depth:337,radius:10,side:"bottom",transverse:.23,kind:"rock",hue:17},
   {id:7,peek:82,depth:399,radius:18,side:"left",transverse:.31,kind:"cloud",hue:46},
   {id:8,peek:89,depth:447,radius:8,side:"top",transverse:.24,kind:"sun",hue:36},
-  {id:9,peek:97,depth:509,radius:20,side:"bottom",transverse:.84,kind:"ice",hue:223},
+  {id:9,peek:97,depth:509,radius:20,side:"bottom",transverse:.84,kind:"rock",hue:42},
 ];
 
 export function createGalaxyFlightScene() {
@@ -260,6 +260,29 @@ export function createGalaxyFlightScene() {
             sat+=fading*.17;
             lum=lum*(1-fading*.6)+(.49+rim*.10)*fading*.6;
           }
+        }else if(world.kind==="vortex"){
+          // Two large cyclone systems, one cobalt-blue, one warm crimson.
+          // This is fluid turbulence, not the same repeated bands used for
+          // Jupiter or a clothing-like stripe texture.
+          const a1=Math.atan2(v+.20,u+.24);
+          const a2=Math.atan2(v-.27,u-.29);
+          const d1=Math.hypot((u+.24)*1.10,(v+.20)*1.10);
+          const d2=Math.hypot((u-.29)*1.12,(v-.27)*1.12);
+          const swirl1=Math.sin(a1*2.3-d1*17+broad*3.3);
+          const swirl2=Math.sin(a2*2.5+d2*18+broad*3.6);
+          const eddies=terrain(lon*4.5+3.0,lat*5.8-1.5,seed+97)-.5;
+          const redZone=.48+.29*Math.sin(lon*2.1-lat*4.0+swirl1*.58+swirl2*.38);
+          const redMix=smooth((redZone-.18)/.66);
+          const electric=clamp(.45+.17*swirl1+.12*swirl2+eddies*.23,.17,.80);
+          const blueTone=rgb(212+eddies*23,.67,electric);
+          const redTone=rgb(347+eddies*14,.67,.45+.15*swirl2);
+          const illumination=clamp(.17+.82*Math.max(0,z*.85-u*.30-v*.35),.08,1);
+          const limb=smooth((1-squared)*19);
+          pixels[o]=Math.round((blueTone[0]*(1-redMix)+redTone[0]*redMix)*illumination);
+          pixels[o+1]=Math.round((blueTone[1]*(1-redMix)+redTone[1]*redMix)*illumination);
+          pixels[o+2]=Math.round((blueTone[2]*(1-redMix)+redTone[2]*redMix)*illumination);
+          pixels[o+3]=Math.round(255*limb);
+          continue;
         }else if(world.kind==="rock"){
           // Large irregular highlands, dry basins and small impact craters.
           // No latitudinal bands whatsoever on rocky worlds.
@@ -390,6 +413,25 @@ export function createGalaxyFlightScene() {
       ctx.beginPath();ctx.ellipse(x,y,r*2.06,r*.42,-.22,Math.PI,TAU);ctx.stroke();
     }
     ctx.drawImage(texturedWorld(world),x-r,y-r,r*2,r*2);
+    if(world.moon && r>6.0) {
+      // A separate, cratered satellite: small, irregular, darker than its
+      // parent and offset beside it, NOT just a second identical sphere.
+      const mx=x+r*2.05, my=y-r*.69, mr=Math.max(1.2,r*.21);
+      const moon=ctx.createRadialGradient(mx-mr*.28,my-mr*.32,mr*.02,mx,my,mr);
+      moon.addColorStop(0,"#c4c5bb");
+      moon.addColorStop(.57,"#7a807b");
+      moon.addColorStop(1,"#2d3235");
+      ctx.fillStyle=moon;
+      ctx.beginPath();ctx.arc(mx,my,mr,0,TAU);ctx.fill();
+      if(mr>2.4){
+        ctx.fillStyle="rgba(37,42,48,.23)";
+        for(let m=0;m<3;m++){
+          ctx.beginPath();
+          ctx.arc(mx+mr*(.26*m-.42),my+mr*(.24-(m%2)*.46),mr*.17,0,TAU);
+          ctx.fill();
+        }
+      }
+    }
     if(world.ring && r>3.7){
       ctx.strokeStyle="hsla("+world.hue+",33%,85%,.56)";
       ctx.lineWidth=Math.max(.85,r*.14);
@@ -409,7 +451,11 @@ export function createGalaxyFlightScene() {
     const g=galaxyGeometry(step,w,h);
     // The field stays populated during the planetary segment. Only after
     // the planets become pinpoints do some stars slowly form a dense region.
-    const outerWeight=1-.57*smooth((step-153)/32);
+    // An isolated formed galaxy has a *subdued*, not empty, surrounding sky.
+    // During its recession the sky grows richer again until the closing
+    // 30-second view contains many randomly scattered twinkling points.
+    const outerWeight=1-.35*smooth((step-153)/32)
+      +.34*smooth((step-210)/21);
     const tiny=g.blend>.99 && g.r<1.4;
     for(let i=0;i<Math.ceil(count);i++){
       const p=skyStars[i];
@@ -439,7 +485,25 @@ export function createGalaxyFlightScene() {
       const px=field?Math.max(.28,p.radius*(1-.26*localBlend)):p.radius;
       ctx.beginPath();ctx.arc(x,y,px,0,TAU);ctx.fill();
     }
-    // Only a few bright stars softly twinkle; no random position resets.
+    // As the galaxy becomes smaller, new distant background stars are
+    // revealed in the dark sky rather than disappearing with the disc.
+    // Their fixed random locations prevent obvious procedural patterns.
+    if(step>207){
+      const returnStars=smooth((step-207)/25);
+      for(let i=0;i<MEMBERS;i++){
+        const p=skyStars[i*2];
+        const alpha=(.25+.55*p.power)*returnStars*
+          (.66+.34*Math.sin(now*.0017+p.phase));
+        if(alpha<.01)continue;
+        ctx.fillStyle="hsla("+p.hue+",58%,89%,"+alpha.toFixed(3)+")";
+        const x=(.5+(p.x-.5)*(1-.03*returnStars))*w;
+        const y=(.5+(p.y-.5)*(1-.03*returnStars))*h;
+        ctx.beginPath();
+        ctx.arc(x,y,Math.max(.48,p.radius*.94),0,TAU);
+        ctx.fill();
+      }
+    }
+    // A handful of bright stars twinkle softly in different colours.
     const bright=Math.floor(34*clamp((step-5)/15,0,1));
     for(let i=0;i<bright;i++){
       const p=skyBright[i];
