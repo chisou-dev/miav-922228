@@ -212,12 +212,14 @@ export function createGalaxyFlightScene() {
   function distantStars(ctx:CanvasRenderingContext2D,step:number,now:number,w:number,h:number) {
     const focus=Math.min(w,h)*.89;
     const back=retreat(step);
+    const entrance=smooth((step-26)/18);
+    if(entrance<=0)return;
     for(const st of background){
       const z=st.z+back;
       const x=w*.5+focus*st.x/z;
       const y=h*.5+focus*st.y/z;
       if(x<0||x>w||y<0||y>h)continue;
-      const a=st.power*(.83+.17*Math.sin(now*.00053+st.phase));
+      const a=entrance*st.power*(.83+.17*Math.sin(now*.00053+st.phase));
       ctx.fillStyle="hsla("+st.hue+",48%,85%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,st.radius,0,TAU);ctx.fill();
     }
@@ -228,8 +230,9 @@ export function createGalaxyFlightScene() {
     const initialDistance=250+retreat(112);
     // A fixed world-space centre lies outside the RIGHT edge until the
     // field of view widens enough to catch its outermost stars.
-    const cxWorld=initialDistance*w/focus*1.00;
-    const worldRadius=initialDistance*w/focus*.66;
+    const span=Math.min(w,h*1.5);
+    const cxWorld=initialDistance*w/focus*.68;
+    const worldRadius=initialDistance*span/focus*.29;
     const dyWorld=-initialDistance*h/focus*.06;
     const distance=250+retreat(step);
     const x=w*.5+cxWorld*focus/distance;
@@ -243,14 +246,14 @@ export function createGalaxyFlightScene() {
     // There is NO galaxy picture, fade-in time or rotation after formation.
     ctx.globalCompositeOperation="screen";
     if(r>1.6){
-      const halo=ctx.createRadialGradient(x,y,0,x,y,Math.max(r,1));
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.scale(1,.66);
+      const halo=ctx.createRadialGradient(0,0,0,0,0,Math.max(r,1));
       halo.addColorStop(0,"rgba(210,184,232,.10)");
       halo.addColorStop(.35,"rgba(105,105,194,.075)");
       halo.addColorStop(.76,"rgba(57,92,158,.038)");
       halo.addColorStop(1,"rgba(36,53,124,0)");
-      ctx.save();
-      ctx.translate(x,y);
-      ctx.scale(1,.66);
       ctx.fillStyle=halo;
       ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();
       ctx.restore();
