@@ -58,11 +58,11 @@ const bodies: Body[] = [
 
 export function createGalaxyFlightScene() {
   const textures = new Map<number, HTMLCanvasElement>();
-  // Sky stars have stable positions for the entire voyage. A *subset of the
-  // very same stars* later resolves into a spiral-shaped distant star system:
-  // no second sky image ever pops in from an edge.
+  // The distant stars never migrate toward the screen centre. Their fixed
+  // bearings persist for the whole trip; the viewer simply pulls farther
+  // away from a pre-existing, much larger star system.
   const SKY_STARS=1370;
-  const MEMBERS=650;
+  const DEEP_STARS=570;
   // Exact early counts requested: tap 2 = 10, tap 3 = 30, tap 5 = 100.
   // The same deterministic star identities persist throughout the voyage.
   const countStops: readonly [number, number][] = [
@@ -93,32 +93,26 @@ export function createGalaxyFlightScene() {
     power:.42+rnd(i*13+61)*.37,
     phase:rnd(i*17+129)*TAU,
   }));
-  const galaxyMembers=Array.from({length:MEMBERS},(_,i)=>{
-    // Flattened, uneven arms: the stars already existed in the all-sky view.
-    // Their apparent grouping changes through a continuous camera pullback.
-    const radial=Math.sqrt((i+.5)/MEMBERS);
-    const arm=i%4;
-    const theta=arm*TAU/4+radial*4.92+
-      (rnd(i*53+79)-.5)*(.44+.68*radial);
-    const wander=(rnd(i*73+33)-.5)*.11;
-    return {
-      u:Math.cos(theta)*(radial+wander)*.84,
-      v:Math.sin(theta)*(radial+wander)*.58,
-      radius:radial,
-      sourceIndex:i*2,
-    };
-  });
+  // Much fainter, fixed, separately distributed points become resolvable
+  // at intergalactic distances. They never inherit spiral coordinates.
+  const deepStars=Array.from({length:DEEP_STARS},(_,i)=>({
+    x:rnd(i*29+110017),y:rnd(i*37+170043),
+    radius:.32+rnd(i*13+70131)*.94,
+    hue:[204,225,242,270,33,39,55][i%7],
+    power:.25+rnd(i*19+9901)*.50,
+    phase:rnd(i*23+23111)*TAU,
+  }));
   let nebulaCache:HTMLCanvasElement|null=null;
 
   function galaxyGeometry(step:number,w:number,h:number){
     const short=Math.min(w,h);
-    // Central star concentration precedes partial arm tips, then full disk.
-    const blend=smooth((step-145)/49);
+    // A single immense, already-existing galactic disc is initially far
+    // larger than the window. With each outward tap MORE of its perimeter
+    // fits the view. Nothing assembles from stars travelling to one point.
+    const framing=smooth((step-151)/54);
     const recession=Math.max(0,step-205);
-    // The resolved galaxy never exceeds the original glass orb's visual
-    // scale. After the full shape is revealed it only becomes smaller.
-    const r=short*.245*Math.exp(-.245*recession);
-    return {blend,x:w*.51,y:h*.49,r};
+    const r=short*.245*Math.exp((1-framing)*3.3)*Math.exp(-.245*recession);
+    return {x:w*.51,y:h*.49,r};
   }
 
   function ensureNebula(){
@@ -449,58 +443,42 @@ export function createGalaxyFlightScene() {
     const count=visibleStarCount(step);
     if(count<=0)return;
     const g=galaxyGeometry(step,w,h);
-    // The field stays populated during the planetary segment. Only after
-    // the planets become pinpoints do some stars slowly form a dense region.
-    // An isolated formed galaxy has a *subdued*, not empty, surrounding sky.
-    // During its recession the sky grows richer again until the closing
-    // 30-second view contains many randomly scattered twinkling points.
-    const outerWeight=1-.35*smooth((step-153)/32)
-      +.34*smooth((step-210)/21);
-    const tiny=g.blend>.99 && g.r<1.4;
+    // When a galaxy first becomes readable the surrounding sky is quieter,
+    // but never black. The little stars return in depth as it recedes.
+    const outerWeight=1-.30*smooth((step-170)/29)
+      +.29*smooth((step-211)/19);
+    const tiny=step>=228;
     for(let i=0;i<Math.ceil(count);i++){
       const p=skyStars[i];
-      const member=i%2===0 && i/2<MEMBERS;
-      if(member && tiny)continue;
-      const field=member?galaxyMembers[i/2]:null;
-      const localBlend=field?smooth((step-(143+field.radius*18))/39):0;
-      // Gentle parallax/foreshortening on EVERY tap; near and far pinpoints
-      // move by slightly different amounts. No scrolling stars as wallpaper.
+      // Only gentle rear-view parallax: this NEVER lerps stars into a
+      // central cluster or a mathematically arranged pinwheel.
       const recede=1-(.04+.13*rnd(i*19+333))*
         smooth((step-5)/118);
       const drift=step<145 ? .013*Math.sin(step*.084+p.phase) : 0;
       const ux=.5+(p.x-.5)*recede+drift*(p.y-.5);
       const uy=.5+(p.y-.5)*recede-drift*(p.x-.5);
-      const x=field
-        ?w*ux+(g.x+field.u*g.r-w*ux)*localBlend
-        :w*ux;
-      const y=field
-        ?h*uy+(g.y+field.v*g.r-h*uy)*localBlend
-        :h*uy;
+      const x=w*ux;
+      const y=h*uy;
       const appearing=clamp(count-i,0,1);
-      const visibility=(member?(1-.05*g.blend):outerWeight)*appearing;
-      const sparkle=.77+.23*Math.sin(now*.00145+p.phase+step*.37);
-      const alpha=Math.min(.97,p.power*visibility*sparkle);
+      const sparkle=.73+.27*Math.sin(now*.00145+p.phase+step*.18);
+      const alpha=Math.min(.95,p.power*outerWeight*appearing*sparkle);
       if(alpha<.007)continue;
       ctx.fillStyle="hsla("+p.hue+",43%,88%,"+alpha.toFixed(3)+")";
-      const px=field?Math.max(.28,p.radius*(1-.26*localBlend)):p.radius;
-      ctx.beginPath();ctx.arc(x,y,px,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
-    // As the galaxy becomes smaller, new distant background stars are
-    // revealed in the dark sky rather than disappearing with the disc.
-    // Their fixed random locations prevent obvious procedural patterns.
-    if(step>207){
-      const returnStars=smooth((step-207)/25);
-      for(let i=0;i<MEMBERS;i++){
-        const p=skyStars[i*2];
-        const alpha=(.25+.55*p.power)*returnStars*
-          (.66+.34*Math.sin(now*.0017+p.phase));
+
+    // Wider cosmic space: additional pinpoints appear at independent fixed
+    // bearings once the FULL galaxy has been revealed, then sparkle gently
+    // throughout the final thirty seconds.
+    const deepWeight=smooth((step-205)/25);
+    if(deepWeight>0.001){
+      for(const p of deepStars){
+        const pulse=.63+.37*Math.sin(now*.00145+p.phase+step*.035);
+        const alpha=p.power*deepWeight*pulse;
         if(alpha<.01)continue;
-        ctx.fillStyle="hsla("+p.hue+",58%,89%,"+alpha.toFixed(3)+")";
-        const x=(.5+(p.x-.5)*(1-.03*returnStars))*w;
-        const y=(.5+(p.y-.5)*(1-.03*returnStars))*h;
-        ctx.beginPath();
-        ctx.arc(x,y,Math.max(.48,p.radius*.94),0,TAU);
-        ctx.fill();
+        const x=p.x*w,y=p.y*h;
+        ctx.fillStyle="hsla("+p.hue+",52%,90%,"+alpha.toFixed(3)+")";
+        ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
       }
     }
     // A handful of bright stars twinkle softly in different colours.
@@ -550,8 +528,11 @@ export function createGalaxyFlightScene() {
     // It is not a newly appearing photograph or a separate ring of dots.
     // First the stars become denser, then only the tip of a spiral arm is
     // suggested. A recognisable full disk comes much later, with no planets.
-    const hazeStrength=.075*smooth((step-167)/14)
-      +.39*smooth((step-186)/13);
+    // At first we are too close to discern spiral arms: the same diffuse
+    // region fills the window. A slow pullback reveals the whole disc as a
+    // consequence of perspective, NEVER of loose stars flying inward.
+    const hazeStrength=.065*smooth((step-173)/13)
+      +.67*smooth((step-186)/19);
     if(hazeStrength<.001 || g.r<2)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
