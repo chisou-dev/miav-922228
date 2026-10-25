@@ -74,7 +74,7 @@ function makePoints():GalaxyPoint[] {
     z:(random(i*53+431)-.5)*1.5,
   }));
   // Irregular clustered filaments: not a grid of planets or a regular spiral.
-  return Array.from({length:196},(_,i)=>{
+  return Array.from({length:118},(_,i)=>{
     const anchor=knots[Math.floor(random(i*17+14)*knots.length)];
     const other=knots[Math.floor(random(i*19+103)*knots.length)];
     const t=random(i*47+87);
@@ -107,18 +107,18 @@ export function createGalaxyClusterOrb() {
   ){
     // Start alongside the off-axis star cloud, not with a different giant
     // spiral appearing in the centre. Each tap opens more of the same region.
-    const reveal=smooth((step-121)/45);
+    const reveal=smooth((step-154)/30);
     if(reveal<=.001)return;
     const short=Math.min(w,h);
     // Slightly larger than the first approved orb; always fit on a phone.
     const r=short*.405;
     const sphereVisibility=smooth((reveal-.62)/.35);
-    const zoom=Math.exp(Math.log(5.0)*(1-reveal));
+    const zoom=Math.exp(Math.log(2.65)*(1-reveal));
     const held=Math.max(0,finalElapsed??0);
     const drift=sphereVisibility*smooth(held/1900);
     const settle=smooth((reveal-.13)/.87);
-    const centreX=lerp(w*.79,w*.51,settle);
-    const centreY=lerp(h*.275,h*.515,settle);
+    const centreX=lerp(w*.77,w*.51,settle);
+    const centreY=lerp(h*.27,h*.515,settle);
     const wanderX=Math.min(w*.11,60)*
       (.55*Math.sin(held*.00019)+.29*Math.sin(held*.000083+1.7)
        +.16*Math.sin(held*.000047+.6));
@@ -160,12 +160,16 @@ export function createGalaxyClusterOrb() {
       if(x<-35||x>w+35||y<-35||y>h+35)continue;
       // Extended view starts with only the known last galaxy visible;
       // each individual cluster member emerges softly at its own distance.
-      const local=alpha*smooth((reveal-.025-random(p.i*11+7)*.16)/.30);
+      // Every individual galaxy emerges on its own gradual schedule;
+      // never light up the entire collection on one tap.
+      const local=alpha*smooth((reveal-.08-random(p.i*11+7)*.28)/.32);
       if(local<.002)continue;
       // A few nearby spirals have enough apparent diameter for their arms to
       // remain visible on a phone; the rest stay as tiny galaxies.
-      const prominent=p.i%23===0?2.15:p.i%9===0?1.4:1;
-      const size=Math.max(2,r*(.052+p.size*.076)*zoom*perspective*prominent);
+      // A few recognisable, resolved galaxies among many small systems.
+      // Reducing the number of overlapping glows lets their shapes read.
+      const prominent=p.i%13===0?2.35:p.i%7===0?1.55:1;
+      const size=Math.max(2,r*(.029+p.size*.058)*zoom*perspective*prominent);
       const radial=Math.hypot((x-cx)/r,(y-cy)/r);
       const feather=1-sphereVisibility*smooth((radial-.84)/.32);
       const opacity=local*p.opacity*feather*
@@ -184,11 +188,14 @@ export function createGalaxyClusterOrb() {
     if(sphereVisibility>.002){
       ctx.save();
       ctx.globalAlpha=sphereVisibility;
+      // Subtle cool refraction and shifting specular glints convey thick
+      // transparent glass without hiding the separate galaxy silhouettes.
       const rim=ctx.createRadialGradient(cx-r*.36,cy-r*.43,r*.11,cx,cy,r*1.02);
       rim.addColorStop(0,"rgba(170,204,239,.034)");
       rim.addColorStop(.68,"rgba(38,80,137,.012)");
-      rim.addColorStop(.88,"rgba(107,166,213,.06)");
-      rim.addColorStop(.98,"rgba(203,234,255,.19)");
+      rim.addColorStop(.84,"rgba(102,164,212,.07)");
+      rim.addColorStop(.955,"rgba(192,229,255,.20)");
+      rim.addColorStop(.992,"rgba(235,247,255,.29)");
       rim.addColorStop(1,"rgba(186,222,255,0)");
       ctx.fillStyle=rim;ctx.beginPath();ctx.arc(cx,cy,r*1.02,0,TAU);ctx.fill();
       ctx.strokeStyle="rgba(194,226,255,.36)";
@@ -209,37 +216,66 @@ export function createGalaxyClusterOrb() {
       glint.addColorStop(1,"rgba(135,205,255,0)");
       ctx.fillStyle=glint;
       ctx.beginPath();ctx.arc(gx,gy,r*.19,0,TAU);ctx.fill();
+      // Reflection of a long softbox across the front hemisphere.
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(roll*.63);
+      ctx.beginPath();ctx.arc(0,0,r*.88,Math.PI*.93,Math.PI*1.34);
+      ctx.strokeStyle="rgba(223,246,255,.15)";
+      ctx.lineWidth=Math.max(1.3,r*.013);ctx.stroke();
+      ctx.beginPath();ctx.arc(0,0,r*.70,Math.PI*.98,Math.PI*1.27);
+      ctx.strokeStyle="rgba(222,242,255,.095)";
+      ctx.lineWidth=Math.max(1,r*.035);ctx.stroke();
+      ctx.restore();
       ctx.restore();
     }
-    // The final three minutes have quiet, intermittent grains attracted from
-    // the surrounding starfield. Different starts, curved tracks and speeds;
-    // no fan blades, identical loops or explosive particle showers.
-    if(sphereVisibility>.55){
+    // Sparkling stardust keeps arriving from every direction for the full
+    // three-minute drift. These are distinct irregular curved trajectories,
+    // never a synchronous ring or a shower from one side of the viewport.
+    if(sphereVisibility>.42){
       ctx.save();
-      const strength=smooth((sphereVisibility-.55)/.35);
-      for(let i=0;i<92;i++){
-        const period=3000+random(i*19+31)*3600;
+      ctx.globalCompositeOperation="screen";
+      const strength=smooth((sphereVisibility-.42)/.46);
+      for(let i=0;i<178;i++){
+        const period=3400+random(i*19+31)*5200;
         const cycle=(now+random(i*29+43)*period*3)/period;
         const age=cycle-Math.floor(cycle);
-        if(age<.14||age>.92||random(i*13+19)<.34)continue;
-        const t=smooth((age-.14)/.78);
+        if(age<.06||age>.96||random(i*13+19)<.22)continue;
+        const t=smooth((age-.06)/.90);
         const angle=random(i*31+17)*TAU;
-        const far=r*(1.36+random(i*41+109)*1.23);
+        const far=r*(1.24+random(i*41+109)*1.48);
         const sx=cx+Math.cos(angle)*far;
         const sy=cy+Math.sin(angle)*far;
-        const targetAngle=angle+.28*(random(i*37+131)-.5);
-        const ex=cx+Math.cos(targetAngle)*r*.63;
-        const ey=cy+Math.sin(targetAngle)*r*.63;
-        const bend=(random(i*47+23)-.5)*r*.40*Math.sin(t*Math.PI);
+        const targetAngle=angle+.36*(random(i*37+131)-.5);
+        const ex=cx+Math.cos(targetAngle)*r*.62;
+        const ey=cy+Math.sin(targetAngle)*r*.62;
+        const bend=(random(i*47+23)-.5)*r*.49*Math.sin(t*Math.PI);
         const x=lerp(sx,ex,t)-Math.sin(angle)*bend;
         const y=lerp(sy,ey,t)+Math.cos(angle)*bend;
-        if(x<0||x>w||y<0||y>h)continue;
-        const vanish=(1-smooth((t-.65)/.35))*smooth(t/.17);
-        const opacity=strength*vanish*(.15+.45*random(i*53+13));
-        if(opacity<.01)continue;
-        const size=.22+random(i*59+41)*.52;
-        ctx.fillStyle="rgba(218,233,251,"+opacity.toFixed(3)+")";
-        ctx.fillRect(x,y,size,size);
+        if(x<1||x>w-1||y<1||y>h-1)continue;
+        const vanish=(1-smooth((t-.68)/.32))*smooth(t/.10);
+        const twinkle=.65+.35*Math.sin(now*.006+i*3.7)**2;
+        const opacity=strength*vanish*twinkle*(.36+.56*random(i*53+13));
+        if(opacity<.017)continue;
+        const size=.55+random(i*59+41)*.92;
+        const cool=i%4!==0;
+        ctx.fillStyle=cool
+          ?"rgba(203,232,255,"+opacity.toFixed(3)+")"
+          :"rgba(255,223,187,"+opacity.toFixed(3)+")";
+        ctx.beginPath();ctx.arc(x,y,size,0,TAU);ctx.fill();
+        if(i%5===0){
+          const glow=ctx.createRadialGradient(x,y,0,x,y,4.7+size*2.2);
+          glow.addColorStop(0,"rgba(237,247,255,"+(opacity*.41).toFixed(3)+")");
+          glow.addColorStop(1,"rgba(180,220,255,0)");
+          ctx.fillStyle=glow;ctx.beginPath();
+          ctx.arc(x,y,4.7+size*2.2,0,TAU);ctx.fill();
+          if(i%15===0){
+            ctx.strokeStyle="rgba(238,248,255,"+(opacity*.47).toFixed(3)+")";
+            ctx.lineWidth=.55;
+            ctx.beginPath();ctx.moveTo(x-3.5,y);ctx.lineTo(x+3.5,y);
+            ctx.moveTo(x,y-3.5);ctx.lineTo(x,y+3.5);ctx.stroke();
+          }
+        }
       }
       ctx.restore();
     }
