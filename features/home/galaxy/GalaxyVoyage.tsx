@@ -355,7 +355,7 @@ export function GalaxyVoyage({
     }
 
     function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
-      phase: number, alpha: number, depth = 1) {
+      phase: number, alpha: number, depth = 1, foregroundOcclusion = false) {
       if (diameter < 1 || alpha <= 0.002) return;
       const texture = preparedGalaxy(img);
       if (!texture) return;
@@ -404,7 +404,10 @@ export function GalaxyVoyage({
       }
       ctx!.save();
       ctx!.transform(a, b, c, d, 0, 0);
-      ctx!.globalCompositeOperation = "screen";
+      // On the typography pass let galactic dust partially cover the glyphs:
+      // it should read as letters BEHIND the star clouds, not white UI drawn
+      // on top of a picture. Ordinary galaxy rendering keeps screen blending.
+      ctx!.globalCompositeOperation = foregroundOcclusion ? "source-over" : "screen";
       ctx!.drawImage(texture, -radius, -radius, diameter, diameter);
       ctx!.restore();
       ctx!.restore();
@@ -457,7 +460,7 @@ export function GalaxyVoyage({
         ctx!.save();
         ctx!.globalCompositeOperation = "source-over";
         drawGalaxy3D(firstTexture, viewWidth * 0.51, viewHeight * 0.52,
-          firstSize, firstRotation, firstOpacity * 0.32, 0.2);
+          firstSize, firstRotation, firstOpacity * 0.44, 0.2, true);
         ctx!.restore();
         drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
           0.96 * (1 - ease((s - 0.85) / 1.13)));
