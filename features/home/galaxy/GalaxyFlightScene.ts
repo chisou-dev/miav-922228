@@ -8,7 +8,7 @@
  * gradually resolves from a bright edge of sky into a distant Milky-Way-like
  * disc. Planet and galaxy distances are cinematic, not an astronomical map.
  */
-type Kind = "jovian" | "storm" | "ice" | "rock" | "cloud";
+type Kind = "jovian" | "storm" | "ice" | "rock" | "cloud" | "sun";
 type Side = "left" | "right" | "top" | "bottom";
 type Body = {
   id: number; peek: number; depth: number; radius: number;
@@ -39,18 +39,21 @@ function retreat(step: number) {
   const back=92*(Math.exp(s*0.043)-1);
   // Once the entire galaxy is in view, continue moving AWAY, faster at huge
   // scale, until the SAME distant object is only a pinprick.
-  return back*(step>145?Math.pow(1.21,step-145):1);
+  // By the time the distant star cloud starts contracting, all worlds have
+  // diminished to pinpoints. Never show a full spiral beside large planets.
+  const planetaryRetreat = 1 + 4.0*smooth((step-103)/27);
+  return back*planetaryRetreat*(step>178?Math.pow(1.17,step-178):1);
 }
 const bodies: Body[] = [
-  {id:1,peek:32,depth:105,radius:20,side:"right",transverse:.37,kind:"jovian",hue:27},
-  {id:2,peek:45,depth:155,radius:23,side:"left",transverse:.72,kind:"ice",hue:202},
-  {id:3,peek:55,depth:230,radius:24,side:"top",transverse:.64,kind:"storm",hue:13},
-  {id:4,peek:65,depth:270,radius:29,side:"right",transverse:.73,kind:"jovian",hue:32,ring:true},
-  {id:5,peek:67,depth:284,radius:6,side:"right",transverse:.53,kind:"rock",hue:212,moon:true},
-  {id:6,peek:75,depth:330,radius:15,side:"bottom",transverse:.26,kind:"rock",hue:20},
-  {id:7,peek:84,depth:375,radius:24,side:"left",transverse:.31,kind:"cloud",hue:182},
-  {id:8,peek:91,depth:430,radius:21,side:"top",transverse:.22,kind:"ice",hue:235},
-  {id:9,peek:98,depth:485,radius:27,side:"bottom",transverse:.78,kind:"jovian",hue:41},
+  {id:1,peek:32,depth:106,radius:29,side:"right",transverse:.34,kind:"jovian",hue:28},
+  {id:2,peek:44,depth:185,radius:13,side:"left",transverse:.78,kind:"ice",hue:209},
+  {id:3,peek:54,depth:235,radius:28,side:"top",transverse:.66,kind:"storm",hue:19},
+  {id:4,peek:65,depth:285,radius:22,side:"right",transverse:.68,kind:"jovian",hue:34,ring:true},
+  {id:5,peek:67,depth:290,radius:5,side:"right",transverse:.49,kind:"rock",hue:212,moon:true},
+  {id:6,peek:74,depth:337,radius:10,side:"bottom",transverse:.23,kind:"rock",hue:17},
+  {id:7,peek:82,depth:399,radius:18,side:"left",transverse:.31,kind:"cloud",hue:46},
+  {id:8,peek:89,depth:447,radius:8,side:"top",transverse:.24,kind:"sun",hue:36},
+  {id:9,peek:97,depth:509,radius:20,side:"bottom",transverse:.84,kind:"ice",hue:223},
 ];
 
 export function createGalaxyFlightScene() {
@@ -60,6 +63,22 @@ export function createGalaxyFlightScene() {
   // no second sky image ever pops in from an edge.
   const SKY_STARS=1370;
   const MEMBERS=650;
+  // Exact early counts requested: tap 2 = 10, tap 3 = 30, tap 5 = 100.
+  // The same deterministic star identities persist throughout the voyage.
+  const countStops: readonly [number, number][] = [
+    [0,0],[1,3],[2,10],[3,30],[4,60],[5,100],
+    [8,250],[12,630],[18,1150],[22,SKY_STARS]
+  ];
+  function visibleStarCount(step:number){
+    for(let k=1;k<countStops.length;k++){
+      const [end,total]=countStops[k];
+      if(step<=end){
+        const [start,previous]=countStops[k-1];
+        return previous+(total-previous)*clamp((step-start)/(end-start),0,1);
+      }
+    }
+    return SKY_STARS;
+  }
   const skyStars=Array.from({length:SKY_STARS},(_,i)=>({
     x:rnd(i*11+17),y:rnd(i*17+37),
     radius:.31+rnd(i*13+47)*.86,
@@ -92,11 +111,13 @@ export function createGalaxyFlightScene() {
 
   function galaxyGeometry(step:number,w:number,h:number){
     const short=Math.min(w,h);
-    const blend=smooth((step-98)/38);
-    const recession=Math.max(0,step-138);
+    // Planetary passage ends before gathering starts: 130–144 quiet distant
+    // stars, 145–160 denser core, 161–180 partial arms to full galaxy.
+    const blend=smooth((step-145)/38);
+    const recession=Math.max(0,step-185);
     // The resolved galaxy never exceeds the original glass orb's visual
     // scale. After the full shape is revealed it only becomes smaller.
-    const r=short*.245*Math.exp(-.235*recession);
+    const r=short*.245*Math.exp(-.180*recession);
     return {blend,x:w*.51,y:h*.49,r};
   }
 
@@ -299,53 +320,61 @@ export function createGalaxyFlightScene() {
   }
 
   function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,step:number) {
-    // Almost empty black space at first. By the time the first spiral is a
-    // pinprick, the SAME sky is fully populated, before any planet flies by.
-    const reveal=smooth((step-3)/26);
-    if(reveal<=.0001)return;
+    // At the beginning there is no backdrop: just the title and first galaxy.
+    // At tap 2, 3 and 5 there are precisely ~10, ~30 and ~100 faraway stars.
+    // By the time the first galaxy is a distant point the WHOLE sky is alive.
+    const count=visibleStarCount(step);
+    if(count<=0)return;
     const g=galaxyGeometry(step,w,h);
-    const outerWeight=1-.75*smooth((step-105)/35);
-    const tiny=g.blend>.99 && g.r<4;
-    for(let i=0;i<skyStars.length;i++){
+    // The field stays populated during the planetary segment. Only after
+    // the planets become pinpoints do some stars slowly form a dense region.
+    const outerWeight=1-.57*smooth((step-153)/32);
+    const tiny=g.blend>.99 && g.r<1.4;
+    for(let i=0;i<Math.ceil(count);i++){
       const p=skyStars[i];
       const member=i%2===0 && i/2<MEMBERS;
       if(member && tiny)continue;
       const field=member?galaxyMembers[i/2]:null;
+      // Gentle parallax/foreshortening on EVERY tap; near and far pinpoints
+      // move by slightly different amounts. No scrolling stars as wallpaper.
+      const recede=1-(.04+.13*rnd(i*19+333))*
+        smooth((step-5)/118);
+      const drift=step<145 ? .013*Math.sin(step*.084+p.phase) : 0;
+      const ux=.5+(p.x-.5)*recede+drift*(p.y-.5);
+      const uy=.5+(p.y-.5)*recede-drift*(p.x-.5);
       const x=field
-        ?w*p.x+(g.x+field.u*g.r-w*p.x)*g.blend
-        :w*p.x;
+        ?w*ux+(g.x+field.u*g.r-w*ux)*g.blend
+        :w*ux;
       const y=field
-        ?h*p.y+(g.y+field.v*g.r-h*p.y)*g.blend
-        :h*p.y;
-      const visibility=member
-        ?reveal*(1-.15*g.blend)
-        :reveal*outerWeight;
-      const alpha=Math.min(.96,p.power*visibility*
-        (.91+.09*Math.sin(now*.00035+p.phase)));
-      if(alpha<.008)continue;
-      ctx.fillStyle="hsla("+p.hue+",43%,87%,"+alpha.toFixed(3)+")";
-      const px=field?Math.max(.30,p.radius*(1-.24*g.blend)):p.radius;
+        ?h*uy+(g.y+field.v*g.r-h*uy)*g.blend
+        :h*uy;
+      const appearing=clamp(count-i,0,1);
+      const visibility=(member?(1-.05*g.blend):outerWeight)*appearing;
+      const sparkle=.77+.23*Math.sin(now*.00145+p.phase+step*.37);
+      const alpha=Math.min(.97,p.power*visibility*sparkle);
+      if(alpha<.007)continue;
+      ctx.fillStyle="hsla("+p.hue+",43%,88%,"+alpha.toFixed(3)+")";
+      const px=field?Math.max(.28,p.radius*(1-.26*g.blend)):p.radius;
       ctx.beginPath();ctx.arc(x,y,px,0,TAU);ctx.fill();
     }
-    // Sparse larger luminous stars survive around the fully formed galaxy.
-    for(const p of skyBright){
+    // Only a few bright stars softly twinkle; no random position resets.
+    const bright=Math.floor(34*clamp((step-5)/15,0,1));
+    for(let i=0;i<bright;i++){
+      const p=skyBright[i];
       const x=w*p.x,y=h*p.y;
-      const a=reveal*outerWeight*p.power*
-        (.84+.16*Math.sin(now*.00064+p.phase));
+      const a=outerWeight*p.power*(.72+.28*Math.sin(now*.001+p.phase+step*.41));
       if(a<.008)continue;
-      const radius=p.radius*6;
+      const radius=p.radius*5;
       const glow=ctx.createRadialGradient(x,y,0,x,y,radius);
-      glow.addColorStop(0,"hsla("+p.hue+",65%,86%,"+(a*.19).toFixed(3)+")");
+      glow.addColorStop(0,"hsla("+p.hue+",65%,86%,"+(a*.23).toFixed(3)+")");
       glow.addColorStop(1,"hsla("+p.hue+",51%,62%,0)");
       ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
     if(tiny){
-      // An almost infinitely remote Andromeda-like galaxy reads as one star,
-      // with the same surrounding sky as the rest of the journey.
-      ctx.fillStyle="rgba(222,218,249,.79)";
-      ctx.beginPath();ctx.arc(g.x,g.y,.73,0,TAU);ctx.fill();
+      ctx.fillStyle="rgba(222,218,249,.82)";
+      ctx.beginPath();ctx.arc(g.x,g.y,.72,0,TAU);ctx.fill();
     }
   }
 
@@ -353,7 +382,10 @@ export function createGalaxyFlightScene() {
     const g=galaxyGeometry(step,w,h);
     // The nebula is only diffuse dust around the 650 EXISTING sky stars.
     // It is not a newly appearing photograph or a separate ring of dots.
-    const hazeStrength=.46*smooth((g.blend-.16)/.72);
+    // First the stars become denser, then only the tip of a spiral arm is
+    // suggested. A recognisable full disk comes much later, with no planets.
+    const hazeStrength=.10*smooth((g.blend-.28)/.24)
+      +.34*smooth((g.blend-.70)/.28);
     if(hazeStrength<.001 || g.r<2)return;
     ctx.save();
     ctx.globalCompositeOperation="screen";
