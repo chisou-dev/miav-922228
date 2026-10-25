@@ -365,11 +365,12 @@ export function GalaxyVoyage({
       const s = progress;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // An unchanged full-screen celestial background remains visible even
-      // while the first orb galaxy recedes to a single point.
-      flightScene.drawSky(ctx!, now, viewWidth, viewHeight);
-      // The next galaxy is a continuously receding patch of this same sky,
-      // never a separate rectangle of stars or a late appearing image.
+      // First: isolated galaxy + damaged MIAV title against black.
+      // As it retreats, a wide starfield gradually fills the entire sky.
+      // Those same sky stars eventually resolve into a faraway spiral.
+      flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
+      // Only diffuse haze supplements those same sky stars; no new photo or
+      // rectangle of particles pops into existence.
       flightScene.drawGalaxy(ctx!, s, viewWidth, viewHeight);
 
       // 0–2: thin, eroded MIAV title with sand leaving it.
