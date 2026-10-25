@@ -9,7 +9,10 @@ import { isolatedSpiral } from "./isolatedSpiral";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
-type Dust = { x: number; y: number; t: number; speed: number; drift: number };
+type Dust = {
+  x: number; y: number; t: number; speed: number; drift: number;
+  phase: number; radius: number; curl: number; group: number;
+};
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -26,28 +29,43 @@ const FINAL_TITLE_FADE_MS = 3_200;
 const IDLE_MS = 120_000;
 
 function sampleTextLocations(): Point[] {
-  const root = document.querySelector("[data-galaxy-title]")?.closest("section");
-  if (!root) return [];
+  // Sample visible individual GLYPHS, not the bounding rectangle of a whole
+  // paragraph. Rectangular random sources looked like evenly spread static.
+  const hero = document.querySelector("[data-galaxy-title]")?.closest("section");
+  if (!hero) return [];
   const points: Point[] = [];
-  // Only sample text currently visible on the screen; the real DOM text is
-  // untouched. The streaks merely give an illusion of letters shedding sand.
-  const nodes = root.querySelectorAll("h1, p, nav a, aside span");
-  for (const el of nodes) {
+  const elements = hero.querySelectorAll("h1, p, nav a, aside span");
+  const range = document.createRange();
+  for (const el of elements) {
+    if (points.length >= 680) break;
     const style = getComputedStyle(el);
     if (style.visibility === "hidden" || style.display === "none") continue;
-    const rect = el.getBoundingClientRect();
-    const left = Math.max(rect.left, 0);
-    const right = Math.min(rect.right, window.innerWidth);
-    const top = Math.max(rect.top, 0);
-    const bottom = Math.min(rect.bottom, window.innerHeight);
-    if (right <= left || bottom <= top) continue;
-    const count = Math.min(48, Math.max(8, Math.floor(((right - left) * (bottom - top)) / 290)));
-    for (let n = 0; n < count; n++) {
-      points.push({ x: mix(left, right, Math.random()), y: mix(top, bottom, Math.random()) });
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let node: Node | null;
+    while ((node = walker.nextNode()) !== null && points.length < 680) {
+      const text = node.textContent ?? "";
+      for (let i=0;i<text.length && points.length<680;i++) {
+        if (!text[i].trim()) continue;
+        if (Math.random() > .68) continue;
+        range.setStart(node, i);
+        range.setEnd(node, i + 1);
+        const r = range.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1 || r.right < 0 ||
+            r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) continue;
+        const count = Math.random() < .34 ? 2 : 1;
+        for (let n=0;n<count;n++) {
+          points.push({
+            x:r.left+r.width*(.12+.76*Math.random()),
+            y:r.top+r.height*(.26+.55*Math.random()),
+          });
+        }
+      }
     }
   }
+  range.detach();
   return points;
 }
+
 
 export function GalaxyVoyage({
   origin, onExit,
@@ -121,18 +139,36 @@ export function GalaxyVoyage({
     first.src = NASA_M100;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
-    // The real homepage is hidden during the trip, so the DOM may no longer
-    // have measurable glyph pixels. Supply guaranteed points from the on-screen
-    // MIAV lettering: visible separate sand grains, not streaks or scratches.
-    const titleGrains: Point[] = Array.from({ length: 190 }, (_, i) => ({
-      x: viewWidth * (0.315 + ((i * 73) % 190) / 190 * 0.37),
-      y: viewHeight * 0.52
-        + (((i * 47) % 29) - 14) * Math.min(1.3, viewWidth / 790),
-    }));
-    const dust: Dust[] = [...titleGrains, ...selectedText.slice(0, 110)].map((p) => ({
-      ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
-      drift: (Math.random() - 0.5) * 44,
-    }));
+    // The on-screen title is rasterised once and sampled at real opaque
+    // letter pixels. Dust comes from strokes and counters, never a uniform
+    // row of unrelated dots around the title.
+    function sampleTitleGlyphs(): Point[] {
+      const w=Math.ceil(Math.min(1400,viewWidth));
+      const h=Math.ceil(titleFontSize()*2.5);
+      const off=document.createElement("canvas");
+      off.width=w;off.height=h;
+      const g=off.getContext("2d",{willReadFrequently:true});
+      if(!g)return [];
+      drawTitleLetters(g,w*.5,h*.5);
+      const image=g.getImageData(0,0,w,h);
+      const results:Point[]=[];
+      let attempts=0;
+      while(results.length<680 && attempts++<24000) {
+        const x=Math.floor(Math.random()*w);
+        const y=Math.floor(Math.random()*h);
+        if(image.data[(y*w+x)*4+3]<110)continue;
+        results.push({x:viewWidth*.51-w*.5+x,y:viewHeight*.52-h*.5+y});
+      }
+      return results;
+    }
+    const glyphPoints=sampleTitleGlyphs();
+    const dust: Dust[] = [...glyphPoints,...selectedText.slice(0,580)]
+      .map((p,i)=>({
+        ...p,t:Math.random(),speed:.25+Math.random()*.83,
+        drift:(Math.random()-.5)*68,phase:Math.random()*TAU,
+        radius:.32+Math.random()*.75,curl:(Math.random()-.5)*2.1,
+        group:(i%11),
+      }));
     const flightScene = createGalaxyFlightScene();
 
     function resize() {
@@ -334,27 +370,37 @@ export function GalaxyVoyage({
     }
 
     function drawSand(now: number, cx: number, cy: number, amount: number) {
-      if (amount <= 0) return;
-      // An independent pinhead of sand follows a bent path to the wandering
-      // galaxy, with individual delay. Never draw straight white streaks.
-      const tNow = (now - opened) / 3400;
+      if (amount <= .001) return;
+      // Each letter sheds pinpricks in uneven bursts. Vary emission timing,
+      // speed, size and orbital curvature. Nearby grains follow arcs into
+      // the nucleus; other letters are sampled independently.
+      const seconds=(now-opened)/1000;
+      ctx!.save();
       for (const grain of dust) {
-        const travel = ((tNow * grain.speed - grain.t + 3.0) % 1);
-        const t = ease(travel);
-        const arc = Math.sin(Math.PI * travel);
-        const dx = cx - grain.x;
-        const dy = cy - grain.y;
-        const swirlX = Math.cos(t * TAU * 1.25 + grain.drift) * arc * 18;
-        const swirlY = Math.sin(t * TAU * 1.25 + grain.drift) * arc * 11;
-        const x = grain.x + dx * t + swirlX;
-        const y = grain.y + dy * t + swirlY;
-        const fade = Math.sin(Math.PI * travel) * amount;
-        const radius = (0.50 + Math.abs(grain.drift / 44) * 0.9) * (1 - 0.45 * t);
-        ctx!.fillStyle = "rgba(239,230,213," + (fade * 0.74).toFixed(3) + ")";
-        ctx!.beginPath();
-        ctx!.arc(x, y, radius, 0, TAU);
-        ctx!.fill();
+        const wave=Math.pow(Math.max(0,Math.sin(
+          seconds*1.38+grain.group*2.35+grain.phase*.33)),3);
+        // Groups detach at different moments, rather than a simultaneous
+        // symmetrical halo or a repetitive, equally-spaced sandstorm.
+        if(wave<.14 && grain.t>.19)continue;
+        const travel=((seconds*(.29+grain.speed*.34)+grain.t)%1+1)%1;
+        const t=ease(travel);
+        const turn=Math.sin(Math.PI*t);
+        const dx=cx-grain.x,dy=cy-grain.y;
+        const ang=Math.atan2(dy,dx);
+        const swirl=(17+Math.abs(grain.drift)*1.05)*turn*(1-t*.36);
+        const x=grain.x+dx*t-Math.sin(ang+grain.curl)*swirl;
+        const y=grain.y+dy*t+Math.cos(ang+grain.curl)*swirl;
+        const alpha=amount*(.17+.83*wave)*Math.sin(Math.PI*travel)*
+          (.55+.45*Math.sin(grain.phase+seconds*.91)**2);
+        if(alpha<.036)continue;
+        const size=grain.radius*(1-.58*t);
+        ctx!.fillStyle=grain.group%5===0
+          ? "rgba(218,230,252,"+Math.min(.95,alpha).toFixed(3)+")"
+          : "rgba(244,236,225,"+Math.min(.95,alpha).toFixed(3)+")";
+        // Distinct, sharp tiny grains, never a smeared line or particle trail.
+        ctx!.fillRect(x,y,size,size);
       }
+      ctx!.restore();
     }
 
     function drawImplosion(now: number) {
@@ -380,7 +426,7 @@ export function GalaxyVoyage({
       // tiny grains that drift inward. The title/galaxy are left intact.
       drawGlassPerimeterGrains(now, cx, cy,
         origin.radius * (1 + .04 * p), 1-ease((p-.28)/.72));
-      drawSand(now, cx, cy, ease((p-.12)/.7) * 0.56);
+      drawSand(now, cx, cy, ease((p-.08)/.62) * 0.98);
     }
 
     function drawVoyageTitle(now: number, s: number) {
@@ -478,8 +524,8 @@ export function GalaxyVoyage({
       // Do not introduce a second galaxy or microscopic scenery.
       flightScene.drawSky(ctx!, now, viewWidth, viewHeight, s);
 
-      // 0–2: thin, eroded MIAV title with sand leaving it.
-      // 3–30: the first 3D rotating galaxy recedes to one star FIRST.
+      // Each phase advances ONLY on user tap: intact letters / erosion /
+      // letters gone / 3+ gradually more distant stars / then the planets.
       const recession = Math.max(0, s - 3);
       const firstSize = short * 0.66 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
       if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
@@ -506,11 +552,11 @@ export function GalaxyVoyage({
           firstSize, firstRotation, firstOpacity * 0.44, 0.2, true);
         ctx!.restore();
         drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
-          0.96 * (1 - ease((s - 0.85) / 1.13)));
+          1.35 * (1 - ease((s - 1.70) / 1.10)));
       }
 
       // Off-axis worlds shrink continuously to star-sized points.
-      flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
+      flightScene.drawForeground(ctx!, s, viewWidth, viewHeight, now);
 
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
         // Distinct stars light up in different colours across the whole sky;
@@ -531,7 +577,7 @@ export function GalaxyVoyage({
 
     function stepForward() {
       const now = performance.now();
-      if (now - lastAdvanceAt < 120 || now - opened < IMPLOSION_MS - 80) return;
+      if (now - lastAdvanceAt < 150 || now - opened < IMPLOSION_MS - 80) return;
       lastAdvanceAt = now;
       if (target >= FINAL_STEP) return;
       target += 1;
