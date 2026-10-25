@@ -34,6 +34,9 @@ function rgb(h: number,s: number,l: number) {
   const f=(n:number)=>Math.round(255*(l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1))));
   return [f(0),f(8),f(4)] as const;
 }
+function limpHue(from:number,to:number,t:number){
+  return from+(to-from)*clamp(t,0,1);
+}
 function retreat(step: number) {
   const s=Math.max(0,step-31);
   const back=92*(Math.exp(s*0.043)-1);
@@ -45,13 +48,13 @@ function retreat(step: number) {
   return back*planetaryRetreat*(step>178?Math.pow(1.17,step-178):1);
 }
 const bodies: Body[] = [
-  {id:1,peek:32,depth:106,radius:29,side:"right",transverse:.34,kind:"jovian",hue:28},
+  {id:1,peek:32,depth:106,radius:29,side:"right",transverse:.34,kind:"storm",hue:204},
   {id:2,peek:44,depth:185,radius:13,side:"left",transverse:.78,kind:"ice",hue:209},
   {id:3,peek:54,depth:235,radius:28,side:"top",transverse:.66,kind:"vortex",hue:214},
   {id:4,peek:65,depth:285,radius:22,side:"right",transverse:.68,kind:"jovian",hue:34,ring:true,moon:true},
   {id:5,peek:67,depth:290,radius:5,side:"right",transverse:.49,kind:"rock",hue:212,moon:true},
   {id:6,peek:74,depth:337,radius:10,side:"bottom",transverse:.23,kind:"rock",hue:17},
-  {id:7,peek:82,depth:399,radius:18,side:"left",transverse:.31,kind:"cloud",hue:46},
+  {id:7,peek:82,depth:399,radius:18,side:"left",transverse:.31,kind:"cloud",hue:45,moon:true},
   {id:8,peek:89,depth:447,radius:8,side:"top",transverse:.24,kind:"sun",hue:36},
   {id:9,peek:97,depth:509,radius:20,side:"bottom",transverse:.84,kind:"rock",hue:42},
 ];
@@ -230,51 +233,71 @@ export function createGalaxyFlightScene() {
         const lat=Math.asin(clamp(v,-1,1));
         const broad=terrain(lon*1.4+2.4,lat*2.2+3.3,seed);
         let hue=world.hue,sat=.40,lum=.52;
-        if(world.kind==="jovian"||world.kind==="storm"){
-          // Fluid layers follow latitude and bend smoothly around vortices,
-          // unlike high-frequency woven stripes on a spherical garment.
-          const warp=(broad-.5)*.29+
-            .036*Math.sin(lon*3.2+lat*5.4+seed);
-          const layered=Math.sin((lat+warp)*19)+
-            .42*Math.sin((lat+warp)*42+2.1*broad);
-          const thin=terrain(lon*5.5+12,lat*16+7,seed+73)-.5;
-          hue=world.hue+(world.kind==="storm"?13:5)*layered+thin*8;
-          sat=clamp(.33+.075*layered+thin*.13,.17,.58);
-          lum=clamp(.60+.15*layered+.065*thin,.29,.85);
-          // Oval cyclone with a subtle rotational cloud boundary (Jupiter
-          // Great-Red-Spot inspired, not a pasted circle).
-          const sx=u+.28,sy=v-.24;
-          const ellipse=sx*sx/(.25*.25)+sy*sy/(.13*.13);
-          if(world.kind==="jovian" && ellipse<1.75){
-            const swirl=Math.atan2(sy/.13,sx/.25)+
-              4.6*Math.sqrt(ellipse);
-            const fading=1-smooth((ellipse-.55)/1.2);
-            const rim=.5+.5*Math.cos(swirl*2+ellipse*5.3);
-            hue=hue*(1-fading*.7)+13*fading*.7;
-            sat+=fading*.17;
-            lum=lum*(1-fading*.6)+(.49+rim*.10)*fading*.6;
-          }
+        if(world.kind==="jovian"){
+          // Jupiter-inspired suspended clouds: the pale equatorial zone,
+          // darker disrupted belts and just one large elongated storm.
+          // Longitude-dependent warping prevents a tiled wallpaper effect.
+          const turbulence=terrain(lon*2.6+1.9,lat*3.4-1.6,seed+47)-.5;
+          const filament=terrain(lon*8.1-4.1,lat*17.3+5.6,seed+91)-.5;
+          const wlat=lat+.13*turbulence+.045*Math.sin(lon*2.2+lat*3.1);
+          const belts=Math.sin(wlat*15.6+filament*1.7)
+            +.28*Math.sin(wlat*34.8+turbulence*1.9);
+          hue=world.hue+belts*5.8+turbulence*12;
+          sat=clamp(.29+belts*.065+filament*.07,.16,.51);
+          lum=clamp(.64+belts*.135+filament*.07,.34,.89);
+          const sx=u+.23,sy=v-.24;
+          const eye=(sx*sx)/(.27*.27)+(sy*sy)/(.14*.14);
+          const halo=smooth((2.2-eye)/1.65);
+          const curling=Math.sin(Math.atan2(sy/.14,sx/.27)*2
+            +Math.sqrt(Math.max(eye,0))*4.7);
+          hue=limpHue(hue,18,halo*.76);
+          sat+=halo*.15;
+          lum=lum*(1-halo*.57)+(.45+.08*curling)*halo*.57;
+        }else if(world.kind==="storm"){
+          // An asymmetric blue-grey atmosphere with broad dark eddies and
+          // intermittent white cloud tops, NOT another brown Jupiter.
+          const t1=terrain(lon*2.8+4.1,lat*3.2-5.7,seed+65);
+          const t2=terrain(lon*7.3+1.9,lat*7.8+4.2,seed+19);
+          const atmosphere=Math.sin(lat*9.4+(t1-.5)*3.3
+            +.35*Math.sin(lon*2.4))*.25;
+          const cloud=smooth((t2+.28*t1-.46)*2.8);
+          hue=world.hue+(t1-.5)*18+atmosphere*11;
+          sat=.47+(t1-.5)*.13-cloud*.08;
+          lum=.43+atmosphere*.23+(t2-.5)*.19+cloud*.20;
         }else if(world.kind==="vortex"){
-          // Two large cyclone systems, one cobalt-blue, one warm crimson.
-          // This is fluid turbulence, not the same repeated bands used for
-          // Jupiter or a clothing-like stripe texture.
-          const a1=Math.atan2(v+.20,u+.24);
-          const a2=Math.atan2(v-.27,u-.29);
-          const d1=Math.hypot((u+.24)*1.10,(v+.20)*1.10);
-          const d2=Math.hypot((u-.29)*1.12,(v-.27)*1.12);
-          const swirl1=Math.sin(a1*2.3-d1*17+broad*3.3);
-          const swirl2=Math.sin(a2*2.5+d2*18+broad*3.6);
-          const eddies=terrain(lon*4.5+3.0,lat*5.8-1.5,seed+97)-.5;
-          const redZone=.48+.29*Math.sin(lon*2.1-lat*4.0+swirl1*.58+swirl2*.38);
-          const redMix=smooth((redZone-.18)/.66);
-          const electric=clamp(.45+.17*swirl1+.12*swirl2+eddies*.23,.17,.80);
-          const blueTone=rgb(212+eddies*23,.67,electric);
-          const redTone=rgb(347+eddies*14,.67,.45+.15*swirl2);
-          const illumination=clamp(.17+.82*Math.max(0,z*.85-u*.30-v*.35),.08,1);
+          // Two overlapping BLUE and CRIMSON storm systems built from
+          // domain-warped turbulence. Avoid radial repeating sine stripes
+          // that made the previous planet resemble a painted bowling ball.
+          const dx=u+.19,dy=v+.13;
+          const dist=Math.hypot(dx,dy);
+          const rotation=-2.05*Math.exp(-2.8*dist*dist);
+          const c1=Math.cos(rotation),s1=Math.sin(rotation);
+          let xu=dx*c1-dy*s1-.19;
+          let yv=dx*s1+dy*c1-.13;
+          const dx2=xu-.34,dy2=yv+.29;
+          const rot2=1.25*Math.exp(-4.5*(dx2*dx2+dy2*dy2));
+          const c2=Math.cos(rot2),s2=Math.sin(rot2);
+          const xw=(dx2*c2-dy2*s2)+.34;
+          const yw=(dx2*s2+dy2*c2)-.29;
+          const low=terrain(xw*3.4+3.3,yw*3.9-1.1,seed+149);
+          const mid=terrain(xw*8.1-4.3,yw*8.9+2.6,seed+99);
+          const detail=terrain(xw*18.4+1.1,yw*19.9-3.7,seed+61);
+          const redBand=clamp(.33+.52*(low-.5)
+            +.36*Math.sin((xw-yw*.7)*3.1)
+            +.34*(mid-.5),.02,.95);
+          const redMix=smooth((redBand-.19)/.57);
+          const streak=smooth((detail+.24*mid-.43)*2.3);
+          const blue=rgb(214+low*7,.49+streak*.17,.35+.19*mid+.10*streak);
+          const red=rgb(351+mid*9,.58+streak*.12,.32+.20*low+.09*streak);
+          const pale=rgb(211,.30,.77);
+          const cloudiness=streak*.27;
+          const illumination=clamp(.14+.89*Math.max(0,z*.82-u*.30-v*.28),.07,1);
           const limb=smooth((1-squared)*19);
-          pixels[o]=Math.round((blueTone[0]*(1-redMix)+redTone[0]*redMix)*illumination);
-          pixels[o+1]=Math.round((blueTone[1]*(1-redMix)+redTone[1]*redMix)*illumination);
-          pixels[o+2]=Math.round((blueTone[2]*(1-redMix)+redTone[2]*redMix)*illumination);
+          for(let channel=0;channel<3;channel++){
+            const base=blue[channel]*(1-redMix)+red[channel]*redMix;
+            pixels[o+channel]=Math.round((base*(1-cloudiness)
+              +pale[channel]*cloudiness)*illumination);
+          }
           pixels[o+3]=Math.round(255*limb);
           continue;
         }else if(world.kind==="rock"){
