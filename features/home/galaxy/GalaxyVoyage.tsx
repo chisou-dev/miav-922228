@@ -22,6 +22,7 @@ const FIRST_PLANET_STEP = 31;
 const FINAL_STEP = 130;
 const IMPLOSION_MS = 1650;
 const FINAL_HOLD_MS = 30_000;
+const FINAL_TITLE_FADE_MS = 3_200;
 const IDLE_MS = 120_000;
 
 function sampleTextLocations(): Point[] {
@@ -98,6 +99,10 @@ export function GalaxyVoyage({
     let nextRotation = 0.16;
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
+    // Final sky holds for 30 seconds. Only then does the MIAV name slowly
+    // materialise; the normal homepage returns after the fade-in completes.
+    let finalReachedAt: number | null = null;
+    let titleRevealAt: number | null = null;
     let titleGhost: HTMLCanvasElement | null = null;
     const titleNode = document.querySelector("[data-galaxy-title]")?.closest("h1");
     const homeTitleStyle = titleNode ? getComputedStyle(titleNode) : null;
@@ -506,6 +511,22 @@ export function GalaxyVoyage({
 
       // Off-axis worlds shrink continuously to star-sized points.
       flightScene.drawForeground(ctx!, s, viewWidth, viewHeight);
+
+      if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
+        // Distinct stars light up in different colours across the whole sky;
+        // their positions do not jump and no sparkle repeats in one cycle.
+        flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
+        if (titleRevealAt !== null) {
+          const appear = reduced ? 1 : ease((now - titleRevealAt) / FINAL_TITLE_FADE_MS);
+          ctx!.save();
+          // Keep the final starfield visible behind the lettering.
+          ctx!.fillStyle = "rgba(0,3,12," + (appear * 0.25).toFixed(3) + ")";
+          ctx!.fillRect(0, 0, viewWidth, viewHeight);
+          ctx!.globalAlpha = appear;
+          drawTitleLetters(ctx!, viewWidth * 0.5, viewHeight * 0.5);
+          ctx!.restore();
+        }
+      }
     }
 
     function stepForward() {
@@ -516,7 +537,15 @@ export function GalaxyVoyage({
       target += 1;
       if (idleTimer !== undefined) clearTimeout(idleTimer);
       if (target >= FINAL_STEP) {
-        finalTimer = window.setTimeout(() => exitRef.current(), FINAL_HOLD_MS);
+        finalReachedAt = now;
+        // No automatic journey progression. Hold the final glittering sky for
+        // a full 30 seconds, slowly reveal MIAV-922228, then return home.
+        finalTimer = window.setTimeout(() => {
+          titleRevealAt = performance.now();
+          finalTimer = window.setTimeout(
+            () => exitRef.current(), FINAL_TITLE_FADE_MS + 400,
+          );
+        }, FINAL_HOLD_MS);
       } else {
         // Intermediate scenes remain entirely tap-driven. This is a safety
         // return for an abandoned modal, not automatic camera movement.
