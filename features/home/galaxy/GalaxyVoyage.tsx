@@ -97,7 +97,13 @@ export function GalaxyVoyage({
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
     let titleGhost: HTMLCanvasElement | null = null;
-    const titleRect = document.querySelector("[data-galaxy-title]")?.getBoundingClientRect() ?? null;
+    const titleNode = document.querySelector("[data-galaxy-title]")?.closest("h1");
+    const homeTitleStyle = titleNode ? getComputedStyle(titleNode) : null;
+    const homeTitleFamily = homeTitleStyle?.fontFamily ??
+      'Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif';
+    const homeTitleWeight = homeTitleStyle?.fontWeight ?? "500";
+    const homeTitleTracking = homeTitleStyle?.letterSpacing ?? "normal";
+    const titleRect = titleNode?.getBoundingClientRect() ?? null;
     let lastAdvanceAt = 0;
 
     // The NASA images really are telescope observations. They are composited
@@ -210,15 +216,19 @@ export function GalaxyVoyage({
     function titleFontSize() {
       // A restrained typographic mark, rather than a large display headline:
       // slender letterforms and lining figures keep 922228 visually uniform.
-      return Math.min(43, Math.max(22, viewWidth * 0.035));
+      return Math.min(66, Math.max(28, viewWidth * 0.041));
     }
 
     function drawTitleLetters(g: CanvasRenderingContext2D, x: number, y: number) {
       const label = "MIAV-922228";
       const size = titleFontSize();
-      const spacing = size * 0.11;
+      const tracking = Number.parseFloat(homeTitleTracking);
+      const spacing = Number.isFinite(tracking) ? tracking * (size /
+        Math.max(1, Number.parseFloat(homeTitleStyle?.fontSize ?? "64"))) : size * 0.04;
       g.save();
-      g.font = "300 " + size + 'px "Segoe UI Light", "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+      // Match the actual homepage MIAV-922228 headline, including serif
+      // numerals and weight; no thin sans-serif substitute.
+      g.font = homeTitleWeight + " " + size + "px " + homeTitleFamily;
       g.textBaseline = "middle";
       g.textAlign = "left";
       const widths = [...label].map((letter) => g.measureText(letter).width);
@@ -226,7 +236,7 @@ export function GalaxyVoyage({
       const fit = Math.min(1, viewWidth * 0.84 / Math.max(1, fullWidth));
       g.translate(x, y);
       g.scale(fit, 1);
-      g.fillStyle = "rgba(244,247,255,0.96)";
+      g.fillStyle = "rgba(241,239,231,0.91)";
       g.shadowColor = "rgba(4,8,23,0.85)";
       g.shadowBlur = 6;
       let pen = -fullWidth / 2;
@@ -427,10 +437,11 @@ export function GalaxyVoyage({
       const recession = Math.max(0, s - 3);
       const firstSize = short * 0.66 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
       if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
+      const firstTexture = first.complete && first.naturalWidth ? first : globe;
+      const firstOpacity = 1 - ease((s - FIRST_STAR_STEP + 2) / 5);
       if (s < FIRST_PLANET_STEP) {
-        drawGalaxy3D(first.complete && first.naturalWidth ? first : globe,
-          viewWidth * 0.51, viewHeight * 0.52, firstSize, firstRotation,
-          1 - ease((s - FIRST_STAR_STEP + 2) / 5), 0.2);
+        drawGalaxy3D(firstTexture, viewWidth * 0.51, viewHeight * 0.52,
+          firstSize, firstRotation, firstOpacity, 0.2);
       } else if (s < 112) {
         ctx!.fillStyle = "rgba(235,209,255,0.42)";
         ctx!.beginPath();
@@ -440,6 +451,14 @@ export function GalaxyVoyage({
 
       if (s < 2.02) {
         drawVoyageTitle(now, s);
+        // Galaxy dust and glowing arms also pass IN FRONT of the title:
+        // letters sit within its volume rather than on a flat UI overlay.
+        // Keep this faint to preserve the MIAV name's readability.
+        ctx!.save();
+        ctx!.globalCompositeOperation = "source-over";
+        drawGalaxy3D(firstTexture, viewWidth * 0.51, viewHeight * 0.52,
+          firstSize, firstRotation, firstOpacity * 0.32, 0.2);
+        ctx!.restore();
         drawSand(now, viewWidth * 0.51, viewHeight * 0.52,
           0.96 * (1 - ease((s - 0.85) / 1.13)));
       }
