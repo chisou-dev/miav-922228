@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GALAXY } from "./GalaxyHeading";
+import { isolatedSpiral } from "./isolatedSpiral";
 import { GalaxyVoyage } from "./GalaxyVoyage";
 
 type Point = { x: number; y: number };
@@ -552,26 +553,37 @@ export function GalaxyOrb() {
         ctx.restore();
       }
 
-      // Existing approved spiral image: preserve all face-on details and the
-      // actual three-axis projection, rather than replacing it with a cloud.
-      ctx.save();
-      ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
-      if (galaxy.complete && galaxy.naturalWidth > 0) {
+      // NEVER transform the original opaque JPEG: its rectangular navy sky
+      // would rotate inside the glass as a visible flat card. Instead project
+      // the cached transparent spiral / stellar arms along all three axes.
+      const isolated = isolatedSpiral(galaxy);
+      if (isolated) {
+        ctx.save();
         ctx.globalCompositeOperation = "screen";
-        ctx.drawImage(galaxy, -r * 0.76, -r * 0.76, r * 1.52, r * 1.52);
-        ctx.globalCompositeOperation = "source-over";
+        // A faint displaced stellar layer supplies depth when the galaxy is
+        // oblique or edge-on, while the crisp main spiral remains intact.
+        if (edge > 0.18) {
+          ctx.save();
+          ctx.globalAlpha = edge * 0.12;
+          ctx.translate(orientation.e * r * 0.07, orientation.f * r * 0.07);
+          ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
+          ctx.drawImage(isolated, -r * 0.73, -r * 0.73, r * 1.46, r * 1.46);
+          ctx.restore();
+        }
+        ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
+        ctx.drawImage(isolated, -r * 0.76, -r * 0.76, r * 1.52, r * 1.52);
+        ctx.restore();
       }
-      ctx.restore();
 
-      // A soft, faintly textured continuation of the real spiral disk adds
-      // physical thickness when edge-on, without making it look face-on.
-      if (edge > 0.27 && galaxy.complete && galaxy.naturalWidth > 0) {
+      // A halo exists above and below the disk. If the face turns edge-on,
+      // retain its central bulge but never paste another square or flat JPEG.
+      if (edge > 0.27 && isolated) {
         ctx.save();
         ctx.rotate(orientation.longAxis);
         ctx.scale(1, 0.30);
-        ctx.globalAlpha = 0.21 * Math.pow((edge - 0.27) / 0.73, 1.2);
+        ctx.globalAlpha = 0.15 * Math.pow((edge - 0.27) / 0.73, 1.2);
         ctx.globalCompositeOperation = "screen";
-        ctx.drawImage(galaxy, -r * 0.70, -r * 0.70, r * 1.40, r * 1.40);
+        ctx.drawImage(isolated, -r * 0.70, -r * 0.70, r * 1.40, r * 1.40);
         ctx.restore();
       }
 
