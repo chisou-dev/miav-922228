@@ -16,7 +16,7 @@ function random(seed:number) {
   let x=Math.imul(seed+31,0x9e3779b1)>>>0;
   x=Math.imul(x^(x>>>16),0x85ebca6b)>>>0;
   x=Math.imul(x^(x>>>13),0xc2b2ae35)>>>0;
-  return (x^(x>>>16))/4294967295;
+  return ((x^(x>>>16))>>>0)/4294967295;
 }
 function galaxySprite(variant:number):HTMLCanvasElement {
   const c=document.createElement("canvas");
