@@ -112,9 +112,9 @@ export function GalaxyVoyage({
     // have measurable glyph pixels. Supply guaranteed points from the on-screen
     // MIAV lettering: visible separate sand grains, not streaks or scratches.
     const titleGrains: Point[] = Array.from({ length: 190 }, (_, i) => ({
-      x: viewWidth * (0.29 + ((i * 73) % 190) / 190 * 0.42),
-      y: viewHeight * (viewWidth < 680 ? 0.24 : 0.23)
-        + (((i * 47) % 29) - 14) * Math.min(1.5, viewWidth / 700),
+      x: viewWidth * (0.315 + ((i * 73) % 190) / 190 * 0.37),
+      y: viewHeight * 0.52
+        + (((i * 47) % 29) - 14) * Math.min(1.3, viewWidth / 790),
     }));
     const dust: Dust[] = [...titleGrains, ...selectedText.slice(0, 110)].map((p) => ({
       ...p, t: -Math.random() * 0.30, speed: 0.75 + Math.random() * 0.5,
@@ -207,38 +207,60 @@ export function GalaxyVoyage({
     }
 
 
+    function titleFontSize() {
+      // A restrained typographic mark, rather than a large display headline:
+      // slender letterforms and lining figures keep 922228 visually uniform.
+      return Math.min(43, Math.max(22, viewWidth * 0.035));
+    }
+
+    function drawTitleLetters(g: CanvasRenderingContext2D, x: number, y: number) {
+      const label = "MIAV-922228";
+      const size = titleFontSize();
+      const spacing = size * 0.11;
+      g.save();
+      g.font = "300 " + size + 'px "Segoe UI Light", "Segoe UI", "Helvetica Neue", Arial, sans-serif';
+      g.textBaseline = "middle";
+      g.textAlign = "left";
+      const widths = [...label].map((letter) => g.measureText(letter).width);
+      const fullWidth = widths.reduce((a, b) => a + b, 0) + spacing * (label.length - 1);
+      const fit = Math.min(1, viewWidth * 0.84 / Math.max(1, fullWidth));
+      g.translate(x, y);
+      g.scale(fit, 1);
+      g.fillStyle = "rgba(244,247,255,0.96)";
+      g.shadowColor = "rgba(4,8,23,0.85)";
+      g.shadowBlur = 6;
+      let pen = -fullWidth / 2;
+      for (let i = 0; i < label.length; i++) {
+        g.fillText(label[i], pen, 0);
+        pen += widths[i] + spacing;
+      }
+      g.restore();
+    }
+
     function damagedTitle() {
       if (titleGhost) return titleGhost;
-      // Draw independently of the hidden homepage layout. The title must
-      // remain readable on desktop AND on a narrow Android screen.
-      const size = Math.min(57, Math.max(23, viewWidth * 0.055));
-      const w = Math.ceil(Math.min(850, viewWidth * 0.88));
-      const h = Math.ceil(size * 1.45);
+      // Keep the perforated copy pixel-for-pixel identical to the clean text
+      // so the first tap NEVER changes the typeface or numeral proportions.
+      const w = Math.ceil(Math.min(900, viewWidth * 0.92));
+      const h = Math.ceil(titleFontSize() * 1.75);
       const output = document.createElement("canvas");
       output.width = w;
       output.height = h;
       const g = output.getContext("2d");
       if (!g) return null;
-      g.font = "500 " + size + "px Georgia, serif";
-      g.textAlign = "center";
-      g.textBaseline = "middle";
-      g.fillStyle = "#f5f6ff";
-      g.fillText("MIAV-922228", w * 0.5, h * 0.52, w * 0.95);
-      // Actually subtract small ragged holes from the glyph pixels.
+      drawTitleLetters(g, w / 2, h * 0.5);
       g.globalCompositeOperation = "destination-out";
       let seed = 194822;
       const next = () => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
         return seed / 4294967296;
       };
-      for (let i = 0; i < 490; i++) {
+      for (let i = 0; i < 540; i++) {
         const x = next() * w;
         const y = next() * h;
-        const size = 0.6 + next() * (i % 9 === 0 ? 4.2 : 2.5);
+        const size = 0.47 + next() * (i % 9 === 0 ? 3.8 : 1.95);
         g.fillStyle = "rgba(0,0,0," + (0.48 + next() * 0.52) + ")";
-        g.beginPath();
-        g.arc(x, y, size, 0, TAU);
-        g.fill();
+        g.beginPath();g.arc(x, y, size, 0, TAU);g.fill();
       }
       g.globalCompositeOperation = "source-over";
       titleGhost = output;
@@ -304,26 +326,20 @@ export function GalaxyVoyage({
     }
 
     function drawVoyageTitle(now: number, s: number) {
-      // First tap after the glass fades: strong WHITE letters.
-      // Next tap: visibly perforated/fading letters. Next: they are gone.
-      const strength = 1 - ease((s - 0.08) / 1.93);
+      // The lettering sits in the middle of the rotating galaxy, not above
+      // it. Initial lettering is crisp; tap 1 reveals small perforations;
+      // tap 2 removes the text without moving the underlying galaxy.
+      const strength = 1 - ease((s - 0.12) / 1.86);
       if (strength < 0.003) return;
-      const mask = damagedTitle();
-      const x = viewWidth * 0.5;
-      const y = viewHeight * (viewWidth < 680 ? 0.24 : 0.23);
+      const x = viewWidth * 0.51;
+      const y = viewHeight * 0.52;
       ctx!.save();
-      ctx!.globalAlpha = strength;
+      ctx!.globalAlpha = strength * (0.97 + 0.03 * Math.sin(now * 0.001));
       if (s < 0.48) {
-        const fontSize = Math.min(57, Math.max(23, viewWidth * 0.055));
-        ctx!.font = "500 " + fontSize + "px Georgia, serif";
-        ctx!.textBaseline = "middle";
-        ctx!.textAlign = "center";
-        ctx!.fillStyle = "rgba(248,249,255,.97)";
-        ctx!.fillText("MIAV-922228", x, y);
-      } else if (mask) {
-        const size = Math.min(mask.width, viewWidth * 0.84);
-        const height = size * mask.height / mask.width;
-        ctx!.drawImage(mask, x - size / 2, y - height / 2, size, height);
+        drawTitleLetters(ctx!, x, y);
+      } else {
+        const mask = damagedTitle();
+        if (mask) ctx!.drawImage(mask, x - mask.width / 2, y - mask.height / 2);
       }
       ctx!.restore();
     }
