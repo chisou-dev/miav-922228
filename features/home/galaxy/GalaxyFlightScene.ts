@@ -454,6 +454,26 @@ export function createGalaxyFlightScene() {
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
+    // Short, sparse glints respond to each tap during the long flight through
+    // the starfield. Their positions vary without scrambling the fixed sky;
+    // the subtle apparent recession still comes from the parallax above.
+    if(step>=18 && step<145){
+      const whole=Math.floor(step),partial=step-whole;
+      const pulse=Math.sin(Math.PI*partial);
+      if(pulse>.03){
+        for(let j=0;j<5;j++){
+          const starIndex=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
+          const p=skyStars[starIndex];
+          const x=w*(.5+(p.x-.5)*(1-.08*smooth((step-5)/118)));
+          const y=h*(.5+(p.y-.5)*(1-.08*smooth((step-5)/118)));
+          const glow=ctx.createRadialGradient(x,y,0,x,y,5+p.radius*4);
+          glow.addColorStop(0,"hsla("+p.hue+",55%,91%,"+(pulse*.31).toFixed(3)+")");
+          glow.addColorStop(1,"hsla("+p.hue+",55%,72%,0)");
+          ctx.fillStyle=glow;
+          ctx.beginPath();ctx.arc(x,y,5+p.radius*4,0,TAU);ctx.fill();
+        }
+      }
+    }
     if(tiny){
       ctx.fillStyle="rgba(222,218,249,.82)";
       ctx.beginPath();ctx.arc(g.x,g.y,.72,0,TAU);ctx.fill();
