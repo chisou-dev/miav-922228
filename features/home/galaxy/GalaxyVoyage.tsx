@@ -10,8 +10,9 @@ import { isolatedSpiral } from "./isolatedSpiral";
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
 type Dust = {
-  x: number; y: number; t: number; speed: number; drift: number;
-  phase: number; radius: number; curl: number; group: number;
+  x: number; y: number; delay: number; speed: number;
+  drift: number; wobble: number; phase: number; radius: number;
+  brightness: number;
 };
 
 const TAU = Math.PI * 2;
@@ -139,36 +140,40 @@ export function GalaxyVoyage({
     first.src = NASA_M100;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
-    // The on-screen title is rasterised once and sampled at real opaque
-    // letter pixels. Dust comes from strokes and counters, never a uniform
-    // row of unrelated dots around the title.
-    function sampleTitleGlyphs(): Point[] {
-      const w=Math.ceil(Math.min(1400,viewWidth));
-      const h=Math.ceil(titleFontSize()*2.5);
-      const off=document.createElement("canvas");
-      off.width=w;off.height=h;
-      const g=off.getContext("2d",{willReadFrequently:true});
-      if(!g)return [];
-      drawTitleLetters(g,w*.5,h*.5);
-      const image=g.getImageData(0,0,w,h);
-      const results:Point[]=[];
-      let attempts=0;
-      while(results.length<680 && attempts++<24000) {
-        const x=Math.floor(Math.random()*w);
-        const y=Math.floor(Math.random()*h);
-        if(image.data[(y*w+x)*4+3]<110)continue;
-        results.push({x:viewWidth*.51-w*.5+x,y:viewHeight*.52-h*.5+y});
-      }
-      return results;
+    // Every particle starts on a REAL homepage glyph; no extra title is
+    // rasterised or brought back after the dark transition.
+    const sourcePoints=selectedText.length ? selectedText :
+      [{x:viewWidth*.51,y:viewHeight*.52}];
+    const dust: Dust[] = Array.from({length:3600},(_,i)=>{
+      const p=sourcePoints[i%sourcePoints.length];
+      return {
+        x:p.x+(Math.random()-.5)*2.3,
+        y:p.y+(Math.random()-.5)*2.3,
+        delay:Math.pow(Math.random(),.75)*.59,
+        speed:.71+Math.random()*.51,
+        drift:(Math.random()-.5)*115,
+        wobble:Math.random()*TAU,
+        phase:Math.random()*TAU,
+        radius:.17+Math.random()*.57,
+        brightness:.38+Math.random()*.62
+      };
+    });
+    // The original DOM text remains visible until it is consumed. Fade it
+    // WHILE sand is departing. Preserve exact inline styles for the return.
+    const section=document.querySelector("[data-galaxy-title]")?.closest("section");
+    const textElements=Array.from(section?.querySelectorAll<HTMLElement>(
+      "h1, p, nav a"
+    )??[]).filter(el=>el.getBoundingClientRect().width>0);
+    const savedTextStyles=textElements.map(el=>({
+      el,opacity:el.style.opacity,transition:el.style.transition,
+    }));
+    for(const saved of savedTextStyles){
+      saved.el.style.transition="none";
     }
-    const glyphPoints=sampleTitleGlyphs();
-    const dust: Dust[] = [...glyphPoints,...selectedText.slice(0,580)]
-      .map((p,i)=>({
-        ...p,t:Math.random(),speed:.25+Math.random()*.83,
-        drift:(Math.random()-.5)*68,phase:Math.random()*TAU,
-        radius:.32+Math.random()*.75,curl:(Math.random()-.5)*2.1,
-        group:(i%11),
-      }));
+    function consumeOriginalText(p:number){
+      const opacity=1-ease((p-.16)/.74);
+      for(const saved of savedTextStyles)saved.el.style.opacity=String(opacity);
+    }
     const flightScene = createGalaxyFlightScene();
 
     function resize() {
@@ -329,46 +334,6 @@ export function GalaxyVoyage({
       g.restore();
     }
 
-    function damagedTitle() {
-      if (titleGhost) return titleGhost;
-      // Keep the perforated copy pixel-for-pixel identical to the clean text
-      // so the first tap NEVER changes the typeface or numeral proportions.
-      const w = Math.ceil(Math.min(900, viewWidth * 0.92));
-      const h = Math.ceil(titleFontSize() * 1.75);
-      const output = document.createElement("canvas");
-      output.width = w;
-      output.height = h;
-      const g = output.getContext("2d");
-      if (!g) return null;
-      drawTitleLetters(g, w / 2, h * 0.5);
-      g.globalCompositeOperation = "destination-out";
-      let seed = 194822;
-      const next = () => {
-        seed = (seed * 1664525 + 1013904223) >>> 0;
-        return seed / 4294967296;
-      };
-      for (let i = 0; i < 540; i++) {
-        const x = next() * w;
-        const y = next() * h;
-        const size = 0.47 + next() * (i % 9 === 0 ? 3.8 : 1.95);
-        g.fillStyle = "rgba(0,0,0," + (0.48 + next() * 0.52) + ")";
-        g.beginPath();g.arc(x, y, size, 0, TAU);g.fill();
-      }
-      g.globalCompositeOperation = "source-over";
-      titleGhost = output;
-      return output;
-    }
-
-    function drawErodedTitle(now: number, strength: number) {
-      if (strength < 0.001 || !titleRect) return;
-      const mask = damagedTitle();
-      if (!mask) return;
-      ctx!.save();
-      ctx!.globalAlpha = strength * (0.87 + 0.13 * Math.sin(now * 0.0019));
-      ctx!.drawImage(mask, titleRect.left, titleRect.top, titleRect.width, titleRect.height);
-      ctx!.restore();
-    }
-
     function drawSand(now: number, cx: number, cy: number, amount: number) {
       if (amount <= .001) return;
       // Each letter sheds pinpricks in uneven bursts. Vary emission timing,
@@ -427,25 +392,6 @@ export function GalaxyVoyage({
       drawGlassPerimeterGrains(now, cx, cy,
         origin.radius * (1 + .04 * p), 1-ease((p-.28)/.72));
       drawSand(now, cx, cy, ease((p-.08)/.62) * 0.98);
-    }
-
-    function drawVoyageTitle(now: number, s: number) {
-      // The lettering sits in the middle of the rotating galaxy, not above
-      // it. Initial lettering is crisp; tap 1 reveals small perforations;
-      // tap 2 removes the text without moving the underlying galaxy.
-      const strength = 1 - ease((s - 0.12) / 1.86);
-      if (strength < 0.003) return;
-      const x = viewWidth * 0.51;
-      const y = viewHeight * 0.52;
-      ctx!.save();
-      ctx!.globalAlpha = strength * (0.97 + 0.03 * Math.sin(now * 0.001));
-      if (s < 0.48) {
-        drawTitleLetters(ctx!, x, y);
-      } else {
-        const mask = damagedTitle();
-        if (mask) ctx!.drawImage(mask, x - mask.width / 2, y - mask.height / 2);
-      }
-      ctx!.restore();
     }
 
     function drawGalaxy3D(img: HTMLImageElement, x: number, y: number, diameter: number,
