@@ -282,22 +282,38 @@ export function GalaxyVoyage({
     // prepared once so there is no visual flicker between animation frames.
     // The many small, independent origins make the entire blue site appear
     // to weather into fine matter rather than simply switching to black.
-    const peelDust = Array.from({length:4300},(_,i)=>{
-      const fromText=i<2900 && nonHeadingText.length>0;
+    const peelDust = Array.from({
+      length:Math.min(16500,Math.max(10400,Math.round(viewWidth*viewHeight/125))),
+    },(_,i)=>{
+      // Roughly half the storm is actual letter matter; the rest consists
+      // of the blue pigment being sucked from across the entire page.
+      const fromText=i%2===0&&nonHeadingText.length>0;
       const source=fromText
         ?nonHeadingText[Math.floor(Math.random()*nonHeadingText.length)]
         :{x:Math.random()*viewWidth,y:Math.random()*viewHeight};
+      const dx=origin.x-source.x,dy=origin.y-source.y;
+      const length=Math.max(1,Math.hypot(dx,dy));
       return {
         x:source.x,y:source.y,
-        born:Math.random()*.73,
-        speed:.92+Math.random()*.28,
-        curl:(Math.random()-.5)*105,
+        dx,dy,acrossX:-dy/length,acrossY:dx/length,
+        born:Math.random()*.68,
+        duration:.28+Math.random()*.30,
+        curl:(Math.random()-.5)*(28+Math.min(110,length*.12)),
         phase:Math.random()*TAU,
-        radius:.13+Math.random()*.29,
-        alpha:.45+Math.random()*.50,
+        radius:.32+Math.random()*.47,
+        alpha:.72+Math.random()*.28,
         fromText,
       };
     });
+    // Fixed, irregular pigment fragments. Darkness builds as a dusty
+    // mottled surface rather than a sudden, opaque fullscreen rectangle.
+    const peelingFlecks=Array.from({length:3600},(_,i)=>({
+      x:Math.random()*viewWidth,y:Math.random()*viewHeight,
+      size:2+Math.random()*12,
+      delay:Math.random()*.86,
+      alpha:.21+Math.random()*.47,
+      seed:Math.random()*TAU,
+    }));
     const dust: Dust[] = Array.from({length:3600},(_,i)=>{
       const p=sourcePoints[i%sourcePoints.length];
       return {
@@ -331,7 +347,9 @@ export function GalaxyVoyage({
       saved.el.style.transition="none";
     }
     function consumeOriginalText(p:number){
-      const opacity=1-ease((p-.08)/.88);
+      // Keep secondary text legible while the storm gathers, then strip
+      // it away along with the moving grains instead of an early fade.
+      const opacity=1-ease((p-.28)/.67);
       for(const saved of savedTextStyles){
         // The heading survives the automatic opening: it only dissolves
         // when the viewer taps through the first three voyage steps.
@@ -371,18 +389,26 @@ export function GalaxyVoyage({
     function peelBackground(amount:number,titleVisibility:number){
       if(amount<=0)return;
       ctx!.save();
-      // The surrounding deep-blue site is stripped away progressively,
-      // from the edges toward the central glass sphere.
-      const maxR=Math.hypot(viewWidth,viewHeight)*.83;
-      const veil=ctx!.createRadialGradient(
-        origin.x,origin.y,origin.radius*.30,
-        origin.x,origin.y,maxR);
-      const outer=clamp(amount,0,1);
-      veil.addColorStop(0,"rgba(0,2,9,"+(.92*outer).toFixed(3)+")");
-      veil.addColorStop(.42,"rgba(0,2,9,"+(.98*outer).toFixed(3)+")");
-      veil.addColorStop(1,"rgba(0,2,9,"+outer.toFixed(3)+")");
-      ctx!.fillStyle=veil;
+      // The original blue homepage stays visible while matter is moving.
+      // Only towards the END of the three-second absorption does the
+      // universe emerge; a uniform early black fade concealed the storm.
+      const p=clamp(amount,0,1);
+      const darkness=ease((p-.37)/.63);
+      const baseAlpha=.06*p+.94*darkness;
+      ctx!.fillStyle="rgba(0,2,9,"+baseAlpha.toFixed(3)+")";
       ctx!.fillRect(0,0,viewWidth,viewHeight);
+      if(p<.99){
+        // A loose stipple of dissolving midnight-blue pigment. Flecks
+        // grow in random locations while their detached grains drift
+        // across the entire viewport to the galactic centre.
+        for(const f of peelingFlecks){
+          const age=clamp((p-f.delay)/.24,0,1);
+          if(age<=0)continue;
+          ctx!.fillStyle="rgba(0,2,9,"+(f.alpha*age*(1-darkness)).toFixed(3)+")";
+          const r=f.size*(.55+.45*age);
+          ctx!.fillRect(f.x-r*.5,f.y-r*.5,r,r);
+        }
+      }
       if(titleVisibility>0 && peelHeadingMask && peelHeadingBox){
         ctx!.globalCompositeOperation="destination-out";
         ctx!.globalAlpha=clamp(titleVisibility,0,1);
@@ -394,31 +420,36 @@ export function GalaxyVoyage({
 
     function drawPreRupturePeel(now:number){
       const p=reduced?1:clamp((now-(opened-PEEL_MS))/PEEL_MS,0,1);
-      // Dissolve the real page's non-title elements alongside the dust;
-      // the original large heading is never touched.
+      // The real navigation, strapline and descriptive text retreat as
+      // sand; the MIAV title alone is left completely intact.
       consumeOriginalText(p);
-      peelBackground(ease((p-.01)/.98),1);
+      peelBackground(p,1);
       ctx!.save();
       for(const grain of peelDust){
-        const q=(p-grain.born)*grain.speed/(1-grain.born);
-        if(q<=0||q>=1)continue;
-        const u=ease(q);
-        const dx=origin.x-grain.x,dy=origin.y-grain.y;
-        const length=Math.max(1,Math.hypot(dx,dy));
-        const curl=grain.curl*Math.sin(Math.PI*u);
-        const x=mix(grain.x,origin.x,u)-dy/length*curl;
-        const y=mix(grain.y,origin.y,u)+dx/length*curl;
-        const alpha=grain.alpha*ease(q/.10)*
-          (1-ease((q-.78)/.22));
-        if(alpha<.025)continue;
-        // Minuscule random sand, without lines, tails or large glows.
+        const t=(p-grain.born)/grain.duration;
+        if(t<=0||t>=1)continue;
+        const travel=ease(t);
+        // Each speck follows an independently curving flight from a real
+        // letter or a random patch of the blue background to the galaxy.
+        const bend=grain.curl*Math.sin(Math.PI*travel);
+        const x=grain.x+grain.dx*travel+grain.acrossX*bend+
+          Math.sin(grain.phase+t*14)*2*(1-t);
+        const y=grain.y+grain.dy*travel+grain.acrossY*bend+
+          Math.cos(grain.phase+t*11)*2*(1-t);
+        const light=ease(t/.065)*(1-ease((t-.91)/.09));
+        if(light<=.01)continue;
+        const alpha=grain.alpha*light;
+        // Brighter individual white and icy-blue sand dots. Never draw
+        // lines, long tails, glowing balls or a radial-spoke pattern.
         ctx!.fillStyle=grain.fromText
-          ?"rgba(250,248,243,"+alpha.toFixed(3)+")"
-          :"rgba(132,161,196,"+(alpha*.68).toFixed(3)+")";
-        ctx!.fillRect(x,y,grain.radius,grain.radius);
+          ?"rgba(255,251,245,"+alpha.toFixed(3)+")"
+          :"rgba(170,202,239,"+(alpha*.92).toFixed(3)+")";
+        const size=grain.radius*(1-.36*travel);
+        ctx!.fillRect(x,y,size,size);
       }
       ctx!.restore();
-      // The existing glass continues to hold together for these 3 seconds.
+      // The original glass remains intact during these three seconds.
+      // It breaks only in the existing drawImplosion sequence.
       drawGlass(origin.x,origin.y,origin.radius,now);
     }
 
