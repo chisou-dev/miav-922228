@@ -104,7 +104,6 @@ export function GalaxyOrb() {
     let galaxyYaw = rand(-0.45, 0.45);
     let galaxyPitch = rand(-0.25, 0.25);
     let galaxyRoll = rand(0, TAU);
-    let quietUntil = 0;
     let yMax = 220;
     let expanded = false;
     let atMaximum = false;
@@ -607,7 +606,7 @@ export function GalaxyOrb() {
       galaxyRoll = (galaxyRoll + elapsed * 0.00014) % TAU;
     }
 
-    function emit(now:number,face:number){
+    function emit(now:number){
       grains=grains.filter(p=>now-p.born<p.life).slice(-5);
       // At most four or five separate grains in flight. No repeated plume
       // from one corner, and no pause just because the galaxy is edge-on.
@@ -1047,8 +1046,7 @@ export function GalaxyOrb() {
         return;
       }
       if (!reduced()) advance(now, elapsed);
-      const face = galaxyOrientation().face;
-      if (!reduced()) emit(now, face);
+      if (!reduced()) emit(now);
       drawGrains(now, false);
       drawSphere();
       drawGrains(now, true);
