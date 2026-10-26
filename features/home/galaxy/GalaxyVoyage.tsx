@@ -305,6 +305,40 @@ export function GalaxyVoyage({
         fromText,
       };
     });
+    // Bright foreground sand is independent of the faint pigment flecks.
+    // About one third detaches from actual non-title glyphs, one third
+    // enters from random screen edges, and one third comes from the entire
+    // blue page. This must remain conspicuously visible on phone displays.
+    const whiteStorm=Array.from({
+      length:Math.min(6800,Math.max(4000,Math.round(viewWidth*viewHeight/170))),
+    },(_,i)=>{
+      const fromText=i%3===0 && nonHeadingText.length>0;
+      let source:Point;
+      if(fromText){
+        const letter=nonHeadingText[Math.floor(Math.random()*nonHeadingText.length)];
+        source={x:letter.x,y:letter.y};
+      }else if(i%3===1){
+        const edge=Math.floor(Math.random()*4);
+        source=edge===0?{x:Math.random()*viewWidth,y:0}:
+          edge===1?{x:viewWidth,y:Math.random()*viewHeight}:
+          edge===2?{x:Math.random()*viewWidth,y:viewHeight}:
+          {x:0,y:Math.random()*viewHeight};
+      }else{
+        source={x:Math.random()*viewWidth,y:Math.random()*viewHeight};
+      }
+      const vx=origin.x-source.x,vy=origin.y-source.y;
+      const d=Math.max(1,Math.hypot(vx,vy));
+      return {
+        x:source.x,y:source.y,
+        vx,vy,sideX:-vy/d,sideY:vx/d,
+        start:Math.random()*.69,
+        duration:.28+Math.random()*.48,
+        bend:(Math.random()-.5)*Math.min(170,40+d*.17),
+        phase:Math.random()*TAU,
+        size:.58+Math.random()*.43,
+        opacity:.83+Math.random()*.17,
+      };
+    });
     // Fixed, irregular pigment fragments. Darkness builds as a dusty
     // mottled surface rather than a sudden, opaque fullscreen rectangle.
     const peelingFlecks=Array.from({length:3600},(_,i)=>({
@@ -448,9 +482,30 @@ export function GalaxyVoyage({
         ctx!.fillRect(x,y,size,size);
       }
       ctx!.restore();
-      // The original glass remains intact during these three seconds.
-      // It breaks only in the existing drawImplosion sequence.
+      // Keep the existing glass and its movement. This NEW foreground
+      // pass is placed AFTER it so the white sand is actually visible
+      // outside the globe instead of disappearing behind the glass layer.
       drawGlass(origin.x,origin.y,origin.radius,now);
+      ctx!.save();
+      for(const g of whiteStorm){
+        const t=(p-g.start)/g.duration;
+        if(t<=0||t>=1)continue;
+        const u=ease(t);
+        const curve=g.bend*Math.sin(Math.PI*u);
+        const flicker=Math.sin(g.phase+t*12)*1.7*(1-u);
+        const x=g.x+g.vx*u+g.sideX*(curve+flicker);
+        const y=g.y+g.vy*u+g.sideY*(curve+flicker);
+        if(x<0||y<0||x>=viewWidth||y>=viewHeight)continue;
+        const visibility=ease(t/.045)*(1-ease((t-.92)/.08));
+        if(visibility<.02)continue;
+        // Independent sub-pixel WHITE sand grains, never streaks, rods,
+        // halos or circular light effects. Sources cover every direction.
+        const alpha=g.opacity*visibility;
+        ctx!.fillStyle="rgba(255,255,250,"+alpha.toFixed(3)+")";
+        const grainSize=g.size*(1-.24*u);
+        ctx!.fillRect(x,y,grainSize,grainSize);
+      }
+      ctx!.restore();
     }
 
     const flightScene = createGalaxyFlightScene();
