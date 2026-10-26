@@ -871,8 +871,11 @@ export function GalaxyVoyage({
       // 2nd: heavily weathered, but still readable.
       // 3rd: slow, complete disintegration. No instant puff.
       const stage=Math.min(3,target);
-      if(stage===0)return 0;
-      const from=[0,0,.22,.40][stage];
+      // The heading was already partially washed out inside the last
+      // glass orb. Never restore an undamaged full-strength copy at the
+      // first post-glass tap: erosion continues from that retained state.
+      if(stage===0)return .11;
+      const from=[0,.11,.22,.40][stage];
       const to=[0,.22,.40,1][stage];
       const ms=[0,1450,1700,4850][stage];
       return mix(from,to,ease((now-titleTapStartedAt)/ms));
@@ -905,8 +908,13 @@ export function GalaxyVoyage({
       // the silhouette above has actually lost material at its edges.
       // The material, not a UI alpha fade, is what disappears. On tap 3
       // its last surviving strokes also become almost transparent.
-      const faded=target===2?mix(1,.48,ease((now-titleTapStartedAt)/1700)):
-        target===3?mix(.48,0,ease((now-titleTapStartedAt)/4850)):1;
+      // Keep the same semi-transparent title carried out of the glass.
+      // Previously target 0 and target 1 jumped to opacity 1, making a
+      // bright intact title reappear when the visitor clicked.
+      const retained=.52;
+      const faded=target===2?mix(retained,.35,ease((now-titleTapStartedAt)/1700)):
+        target===3?mix(.35,0,ease((now-titleTapStartedAt)/4850)):
+        retained;
       ctx!.globalAlpha=faded*entering;
       ctx!.shadowColor="rgba(204,226,255,.045)";
       ctx!.shadowBlur=.5;
