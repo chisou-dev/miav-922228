@@ -126,7 +126,7 @@ export function createGalaxyFlightScene() {
     const theta=TAU*((p.x*.971+p.y*.163)%1);
     const rad=Math.sqrt(p.y);
     const drift=cam.distant*smooth((step-144)/46);
-    const turn=(now*.000010)*drift;
+    const turn=(now*.000031)*drift;
     const radiusX=Math.cos(theta)*rad*short*.93*sight.scale;
     const radiusY=Math.sin(theta)*rad*short*.37*sight.scale;
     const cs=Math.cos(turn),sn=Math.sin(turn);
@@ -735,7 +735,9 @@ export function createGalaxyFlightScene() {
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(sight.x,sight.y);
-    ctx.rotate(-.20+now*.000010*smooth((step-144)/48));
+    // The gaseous arms and their stars share the same angular velocity.
+    // Rotation is now perceptible on a phone while the camera is parked.
+    ctx.rotate(-.20+now*.000031*smooth((step-144)/48));
     ctx.globalAlpha=.45*strength;
     // Prebaked transparent nebula, NOT a square NASA photograph. Only a
     // portion of the outer spiral is visible before the rest of its body
