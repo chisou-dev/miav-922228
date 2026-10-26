@@ -574,7 +574,12 @@ export function GalaxyOrb() {
           ctx.restore();
         }
         ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
-        ctx.drawImage(isolated, -r * 0.76, -r * 0.76, r * 1.52, r * 1.52);
+        // Make the existing photographic arms slightly easier to read inside
+        // the glass, without replacing the approved image or drawing a fake
+        // mathematical spiral. Both passes share the SAME 3-D orientation.
+        ctx.drawImage(isolated, -r * 0.80, -r * 0.80, r * 1.60, r * 1.60);
+        ctx.globalAlpha = 0.14;
+        ctx.drawImage(isolated, -r * 0.80, -r * 0.80, r * 1.60, r * 1.60);
         ctx.restore();
       }
 
@@ -587,6 +592,26 @@ export function GalaxyOrb() {
         ctx.globalAlpha = 0.15 * Math.pow((edge - 0.27) / 0.73, 1.2);
         ctx.globalCompositeOperation = "screen";
         ctx.drawImage(isolated, -r * 0.70, -r * 0.70, r * 1.40, r * 1.40);
+        ctx.restore();
+      }
+
+      // A narrow warm-white nucleus remains legible even when the visible
+      // spiral is tilted. Keep it optically restrained so it does not cover
+      // the dark dust lanes or turn the galaxy into a glowing planet.
+      if (face > 0.12) {
+        ctx.save();
+        ctx.rotate(orientation.longAxis);
+        ctx.scale(1, 0.40 + face * 0.60);
+        ctx.globalCompositeOperation = "screen";
+        const nucleusLight = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.19);
+        nucleusLight.addColorStop(0, `rgba(255,249,231,${(0.31 + face * 0.10).toFixed(3)})`);
+        nucleusLight.addColorStop(0.22, `rgba(255,226,206,${(0.22 + face * 0.07).toFixed(3)})`);
+        nucleusLight.addColorStop(0.58, "rgba(190,176,227,0.075)");
+        nucleusLight.addColorStop(1, "rgba(190,176,227,0)");
+        ctx.fillStyle = nucleusLight;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.19, 0, TAU);
+        ctx.fill();
         ctx.restore();
       }
 
