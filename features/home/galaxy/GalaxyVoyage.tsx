@@ -160,43 +160,37 @@ export function GalaxyVoyage({
     let titleOriginalPixels:Uint8ClampedArray|null=null;
     let titleParticles:TitleParticle[]=[];
     let titleErosionFrame=-1;
+    // Preserve the actual homepage location for the whole animation,
+    // including after the original DOM is covered by the space canvas.
+    const originalTitleRect=titleSpan?.getBoundingClientRect() ?? null;
     // Render the heading as a large TRUE glyph mask. Removing pieces of
     // these glyphs is fundamentally different from fading the text layer.
     function prepareTitle() {
       if(titleBase&&titleEroded)return;
-      // Use the actual HOMEPAGE heading's computed CSS size and tracking,
-      // not a second oversized 52-88px title in the fullscreen animation.
-      const maxWidth=Math.max(120,viewWidth*.94);
+      // Paint exactly where the homepage title was placed. Never centre or
+      // enlarge a new title when the glass disappears.
       const weight=titleStyle?.fontWeight||"500";
       const family=titleStyle?.fontFamily||'Georgia, "Yu Mincho", serif';
-      const cssSize=parseFloat(titleStyle?.fontSize||"")||34;
-      const cssSpacing=parseFloat(titleStyle?.letterSpacing||"")||0;
-      const probe=document.createElement("canvas").getContext("2d");
-      if(!probe)return;
-      let fontSize=cssSize;
-      let tracking=cssSpacing;
-      function textWidth(){
-        probe!.font=weight+" "+fontSize+"px "+family;
-        return probe!.measureText(titleLabel).width+
-          Math.max(0,titleLabel.length-1)*tracking;
-      }
-      for(let trial=0;trial<20&&textWidth()>maxWidth-8;trial++){
-        fontSize*=.96;
-        tracking*=.96;
-      }
-      const inkWidth=textWidth();
+      const fontSize=parseFloat(titleStyle?.fontSize||"")||34;
+      const tracking=parseFloat(titleStyle?.letterSpacing||"")||0;
+      const rect=originalTitleRect;
       const base=document.createElement("canvas");
-      base.width=Math.ceil(Math.min(maxWidth,inkWidth+12));
-      base.height=Math.ceil(fontSize*1.62);
+      const expectedWidth=rect?.width??viewWidth*.7;
+      const expectedHeight=rect?.height??fontSize*1.15;
+      base.width=Math.max(2,Math.ceil(expectedWidth+8));
+      base.height=Math.max(2,Math.ceil(expectedHeight+8));
       const b=base.getContext("2d",{willReadFrequently:true});
       if(!b)return;
-      b.font=probe.font;b.textAlign="left";b.textBaseline="middle";
+      b.font=weight+" "+fontSize+"px "+family;
+      b.textAlign="left";b.textBaseline="alphabetic";
       b.fillStyle="rgba(251,245,235,1)";
-      // Canvas letterSpacing varies by Android version: draw characters
-      // explicitly to match the homepage's 0.04em tracking everywhere.
-      let drawX=(base.width-inkWidth)*.5;
+      const metrics=b.measureText(titleLabel);
+      const ascent=metrics.actualBoundingBoxAscent||fontSize*.75;
+      const descent=metrics.actualBoundingBoxDescent||fontSize*.20;
+      const baseline=(base.height+ascent-descent)*.5;
+      let drawX=4;
       for(const char of titleLabel){
-        b.fillText(char,drawX,base.height*.53);
+        b.fillText(char,drawX,baseline);
         drawX+=b.measureText(char).width+tracking;
       }
       const mask=b.getImageData(0,0,base.width,base.height).data;
@@ -240,18 +234,32 @@ export function GalaxyVoyage({
         }
         distance[idx]=d;
       }
+      // Each vertical slice of genuine glyph ink has its own top and bottom.
+      // Their uneven exposure and the distance to a free edge determine
+      // when fragments rot away: ragged timber, never evenly punched holes.
+      const top=new Int16Array(w).fill(h);
+      const bottom=new Int16Array(w).fill(-1);
+      for(let x=0;x<w;x++)for(let y=0;y<h;y++){
+        if(mask[(y*w+x)*4+3]>48){
+          top[x]=Math.min(top[x],y);
+          bottom[x]=Math.max(bottom[x],y);
+        }
+      }
       const ranks=new Uint8Array(len);
       for(let y=0;y<h;y++)for(let x=0;x<w;x++){
         const idx=y*w+x;
         if(mask[idx*4+3]<4){ranks[idx]=0;continue;}
-        const d=distance[idx];
-        // Smoothly correlated erosion rather than isolated damage dots.
-        const ripple=.5+.25*Math.sin(x*.039+y*.027)+
-          .18*Math.sin(x*.087-y*.051)+.07*Math.sin(y*.19+x*.025);
-        const edge=Math.min(1,Math.max(0,(d-.55)/4.3));
-        const vulnerability=.13+.68*edge+
-          (.12+.08*edge)*Math.max(0,Math.min(1,ripple));
-        ranks[idx]=Math.round(Math.max(.06,Math.min(.985,vulnerability))*255);
+        const topDepth=(y-top[x])/Math.max(1,bottom[x]-top[x]);
+        const bottomDepth=(bottom[x]-y)/Math.max(1,bottom[x]-top[x]);
+        const exposure=2*Math.max(0,Math.min(topDepth,bottomDepth));
+        const ripples=.50+
+          .22*Math.sin(x*.098+y*.042)+
+          .17*Math.sin(x*.187-y*.074)+
+          .11*Math.sin(x*.41+y*.15);
+        const edge=Math.min(1,Math.max(0,(distance[idx]-.4)/3.8));
+        const vulnerability=.085+.64*exposure+.21*edge+
+          .13*ripples+.045*Math.sin(x*.047-y*.125);
+        ranks[idx]=Math.round(Math.max(.035,Math.min(.995,vulnerability))*255);
       }
       titleEdgeRank=ranks;
       titleOriginalPixels=new Uint8ClampedArray(mask);
@@ -275,8 +283,10 @@ export function GalaxyVoyage({
     }
     function titleOrigin(){
       if(!titleBase)return {x:0,y:0};
-      return {x:(viewWidth-titleBase.width)*.5,
-        y:(viewHeight-titleBase.height)*.5};
+      return {
+        x:originalTitleRect ? originalTitleRect.left-4 : (viewWidth-titleBase.width)*.5,
+        y:originalTitleRect ? originalTitleRect.top-4 : (viewHeight-titleBase.height)*.5,
+      };
     }
     // Stable random background flakes and independent letter grains are
     // prepared once so there is no visual flicker between animation frames.
