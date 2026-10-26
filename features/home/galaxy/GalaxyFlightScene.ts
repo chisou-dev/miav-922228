@@ -757,12 +757,13 @@ export function createGalaxyFlightScene() {
     ctx:CanvasRenderingContext2D, elapsedMs:number,w:number,h:number,
   ) {
     const elapsed=Math.max(0,elapsedMs);
-    const interval=300;
+    // More independently timed glints throughout the three-minute finale.
+    const interval=165;
     const last=Math.floor(elapsed/interval);
     const hues=[210,197,225,251,281,330,14,37,49,176];
     ctx.save();
     ctx.globalCompositeOperation="screen";
-    for(let event=Math.max(0,last-7);event<=last;event++){
+    for(let event=Math.max(0,last-15);event<=last;event++){
       const age=elapsed-event*interval;
       const lifetime=920+rnd(event*79+13)*1010;
       if(age<0||age>=lifetime)continue;
