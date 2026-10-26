@@ -120,18 +120,20 @@ export function createGalaxyFlightScene() {
     if(!member)return {x:backX,y:backY};
     const sight=galaxySightline(step,w,h);
     const short=Math.min(w,h);
-    const theta=Math.atan2((p.y-.5)*.60,(p.x-.5));
+    // The sky sample is originally rectangular in screen coordinates.
+    // Reproject its permanent indices onto an elliptical galactic disc;
+    // otherwise compressing the rectangular cloud exposes four corners.
+    const theta=TAU*((p.x*.971+p.y*.163)%1);
+    const rad=Math.sqrt(p.y);
     const drift=cam.distant*smooth((step-144)/46);
-    // Disc changes its apparent perspective with distance; when paused
-    // the gas and stellar lanes KEEP gently orbiting around the same axis.
     const turn=(now*.000010)*drift;
-    const radiusX=(p.x-.5)*short*1.75*sight.scale;
-    const radiusY=(p.y-.5)*short*.72*sight.scale;
+    const radiusX=Math.cos(theta)*rad*short*.93*sight.scale;
+    const radiusY=Math.sin(theta)*rad*short*.37*sight.scale;
     const cs=Math.cos(turn),sn=Math.sin(turn);
     const targetX=sight.x+radiusX*cs-radiusY*sn+
-      Math.sin(theta*3.1+p.y*5)*short*.075*sight.scale;
+      Math.sin(theta*3.1+p.y*5)*short*.045*sight.scale;
     const targetY=sight.y+radiusX*sn+radiusY*cs+
-      Math.sin(theta*2.2+p.x*4)*short*.045*sight.scale;
+      Math.sin(theta*2.2+p.x*4)*short*.034*sight.scale;
     const blend=smooth((step-123)/105);
     return {
       x:backX+(targetX-backX)*blend,
