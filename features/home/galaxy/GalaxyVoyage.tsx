@@ -116,6 +116,7 @@ export function GalaxyVoyage({
     let viewHeight = window.innerHeight;
     let progress = 0;
     let target = 0;
+    let titleTapStartedAt = performance.now();
     // Start both galaxies face-on. Independent rotations are accumulated
     // only while they are visibly large enough to appreciate the tumbling.
     let firstRotation = 0.08;
@@ -450,14 +451,24 @@ export function GalaxyVoyage({
         (1-ease((p-.84)/.15)));
     }
 
-    function drawRemainingTitle(step:number) {
-      if(step>=3)return;
+    function titleErosion(now:number) {
+      // 1st tap: a recognisable heading with a few missing fragments.
+      // 2nd: heavily weathered, but still readable.
+      // 3rd: slow, complete disintegration. No instant puff.
+      const stage=Math.min(3,target);
+      if(stage===0)return 0;
+      const from=[0,0,.22,.52][stage];
+      const to=[0,.22,.52,1][stage];
+      const ms=[0,1450,1700,4850][stage];
+      return mix(from,to,ease((now-titleTapStartedAt)/ms));
+    }
+
+    function drawRemainingTitle(now:number) {
+      if(target>=4)return;
       prepareTitle();
       if(!titleBase||!titleEroded)return;
-      const fraction=clamp(step/3,0,1);
-      // Rebuild only when erosion visibly changes. Hundreds of tiny holes
-      // physically punch transparent chips out of real white glyphs.
-      const frame=Math.floor(fraction*140);
+      const fraction=titleErosion(now);
+      const frame=Math.floor(fraction*190);
       if(frame!==titleErosionFrame){
         const b=titleEroded.getContext("2d");
         if(!b)return;
@@ -465,49 +476,67 @@ export function GalaxyVoyage({
         b.globalCompositeOperation="source-over";
         b.drawImage(titleBase,0,0);
         b.globalCompositeOperation="destination-out";
-        const holeCount=Math.floor(Math.pow(fraction,.72)*titleHoles.length);
+        const count=Math.floor(fraction<=.22
+          ? fraction/.22*340
+          : fraction<=.52
+            ? 340+(fraction-.22)/.30*990
+            : 1330+(fraction-.52)/.48*2370);
         b.fillStyle="#000";
-        for(let i=0;i<holeCount;i++){
+        for(let i=0;i<Math.min(titleHoles.length,count);i++){
           const hole=titleHoles[i];
           b.beginPath();b.arc(hole.x,hole.y,hole.radius,0,TAU);b.fill();
         }
         b.globalCompositeOperation="source-over";
+        if(fraction>=.997)b.clearRect(0,0,titleEroded.width,titleEroded.height);
         titleErosionFrame=frame;
       }
       const pos=titleOrigin();
-      ctx!.save();
-      ctx!.shadowColor="rgba(204,226,255,.12)";
-      ctx!.shadowBlur=3;
+      ctx!.save();ctx!.shadowColor="rgba(204,226,255,.13)";
+      ctx!.shadowBlur=2;
       ctx!.drawImage(titleEroded,pos.x,pos.y);
       ctx!.restore();
     }
 
-    function drawRemainingTitleDust(step:number,cx:number,cy:number) {
-      if(step<=0||step>=3)return;
+    function drawRemainingTitleDust(now:number,cx:number,cy:number){
+      if(target===0||target>=4)return;
       prepareTitle();
       if(!titleBase)return;
-      const fraction=clamp(step/3,0,1);
       const pos=titleOrigin();
+      const stage=Math.min(target,3);
+      const stageAge=now-titleTapStartedAt;
+      const final=stage===3;
       ctx!.save();
-      // Dust follows random curved routes from every letter to the galactic
-      // centre; the onset is staggered throughout all three deliberate taps.
-      for(const grain of titleParticles){
-        const local=(fraction-grain.delay)/Math.max(.18,1-grain.delay);
-        if(local<=0||local>=1)continue;
-        const t=ease(local);
+      for(let i=0;i<titleParticles.length;i++){
+        const grain=titleParticles[i];
+        let t:number;
+        if(final) {
+          // On the third tap each fragment makes one slow, final journey.
+          // Delayed departures and varied speeds preserve a ragged cloud.
+          t=(stageAge-grain.delay*1550)/
+            (2500+1700*(.5+.5*Math.sin(grain.phase*3.17)));
+        } else {
+          // When paused at tap 1 or 2, the glyph continuously sheds fine
+          // material. Do not freeze or leave static specks in mid-air.
+          const period=1950+980*(.5+.5*Math.sin(grain.phase*2.17));
+          t=((now-opened+grain.delay*period*3)/period)%1;
+        }
+        if(t<=0||t>=1)continue;
+        const travel=ease(t);
         const sx=pos.x+grain.x,sy=pos.y+grain.y;
         const dx=cx-sx,dy=cy-sy;
         const length=Math.max(1,Math.hypot(dx,dy));
-        const curvature=grain.bend*Math.sin(Math.PI*t);
-        const x=sx+dx*t-dy/length*curvature;
-        const y=sy+dy*t+dx/length*curvature;
-        const alpha=(1-ease((t-.70)/.30))*ease(t/.09)*
-          (.56+.36*Math.sin(grain.phase+t*19)**2);
-        if(alpha<.026)continue;
+        const curl=grain.bend*Math.sin(Math.PI*t);
+        const x=sx+dx*travel-dy/length*curl+
+          2.2*Math.sin(t*11+grain.phase)*(1-t);
+        const y=sy+dy*travel+dx/length*curl;
+        const alpha=(1-ease((t-.77)/.23))*ease(t/.10)*
+          (.42+.46*Math.sin(grain.phase+t*19)**2)*
+          (final?1.0:stage===1?.66:.85);
+        if(alpha<.023)continue;
         ctx!.fillStyle=grain.phase>Math.PI
           ?"rgba(208,230,255,"+alpha.toFixed(3)+")"
           :"rgba(255,242,223,"+alpha.toFixed(3)+")";
-        const radius=grain.radius*(1-.58*t);
+        const radius=grain.radius*(1-.60*t);
         ctx!.fillRect(x,y,radius,radius);
       }
       ctx!.restore();
@@ -602,11 +631,12 @@ export function GalaxyVoyage({
 
       // The larger, chipped title sits BEHIND the foreground galaxy for
       // three taps. Its missing fragments depart from all parts of the text.
-      drawRemainingTitle(s);
+      drawRemainingTitle(now);
+      drawRemainingTitleDust(now,viewWidth*.51,viewHeight*.52);
       // Each phase advances ONLY on user tap: 3 title taps, faint stars,
       // close planetary passes, galaxy edge/half/exit, then the glass orb.
       const recession = Math.max(0, s - 3);
-      const firstSize = short * 0.86 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
+      const firstSize = short * 0.86 * Math.pow(0.855, Math.min(FIRST_STAR_STEP - 3, recession));
       if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
       const firstTexture = first.complete && first.naturalWidth ? first : globe;
       const firstOpacity = 1 - ease((s - FIRST_STAR_STEP + 2) / 5);
@@ -620,8 +650,7 @@ export function GalaxyVoyage({
         ctx!.fill();
       }
 
-      // The final text disappears only by the third voyage tap.
-      drawRemainingTitleDust(s,viewWidth*.51,viewHeight*.52);
+      // The eroded heading and departing dust were drawn BEHIND the galaxy.
 
       // Planets remain off-axis in the same sky throughout the pull-back.
       flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
@@ -634,11 +663,17 @@ export function GalaxyVoyage({
     function stepForward() {
       const now = performance.now();
       if (now - lastAdvanceAt < 150 || now - opened < IMPLOSION_MS - 80) return;
+      // Finish each title stage before allowing the next one. The final
+      // explosion takes nearly five seconds, and cannot be skipped by
+      // rapidly tapping through an unfinished letter disintegration.
+      if(target>0&&target<3&&now-titleTapStartedAt<900)return;
+      if(target===3&&now-titleTapStartedAt<4850)return;
       lastAdvanceAt = now;
       // The last orb is a contemplative scene, not a tap-to-exit button.
       // Only the existing spaceship control (or Escape) returns home early.
       if (target >= FINAL_STEP) return;
       target += 1;
+      if(target<=3)titleTapStartedAt=now;
       if (idleTimer !== undefined) clearTimeout(idleTimer);
       if (target >= FINAL_STEP) {
         finalReachedAt = now;
