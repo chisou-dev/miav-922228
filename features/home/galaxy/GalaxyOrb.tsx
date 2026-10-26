@@ -319,7 +319,7 @@ export function GalaxyOrb() {
       // preserves individual letter strokes instead of making two neat rows.
       const upper=sources.filter(p=>p.y<window.innerHeight*.49);
       const lower=sources.filter(p=>p.y>=window.innerHeight*.49);
-      zoomGrains=Array.from({length:1050},(_,i)=>{
+      zoomGrains=Array.from({length:72},(_,i)=>{
         const pool=i%3===0?upper:i%3===1?lower:sources;
         const actual=pool.length?pool:sources;
         const p=actual[Math.floor(Math.random()*actual.length)]||
@@ -341,6 +341,10 @@ export function GalaxyOrb() {
       const spread=clamp((radius-normalRadius)/
         Math.max(1,maximumRadius-normalRadius),0,1);
       const strength=.28+.72*smooth(spread);
+      // Four individually travelling grains on the first enlargement,
+      // gradually rising to about fifteen across successive taps. The
+      // particles' points and departure phases are deliberately irregular.
+      const activeGrains=Math.round(4+11*smooth(clamp((zoomStep-1)/4,0,1)));
       // Smoothly let the original copy grow fragile while the stream
       // intensifies; still recognisable when entering the voyage.
       for(const saved of zoomTextStyles){
@@ -348,7 +352,8 @@ export function GalaxyOrb() {
         saved.el.style.opacity=String(1-strength*(isHeading?.32:.63));
       }
       ctx.save();
-      for(const g of zoomGrains){
+      for(let i=0;i<activeGrains;i++){
+        const g=zoomGrains[i];
         const t=((now-zoomStartedAt+g.delay*g.life*3)/g.life)%1;
         if(t<=.055||t>=.97)continue;
         const u=smooth(clamp((t-.055)/.915,0,1));
@@ -533,9 +538,12 @@ export function GalaxyOrb() {
     }
 
     function emit(now: number, face: number) {
-      grains = grains.filter((p) => now - p.born < p.life).slice(-36);
+      // Before any tap the little travelling orb collects just a handful
+      // of individual grains. The larger 4-to-15 stream belongs to the
+      // deliberate zoom interaction above.
+      grains = grains.filter((p) => now - p.born < p.life).slice(-5);
       if (now < quietUntil || !textPixels.length || Math.sin(now / 900) < -0.15) return;
-      if (Math.random() > 0.022 + 0.050 * Math.pow(face, 3)) return;
+      if (Math.random() > 0.048 + 0.035 * Math.pow(face, 3)) return;
       for (let attempt = 0; attempt < 18; attempt++) {
         const source = textPixels[Math.floor(Math.random() * textPixels.length)];
         const d = pointDistance(source, orb);
