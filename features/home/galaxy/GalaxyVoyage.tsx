@@ -592,10 +592,10 @@ export function GalaxyVoyage({
         : 280 + (s - 160) * 1.2;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
+      // Transparent galactic gas is BELOW its own orbiting stars. The camera
+      // and star positions share the same distance: no stage picture swap.
+      flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight, now);
       flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
-      // Never paste a second, central spiral over the starfield. This pass
-      // adds only a soft irregular glow along the very same retreating stars.
-      flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight);
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
         flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
       }
