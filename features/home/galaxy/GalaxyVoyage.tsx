@@ -25,11 +25,14 @@ const FIRST_STAR_STEP = 30;
 const FIRST_PLANET_STEP = 31;
 // End when all nearby worlds have dwindled to star-like points.
 const FINAL_STEP = 184;
+// Three seconds of gradual typography + page-colour absorption BEFORE the
+// unchanged glass rupture and normal space voyage begin.
+const PEEL_MS = 3000;
 const IMPLOSION_MS = 2650;
 const FINAL_HOLD_MS = 180_000;
 const IDLE_MS = 120_000;
 
-function sampleTextLocations(): Point[] {
+function sampleTextLocations(includeHeading = true): Point[] {
   // After the glass breaks, fine dust comes from EVERY visible glyph on the
   // homepage, not only randomly selected letters. Keep the existing drawSand
   // animation, glass transition, title erosion and voyage timing unchanged.
@@ -41,6 +44,7 @@ function sampleTextLocations(): Point[] {
   );
   const range = document.createRange();
   for (const el of elements) {
+    if (!includeHeading && (el.matches("h1") || el.closest("h1"))) continue;
     if (points.length >= 3000) break;
     const style = getComputedStyle(el);
     if (style.visibility === "hidden" || style.display === "none" ||
@@ -109,7 +113,9 @@ export function GalaxyVoyage({
     let running = true;
     let frame = 0;
     let previous = performance.now();
-    const opened = previous;
+    // Timers used by the existing shattering/galaxy sequence start AFTER
+    // the pre-rupture peel; existing IMPLOSION_MS timing remains unchanged.
+    const opened = previous + PEEL_MS;
     let viewWidth = window.innerWidth;
     let viewHeight = window.innerHeight;
     let progress = 0;
@@ -133,6 +139,7 @@ export function GalaxyVoyage({
     first.src = NASA_M100;
     const prepared = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
     const selectedText = sampleTextLocations();
+    const nonHeadingText = sampleTextLocations(false);
     // Every particle starts on a REAL homepage glyph; no extra title is
     // rasterised or brought back after the dark transition.
     const sourcePoints=selectedText.length ? selectedText :
@@ -271,6 +278,26 @@ export function GalaxyVoyage({
       return {x:(viewWidth-titleBase.width)*.5,
         y:(viewHeight-titleBase.height)*.5};
     }
+    // Stable random background flakes and independent letter grains are
+    // prepared once so there is no visual flicker between animation frames.
+    // The many small, independent origins make the entire blue site appear
+    // to weather into fine matter rather than simply switching to black.
+    const peelDust = Array.from({length:4300},(_,i)=>{
+      const fromText=i<2900 && nonHeadingText.length>0;
+      const source=fromText
+        ?nonHeadingText[Math.floor(Math.random()*nonHeadingText.length)]
+        :{x:Math.random()*viewWidth,y:Math.random()*viewHeight};
+      return {
+        x:source.x,y:source.y,
+        born:Math.random()*.73,
+        speed:.92+Math.random()*.28,
+        curl:(Math.random()-.5)*105,
+        phase:Math.random()*TAU,
+        radius:.13+Math.random()*.29,
+        alpha:.45+Math.random()*.50,
+        fromText,
+      };
+    });
     const dust: Dust[] = Array.from({length:3600},(_,i)=>{
       const p=sourcePoints[i%sourcePoints.length];
       return {
@@ -288,9 +315,15 @@ export function GalaxyVoyage({
     // The original DOM text remains visible until it is consumed. Fade it
     // WHILE sand is departing. Preserve exact inline styles for the return.
     const section=document.querySelector("[data-galaxy-title]")?.closest("section");
-    const textElements=Array.from(section?.querySelectorAll<HTMLElement>(
-      "h1, p, nav a"
-    )??[]).filter(el=>el.getBoundingClientRect().width>0);
+    const textElements=Array.from(new Set([
+      ...Array.from(section?.querySelectorAll<HTMLElement>(
+        "h1, p, nav a, aside"
+      )??[]),
+      ...Array.from(document.querySelectorAll<HTMLElement>(
+        "header, header a, header button, header span, body > nav, body > aside"
+      )),
+    ])).filter(el=>el.getBoundingClientRect().width>0 &&
+      (!titleSpan || !el.contains(titleSpan) || el.matches("h1")));
     const savedTextStyles=textElements.map(el=>({
       el,opacity:el.style.opacity,transition:el.style.transition,
     }));
@@ -298,13 +331,97 @@ export function GalaxyVoyage({
       saved.el.style.transition="none";
     }
     function consumeOriginalText(p:number){
-      const opacity=1-ease((p-.16)/.74);
+      const opacity=1-ease((p-.08)/.88);
       for(const saved of savedTextStyles){
         // The heading survives the automatic opening: it only dissolves
         // when the viewer taps through the first three voyage steps.
         saved.el.style.opacity=saved.el.matches("h1")?"1":String(opacity);
       }
     }
+    // Punch out ONLY the actual heading ink from the darkening veil.
+    // The real DOM glyphs remain underneath; there is no blue rectangular
+    // patch around the title and no second oversized text overlay.
+    let peelHeadingMask:HTMLCanvasElement|null=null;
+    let peelHeadingBox:{x:number;y:number;w:number;h:number}|null=null;
+    function updatePeelHeadingMask(){
+      if(!titleSpan)return;
+      const bounds=titleSpan.getBoundingClientRect();
+      if(bounds.width<1||bounds.height<1)return;
+      const font=getComputedStyle(titleSpan);
+      const fs=parseFloat(font.fontSize)||32;
+      const tracking=parseFloat(font.letterSpacing)||0;
+      const mask=document.createElement("canvas");
+      mask.width=Math.ceil(bounds.width+12);
+      mask.height=Math.ceil(bounds.height+12);
+      const mc=mask.getContext("2d");
+      if(!mc)return;
+      mc.font=font.fontWeight+" "+font.fontSize+" "+font.fontFamily;
+      mc.textBaseline="middle";
+      mc.fillStyle="#ffffff";
+      let x=6;
+      for(const char of titleLabel){
+        mc.fillText(char,x,mask.height*.5);
+        x+=mc.measureText(char).width+tracking;
+      }
+      peelHeadingMask=mask;
+      peelHeadingBox={x:bounds.left-6,y:bounds.top-6,
+        w:mask.width,h:mask.height};
+    }
+
+    function peelBackground(amount:number,titleVisibility:number){
+      if(amount<=0)return;
+      ctx!.save();
+      // The surrounding deep-blue site is stripped away progressively,
+      // from the edges toward the central glass sphere.
+      const maxR=Math.hypot(viewWidth,viewHeight)*.83;
+      const veil=ctx!.createRadialGradient(
+        origin.x,origin.y,origin.radius*.30,
+        origin.x,origin.y,maxR);
+      const outer=clamp(amount,0,1);
+      veil.addColorStop(0,"rgba(0,2,9,"+(.92*outer).toFixed(3)+")");
+      veil.addColorStop(.42,"rgba(0,2,9,"+(.98*outer).toFixed(3)+")");
+      veil.addColorStop(1,"rgba(0,2,9,"+outer.toFixed(3)+")");
+      ctx!.fillStyle=veil;
+      ctx!.fillRect(0,0,viewWidth,viewHeight);
+      if(titleVisibility>0 && peelHeadingMask && peelHeadingBox){
+        ctx!.globalCompositeOperation="destination-out";
+        ctx!.globalAlpha=clamp(titleVisibility,0,1);
+        ctx!.drawImage(peelHeadingMask,
+          peelHeadingBox.x,peelHeadingBox.y);
+      }
+      ctx!.restore();
+    }
+
+    function drawPreRupturePeel(now:number){
+      const p=reduced?1:clamp((now-(opened-PEEL_MS))/PEEL_MS,0,1);
+      // Dissolve the real page's non-title elements alongside the dust;
+      // the original large heading is never touched.
+      consumeOriginalText(p);
+      peelBackground(ease((p-.01)/.98),1);
+      ctx!.save();
+      for(const grain of peelDust){
+        const q=(p-grain.born)*grain.speed/(1-grain.born);
+        if(q<=0||q>=1)continue;
+        const u=ease(q);
+        const dx=origin.x-grain.x,dy=origin.y-grain.y;
+        const length=Math.max(1,Math.hypot(dx,dy));
+        const curl=grain.curl*Math.sin(Math.PI*u);
+        const x=mix(grain.x,origin.x,u)-dy/length*curl;
+        const y=mix(grain.y,origin.y,u)+dx/length*curl;
+        const alpha=grain.alpha*ease(q/.10)*
+          (1-ease((q-.78)/.22));
+        if(alpha<.025)continue;
+        // Minuscule random sand, without lines, tails or large glows.
+        ctx!.fillStyle=grain.fromText
+          ?"rgba(250,248,243,"+alpha.toFixed(3)+")"
+          :"rgba(132,161,196,"+(alpha*.68).toFixed(3)+")";
+        ctx!.fillRect(x,y,grain.radius,grain.radius);
+      }
+      ctx!.restore();
+      // The existing glass continues to hold together for these 3 seconds.
+      drawGlass(origin.x,origin.y,origin.radius,now);
+    }
+
     const flightScene = createGalaxyFlightScene();
     const clusterOrb = createGalaxyClusterOrb();
 
@@ -319,6 +436,7 @@ export function GalaxyVoyage({
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
       titleBase=null;titleEroded=null;titleEdgeRank=null;
       titleOriginalPixels=null;titleErosionFrame=-1;
+      updatePeelHeadingMask();
     }
 
     // The source photos are rectangular. A cached circular feather removes
@@ -482,17 +600,10 @@ export function GalaxyVoyage({
       const cx=mix(origin.x,viewWidth*.51,glide);
       const cy=mix(origin.y,viewHeight*.52,glide);
       const short=Math.min(viewWidth,viewHeight);
-      // The actual homepage letters still exist during this phase. They
-      // erode ONLY NOW and NEVER return as a second canvas-generated title.
-      consumeOriginalText(p);
-
-      // FIRST the real glyphs turn into fine dust. Only AFTER most letters
-      // have disappeared do the glass and background fade into deep space.
-      const darkness=ease((p-.56)/.44);
-      if(darkness>0){
-        ctx!.fillStyle="rgba(0,2,9,"+darkness.toFixed(4)+")";
-        ctx!.fillRect(0,0,viewWidth,viewHeight);
-      }
+      // The blue site and secondary copy have ALREADY been absorbed for
+      // three seconds. Keep them gone while the ORIGINAL glass breaks.
+      consumeOriginalText(1);
+      peelBackground(1,1-ease((p-.73)/.27));
       const glassOpacity=1-ease((p-.60)/.37);
       if(glassOpacity>.002){
         ctx!.save();
@@ -669,7 +780,9 @@ export function GalaxyVoyage({
       ctx!.clearRect(0, 0, viewWidth, viewHeight);
       const age = now - opened;
       const short = Math.min(viewWidth, viewHeight);
-      // Consume the real homepage lettering before covering it in darkness.
+      // Pre-rupture: 3 seconds of absorbing page text and blue pigment.
+      // Only after that do the existing glass and galaxy steps start.
+      if(age<0){drawPreRupturePeel(now);return;}
       if (age < IMPLOSION_MS) { drawImplosion(now); return; }
       consumeOriginalText(1);
       progress = mix(progress, target, reduced ? 1 : Math.min(1, dt / 205));
