@@ -143,45 +143,72 @@ export function GalaxyVoyage({
     // taps. Sample actual text glyph rectangles across the entire title,
     // not an artificial line of dust from the bottom edge.
     const titleSpan=document.querySelector<HTMLElement>("[data-galaxy-title]");
-    const titleBox=titleSpan?.getBoundingClientRect() ?? null;
-    const titleStyle=titleSpan ? getComputedStyle(titleSpan) : null;
+    const titleStyle=titleSpan?getComputedStyle(titleSpan):null;
     const titleLabel=titleSpan?.textContent?.trim() || "MIAV-922228";
-    const titleFont=titleStyle
-      ? titleStyle.fontWeight+" "+titleStyle.fontSize+" "+titleStyle.fontFamily
-      : '500 44px Georgia, serif';
-    const titleGlyphs: Point[]=[];
-    if(titleSpan){
-      const range=document.createRange();
-      const walker=document.createTreeWalker(titleSpan,NodeFilter.SHOW_TEXT);
-      let node:Node|null;
-      while((node=walker.nextNode())!==null){
-        const letters=node.textContent??"";
-        for(let i=0;i<letters.length;i++){
-          if(!letters[i].trim())continue;
-          range.setStart(node,i);range.setEnd(node,i+1);
-          const glyph=range.getBoundingClientRect();
-          if(glyph.width<1||glyph.height<1)continue;
-          for(let j=0;j<9;j++)titleGlyphs.push({
-            x:glyph.left+glyph.width*(.10+.80*Math.random()),
-            y:glyph.top+glyph.height*(.14+.72*Math.random()),
-          });
+    type TitleParticle={x:number;y:number;delay:number;radius:number;bend:number;phase:number};
+    type Hole={x:number;y:number;radius:number};
+    let titleBase:HTMLCanvasElement|null=null;
+    let titleEroded:HTMLCanvasElement|null=null;
+    let titleHoles:Hole[]=[];
+    let titleParticles:TitleParticle[]=[];
+    let titleErosionFrame=-1;
+    // Render the heading as a large TRUE glyph mask. Removing pieces of
+    // these glyphs is fundamentally different from fading the text layer.
+    function prepareTitle() {
+      if(titleBase&&titleEroded)return;
+      const maxWidth=Math.max(120,viewWidth*.94);
+      const weight=titleStyle?.fontWeight||"500";
+      const family=titleStyle?.fontFamily||'Georgia, "Yu Mincho", serif';
+      const probe=document.createElement("canvas").getContext("2d");
+      if(!probe)return;
+      let fontSize=Math.min(88,Math.max(52,viewWidth*.20));
+      for(let trial=0;trial<18;trial++){
+        probe.font=weight+" "+fontSize+"px "+family;
+        if(probe.measureText(titleLabel).width<=maxWidth-8)break;
+        fontSize*=.94;
+      }
+      probe.font=weight+" "+fontSize+"px "+family;
+      const width=Math.min(viewWidth*.97,probe.measureText(titleLabel).width+12);
+      const base=document.createElement("canvas");
+      base.width=Math.ceil(width);base.height=Math.ceil(fontSize*1.62);
+      const b=base.getContext("2d",{willReadFrequently:true});
+      if(!b)return;
+      b.font=probe.font;b.textAlign="center";b.textBaseline="middle";
+      b.fillStyle="rgba(251,245,235,1)";
+      b.fillText(titleLabel,base.width*.5,base.height*.53);
+      const mask=b.getImageData(0,0,base.width,base.height).data;
+      const pixels:Point[]=[];
+      for(let y=1;y<base.height-1;y+=2){
+        for(let x=1;x<base.width-1;x+=2){
+          if(mask[(y*base.width+x)*4+3]>125)pixels.push({x,y});
         }
       }
-      range.detach();
+      if(!pixels.length)return;
+      // Stable randomized erosion across ALL letters, not a horizontal
+      // wipe or uniformly dissolving opacity. Cache the cuts during pauses.
+      titleHoles=Array.from({length:3700},(_,n)=>{
+        const p=pixels[Math.floor(Math.random()*pixels.length)];
+        return {x:p.x+(Math.random()-.5)*3,
+          y:p.y+(Math.random()-.5)*3,
+          radius:.75+Math.pow(Math.random(),.7)*3.0};
+      });
+      titleParticles=Array.from({length:3600},(_,n)=>{
+        const p=pixels[Math.floor(Math.random()*pixels.length)];
+        return {x:p.x+(Math.random()-.5)*3,
+          y:p.y+(Math.random()-.5)*3,
+          delay:Math.random()*.77,
+          radius:.24+Math.random()*.76,
+          bend:(Math.random()-.5)*84,phase:Math.random()*TAU};
+      });
+      titleBase=base;titleEroded=document.createElement("canvas");
+      titleEroded.width=base.width;titleEroded.height=base.height;
+      titleErosionFrame=-1;
     }
-    const titleDust=Array.from({length:1800},(_,i)=>{
-      const p=titleGlyphs.length
-        ? titleGlyphs[i%titleGlyphs.length]
-        : {x:viewWidth*.5,y:viewHeight*.5};
-      return {
-        x:p.x+(Math.random()-.5)*2,
-        y:p.y+(Math.random()-.5)*2,
-        delay:Math.random()*.73,
-        bend:(Math.random()-.5)*54,
-        radius:.32+Math.random()*.7,
-        phase:Math.random()*TAU,
-      };
-    });
+    function titleOrigin(){
+      if(!titleBase)return {x:0,y:0};
+      return {x:(viewWidth-titleBase.width)*.5,
+        y:(viewHeight-titleBase.height)*.5};
+    }
     const dust: Dust[] = Array.from({length:3600},(_,i)=>{
       const p=sourcePoints[i%sourcePoints.length];
       return {
@@ -228,6 +255,7 @@ export function GalaxyVoyage({
       canvas!.style.width = viewWidth + "px";
       canvas!.style.height = viewHeight + "px";
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      titleBase=null;titleEroded=null;titleErosionFrame=-1;
     }
 
     // The source photos are rectangular. A cached circular feather removes
@@ -412,7 +440,7 @@ export function GalaxyVoyage({
       // Galaxy continues moving out of its glass shell; its size and
       // position carry seamlessly into the starless voyage start.
       galaxyImage(first.complete&&first.naturalWidth?first:globe,
-        cx,cy,mix(origin.radius*1.48,short*.66,glide),
+        cx,cy,mix(origin.radius*1.48,short*.86,glide),
         firstRotation,.32+.68*ease((p-.38)/.50));
       drawGlassPerimeterGrains(now,cx,cy,
         origin.radius*(1+.04*glide),1-ease((p-.48)/.48));
@@ -423,43 +451,63 @@ export function GalaxyVoyage({
     }
 
     function drawRemainingTitle(step:number) {
-      if(step>=3 || !titleBox)return;
-      const fade=1-ease(step/3);
-      const textX=titleBox.left;
-      const textY=titleBox.top+titleBox.height*.53;
+      if(step>=3)return;
+      prepareTitle();
+      if(!titleBase||!titleEroded)return;
+      const fraction=clamp(step/3,0,1);
+      // Rebuild only when erosion visibly changes. Hundreds of tiny holes
+      // physically punch transparent chips out of real white glyphs.
+      const frame=Math.floor(fraction*140);
+      if(frame!==titleErosionFrame){
+        const b=titleEroded.getContext("2d");
+        if(!b)return;
+        b.clearRect(0,0,titleEroded.width,titleEroded.height);
+        b.globalCompositeOperation="source-over";
+        b.drawImage(titleBase,0,0);
+        b.globalCompositeOperation="destination-out";
+        const holeCount=Math.floor(Math.pow(fraction,.72)*titleHoles.length);
+        b.fillStyle="#000";
+        for(let i=0;i<holeCount;i++){
+          const hole=titleHoles[i];
+          b.beginPath();b.arc(hole.x,hole.y,hole.radius,0,TAU);b.fill();
+        }
+        b.globalCompositeOperation="source-over";
+        titleErosionFrame=frame;
+      }
+      const pos=titleOrigin();
       ctx!.save();
-      ctx!.font=titleFont;
-      ctx!.textAlign="left";
-      ctx!.textBaseline="middle";
-      const measure=Math.max(1,ctx!.measureText(titleLabel).width);
-      ctx!.translate(textX,textY);
-      ctx!.scale(Math.min(1.03,titleBox.width/measure),1);
-      ctx!.fillStyle="rgba(245,240,230,"+(fade*.92).toFixed(3)+")";
-      ctx!.shadowColor="rgba(203,225,255,"+(fade*.12).toFixed(3)+")";
-      ctx!.shadowBlur=4;
-      ctx!.fillText(titleLabel,0,0);
+      ctx!.shadowColor="rgba(204,226,255,.12)";
+      ctx!.shadowBlur=3;
+      ctx!.drawImage(titleEroded,pos.x,pos.y);
       ctx!.restore();
     }
 
-    function drawRemainingTitleDust(step:number,cx:number,cy:number){
-      if(step<=0||step>=3.05)return;
+    function drawRemainingTitleDust(step:number,cx:number,cy:number) {
+      if(step<=0||step>=3)return;
+      prepareTitle();
+      if(!titleBase)return;
       const fraction=clamp(step/3,0,1);
+      const pos=titleOrigin();
       ctx!.save();
-      for(const grain of titleDust){
-        const local=clamp((fraction-grain.delay)/Math.max(.15,1-grain.delay),0,1);
+      // Dust follows random curved routes from every letter to the galactic
+      // centre; the onset is staggered throughout all three deliberate taps.
+      for(const grain of titleParticles){
+        const local=(fraction-grain.delay)/Math.max(.18,1-grain.delay);
         if(local<=0||local>=1)continue;
         const t=ease(local);
-        const dx=cx-grain.x,dy=cy-grain.y;
+        const sx=pos.x+grain.x,sy=pos.y+grain.y;
+        const dx=cx-sx,dy=cy-sy;
         const length=Math.max(1,Math.hypot(dx,dy));
-        const curving=grain.bend*Math.sin(Math.PI*t);
-        const x=grain.x+dx*t-dy/length*curving;
-        const y=grain.y+dy*t+dx/length*curving;
-        const alpha=(1-ease((t-.68)/.32))*Math.sin(Math.PI*t)*.88;
-        if(alpha<.018)continue;
-        const radius=grain.radius*(1-.65*t);
+        const curvature=grain.bend*Math.sin(Math.PI*t);
+        const x=sx+dx*t-dy/length*curvature;
+        const y=sy+dy*t+dx/length*curvature;
+        const alpha=(1-ease((t-.70)/.30))*ease(t/.09)*
+          (.56+.36*Math.sin(grain.phase+t*19)**2);
+        if(alpha<.026)continue;
         ctx!.fillStyle=grain.phase>Math.PI
-          ?"rgba(207,227,253,"+alpha.toFixed(3)+")"
-          :"rgba(255,243,225,"+alpha.toFixed(3)+")";
+          ?"rgba(208,230,255,"+alpha.toFixed(3)+")"
+          :"rgba(255,242,223,"+alpha.toFixed(3)+")";
+        const radius=grain.radius*(1-.58*t);
         ctx!.fillRect(x,y,radius,radius);
       }
       ctx!.restore();
@@ -552,14 +600,13 @@ export function GalaxyVoyage({
         flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
       }
 
-      // The actual homepage title persists for three deliberate taps
-      // after the glass dissolves. Its grains depart from every glyph,
-      // while the same first galaxy remains visible behind the text.
+      // The larger, chipped title sits BEHIND the foreground galaxy for
+      // three taps. Its missing fragments depart from all parts of the text.
       drawRemainingTitle(s);
       // Each phase advances ONLY on user tap: 3 title taps, faint stars,
       // close planetary passes, galaxy edge/half/exit, then the glass orb.
       const recession = Math.max(0, s - 3);
-      const firstSize = short * 0.66 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
+      const firstSize = short * 0.86 * Math.pow(0.78, Math.min(FIRST_STAR_STEP - 3, recession));
       if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
       const firstTexture = first.complete && first.naturalWidth ? first : globe;
       const firstOpacity = 1 - ease((s - FIRST_STAR_STEP + 2) / 5);
