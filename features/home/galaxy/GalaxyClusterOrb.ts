@@ -124,6 +124,72 @@ function makePoints():GalaxyPoint[] {
 }
 export function createGalaxyClusterOrb() {
   const points=makePoints();
+  // A separate, truly full-frame deep sky, not the former compact square
+  // patch around the nebula. Fixed coordinates make paused frames stable.
+  // During the final three minutes a changing subset of the tiny stars
+  // spirals into the glass sphere; other distant stars stay visible.
+  const ambientStars=Array.from({length:1150},(_,i)=>({
+    u:random(i*107+817),
+    v:random(i*139+1913),
+    radius:.18+random(i*23+621)*.88,
+    brightness:.23+random(i*37+299)*.69,
+    phase:random(i*67+913)*TAU,
+    hue:i%9===0?36:i%13===0?279:208+Math.floor(random(i*53+211)*33),
+  }));
+  function drawFullSky(
+    ctx:CanvasRenderingContext2D,w:number,h:number,now:number,
+    reveal:number,sphereVisibility:number,cx:number,cy:number,r:number,
+  ){
+    const emerging=smooth((reveal-.012)/.30);
+    if(emerging<.001)return;
+    ctx.save();
+    for(let i=0;i<ambientStars.length;i++){
+      const p=ambientStars[i];
+      const sx=p.u*w,sy=p.v*h;
+      let x=sx,y=sy,vanish=1;
+      // These are stars throughout the visible sky rather than a square
+      // sample near the glass. Each captured star follows its own bent,
+      // asynchronous track. The field is replenished by farther stars.
+      if(sphereVisibility>.15 && i%3===0){
+        const cycleMs=5800+random(i*61+721)*6700;
+        const phase=(now/cycleMs+random(i*41+331)*5)%1;
+        const approach=smooth((phase-.10)/.83);
+        const bearing=Math.atan2(sy-cy,sx-cx);
+        const landing=.42+.30*random(i*71+433);
+        const tx=cx+Math.cos(bearing)*r*landing;
+        const ty=cy+Math.sin(bearing)*r*landing;
+        const curve=r*(random(i*79+83)-.5)*.39*
+          Math.sin(Math.PI*approach);
+        const absorbed=approach*smooth((sphereVisibility-.15)/.53);
+        x=sx+(tx-sx)*absorbed-Math.sin(bearing)*curve*absorbed;
+        y=sy+(ty-sy)*absorbed+Math.cos(bearing)*curve*absorbed;
+        vanish=1-smooth((approach-.70)/.27)*
+          smooth((sphereVisibility-.15)/.53);
+      }
+      if(x<-5||x>w+5||y<-5||y>h+5)continue;
+      const twinkle=.69+.31*Math.sin(now*.0018+p.phase)**2;
+      const a=emerging*p.brightness*twinkle*vanish;
+      if(a<.008)continue;
+      ctx.fillStyle="hsla("+p.hue+",57%,91%,"+a.toFixed(3)+")";
+      ctx.fillRect(x,y,p.radius,p.radius);
+      // Widely separated prismatic glints: more bright stars without
+      // making a flat, uniform wallpaper or a regular particle grid.
+      if(i%47===0){
+        const pulse=.55+.45*Math.sin(now*.0031+p.phase)**2;
+        const glow=ctx.createRadialGradient(x,y,0,x,y,6.3);
+        glow.addColorStop(0,"rgba(227,242,255,"+(a*.42*pulse).toFixed(3)+")");
+        glow.addColorStop(1,"rgba(147,196,246,0)");
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,6.3,0,TAU);ctx.fill();
+        if(i%141===0){
+          ctx.strokeStyle="rgba(235,244,255,"+(a*.37*pulse).toFixed(3)+")";
+          ctx.lineWidth=.55;
+          ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);
+          ctx.moveTo(x,y-3);ctx.lineTo(x,y+3);ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  }
   // Lazy texture construction: no work or remote image transfer until needed.
   let sprites:HTMLCanvasElement[]|null=null;
   function ensureSprites(){
@@ -170,6 +236,9 @@ export function createGalaxyClusterOrb() {
     const yaw=held*.000058+Math.sin(held*.000089)*.22;
     const pitch=held*.000044+Math.sin(held*.000063+1.4)*.18;
     const textures=ensureSprites();
+    // The sky must remain rich from edge to edge, even before any galaxy
+    // becomes large enough to identify, and long after the sphere appears.
+    drawFullSky(ctx,w,h,now,reveal,sphereVisibility,cx,cy,r);
     ctx.save();
     // Barely visible gas lanes behind the materialised galaxies. The falloff
     // never has a rectangular edge and does not black out the existing sky.
@@ -192,8 +261,15 @@ export function createGalaxyClusterOrb() {
     }).sort((a,b)=>a.depth-b.depth);
     for(const p of rotated){
       const perspective=1+p.depth*.15;
-      const x=cx+p.px*r*zoom*perspective;
-      const y=cy+p.py*r*zoom*perspective;
+      // Previously these clustered filaments were visible as a conspicuous
+      // rectangle of point lights BEFORE the sphere existed. Give every
+      // member its own bearing across the full celestial field, then reveal
+      // its actual three-dimensional place by continuous camera pullback.
+      const broadX=w*(.025+.95*random(p.i*101+1709));
+      const broadY=h*(.02+.96*random(p.i*131+3119));
+      const settle=smooth((reveal-.19-random(p.i*29+17)*.08)/.72);
+      const x=lerp(broadX,cx+p.px*r*zoom*perspective,settle);
+      const y=lerp(broadY,cy+p.py*r*zoom*perspective,settle);
       if(x<-35||x>w+35||y<-35||y>h+35)continue;
       // Extended view starts with only the known last galaxy visible;
       // each individual cluster member emerges softly at its own distance.
@@ -212,12 +288,12 @@ export function createGalaxyClusterOrb() {
       // individual light discs. This keeps early galaxies separate instead
       // of creating square patches of overlapping nebular sprites.
       const apparentDiameter=Math.pow(zoom,.48);
-      const size=Math.max(2,r*(.029+p.size*.058)*
-        apparentDiameter*perspective*prominent);
+      const size=Math.max(.8,r*(.029+p.size*.058)*
+        apparentDiameter*perspective*prominent*(.12+.88*settle));
       const radial=Math.hypot((x-cx)/r,(y-cy)/r);
       const feather=1-sphereVisibility*smooth((radial-.84)/.32);
       const opacity=local*p.opacity*feather*
-        (.91+.09*Math.sin(now*.00061+p.phase));
+        (.45+.55*settle)*(.91+.09*Math.sin(now*.00061+p.phase));
       if(opacity<.003)continue;
       ctx.globalAlpha=opacity;
       ctx.save();
@@ -280,8 +356,8 @@ export function createGalaxyClusterOrb() {
       ctx.save();
       ctx.globalCompositeOperation="screen";
       const strength=smooth((sphereVisibility-.42)/.46);
-      for(let i=0;i<178;i++){
-        const period=3400+random(i*19+31)*5200;
+      for(let i=0;i<235;i++){
+        const period=3150+random(i*19+31)*4600;
         const cycle=(now+random(i*29+43)*period*3)/period;
         const age=cycle-Math.floor(cycle);
         if(age<.06||age>.96||random(i*13+19)<.22)continue;
