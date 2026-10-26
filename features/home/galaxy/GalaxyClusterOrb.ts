@@ -90,22 +90,35 @@ function makePoints():GalaxyPoint[] {
       z:Math.sin(elevation)*radius};
   });
   // Irregular clustered filaments: not a grid of planets or a regular spiral.
-  return Array.from({length:118},(_,i)=>{
-    const anchor=knots[Math.floor(random(i*17+14)*knots.length)];
-    const other=knots[Math.floor(random(i*19+103)*knots.length)];
-    const t=random(i*47+87);
-    const spread=i%4===0?.14:.065;
-    let x=lerp(anchor.x,other.x,t)+(random(i*59+121)-.5)*spread*2;
-    let y=lerp(anchor.y,other.y,t)+(random(i*61+231)-.5)*spread*2;
-    let z=lerp(anchor.z,other.z,t)+(random(i*67+311)-.5)*spread*2;
+  return Array.from({length:158},(_,i)=>{
+    // A smaller, diffuse population sits BETWEEN filament galaxies; it
+    // removes the artificial boxed-in cluster while retaining density peaks.
+    const diffuse=i>=118;
+    let x:number,y:number,z:number;
+    if(diffuse){
+      const bearing=TAU*random(i*47+137);
+      const latitude=(random(i*79+381)-.5)*Math.PI;
+      const rad=.35+.56*Math.sqrt(random(i*61+377));
+      x=Math.cos(bearing)*Math.cos(latitude)*rad;
+      y=Math.sin(bearing)*Math.cos(latitude)*rad;
+      z=Math.sin(latitude)*rad;
+    } else {
+      const anchor=knots[Math.floor(random(i*17+14)*knots.length)];
+      const other=knots[Math.floor(random(i*19+103)*knots.length)];
+      const t=random(i*47+87);
+      const spread=i%4===0?.14:.065;
+      x=lerp(anchor.x,other.x,t)+(random(i*59+121)-.5)*spread*2;
+      y=lerp(anchor.y,other.y,t)+(random(i*61+231)-.5)*spread*2;
+      z=lerp(anchor.z,other.z,t)+(random(i*67+311)-.5)*spread*2;
+    }
     const d=Math.hypot(x,y,z);
-    if(d>.91){ x*=.91/d;y*=.91/d;z*=.91/d; }
+    if(d>.91){x*=.91/d;y*=.91/d;z*=.91/d;}
     return {
       x,y,z,
-      size:.42+Math.pow(random(i*71+19),2)*2.35,
+      size:(.42+Math.pow(random(i*71+19),2)*2.35)*(diffuse?.70:1),
       phase:random(i*73+31)*TAU,
       variant:Math.floor(random(i*79+91)*6),
-      opacity:.53+random(i*83+19)*.47,
+      opacity:(.53+random(i*83+19)*.47)*(diffuse?.65:1),
     };
   });
 }
@@ -131,26 +144,31 @@ export function createGalaxyClusterOrb() {
     const sphereVisibility=smooth((reveal-.62)/.35);
     // One widening camera, without a gallery of pictures sliding from the
     // edge of the display. Their bearings remain in the same sky.
-    const zoom=Math.exp(Math.log(2.20)*(1-reveal));
+    // The initial, uncased field occupies the *entire* sky. As we pull
+    // back, those same points compress into the sphere without revealing
+    // the edges of a rectangular sprite catalogue.
+    const zoom=1+3.8*Math.pow(1-reveal,1.1);
     const held=Math.max(0,finalElapsed??0);
     const drift=sphereVisibility*smooth(held/1900);
     // Fixed cosmic sightline: each miniature system is already somewhere
     // in this large field; expanding FOV gradually resolves its light.
     const centreX=w*.515;
     const centreY=h*.515;
-    const wanderX=Math.min(w*.11,60)*
-      (.55*Math.sin(held*.00019)+.29*Math.sin(held*.000083+1.7)
-       +.16*Math.sin(held*.000047+.6));
-    const wanderY=Math.min(h*.17,95)*
-      (.49*Math.sin(held*.000137+.4)+.33*Math.sin(held*.000061+2)
-       +.18*Math.sin(held*.000031+.9));
+    // After the initial arrival, keep a clearly perceptible but smooth
+    // wander throughout the entire three-minute observation.
+    const wanderX=Math.min(w*.14,68)*
+      (.55*Math.sin(held*.00034)+.29*Math.sin(held*.000157+1.7)
+       +.16*Math.sin(held*.000091+.6));
+    const wanderY=Math.min(h*.20,114)*
+      (.49*Math.sin(held*.000255+.4)+.33*Math.sin(held*.000113+2)
+       +.18*Math.sin(held*.000062+.9));
     const cx=lerp(centreX,clamp(centreX+drift*wanderX,r+8,w-r-8),drift);
     const cy=lerp(centreY,clamp(centreY+drift*wanderY,r+12,h-r-12),drift);
     const alpha=smooth((reveal-.015)/.54);
     // Rotation and drift continue for the entire three-minute hold, with no
     // single-loop path or automatic advancement to another scene.
-    const yaw=held*.000037+Math.sin(held*.000059)*.22;
-    const pitch=held*.000029+Math.sin(held*.000041+1.4)*.18;
+    const yaw=held*.000058+Math.sin(held*.000089)*.22;
+    const pitch=held*.000044+Math.sin(held*.000063+1.4)*.18;
     const textures=ensureSprites();
     ctx.save();
     // Barely visible gas lanes behind the materialised galaxies. The falloff
@@ -182,15 +200,20 @@ export function createGalaxyClusterOrb() {
       // Every individual galaxy emerges on its own gradual schedule;
       // never light up the entire collection on one tap.
       const depthDelay=(p.depth+1)*.09;
-      const local=alpha*smooth((reveal-.07-depthDelay-
-        random(p.i*11+7)*.24)/.38);
+      const local=alpha*smooth((reveal-.05-depthDelay-
+        random(p.i*11+7)*.31)/.48);
       if(local<.002)continue;
       // A few nearby spirals have enough apparent diameter for their arms to
       // remain visible on a phone; the rest stay as tiny galaxies.
       // A few recognisable, resolved galaxies among many small systems.
       // Reducing the number of overlapping glows lets their shapes read.
       const prominent=p.i%13===0?2.35:p.i%7===0?1.55:1;
-      const size=Math.max(2,r*(.029+p.size*.058)*zoom*perspective*prominent);
+      // Apparent positions follow camera distance more strongly than the
+      // individual light discs. This keeps early galaxies separate instead
+      // of creating square patches of overlapping nebular sprites.
+      const apparentDiameter=Math.pow(zoom,.48);
+      const size=Math.max(2,r*(.029+p.size*.058)*
+        apparentDiameter*perspective*prominent);
       const radial=Math.hypot((x-cx)/r,(y-cy)/r);
       const feather=1-sphereVisibility*smooth((radial-.84)/.32);
       const opacity=local*p.opacity*feather*
@@ -226,7 +249,7 @@ export function createGalaxyClusterOrb() {
       ctx.lineWidth=Math.max(.6,Math.min(1.4,r*.006));
       // The short specular arc and highlight slowly travel over the glass
       // independently of the entire orb's drifting position.
-      const roll=held*.000087;
+      const roll=held*.000125;
       ctx.beginPath();
       ctx.arc(cx,cy,r*.993,Math.PI*1.12+roll,Math.PI*1.60+roll);ctx.stroke();
       const gx=cx+Math.cos(-2.25+roll)*r*.61;
