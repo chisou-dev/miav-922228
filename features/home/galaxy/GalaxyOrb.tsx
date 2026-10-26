@@ -425,13 +425,8 @@ export function GalaxyOrb() {
           smooth(t/.10)*(1-smooth((t-.82)/.18))*
           (within?.30:1);
         if(alpha<.018)continue;
-        const previous=position(Math.max(0,a-.055));
-        // A short, randomly angled, tapered stardust streak makes the
-        // flight readable on a phone without turning it into a laser beam.
-        ctx.strokeStyle="rgba(234,243,255,"+(alpha*(within?.22:.46)).toFixed(3)+")";
-        ctx.lineWidth=.65;
-        ctx.beginPath();ctx.moveTo(previous.x,previous.y);
-        ctx.lineTo(pos.x,pos.y);ctx.stroke();
+        // A single bright white grain with a soft circular glow;
+        // no stroke or trailing line behind the moving particle.
         const halo=ctx.createRadialGradient(pos.x,pos.y,0,
           pos.x,pos.y,grain.radius*4.5);
         halo.addColorStop(0,"rgba(249,252,255,"+(alpha*.68).toFixed(3)+")");
@@ -652,11 +647,7 @@ export function GalaxyOrb() {
         if(isInside!==inside)continue;
         const alpha=smooth(t/.10)*(1-smooth((t-.82)/.18));
         if(alpha<.02)continue;
-        const prev=position(Math.max(0,t-.045));
-        ctx.strokeStyle="rgba(227,240,255,"+(alpha*(inside?.22:.47)).toFixed(3)+")";
-        ctx.lineWidth=.65;
-        ctx.beginPath();ctx.moveTo(prev.x,prev.y);
-        ctx.lineTo(pos.x,pos.y);ctx.stroke();
+        // Only the white grain itself is drawn; no stick-shaped trail.
         const glow=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,4.1);
         glow.addColorStop(0,"rgba(250,252,255,"+(alpha*(inside?.30:.58)).toFixed(3)+")");
         glow.addColorStop(1,"rgba(198,225,255,0)");
