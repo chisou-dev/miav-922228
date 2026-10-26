@@ -81,12 +81,13 @@ export function GalaxyOrb() {
     let grains: Grain[] = [];
     // While the orb enlarges, grains come from real hero/header lettering
     // across the top AND bottom of the visible screen (not a lower arc).
-    type ZoomGrain = Point & {
-      phase: number; delay: number; curve: number; life: number;
-      radius: number; brightness: number;
+    type ZoomGrain = {
+      source: Point; born: number; life: number; phase: number;
+      curve: number; radius: number; brightness: number;
     };
     let zoomGrains: ZoomGrain[] = [];
-    let zoomStartedAt = 0;
+    let zoomSources: Point[] = [];
+    let zoomLastSpawn = 0;
     let zoomTextStyles: Array<{el: HTMLElement; opacity: string}> = [];
     let from: Point = { x: 0, y: 0 };
     let to: Point = { x: 0, y: 0 };
@@ -272,10 +273,10 @@ export function GalaxyOrb() {
     }
 
     function prepareZoomAbsorption() {
-      // Sample the actual visible glyph rectangles once per enlargement:
-      // header, title, tagline and body can all supply scattered dust.
-      const sources: Point[] = [];
-      const els = [
+      // Keep true on-screen glyph positions, not a single fixed set of
+      // pre-animated specks. A grain is born later at a NEW letter.
+      const sources:Point[]=[];
+      const els=[
         ...Array.from(document.querySelectorAll<HTMLElement>(
           "header a, header button, header span"
         )),
@@ -283,53 +284,38 @@ export function GalaxyOrb() {
           "h1, p, nav a"
         )),
       ];
-      const uniqueEls = Array.from(new Set(els));
-      const range = document.createRange();
-      for(const el of uniqueEls){
-        const box=el.getBoundingClientRect();
-        if(box.width<1 || box.height<1 || box.bottom<0 ||
-           box.top>window.innerHeight)continue;
+      const range=document.createRange();
+      for(const el of Array.from(new Set(els))){
+        const rect=el.getBoundingClientRect();
+        if(rect.width<1||rect.height<1||rect.bottom<0||
+           rect.top>window.innerHeight)continue;
         const style=getComputedStyle(el);
-        if(style.visibility==="hidden"||style.display==="none")continue;
+        if(style.visibility==="hidden"||style.display==="none"||
+           parseFloat(style.opacity||"1")<.04)continue;
         const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
         let node:Node|null;
-        while((node=walker.nextNode())!==null&&sources.length<2600){
+        while((node=walker.nextNode())!==null&&sources.length<3200){
           const value=node.textContent??"";
-          for(let i=0;i<value.length&&sources.length<2600;i++){
+          for(let i=0;i<value.length&&sources.length<3200;i++){
             if(!value[i].trim())continue;
             range.setStart(node,i);range.setEnd(node,i+1);
-            const rect=range.getBoundingClientRect();
-            if(rect.width<1||rect.height<1 || rect.bottom<0 ||
-               rect.top>window.innerHeight)continue;
-            for(let j=0;j<3;j++){
-              sources.push({
-                x:rect.left+rect.width*rand(.06,.94),
-                y:rect.top+rect.height*rand(.07,.93)
-              });
+            const g=range.getBoundingClientRect();
+            if(g.width<1||g.height<1||g.bottom<0||
+               g.top>window.innerHeight)continue;
+            for(let k=0;k<3;k++){
+              sources.push({x:g.left+rand(.12,.88)*g.width,
+                y:g.top+rand(.12,.88)*g.height});
             }
           }
         }
       }
       if(!sources.length){
-        for(const p of textPixels)sources.push({
-          x:sectionBounds.left+p.x,y:sectionBounds.top+p.y
-        });
-      }
-      // Upper/lower sources deliberately interleave. An irregular mix
-      // preserves individual letter strokes instead of making two neat rows.
-      const upper=sources.filter(p=>p.y<window.innerHeight*.49);
-      const lower=sources.filter(p=>p.y>=window.innerHeight*.49);
-      zoomGrains=Array.from({length:72},(_,i)=>{
-        const pool=i%3===0?upper:i%3===1?lower:sources;
-        const actual=pool.length?pool:sources;
-        const p=actual[Math.floor(Math.random()*actual.length)]||
-          {x:width*.5,y:height*.5};
-        return {...p, phase:rand(0,TAU),delay:Math.random(),
-          curve:rand(-64,64),life:rand(2200,5000),
-          radius:rand(.25,.85),brightness:rand(.32,.86)};
-      });
-      zoomStartedAt=performance.now();
-      // Only temporary opacity changes, always restored on close.
+        zoomSources=textPixels.map(p=>({
+          x:sectionBounds.left+p.x,y:sectionBounds.top+p.y,
+        }));
+      } else zoomSources=sources;
+      zoomGrains=[];
+      zoomLastSpawn=0;
       zoomTextStyles=Array.from(section!.querySelectorAll<HTMLElement>(
         "h1, p, nav a"
       )).filter(el=>el.getBoundingClientRect().width>0)
@@ -337,41 +323,90 @@ export function GalaxyOrb() {
     }
 
     function drawZoomAbsorption(now:number,inside:boolean){
-      if(!expanded||!zoomGrains.length)return;
+      if(!expanded)return;
       const spread=clamp((radius-normalRadius)/
         Math.max(1,maximumRadius-normalRadius),0,1);
-      const strength=.28+.72*smooth(spread);
-      // Four individually travelling grains on the first enlargement,
-      // gradually rising to about fifteen across successive taps. The
-      // particles' points and departure phases are deliberately irregular.
-      const activeGrains=Math.round(4+11*smooth(clamp((zoomStep-1)/4,0,1)));
-      // Smoothly let the original copy grow fragile while the stream
-      // intensifies; still recognisable when entering the voyage.
-      for(const saved of zoomTextStyles){
-        const isHeading=saved.el.matches("h1");
-        saved.el.style.opacity=String(1-strength*(isHeading?.32:.63));
+      // Small sphere: 4-5 grains. Mid-sized sphere: about 15. The enlarged
+      // sphere reaches lettering throughout the viewport.
+      const capacity=Math.round(5+10*smooth(clamp((zoomStep-1)/3,0,1)));
+      const reach=Math.max(radius*3.3,
+        Math.hypot(width,height)*(.16+.85*smooth(spread)));
+      const strength=.52+.48*smooth(spread);
+      if(!inside){
+        for(const saved of zoomTextStyles){
+          const heading=saved.el.matches("h1");
+          saved.el.style.opacity=String(1-strength*(heading?.22:.47));
+        }
+        zoomGrains=zoomGrains.filter(g=>now-g.born<g.life);
+        const interval=capacity<=5?460:capacity<12?310:220;
+        if(now-zoomLastSpawn>=interval && zoomGrains.length<capacity){
+          const eligible=zoomSources.filter(p=>{
+            const d=Math.hypot(p.x-orb.x,p.y-orb.y);
+            return d>radius*1.07&&d<reach;
+          });
+          if(eligible.length){
+            // Avoid two consecutive jets originating from the same glyph
+            // or from neighbouring pixels on one line.
+            let sample=eligible[Math.floor(Math.random()*eligible.length)];
+            for(let trial=0;trial<16;trial++){
+              const candidate=eligible[Math.floor(Math.random()*eligible.length)];
+              if(zoomGrains.every(g=>Math.hypot(
+                candidate.x-g.source.x,candidate.y-g.source.y)>26)){
+                sample=candidate;break;
+              }
+            }
+            zoomGrains.push({
+              source:{...sample},born:now,life:rand(2900,4100),
+              phase:rand(0,TAU),curve:rand(-70,70),
+              radius:rand(.65,1.25),brightness:rand(.70,1),
+            });
+          }
+          zoomLastSpawn=now;
+        }
       }
       ctx.save();
-      for(let i=0;i<activeGrains;i++){
-        const g=zoomGrains[i];
-        const t=((now-zoomStartedAt+g.delay*g.life*3)/g.life)%1;
-        if(t<=.055||t>=.97)continue;
-        const u=smooth(clamp((t-.055)/.915,0,1));
-        const dx=orb.x-g.x,dy=orb.y-g.y;
-        const length=Math.max(1,Math.hypot(dx,dy));
-        const bend=Math.sin(Math.PI*u)*g.curve;
-        const x=mix(g.x,orb.x+dx/length*radius*.18,u)-
-          dy/length*bend;
-        const y=mix(g.y,orb.y+dy/length*radius*.18,u)+
-          dx/length*bend;
-        const inGlass=Math.hypot(x-orb.x,y-orb.y)<=radius*.98;
-        if(inGlass!==inside)continue;
-        const fade=smooth((u)/.10)*(1-smooth((u-.74)/.26));
-        const a=strength*g.brightness*fade*(inside?.38:.86);
-        if(a<.02)continue;
-        ctx.fillStyle="rgba(239,245,255,"+a.toFixed(3)+")";
-        const r=g.radius*(1-.55*u);
-        ctx.fillRect(x,y,r,r);
+      for(const grain of zoomGrains){
+        const t=(now-grain.born)/grain.life;
+        if(t<=0||t>=1)continue;
+        const a=smooth(t);
+        const dx=orb.x-grain.source.x,dy=orb.y-grain.source.y;
+        const d=Math.max(1,Math.hypot(dx,dy));
+        const theta=Math.atan2(dy,dx);
+        // The visible white fleck crosses the EMPTY space OUTSIDE glass,
+        // then its much dimmer tail disappears into the galactic centre.
+        const targetX=orb.x-Math.cos(theta)*radius*.16;
+        const targetY=orb.y-Math.sin(theta)*radius*.16;
+        const bend=grain.curve*Math.sin(Math.PI*a);
+        function position(u:number){
+          return {
+            x:mix(grain.source.x,targetX,u)-dy/d*bend*
+              Math.sin(Math.PI*u)/Math.max(.12,Math.sin(Math.PI*a)),
+            y:mix(grain.source.y,targetY,u)+dx/d*bend*
+              Math.sin(Math.PI*u)/Math.max(.12,Math.sin(Math.PI*a)),
+          };
+        }
+        const pos=position(a);
+        const within=Math.hypot(pos.x-orb.x,pos.y-orb.y)<radius*.98;
+        if(within!==inside)continue;
+        const alpha=strength*grain.brightness*
+          smooth(t/.10)*(1-smooth((t-.82)/.18))*
+          (within?.30:1);
+        if(alpha<.018)continue;
+        const previous=position(Math.max(0,a-.055));
+        // A short, randomly angled, tapered stardust streak makes the
+        // flight readable on a phone without turning it into a laser beam.
+        ctx.strokeStyle="rgba(234,243,255,"+(alpha*(within?.22:.46)).toFixed(3)+")";
+        ctx.lineWidth=.65;
+        ctx.beginPath();ctx.moveTo(previous.x,previous.y);
+        ctx.lineTo(pos.x,pos.y);ctx.stroke();
+        const halo=ctx.createRadialGradient(pos.x,pos.y,0,
+          pos.x,pos.y,grain.radius*4.5);
+        halo.addColorStop(0,"rgba(249,252,255,"+(alpha*.68).toFixed(3)+")");
+        halo.addColorStop(1,"rgba(183,217,255,0)");
+        ctx.fillStyle=halo;
+        ctx.beginPath();ctx.arc(pos.x,pos.y,grain.radius*4.5,0,TAU);ctx.fill();
+        ctx.fillStyle="rgba(255,255,251,"+Math.min(.98,alpha).toFixed(3)+")";
+        ctx.beginPath();ctx.arc(pos.x,pos.y,grain.radius,0,TAU);ctx.fill();
       }
       ctx.restore();
     }
@@ -380,6 +415,7 @@ export function GalaxyOrb() {
       for(const saved of zoomTextStyles)saved.el.style.opacity=saved.opacity;
       zoomTextStyles=[];
       zoomGrains=[];
+      zoomSources=[];
     }
 
     function closeExpanded() {
