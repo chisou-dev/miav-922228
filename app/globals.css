@@ -1188,3 +1188,13 @@ header .lang-switcher__list {
 .trace-dialog-root {
   z-index: 10000;
 }
+
+/* Galaxy voyage: visually remove the normal sidebar while the immersive
+   canvas is active. The sidebar's saved state remains untouched for return. */
+html[data-galaxy-voyage="true"] .app-sidebar,
+html[data-galaxy-voyage="true"] .app-sidebar-mobile-trigger,
+html[data-galaxy-voyage="true"] .app-sidebar-backdrop {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
