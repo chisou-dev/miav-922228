@@ -261,7 +261,7 @@ export function GalaxyVoyage({
         return {x:p.x+(Math.random()-.5)*3,
           y:p.y+(Math.random()-.5)*3,
           delay:Math.random()*.77,
-          radius:.24+Math.random()*.76,
+          radius:.10+Math.random()*.32,
           bend:(Math.random()-.5)*84,phase:Math.random()*TAU};
       });
       titleBase=base;titleEroded=document.createElement("canvas");
@@ -283,7 +283,7 @@ export function GalaxyVoyage({
         drift:(Math.random()-.5)*115,
         wobble:Math.random()*TAU,
         phase:Math.random()*TAU,
-        radius:.17+Math.random()*.57,
+        radius:.09+Math.random()*.28,
         brightness:.38+Math.random()*.62
       };
     });
@@ -433,7 +433,7 @@ export function GalaxyVoyage({
         const alpha=fading*(.16+.38*seed)*Math.sin(Math.PI*t);
         if(alpha<.025)continue;
         ctx!.fillStyle="rgba(218,233,247,"+alpha.toFixed(3)+")";
-        const r=.20+seed*.50;
+        const r=.085+seed*.24;
         ctx!.fillRect(x,y,r,r);
       }
       ctx!.restore();
@@ -468,7 +468,7 @@ export function GalaxyVoyage({
         const alpha=amount*grain.brightness*fadeIn*fadeOut*
           (.73+.27*Math.sin(grain.phase+t*39)**2);
         if(alpha<.025)continue;
-        const size=Math.max(.12,grain.radius*(1-.56*t));
+        const size=Math.max(.075,grain.radius*(1-.56*t));
         ctx!.fillStyle=grain.phase>3.8
           ? "rgba(205,223,248,"+Math.min(.86,alpha).toFixed(3)+")"
           : "rgba(246,240,230,"+Math.min(.86,alpha).toFixed(3)+")";
