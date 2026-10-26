@@ -653,7 +653,13 @@ export function createGalaxyFlightScene() {
     if(count<=0)return;
     const cam=camera(step,w,h);
     const appearance=smooth((step-125)/58);
-    const clusterFade=1-smooth((step-240)/59);
+    // Crucial: the old full-screen LOCAL star catalogue is rectangular.
+    // Compressing its non-galaxy members into 23% of their original field
+    // created the conspicuous little square in the user's screenshots.
+    // As the camera pulls back, those nearby stars pass below visibility,
+    // while the much deeper, spherical farStars catalogue fills the sky.
+    const oldGalaxyFade=1-smooth((step-225)/65);
+    const localFieldFade=1-smooth((step-175)/83);
     const fadeSpan=step<31?36:84;
     for(let i=0;i<skyStars.length;i++){
       const appearing=smooth((count-i)/fadeSpan);
@@ -663,7 +669,10 @@ export function createGalaxyFlightScene() {
       const {x,y}=projectedStar(p,member,step,w,h,now);
       if(x<-3||y<-3||x>w+3||y>h+3)continue;
       const shimmer=.79+.21*Math.sin(now*.00145+p.phase);
-      const survival=member?clusterFade:1-.18*smooth((step-230)/72);
+      // No remnant rectangle at the end: BOTH populations eventually fade.
+      // The old galaxy-side stars follow its upward departure; the rest
+      // gradually become too faint to distinguish at this distance.
+      const survival=member?oldGalaxyFade:localFieldFade;
       const alpha=Math.min(.94,p.power*appearing*shimmer*survival);
       if(alpha<.008)continue;
       ctx.fillStyle="hsla("+p.hue+",43%,88%,"+alpha.toFixed(3)+")";
@@ -687,7 +696,9 @@ export function createGalaxyFlightScene() {
         ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
       }
     }
-    const bright=34*smooth((step-9)/23)*(1-.30*smooth((step-228)/70));
+    // These bright stars originate in that same original rectangular
+    // catalogue; leave no handful of its compressed points behind.
+    const bright=34*smooth((step-9)/23)*(1-smooth((step-190)/69));
     for(let i=0;i<skyBright.length;i++){
       const appearing=smooth((bright-i)/3);
       if(appearing<=0)continue;
