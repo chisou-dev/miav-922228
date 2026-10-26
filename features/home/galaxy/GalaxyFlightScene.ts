@@ -104,7 +104,9 @@ export function createGalaxyFlightScene() {
     const reveal=smooth((step-132)/83);
     const depart=smooth((step-224)/49);
     return {
-      x:w*(1.38-.54*reveal),
+      // The second galaxy clears the frame diagonally to upper LEFT,
+      // never marching straight up a fixed vertical track.
+      x:w*(1.38-.54*reveal-.44*depart),
       y:h*(.47-1.26*depart),
       scale:1-.42*depart,
       depart,
@@ -128,7 +130,7 @@ export function createGalaxyFlightScene() {
     const drift=cam.distant*smooth((step-144)/46);
     const turn=(now*.000031)*drift;
     const radiusX=Math.cos(theta)*rad*short*.93*sight.scale;
-    const radiusY=Math.sin(theta)*rad*short*.37*sight.scale;
+    const radiusY=Math.sin(theta)*rad*short*.30*sight.scale;
     const cs=Math.cos(turn),sn=Math.sin(turn);
     const targetX=sight.x+radiusX*cs-radiusY*sn+
       Math.sin(theta*3.1+p.y*5)*short*.045*sight.scale;
@@ -259,6 +261,22 @@ export function createGalaxyFlightScene() {
     g.beginPath();g.arc(0,0,n*.47,0,TAU);g.fill();
     g.restore();
 
+    // This is a BARRED, inclined second galaxy rather than a duplicate of
+    // the original face-on spiral. Its warm elongated central stellar bar
+    // is embedded BELOW the gaseous arms and thousands of individual stars.
+    g.save();
+    g.translate(middle,middle);
+    g.rotate(-.33);
+    g.scale(1,.36);
+    const bar=g.createRadialGradient(0,0,0,0,0,n*.255);
+    bar.addColorStop(0,"rgba(255,242,216,.54)");
+    bar.addColorStop(.22,"rgba(252,213,184,.43)");
+    bar.addColorStop(.54,"rgba(201,174,192,.20)");
+    bar.addColorStop(1,"rgba(136,163,200,0)");
+    g.fillStyle=bar;
+    g.beginPath();g.arc(0,0,n*.255,0,TAU);g.fill();
+    g.restore();
+
     // Wide translucent interstellar gas wisps have their own scale and hue.
     // They are baked into the SAME fixed galaxy as the star points, so they
     // gradually come into view during zoom-out instead of fading in as a
@@ -269,10 +287,10 @@ export function createGalaxyFlightScene() {
       const radial=.10+rnd(i*43+117)*.79;
       const arm=i%2;
       // Two broad and unequal stellar arms: a galaxy, not a foggy circle.
-      const theta=arm*TAU/2+radial*5.4
-        +(rnd(i*79+19)-.5)*(.64+.27*radial);
+      const theta=arm*TAU/2-.33+radial*4.15
+        +(rnd(i*79+19)-.5)*(.67+.29*radial);
       const x=middle+Math.cos(theta)*radial*n*.42;
-      const y=middle+Math.sin(theta)*radial*n*.275;
+      const y=middle+Math.sin(theta)*radial*n*.235;
       const radius=34+rnd(i*37+101)*86;
       const q=g.createRadialGradient(x,y,0,x,y,radius);
       if(i%7<3){
@@ -298,10 +316,10 @@ export function createGalaxyFlightScene() {
     for(let i=0;i<2500;i++){
       const radial=Math.sqrt(rnd(i*37+191))*.92;
       const arm=i%2;
-      const theta=arm*TAU/2+radial*5.4+
-        (rnd(i*71+51)-.5)*(.37+.48*radial);
+      const theta=arm*TAU/2-.33+radial*4.15+
+        (rnd(i*71+51)-.5)*(.39+.51*radial);
       const cx=middle+Math.cos(theta)*radial*n*.42;
-      const cy=middle+Math.sin(theta)*radial*n*.27;
+      const cy=middle+Math.sin(theta)*radial*n*.235;
       const rad=8+rnd(i*17+109)*31;
       const q=g.createRadialGradient(cx,cy,0,cx,cy,rad);
       const blue=i%9<6;
@@ -319,10 +337,10 @@ export function createGalaxyFlightScene() {
       const arm=i%2;
       const theta=diffuse
         ?rnd(i*41+27)*TAU
-        :arm*TAU/2+radial*5.4+(rnd(i*53+79)-.5)*(.39+.51*radial);
+        :arm*TAU/2-.33+radial*4.15+(rnd(i*53+79)-.5)*(.41+.53*radial);
       const wobble=(rnd(i*73+33)-.5)*.10;
       const x=middle+Math.cos(theta)*(radial+wobble)*n*.43;
-      const y=middle+Math.sin(theta)*(radial+wobble)*n*.275;
+      const y=middle+Math.sin(theta)*(radial+wobble)*n*.235;
       const alpha=(.18+.62*rnd(i*19+47))*
         (diffuse?.52:1)*(1-smooth((radial-.73)/.27));
       const hue=[210,218,232,250,275,328,32,39][i%8];
@@ -331,14 +349,14 @@ export function createGalaxyFlightScene() {
       g.arc(x,y,.22+rnd(i*29+31)*1.18,0,TAU);g.fill();
     }
     // Soft luminous nucleus with a faint surrounding bulge.
-    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.118);
+    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.123);
     core.addColorStop(0,"rgba(255,250,238,1)");
     core.addColorStop(.14,"rgba(255,228,215,.92)");
     core.addColorStop(.35,"rgba(227,212,235,.63)");
     core.addColorStop(.67,"rgba(152,152,205,.23)");
     core.addColorStop(1,"rgba(95,121,180,0)");
     g.fillStyle=core;
-    g.beginPath();g.ellipse(middle,middle,n*.118,n*.079,-.12,0,TAU);g.fill();
+    g.beginPath();g.ellipse(middle,middle,n*.123,n*.052,-.33,0,TAU);g.fill();
     nebulaCache=c;
     return c;
   }
@@ -755,7 +773,7 @@ export function createGalaxyFlightScene() {
     // glides into view and finally leaves across the top.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
-    ctx.drawImage(nebula,-size*.5,-size*.5,size,size);
+    ctx.drawImage(nebula,-size*.5,-size*.44,size,size*.88);
     ctx.restore();
   }
 
