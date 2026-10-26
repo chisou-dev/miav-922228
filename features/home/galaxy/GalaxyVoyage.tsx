@@ -372,6 +372,52 @@ export function GalaxyVoyage({
         brightness:.38+Math.random()*.62
       };
     });
+    // The galaxy keeps drawing in small WHITE grains even before any tap.
+    // These independent sources run continuously, with more material
+    // circulating during the three irregular letter-erosion stages.
+    const orbitSand=Array.from({length:1500},()=>({
+      bearing:Math.random()*TAU,
+      distance:.35+Math.random()*1.4,
+      phase:Math.random(),
+      duration:2300+Math.random()*3100,
+      bend:(Math.random()-.5)*130,
+      wobble:Math.random()*TAU,
+      radius:.21+Math.random()*.26,
+      brightness:.5+Math.random()*.5,
+    }));
+    function drawOrbitSand(now:number,step:number){
+      if(step>12)return;
+      const intensity=step<=3?1:1-ease((step-3)/9);
+      if(intensity<=.002)return;
+      const cap=step<1?420:step<2?680:step<3?940:1500;
+      const cx=viewWidth*.51,cy=viewHeight*.52;
+      const short=Math.min(viewWidth,viewHeight);
+      ctx!.save();
+      for(let i=0;i<cap;i++){
+        const grain=orbitSand[i];
+        const age=now-opened+grain.phase*grain.duration;
+        const t=((age%grain.duration)+grain.duration)%grain.duration/grain.duration;
+        const u=ease(t);
+        const sx=cx+Math.cos(grain.bearing)*short*grain.distance;
+        const sy=cy+Math.sin(grain.bearing)*short*grain.distance*.68;
+        const dx=cx-sx,dy=cy-sy;
+        const d=Math.max(1,Math.hypot(dx,dy));
+        const curve=grain.bend*Math.sin(Math.PI*u);
+        const x=sx+dx*u-dy/d*curve+
+          Math.sin(t*23+grain.wobble)*2*(1-u);
+        const y=sy+dy*u+dx/d*curve+
+          Math.cos(t*19+grain.wobble)*2*(1-u);
+        if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
+        const fade=ease(t/.08)*(1-ease((t-.83)/.17));
+        const alpha=grain.brightness*intensity*fade*.91;
+        if(alpha<.025)continue;
+        ctx!.fillStyle="rgba(255,255,253,"+alpha.toFixed(3)+")";
+        const r=grain.radius*(1-.42*u);
+        ctx!.fillRect(x,y,r,r);
+      }
+      ctx!.restore();
+    }
+
     // The original DOM text remains visible until it is consumed. Fade it
     // WHILE sand is departing. Preserve exact inline styles for the return.
     const section=document.querySelector("[data-galaxy-title]")?.closest("section");
@@ -700,6 +746,10 @@ export function GalaxyVoyage({
       // three seconds. Keep them gone while the ORIGINAL glass breaks.
       consumeOriginalText(1);
       peelBackground(1,1-ease((p-.73)/.27));
+      // Crossfade the same-size glyphs in their ORIGINAL page position
+      // while the DOM stencil is being covered by the space background.
+      // There is never a gap or a second title entering elsewhere.
+      drawRemainingTitle(now,ease((p-.73)/.27));
       const glassOpacity=1-ease((p-.60)/.37);
       if(glassOpacity>.002){
         ctx!.save();
@@ -732,7 +782,7 @@ export function GalaxyVoyage({
       return mix(from,to,ease((now-titleTapStartedAt)/ms));
     }
 
-    function drawRemainingTitle(now:number) {
+    function drawRemainingTitle(now:number, entering=1) {
       if(target>=4)return;
       prepareTitle();
       if(!titleBase||!titleEroded)return;
@@ -757,11 +807,13 @@ export function GalaxyVoyage({
       // Tap two becomes an almost translucent, fragile ivory-white.
       // Do not mistake this subdued opacity for the erosion itself:
       // the silhouette above has actually lost material at its edges.
-      const faded=target===2?mix(1,.47,ease((now-titleTapStartedAt)/1700)):
-        target===3?mix(.47,.32,ease((now-titleTapStartedAt)/4850)):1;
-      ctx!.globalAlpha=faded;
-      ctx!.shadowColor="rgba(204,226,255,.085)";
-      ctx!.shadowBlur=2;
+      // The material, not a UI alpha fade, is what disappears. On tap 3
+      // its last surviving strokes also become almost transparent.
+      const faded=target===2?mix(1,.87,ease((now-titleTapStartedAt)/1700)):
+        target===3?mix(.87,.035,ease((now-titleTapStartedAt)/4850)):1;
+      ctx!.globalAlpha=faded*entering;
+      ctx!.shadowColor="rgba(204,226,255,.045)";
+      ctx!.shadowBlur=.5;
       ctx!.drawImage(titleEroded,pos.x,pos.y);
       ctx!.restore();
     }
@@ -802,9 +854,7 @@ export function GalaxyVoyage({
           (.42+.46*Math.sin(grain.phase+t*19)**2)*
           (final?1.0:stage===1?.66:.85);
         if(alpha<.023)continue;
-        ctx!.fillStyle=grain.phase>Math.PI
-          ?"rgba(208,230,255,"+alpha.toFixed(3)+")"
-          :"rgba(255,242,223,"+alpha.toFixed(3)+")";
+        ctx!.fillStyle="rgba(251,251,249,"+alpha.toFixed(3)+")";
         const radius=grain.radius*(1-.60*t);
         ctx!.fillRect(x,y,radius,radius);
       }
@@ -895,7 +945,15 @@ export function GalaxyVoyage({
       // Transparent galactic gas is BELOW its own orbiting stars. The camera
       // and star positions share the same distance: no stage picture swap.
       flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight, now);
-      flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
+      // The third tap finishes the title, leaving JUST the galaxy and
+      // drifting sand. Stars begin revealing with the FOURTH tap and
+      // accumulate and twinkle through the existing unchanged sky logic.
+      if(s>3){
+        ctx!.save();
+        ctx!.globalAlpha=ease((s-3)/.92);
+        flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
+        ctx!.restore();
+      }
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
         flightScene.drawFinalSparkles(ctx!, now - finalReachedAt, viewWidth, viewHeight);
       }
@@ -920,6 +978,7 @@ export function GalaxyVoyage({
         ctx!.arc(viewWidth * 0.51, viewHeight * 0.52, 0.7, 0, TAU);
         ctx!.fill();
       }
+      drawOrbitSand(now,s);
 
       // The eroded heading and departing dust were drawn BEHIND the galaxy.
 
