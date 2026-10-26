@@ -519,46 +519,82 @@ export function GalaxyVoyage({
         w:mask.width,h:mask.height};
     }
 
+    // Background pigment is consumed as individual microscopic flecks
+    // across the WHOLE page. The stable sub-pixel noise never moves as
+    // a rectangle, closing shutter, radial vignette or blotchy square patch.
+    // A cached, modest-resolution mask keeps the mobile render affordable.
+    let absorptionMask:HTMLCanvasElement|null=null;
+    let absorptionPixels:ImageData|null=null;
+    let absorptionThresholds:Uint8Array|null=null;
+    let absorptionStage=-1;
+    function prepareAbsorptionMask(){
+      const scale=Math.min(1,780/Math.max(1,viewWidth));
+      const w=Math.max(2,Math.ceil(viewWidth*scale));
+      const h=Math.max(2,Math.ceil(viewHeight*scale));
+      if(absorptionMask && absorptionMask.width===w &&
+        absorptionMask.height===h && absorptionPixels &&
+        absorptionThresholds)return;
+      const mask=document.createElement("canvas");
+      mask.width=w;mask.height=h;
+      const m=mask.getContext("2d");
+      if(!m)return;
+      const pixels=m.createImageData(w,h);
+      const thresholds=new Uint8Array(w*h);
+      // Individual flecks vanish at different moments. A small amount
+      // of low-frequency variation suggests uneven weathered material,
+      // but no visible coarse patches or four-sided wall closing.
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const idx=y*w+x;
+        const nx=(x+.5)/w,ny=(y+.5)/h;
+        const radial=Math.hypot(nx-origin.x/viewWidth,
+          ny-origin.y/viewHeight);
+        const grain=Math.random();
+        const turbulence=.032*Math.sin(x*.101+y*.076)*
+          Math.cos(y*.083-x*.047);
+        const fading=clamp(grain+turbulence-.045*radial,0,1);
+        thresholds[idx]=Math.round(fading*255);
+        const i=idx*4;
+        pixels.data[i]=0;
+        pixels.data[i+1]=2;
+        pixels.data[i+2]=9;
+        pixels.data[i+3]=0;
+      }
+      absorptionMask=mask;
+      absorptionPixels=pixels;
+      absorptionThresholds=thresholds;
+      absorptionStage=-1;
+    }
     function peelBackground(amount:number,titleVisibility:number){
       if(amount<=0)return;
       const p=clamp(amount,0,1);
-      // A single clean inward-moving peel from ALL FOUR PAGE EDGES.
-      // Do not paint random dark squares or a full-screen fade: the dark
-      // edges progressively consume the original navy wall toward the
-      // middle while the white/blue sand keeps travelling into the galaxy.
-      const reach=ease((p-.015)/.985);
-      const featherX=Math.max(14,viewWidth*.095);
-      const featherY=Math.max(18,viewHeight*.095);
-      const depthX=Math.max(1,reach*(viewWidth*.5+featherX));
-      const depthY=Math.max(1,reach*(viewHeight*.5+featherY));
-      const black="rgba(0,2,9,1)";
-      const clear="rgba(0,2,9,0)";
       ctx!.save();
-      const left=ctx!.createLinearGradient(0,0,depthX,0);
-      left.addColorStop(0,black);
-      left.addColorStop(Math.max(0,1-featherX/depthX),black);
-      left.addColorStop(1,clear);
-      ctx!.fillStyle=left;
-      ctx!.fillRect(0,0,depthX,viewHeight);
-      const right=ctx!.createLinearGradient(viewWidth,0,viewWidth-depthX,0);
-      right.addColorStop(0,black);
-      right.addColorStop(Math.max(0,1-featherX/depthX),black);
-      right.addColorStop(1,clear);
-      ctx!.fillStyle=right;
-      ctx!.fillRect(viewWidth-depthX,0,depthX,viewHeight);
-      const top=ctx!.createLinearGradient(0,0,0,depthY);
-      top.addColorStop(0,black);
-      top.addColorStop(Math.max(0,1-featherY/depthY),black);
-      top.addColorStop(1,clear);
-      ctx!.fillStyle=top;
-      ctx!.fillRect(0,0,viewWidth,depthY);
-      const bottom=ctx!.createLinearGradient(0,viewHeight,0,viewHeight-depthY);
-      bottom.addColorStop(0,black);
-      bottom.addColorStop(Math.max(0,1-featherY/depthY),black);
-      bottom.addColorStop(1,clear);
-      ctx!.fillStyle=bottom;
-      ctx!.fillRect(0,viewHeight-depthY,viewWidth,depthY);
-      // Preserve the same original heading cutout as before.
+      prepareAbsorptionMask();
+      if(absorptionMask&&absorptionPixels&&absorptionThresholds){
+        // Quantize only the mask update, not the moving sand animation.
+        // Each ~1px grain keeps its assigned release threshold stable.
+        const stage=p>=.995?256:Math.floor(p*255);
+        if(stage!==absorptionStage){
+          const data=absorptionPixels.data;
+          const thresholds=absorptionThresholds;
+          for(let i=0;i<thresholds.length;i++){
+            const difference=stage-thresholds[i];
+            const alpha=stage===256?255:
+              difference<=-11?0:difference>=11?255:
+              Math.round((difference+11)*(255/22));
+            data[i*4+3]=alpha;
+          }
+          absorptionMask.getContext("2d")!.putImageData(absorptionPixels,0,0);
+          absorptionStage=stage;
+        }
+        ctx!.imageSmoothingEnabled=true;
+        ctx!.drawImage(absorptionMask,0,0,viewWidth,viewHeight);
+      }else{
+        // Browser fallback: never use edge-closing masks.
+        ctx!.fillStyle="rgba(0,2,9,"+p.toFixed(3)+")";
+        ctx!.fillRect(0,0,viewWidth,viewHeight);
+      }
+      // The MIAV title still belongs to the ORIGINAL page. Its actual
+      // glyph stencil remains untouched until the later title taps.
       if(titleVisibility>0 && peelHeadingMask && peelHeadingBox){
         ctx!.globalCompositeOperation="destination-out";
         ctx!.globalAlpha=clamp(titleVisibility,0,1);
