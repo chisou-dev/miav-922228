@@ -90,6 +90,10 @@ export function GalaxyOrb() {
     let zoomGrains: ZoomGrain[] = [];
     let zoomSources: Point[] = [];
     let zoomLastSpawn = 0;
+    // Separate from the approved first-tap particles. Only zoomStep >= 2
+    // uses this denser stream; the unexpanded and first-zoom orb are intact.
+    let expandedSand: ZoomGrain[] = [];
+    let expandedSandLastSpawn = 0;
     let zoomTextStyles: Array<{el: HTMLElement; opacity: string}> = [];
     let from: Point = { x: 0, y: 0 };
     let to: Point = { x: 0, y: 0 };
@@ -349,14 +353,108 @@ export function GalaxyOrb() {
       } else zoomSources=sources;
       zoomGrains=[];
       zoomLastSpawn=0;
+      expandedSand=[];
+      expandedSandLastSpawn=0;
       zoomTextStyles=Array.from(section!.querySelectorAll<HTMLElement>(
         "h1, p, nav a"
       )).filter(el=>el.getBoundingClientRect().width>0)
         .map(el=>({el,opacity:el.style.opacity}));
     }
 
+    function drawExpandedSand(now:number,inside:boolean){
+      // After the second tap, the incoming sand grows from a few dozen
+      // independent specks into a fine irregular shower from all sides.
+      // Nothing here runs for the smallest orb or first enlargement.
+      const stage=smooth(clamp((zoomStep-2)/3,0,1));
+      const capacity=Math.round(18+90*stage);
+      const interval=mix(105,16,stage);
+      const reach=Math.hypot(width,height);
+      if(!inside){
+        // Restore only on closing as before. Text remains readable even
+        // when much of its fine material has left the page.
+        for(const saved of zoomTextStyles){
+          const isHeading=saved.el.matches("h1");
+          saved.el.style.opacity=String(1-(.43+.30*stage)*(isHeading?.42:.72));
+        }
+        expandedSand=expandedSand.filter(p=>now-p.born<p.life);
+        if(expandedSandLastSpawn===0)expandedSandLastSpawn=now-interval;
+        const ready=Math.min(5,Math.floor((now-expandedSandLastSpawn)/interval));
+        if(ready>0){
+          // Prefer individual visible letter positions OUTSIDE the globe.
+          // As the globe grows to cover the words, keep spawning from the
+          // surrounding empty sky instead of allowing the stream to die.
+          const candidates=zoomSources.filter(p=>{
+            const d=Math.hypot(p.x-orb.x,p.y-orb.y);
+            return d>radius*1.09 && d<reach &&
+              p.x>=1&&p.x<width-1&&p.y>=1&&p.y<height-1;
+          });
+          for(let j=0;j<ready&&expandedSand.length<capacity;j++){
+            let source:Point|null=null;
+            if(candidates.length){
+              // Different letters and directions; never a single fixed jet.
+              for(let attempt=0;attempt<14;attempt++){
+                const p=candidates[Math.floor(Math.random()*candidates.length)];
+                if(expandedSand.every(q=>
+                  Math.hypot(p.x-q.source.x,p.y-q.source.y)>21)){
+                  source={x:p.x,y:p.y};break;
+                }
+                if(!source)source={x:p.x,y:p.y};
+              }
+            }
+            if(!source){
+              for(let attempt=0;attempt<32;attempt++){
+                const bearing=rand(0,TAU);
+                const d=radius*(1.16+rand(0,.80));
+                const x=orb.x+Math.cos(bearing)*d;
+                const y=orb.y+Math.sin(bearing)*d;
+                if(x>3&&x<width-3&&y>3&&y<height-3){
+                  source={x,y};break;
+                }
+              }
+            }
+            if(!source)continue;
+            expandedSand.push({
+              source,born:now-rand(0,interval),life:rand(2200,3700),
+              phase:rand(0,TAU),curve:rand(-75,75),
+              radius:rand(.28,.48),brightness:rand(.75,1),
+            });
+          }
+          expandedSandLastSpawn=now;
+        }
+      }
+      ctx.save();
+      for(const p of expandedSand){
+        const t=(now-p.born)/p.life;
+        if(t<=0||t>=1)continue;
+        const u=smooth(t);
+        const dx=orb.x-p.source.x,dy=orb.y-p.source.y;
+        const d=Math.max(1,Math.hypot(dx,dy));
+        const bend=Math.sin(Math.PI*u)*p.curve;
+        const x=mix(p.source.x,orb.x,u)-dy/d*bend;
+        const y=mix(p.source.y,orb.y,u)+dx/d*bend;
+        if(x<0||x>width||y<0||y>height)continue;
+        const within=Math.hypot(x-orb.x,y-orb.y)<radius*.98;
+        if(within!==inside)continue;
+        const fade=smooth(t/.075)*(1-smooth((t-.83)/.17));
+        const shimmer=.83+.17*Math.sin(now*.004+p.phase)**2;
+        const alpha=p.brightness*fade*shimmer*(within?.27:.93);
+        if(alpha<.018)continue;
+        // Same tiny WHITE sand as the approved smallest orb:
+        // no halo, glow, line, stick, comet tail or enlarged dots.
+        ctx.fillStyle="rgba(255,255,255,"+alpha.toFixed(3)+")";
+        ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
+      }
+      ctx.restore();
+    }
+
     function drawZoomAbsorption(now:number,inside:boolean){
       if(!expanded)return;
+      // Keep the exact first enlargement (and the smallest roaming orb)
+      // previously approved. All increased sand starts at the SECOND tap.
+      if(zoomStep>=2){
+        drawExpandedSand(now,inside);
+        return;
+      }
       const spread=clamp((radius-normalRadius)/
         Math.max(1,maximumRadius-normalRadius),0,1);
       // Small sphere: 4-5 grains. Mid-sized sphere: about 15. The enlarged
@@ -437,6 +535,8 @@ export function GalaxyOrb() {
       zoomTextStyles=[];
       zoomGrains=[];
       zoomSources=[];
+      expandedSand=[];
+      expandedSandLastSpawn=0;
     }
 
     function closeExpanded() {
