@@ -30,10 +30,9 @@ const FINAL_HOLD_MS = 180_000;
 const IDLE_MS = 120_000;
 
 function sampleTextLocations(): Point[] {
-  // Sample visible individual GLYPHS, not the bounding rectangle of a whole
-  // paragraph. Rectangular random sources looked like evenly spread static.
-  // Include top navigation as well as all visible hero lettering, rather
-  // than releasing dust only from the lower half of the mobile screen.
+  // After the glass breaks, fine dust comes from EVERY visible glyph on the
+  // homepage, not only randomly selected letters. Keep the existing drawSand
+  // animation, glass transition, title erosion and voyage timing unchanged.
   const points: Point[] = [];
   const elements = document.querySelectorAll(
     "header a, header button, header span, main section:first-of-type h1, " +
@@ -42,26 +41,25 @@ function sampleTextLocations(): Point[] {
   );
   const range = document.createRange();
   for (const el of elements) {
-    if (points.length >= 1200) break;
+    if (points.length >= 3000) break;
     const style = getComputedStyle(el);
-    if (style.visibility === "hidden" || style.display === "none") continue;
+    if (style.visibility === "hidden" || style.display === "none" ||
+        Number.parseFloat(style.opacity || "1") < .03) continue;
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     let node: Node | null;
-    while ((node = walker.nextNode()) !== null && points.length < 1200) {
+    while ((node = walker.nextNode()) !== null && points.length < 3000) {
       const text = node.textContent ?? "";
-      for (let i=0;i<text.length && points.length<1200;i++) {
+      for (let i=0;i<text.length && points.length<3000;i++) {
         if (!text[i].trim()) continue;
-        if (Math.random() > .68) continue;
         range.setStart(node, i);
         range.setEnd(node, i + 1);
         const r = range.getBoundingClientRect();
         if (r.width < 1 || r.height < 1 || r.right < 0 ||
             r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) continue;
-        const count = Math.random() < .34 ? 2 : 1;
-        for (let n=0;n<count;n++) {
+        for (let n=0;n<3 && points.length<3000;n++) {
           points.push({
-            x:r.left+r.width*(.12+.76*Math.random()),
-            y:r.top+r.height*(.26+.55*Math.random()),
+            x:r.left+r.width*(.08+.84*Math.random()),
+            y:r.top+r.height*(.10+.80*Math.random()),
           });
         }
       }
