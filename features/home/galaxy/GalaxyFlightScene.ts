@@ -612,9 +612,10 @@ export function createGalaxyFlightScene() {
   // Unlike concentric parallel Saturn bands, each ring circles the planet
   // along a DIFFERENT screen-space axis: -18°, +27°, and +72°.
   // Rear arcs are behind the planet; front arcs cross in front.
-  // Ring planes remain steady while the planet's clouds rotate on their own.
+  // The ring planes stay anchored in 3D; bright flecks orbit opposite to
+  // the ringed planet's own visible cloud rotation.
   function drawThreeRings(ctx:CanvasRenderingContext2D,x:number,y:number,
-    radius:number,front:boolean,hue:number) {
+    radius:number,front:boolean,hue:number,now:number) {
     const hoops=[
       {axis:-18*Math.PI/180,major:1.57,minor:.48,stroke:.088,shade:83,opacity:.58},
       {axis: 27*Math.PI/180,major:1.70,minor:.50,stroke:.077,shade:69,opacity:.53},
@@ -622,7 +623,8 @@ export function createGalaxyFlightScene() {
     ];
     ctx.save();
     ctx.lineCap="round";
-    for(const hoop of hoops){
+    for(let k=0;k<hoops.length;k++){
+      const hoop=hoops[k];
       ctx.beginPath();
       ctx.ellipse(x,y,radius*hoop.major,radius*hoop.minor,hoop.axis,
         front?0:Math.PI,front?Math.PI:TAU);
@@ -630,6 +632,24 @@ export function createGalaxyFlightScene() {
       ctx.strokeStyle="hsla("+hue+",29%,"+hoop.shade+"%,"+
         (hoop.opacity*(front?1:.71)).toFixed(3)+")";
       ctx.stroke();
+      // Pale and shadowed grains circulate counter to the cloud bands.
+      // They trace the existing ellipses; the rings themselves never spin
+      // like flat propellers. No motion once the hoops are tiny on screen.
+      if(radius>9){
+        const orbit=now*.00056;
+        for(let j=0;j<9;j++){
+          const theta=(orbit+j*TAU/9+k*.73)%TAU;
+          const visible=front?theta<Math.PI:theta>=Math.PI;
+          if(!visible)continue;
+          ctx.beginPath();
+          ctx.ellipse(x,y,radius*hoop.major,radius*hoop.minor,
+            hoop.axis,theta,theta+.070);
+          ctx.lineWidth=Math.max(.55,radius*hoop.stroke*.53);
+          ctx.strokeStyle="hsla("+hue+",32%,"+(j%3===0?96:38)+"%,"+
+            (hoop.opacity*(j%3===0?.68:.31)).toFixed(3)+")";
+          ctx.stroke();
+        }
+      }
     }
     ctx.restore();
   }
@@ -646,16 +666,16 @@ export function createGalaxyFlightScene() {
       return;
     }
     if(world.ring && r>3.7){
-      drawThreeRings(ctx,x,y,r,false,world.hue);
+      drawThreeRings(ctx,x,y,r,false,world.hue,now);
     }
-    // Rotation runs continuously even while the user is NOT tapping.
-    // Each planet completes one slow turn in about 45–65 seconds.
-    // It is a longitude/texture rotation, not a flat disk rotation.
-    // Under 8 screen pixels the surface is no longer distinguishable:
-    // stop spending render work on movement at that distance.
-    const spinVisible=r>8;
-    const angularSpeed=.000092+world.id*.000005;
-    const turns=spinVisible ? now*angularSpeed+world.id*.071 : 0;
+    // Faster textured longitude rotation stays visible between taps.
+    // The ringed world's atmosphere rotates in the opposite direction
+    // from the other planets. Its ring flecks orbit counter to those clouds.
+    // Once a planet becomes too small, freeze the rotation entirely.
+    const spinVisible=r>9;
+    const angularSpeed=.000148+world.id*.000006;
+    const direction=world.ring?-1:1;
+    const turns=spinVisible ? direction*now*angularSpeed+world.id*.071 : 0;
     const movingFrame=spinVisible ? ((turns*12)%12) : 0;
     const frame=Math.floor(movingFrame);
     const blend=spinVisible ? movingFrame-frame : 0;
@@ -685,7 +705,7 @@ export function createGalaxyFlightScene() {
       }
     }
     if(world.ring && r>3.7){
-      drawThreeRings(ctx,x,y,r,true,world.hue);
+      drawThreeRings(ctx,x,y,r,true,world.hue,now);
     }
   }
 
