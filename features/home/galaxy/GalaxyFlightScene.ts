@@ -91,36 +91,61 @@ export function createGalaxyFlightScene() {
     }
     return SKY_STARS;
   }
-  // One camera move, not a picture swap: the galaxy first enters from
-  // the RIGHT as a faint edge, reveals half its asymmetric disc, then drifts
-  // UP and out as the rearward sightline changes. Unrelated stars persist.
-  const stellarRecession=(step:number)=>smooth((step-120)/95);
+  // A continuously widening camera, not two star layers with one frozen.
+  // Both near and far stars obey the same recession. A larger pre-existing
+  // catalogue enters the expanding field of view as the telescope pulls back.
+  const stellarRecession=(step:number)=>smooth((step-120)/144);
+  function camera(step:number,w:number,h:number){
+    const distant=stellarRecession(step);
+    return {scale:1-.77*distant,panX:-w*.09*distant,
+      panY:h*.025*distant,distant};
+  }
   function galaxySightline(step:number,w:number,h:number){
-    const reveal=smooth((step-126)/88);
-    const depart=smooth((step-216)/49);
+    const reveal=smooth((step-132)/83);
+    const depart=smooth((step-224)/49);
     return {
-      x:w*(1.29-.47*reveal),
-      y:h*(.39-1.18*depart),
-      scale:1-.34*depart,
+      x:w*(1.38-.54*reveal),
+      y:h*(.47-1.26*depart),
+      scale:1-.42*depart,
       depart,
     };
   }
   function projectedStar(
-    p:{x:number;y:number},member:boolean,step:number,w:number,h:number,
+    p:{x:number;y:number},member:boolean,step:number,
+    w:number,h:number,now=0,
   ){
-    if(!member)return {x:w*p.x,y:h*p.y};
-    const recession=stellarRecession(step);
-    const short=Math.min(w,h);
+    const cam=camera(step,w,h);
+    const backX=w*.5+(p.x-.5)*w*cam.scale+cam.panX;
+    const backY=h*.5+(p.y-.5)*h*cam.scale+cam.panY;
+    if(!member)return {x:backX,y:backY};
     const sight=galaxySightline(step,w,h);
-    const targetX=sight.x+(p.x-.5)*short*1.12*sight.scale+
-      Math.sin(p.y*7.9+p.x*2.3)*short*.083*sight.scale;
-    const targetY=sight.y+(p.y-.5)*short*.43*sight.scale+
-      Math.sin(p.x*5.6+p.y*2.2)*short*.054*sight.scale;
+    const short=Math.min(w,h);
+    const theta=Math.atan2((p.y-.5)*.60,(p.x-.5));
+    const drift=cam.distant*smooth((step-144)/46);
+    // Disc changes its apparent perspective with distance; when paused
+    // the gas and stellar lanes KEEP gently orbiting around the same axis.
+    const turn=(now*.000010)*drift;
+    const radiusX=(p.x-.5)*short*1.75*sight.scale;
+    const radiusY=(p.y-.5)*short*.72*sight.scale;
+    const cs=Math.cos(turn),sn=Math.sin(turn);
+    const targetX=sight.x+radiusX*cs-radiusY*sn+
+      Math.sin(theta*3.1+p.y*5)*short*.075*sight.scale;
+    const targetY=sight.y+radiusX*sn+radiusY*cs+
+      Math.sin(theta*2.2+p.x*4)*short*.045*sight.scale;
+    const blend=smooth((step-123)/105);
     return {
-      x:w*p.x+(targetX-w*p.x)*recession,
-      y:h*p.y+(targetY-h*p.y)*recession,
+      x:backX+(targetX-backX)*blend,
+      y:backY+(targetY-backY)*blend,
     };
   }
+  const farStars=Array.from({length:1900},(_,i)=>({
+    x:(rnd(i*109+31)-.5)*7.3,
+    y:(rnd(i*97+241)-.5)*7.3,
+    radius:.23+rnd(i*71+33)*.66,
+    phase:rnd(i*43+151)*TAU,
+    hue:[207,224,238,42,33,282][i%6],
+    power:.17+rnd(i*59+111)*.54,
+  }));
   const skyStars=Array.from({length:SKY_STARS},(_,i)=>({
     x:rnd(i*11+17),y:rnd(i*17+37),
     radius:.31+rnd(i*13+47)*.86,
@@ -616,35 +641,49 @@ export function createGalaxyFlightScene() {
   function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,step:number) {
     const count=visibleStarCount(step);
     if(count<=0)return;
-    const recede=stellarRecession(step);
-    const clusterFade=1-smooth((step-231)/52);
+    const cam=camera(step,w,h);
+    const appearance=smooth((step-125)/58);
+    const clusterFade=1-smooth((step-240)/59);
     const fadeSpan=step<31?36:84;
-    // Identity and colour never change. Roughly two thirds of the EXISTING
-    // stars form the receding asymmetric structure; the rest stay outside.
-    // No new background texture switches on at a hidden keyframe.
     for(let i=0;i<skyStars.length;i++){
       const appearing=smooth((count-i)/fadeSpan);
-      if(appearing<=0.0001)continue;
+      if(appearing<=.0001)continue;
       const member=i%3!==0;
       const p=skyStars[i];
-      const {x,y}=projectedStar(p,member,step,w,h);
-      if(x < -2 || y < -2 || x > w+2 || y > h+2)continue;
-      const shimmer=.78+.22*Math.sin(now*.00145+p.phase+step*.15);
-      const survival=member?clusterFade:(1-.27*smooth((step-185)/65));
-      const concentration=member?1+.17*recede:1;
-      const alpha=Math.min(.94,p.power*appearing*shimmer*survival*concentration);
-      if(alpha<.007)continue;
+      const {x,y}=projectedStar(p,member,step,w,h,now);
+      if(x<-3||y<-3||x>w+3||y>h+3)continue;
+      const shimmer=.79+.21*Math.sin(now*.00145+p.phase);
+      const survival=member?clusterFade:1-.18*smooth((step-230)/72);
+      const alpha=Math.min(.94,p.power*appearing*shimmer*survival);
+      if(alpha<.008)continue;
       ctx.fillStyle="hsla("+p.hue+",43%,88%,"+alpha.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
-    // Brighter unrelated stars stay at their own bearings, surrounding the
-    // emerging galaxy on all sides instead of making a black cutout around it.
-    const bright=34*smooth((step-9)/23)*(1-.35*smooth((step-210)/70));
+    // Unlike a replacement sky image, these previously unseen stars already
+    // have permanent coordinates beyond the original narrow camera view.
+    // They enter from all four edges as the wider field is progressively
+    // revealed; no scene cut and no fixed outer-star frame.
+    if(appearance>.001){
+      for(const p of farStars){
+        const x=w*.5+p.x*w*cam.scale+cam.panX;
+        const y=h*.5+p.y*h*cam.scale+cam.panY;
+        if(x<0||x>w||y<0||y>h)continue;
+        const angular=Math.max(Math.abs(p.x),Math.abs(p.y));
+        const entry=smooth((step-(122+angular*8))/40);
+        const a=appearance*entry*p.power*
+          (.82+.18*Math.sin(now*.00115+p.phase));
+        if(a<.009)continue;
+        ctx.fillStyle="hsla("+p.hue+",39%,88%,"+a.toFixed(3)+")";
+        ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
+      }
+    }
+    const bright=34*smooth((step-9)/23)*(1-.30*smooth((step-228)/70));
     for(let i=0;i<skyBright.length;i++){
       const appearing=smooth((bright-i)/3);
       if(appearing<=0)continue;
       const p=skyBright[i];
-      const x=w*p.x,y=h*p.y;
+      const {x,y}=projectedStar(p,false,step,w,h,now);
+      if(x<0||x>w||y<0||y>h)continue;
       const a=appearing*p.power*(.72+.28*Math.sin(now*.001+p.phase));
       if(a<.008)continue;
       const radius=p.radius*4.5;
@@ -655,58 +694,45 @@ export function createGalaxyFlightScene() {
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
-    // Very brief, irregular glints on existing stars during movement only.
-    if(step>=18 && step<145){
+    // Hold the field and its slowly turning galactic disc between taps.
+    if(step>=18&&step<145){
       const whole=Math.floor(step),partial=step-whole;
       const pulse=Math.sin(Math.PI*partial);
       if(pulse>.03){
         for(let j=0;j<4;j++){
-          const index=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
-          const p=skyStars[index];
-          const loc=projectedStar(p,index%3!==0,step,w,h);
-          const radius=4+p.radius*4;
-          const glow=ctx.createRadialGradient(loc.x,loc.y,0,loc.x,loc.y,radius);
+          const idx=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
+          const p=skyStars[idx];
+          const loc=projectedStar(p,idx%3!==0,step,w,h,now);
+          const rad=4+p.radius*4;
+          const glow=ctx.createRadialGradient(loc.x,loc.y,0,loc.x,loc.y,rad);
           glow.addColorStop(0,"hsla("+p.hue+",55%,91%,"+(pulse*.22).toFixed(3)+")");
           glow.addColorStop(1,"hsla("+p.hue+",55%,72%,0)");
-          ctx.fillStyle=glow;ctx.beginPath();ctx.arc(loc.x,loc.y,radius,0,TAU);ctx.fill();
+          ctx.fillStyle=glow;ctx.beginPath();ctx.arc(loc.x,loc.y,rad,0,TAU);ctx.fill();
         }
       }
     }
   }
 
-  function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
-    // Only diffuse light co-located with the SAME receding stars. Let its
-    // edge appear, its half-disc become recognisable, and then carry it
-    // off the TOP of the frame. Never spawn a separate full spiral photo.
+  function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
     const sight=galaxySightline(step,w,h);
-    const strength=smooth((step-153)/66)*(1-smooth((step-237)/39));
-    if(strength<.003)return;
+    // Nebulous gas and broken arms are part of ONE stellar disc. Both the
+    // dust cloud and its stars revolve even while the camera stops moving.
+    const reveal=smooth((step-147)/63);
+    const exit=1-smooth((step-250)/39);
+    const strength=reveal*exit;
+    if(strength<.001)return;
     const short=Math.min(w,h);
     ctx.save();
     ctx.globalCompositeOperation="screen";
-    const wisps=[
-      {dx:0,dy:0,sx:.81,sy:.29,hue:215,opacity:.105},
-      {dx:-.24,dy:.039,sx:.44,sy:.16,hue:236,opacity:.054},
-      {dx:.18,dy:-.051,sx:.34,sy:.15,hue:33,opacity:.061},
-      {dx:-.07,dy:.087,sx:.28,sy:.12,hue:205,opacity:.047},
-    ];
-    for(const p of wisps){
-      const radius=short*p.sx*sight.scale;
-      ctx.save();
-      ctx.translate(sight.x+p.dx*short*sight.scale,
-        sight.y+p.dy*short*sight.scale);
-      ctx.rotate(-.14);
-      ctx.scale(1,p.sy/p.sx);
-      const fog=ctx.createRadialGradient(0,0,0,0,0,radius);
-      fog.addColorStop(0,"hsla("+p.hue+",46%,84%,"+
-        (p.opacity*strength).toFixed(4)+")");
-      fog.addColorStop(.52,"hsla("+p.hue+",42%,58%,"+
-        (p.opacity*strength*.27).toFixed(4)+")");
-      fog.addColorStop(1,"hsla("+p.hue+",42%,48%,0)");
-      ctx.fillStyle=fog;
-      ctx.beginPath();ctx.arc(0,0,radius,0,TAU);ctx.fill();
-      ctx.restore();
-    }
+    ctx.translate(sight.x,sight.y);
+    ctx.rotate(-.20+now*.000010*smooth((step-144)/48));
+    ctx.globalAlpha=.45*strength;
+    // Prebaked transparent nebula, NOT a square NASA photograph. Only a
+    // portion of the outer spiral is visible before the rest of its body
+    // glides into view and finally leaves across the top.
+    const size=short*2.6*sight.scale;
+    const nebula=ensureNebula();
+    ctx.drawImage(nebula,-size*.5,-size*.5,size,size);
     ctx.restore();
   }
 
@@ -768,8 +794,8 @@ export function createGalaxyFlightScene() {
       // Different off-axis worlds remain in fixed positions behind the ship.
       if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h,now);
     },
-    drawGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number) {
-      drawDistantGalaxy(ctx,step,w,h);
+    drawGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
+      drawDistantGalaxy(ctx,step,w,h,now);
     },
   };
 }
