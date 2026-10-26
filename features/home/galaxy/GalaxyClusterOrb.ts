@@ -113,12 +113,15 @@ export function createGalaxyClusterOrb() {
     // Slightly larger than the first approved orb; always fit on a phone.
     const r=short*.405;
     const sphereVisibility=smooth((reveal-.62)/.35);
-    const zoom=Math.exp(Math.log(2.65)*(1-reveal));
+    // One widening camera, without a gallery of pictures sliding from the
+    // edge of the display. Their bearings remain in the same sky.
+    const zoom=Math.exp(Math.log(2.20)*(1-reveal));
     const held=Math.max(0,finalElapsed??0);
     const drift=sphereVisibility*smooth(held/1900);
-    const settle=smooth((reveal-.13)/.87);
-    const centreX=lerp(w*.77,w*.51,settle);
-    const centreY=lerp(h*.27,h*.515,settle);
+    // Fixed cosmic sightline: each miniature system is already somewhere
+    // in this large field; expanding FOV gradually resolves its light.
+    const centreX=w*.515;
+    const centreY=h*.515;
     const wanderX=Math.min(w*.11,60)*
       (.55*Math.sin(held*.00019)+.29*Math.sin(held*.000083+1.7)
        +.16*Math.sin(held*.000047+.6));
@@ -162,7 +165,9 @@ export function createGalaxyClusterOrb() {
       // each individual cluster member emerges softly at its own distance.
       // Every individual galaxy emerges on its own gradual schedule;
       // never light up the entire collection on one tap.
-      const local=alpha*smooth((reveal-.08-random(p.i*11+7)*.28)/.32);
+      const depthDelay=(p.depth+1)*.09;
+      const local=alpha*smooth((reveal-.07-depthDelay-
+        random(p.i*11+7)*.24)/.38);
       if(local<.002)continue;
       // A few nearby spirals have enough apparent diameter for their arms to
       // remain visible on a phone; the rest stay as tiny galaxies.
