@@ -78,7 +78,9 @@ export function GalaxyOrb() {
     let sectionBounds = section.getBoundingClientRect();
     let titleBounds: DOMRect | null = null;
     let textPixels: Point[] = [];
+    let nearbyLetterPixels: Point[] = [];
     let grains: Grain[] = [];
+    let lastSmallGrainAt=0;
     // While the orb enlarges, grains come from real hero/header lettering
     // across the top AND bottom of the visible screen (not a lower arc).
     type ZoomGrain = {
@@ -237,6 +239,38 @@ export function GalaxyOrb() {
           }
         }
       }
+      // Nearby LETTERS, not arbitrary starfield pixels. Include title,
+      // tagline, the descriptive paragraphs and navigation in the same
+      // section. Sources are kept in the original canvas's local space.
+      nearbyLetterPixels=[];
+      const letterRange=document.createRange();
+      const textEls=Array.from(section!.querySelectorAll<HTMLElement>(
+        "h1, p, nav a, header a, header button, header span"
+      ));
+      for(const el of Array.from(new Set(textEls))){
+        const rect=el.getBoundingClientRect();
+        if(rect.width<1||rect.height<1)continue;
+        const style=getComputedStyle(el);
+        if(style.visibility==="hidden"||style.display==="none")continue;
+        const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+        let node:Node|null;
+        while((node=walker.nextNode())!==null&&nearbyLetterPixels.length<3500){
+          const value=node.textContent??"";
+          for(let i=0;i<value.length&&nearbyLetterPixels.length<3500;i++){
+            if(!value[i].trim())continue;
+            letterRange.setStart(node,i);letterRange.setEnd(node,i+1);
+            const g=letterRange.getBoundingClientRect();
+            if(g.width<1||g.height<1)continue;
+            for(let j=0;j<2;j++){
+              nearbyLetterPixels.push({
+                x:g.left-sectionBounds.left+rand(.1,.9)*g.width,
+                y:g.top-sectionBounds.top+rand(.15,.85)*g.height,
+              });
+            }
+          }
+        }
+      }
+      if(!nearbyLetterPixels.length)nearbyLetterPixels=textPixels.slice();
       orb = newWaypoint();
       from = { ...orb };
       to = newWaypoint(orb);
@@ -573,40 +607,63 @@ export function GalaxyOrb() {
       galaxyRoll = (galaxyRoll + elapsed * 0.00014) % TAU;
     }
 
-    function emit(now: number, face: number) {
-      // Before any tap the little travelling orb collects just a handful
-      // of individual grains. The larger 4-to-15 stream belongs to the
-      // deliberate zoom interaction above.
-      grains = grains.filter((p) => now - p.born < p.life).slice(-5);
-      if (now < quietUntil || !textPixels.length || Math.sin(now / 900) < -0.15) return;
-      if (Math.random() > 0.048 + 0.035 * Math.pow(face, 3)) return;
-      for (let attempt = 0; attempt < 18; attempt++) {
-        const source = textPixels[Math.floor(Math.random() * textPixels.length)];
-        const d = pointDistance(source, orb);
-        if (d > radius * 2.95 || d < radius * 0.67) continue;
-        grains.push({
-          source, born: now, life: rand(2500, 3900),
-          angle: Math.atan2(source.y - orb.y, source.x - orb.x) + rand(-0.06, 0.11),
+    function emit(now:number,face:number){
+      grains=grains.filter(p=>now-p.born<p.life).slice(-5);
+      // At most four or five separate grains in flight. No repeated plume
+      // from one corner, and no pause just because the galaxy is edge-on.
+      if(now-lastSmallGrainAt<480 || grains.length>=5)return;
+      const pool=(nearbyLetterPixels.length?nearbyLetterPixels:textPixels)
+        .filter(p=>{
+          const d=pointDistance(p,orb);
+          return d>radius*1.10&&d<radius*3.5;
         });
-        if (Math.random() < 0.16) quietUntil = now + rand(1500, 3500);
-        break;
+      lastSmallGrainAt=now;
+      if(!pool.length)return;
+      let source=pool[Math.floor(Math.random()*pool.length)];
+      for(let i=0;i<14;i++){
+        const candidate=pool[Math.floor(Math.random()*pool.length)];
+        if(grains.every(p=>pointDistance(candidate,p.source)>22)){
+          source=candidate;break;
+        }
       }
+      grains.push({
+        source:{...source},born:now,life:rand(2700,3800),
+        angle:Math.atan2(source.y-orb.y,source.x-orb.x),
+      });
     }
 
-    function drawGrains(now: number, inside: boolean) {
-      for (const p of grains) {
-        const t = (now - p.born) / p.life;
-        if (t < 0 || t >= 1) continue;
-        const u = smooth(t);
-        const endX = orb.x + Math.cos(p.angle) * radius * 0.81;
-        const endY = orb.y + Math.sin(p.angle) * radius * 0.81;
-        const x = mix(p.source.x, endX, u) + Math.sin(Math.PI * u) * 5;
-        const y = mix(p.source.y, endY, u) - Math.sin(Math.PI * u) * 3;
-        if ((Math.hypot(x - orb.x, y - orb.y) <= radius * 0.98) !== inside) continue;
-        ctx.fillStyle = `rgba(244,249,255,${(inside ? 0.38 : 0.68) * Math.sin(Math.PI * t)})`;
-        ctx.beginPath();
-        ctx.arc(x, y, 0.7, 0, TAU);
-        ctx.fill();
+    function drawGrains(now:number,inside:boolean){
+      for(const p of grains){
+        const t=(now-p.born)/p.life;
+        if(t<=0||t>=1)continue;
+        const angle=p.angle;
+        const endX=orb.x+Math.cos(angle)*radius*.24;
+        const endY=orb.y+Math.sin(angle)*radius*.24;
+        function position(u:number){
+          const travel=smooth(u);
+          return {
+            x:mix(p.source.x,endX,travel)+
+              Math.sin(Math.PI*travel)*7*Math.cos(angle+Math.PI/2),
+            y:mix(p.source.y,endY,travel)+
+              Math.sin(Math.PI*travel)*7*Math.sin(angle+Math.PI/2),
+          };
+        }
+        const pos=position(t);
+        const isInside=pointDistance(pos,orb)<radius*.98;
+        if(isInside!==inside)continue;
+        const alpha=smooth(t/.10)*(1-smooth((t-.82)/.18));
+        if(alpha<.02)continue;
+        const prev=position(Math.max(0,t-.045));
+        ctx.strokeStyle="rgba(227,240,255,"+(alpha*(inside?.22:.47)).toFixed(3)+")";
+        ctx.lineWidth=.65;
+        ctx.beginPath();ctx.moveTo(prev.x,prev.y);
+        ctx.lineTo(pos.x,pos.y);ctx.stroke();
+        const glow=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,4.1);
+        glow.addColorStop(0,"rgba(250,252,255,"+(alpha*(inside?.30:.58)).toFixed(3)+")");
+        glow.addColorStop(1,"rgba(198,225,255,0)");
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(pos.x,pos.y,4.1,0,TAU);ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,"+(alpha*(inside?.39:.92)).toFixed(3)+")";
+        ctx.beginPath();ctx.arc(pos.x,pos.y,.95,0,TAU);ctx.fill();
       }
     }
 
