@@ -391,7 +391,7 @@ export function GalaxyOrb() {
             zoomGrains.push({
               source:{...sample},born:now,life:rand(2900,4100),
               phase:rand(0,TAU),curve:rand(-70,70),
-              radius:rand(.65,1.25),brightness:rand(.70,1),
+              radius:rand(.28,.48),brightness:rand(.72,1),
             });
           }
           zoomLastSpawn=now;
@@ -425,14 +425,7 @@ export function GalaxyOrb() {
           smooth(t/.10)*(1-smooth((t-.82)/.18))*
           (within?.30:1);
         if(alpha<.018)continue;
-        // A single bright white grain with a soft circular glow;
-        // no stroke or trailing line behind the moving particle.
-        const halo=ctx.createRadialGradient(pos.x,pos.y,0,
-          pos.x,pos.y,grain.radius*4.5);
-        halo.addColorStop(0,"rgba(249,252,255,"+(alpha*.68).toFixed(3)+")");
-        halo.addColorStop(1,"rgba(183,217,255,0)");
-        ctx.fillStyle=halo;
-        ctx.beginPath();ctx.arc(pos.x,pos.y,grain.radius*4.5,0,TAU);ctx.fill();
+        // Fine, clean white sand — no halo or line that enlarges the grain.
         ctx.fillStyle="rgba(255,255,251,"+Math.min(.98,alpha).toFixed(3)+")";
         ctx.beginPath();ctx.arc(pos.x,pos.y,grain.radius,0,TAU);ctx.fill();
       }
@@ -647,13 +640,9 @@ export function GalaxyOrb() {
         if(isInside!==inside)continue;
         const alpha=smooth(t/.10)*(1-smooth((t-.82)/.18));
         if(alpha<.02)continue;
-        // Only the white grain itself is drawn; no stick-shaped trail.
-        const glow=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,4.1);
-        glow.addColorStop(0,"rgba(250,252,255,"+(alpha*(inside?.30:.58)).toFixed(3)+")");
-        glow.addColorStop(1,"rgba(198,225,255,0)");
-        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(pos.x,pos.y,4.1,0,TAU);ctx.fill();
+        // A single near-pixel-sized white sand grain, with no glow or trail.
         ctx.fillStyle="rgba(255,255,255,"+(alpha*(inside?.39:.92)).toFixed(3)+")";
-        ctx.beginPath();ctx.arc(pos.x,pos.y,.95,0,TAU);ctx.fill();
+        ctx.beginPath();ctx.arc(pos.x,pos.y,.43,0,TAU);ctx.fill();
       }
     }
 
