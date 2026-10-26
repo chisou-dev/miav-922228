@@ -196,6 +196,88 @@ export function createGalaxyClusterOrb() {
     if(!sprites)sprites=Array.from({length:6},(_,i)=>galaxySprite(i));
     return sprites;
   }
+  // This glass is a cached optical layer, not a set of ideal concentric
+  // vector rings. Broad, irregular reflections and an angle-dependent edge
+  // imply a clear curved surface without hiding the enclosed galaxies.
+  let glassOptics:HTMLCanvasElement|null=null;
+  function ensureGlassOptics():HTMLCanvasElement {
+    if(glassOptics)return glassOptics;
+    const n=768,mid=n*.5,rad=n*.489;
+    const c=document.createElement("canvas");
+    c.width=c.height=n;
+    const g=c.getContext("2d",{alpha:true});
+    if(!g){glassOptics=c;return c;}
+    const disc=new Path2D();
+    disc.arc(mid,mid,rad,0,TAU);
+    // Very slight cool transmission and local glass thickness. This
+    // fades seamlessly; nothing like a uniform blue circular fill.
+    g.save();g.clip(disc);
+    const volume=g.createRadialGradient(mid-n*.13,mid-n*.15,n*.08,mid,mid,rad);
+    volume.addColorStop(0,"rgba(208,236,255,.007)");
+    volume.addColorStop(.68,"rgba(125,171,219,.009)");
+    volume.addColorStop(.84,"rgba(103,161,218,.022)");
+    volume.addColorStop(.944,"rgba(158,201,236,.052)");
+    volume.addColorStop(.975,"rgba(182,227,255,.12)");
+    volume.addColorStop(1,"rgba(82,133,193,.025)");
+    g.fillStyle=volume;g.fillRect(0,0,n,n);
+    // Uneven shadow on the far underside of the glass: only close to the
+    // edge; the galaxies remain visible and distinct through the centre.
+    const shade=g.createRadialGradient(mid+n*.13,mid+n*.14,rad*.45,
+      mid+n*.08,mid+n*.07,rad*1.17);
+    shade.addColorStop(0,"rgba(0,8,24,0)");
+    shade.addColorStop(.82,"rgba(0,8,24,.009)");
+    shade.addColorStop(1,"rgba(0,6,19,.10)");
+    g.fillStyle=shade;g.fillRect(0,0,n,n);
+    // Reflections are soft elliptical patches rather than painted curved
+    // bars. Each has different scale, angle and falloff.
+    function softReflection(
+      x:number,y:number,rx:number,ry:number,angle:number,opacity:number,
+      rgb:string,
+    ){
+      g.save();g.translate(x,y);g.rotate(angle);g.scale(rx,ry);
+      const q=g.createRadialGradient(-.14,-.13,.03,0,0,1);
+      q.addColorStop(0,"rgba("+rgb+","+opacity.toFixed(3)+")");
+      q.addColorStop(.27,"rgba("+rgb+","+(opacity*.54).toFixed(3)+")");
+      q.addColorStop(.65,"rgba("+rgb+","+(opacity*.15).toFixed(3)+")");
+      q.addColorStop(1,"rgba("+rgb+",0)");
+      g.fillStyle=q;g.beginPath();g.arc(0,0,1,0,TAU);g.fill();
+      g.restore();
+    }
+    // An off-axis light source leaves a broad luminous smear high on the
+    // left of the glass, tapering into smaller, much dimmer glints.
+    softReflection(mid-rad*.37,mid-rad*.58,rad*.28,rad*.13,-.48,.14,"235,248,255");
+    softReflection(mid-rad*.51,mid-rad*.27,rad*.12,rad*.29,.42,.07,"198,228,250");
+    softReflection(mid+rad*.62,mid+rad*.48,rad*.20,rad*.09,-.28,.045,"176,212,246");
+    softReflection(mid-rad*.56,mid-rad*.64,rad*.08,rad*.053,.35,.20,"251,252,255");
+    g.restore();
+
+    // The silhouette is extremely faint away from the light. Smooth
+    // changing thickness, colour and brightness along its circumference
+    // prevents a uniform vector-circle or a repeated mechanical arc.
+    for(let i=0;i<320;i++){
+      const angle=i*TAU/320;
+      const main=Math.pow(Math.max(0,Math.cos(angle+2.28)),4.2);
+      const lower=Math.pow(Math.max(0,Math.cos(angle-.83)),10);
+      const upper=Math.pow(Math.max(0,Math.cos(angle+1.47)),12);
+      const wobble=.83+.17*Math.sin(angle*7.3+.7)*Math.sin(angle*13.1+1.9);
+      const opacity=(.016+.36*main+.095*lower+.08*upper)*wobble;
+      const thickness=.64+1.08*main+.33*upper;
+      const rr=rad-.8+.32*Math.sin(angle*5.2+1);
+      const from=angle-.0027,to=angle+TAU/320+.0027;
+      // A diffuse refracted colour outside the sharp highlight.
+      g.strokeStyle="rgba(128,188,235,"+(opacity*.28).toFixed(4)+")";
+      g.lineWidth=thickness*3.3;
+      g.beginPath();g.arc(mid,mid,rr-1.0,from,to);g.stroke();
+      // Only local reflections become brighter. Most of the edge nearly
+      // disappears, exactly as a clear sphere against a dark sky would.
+      g.strokeStyle="rgba(235,246,255,"+opacity.toFixed(4)+")";
+      g.lineWidth=thickness;
+      g.beginPath();g.arc(mid,mid,rr,from,to);g.stroke();
+    }
+    glassOptics=c;
+    return c;
+  }
+
   function draw(
     ctx:CanvasRenderingContext2D,w:number,h:number,step:number,
     now:number,finalElapsed:number|null,
@@ -303,50 +385,27 @@ export function createGalaxyClusterOrb() {
       ctx.restore();
     }
     ctx.restore();
-    // Highlights REVEAL the enclosing sphere only after the already-visible
-    // galaxies have contracted into it; no opaque circular scene transition.
+    // The galaxies never stop moving. At the last stage only a soft,
+    // physically inspired optical skin is placed in front of them.
+    // This deliberately removes the old full-circle outline and the two
+    // dark, perfect internal arcs that resembled mechanical hardware.
     if(sphereVisibility>.002){
       ctx.save();
       ctx.globalAlpha=sphereVisibility;
-      // Subtle cool refraction and shifting specular glints convey thick
-      // transparent glass without hiding the separate galaxy silhouettes.
-      const rim=ctx.createRadialGradient(cx-r*.36,cy-r*.43,r*.11,cx,cy,r*1.02);
-      rim.addColorStop(0,"rgba(170,204,239,.034)");
-      rim.addColorStop(.68,"rgba(38,80,137,.012)");
-      rim.addColorStop(.84,"rgba(102,164,212,.07)");
-      rim.addColorStop(.955,"rgba(192,229,255,.20)");
-      rim.addColorStop(.992,"rgba(235,247,255,.29)");
-      rim.addColorStop(1,"rgba(186,222,255,0)");
-      ctx.fillStyle=rim;ctx.beginPath();ctx.arc(cx,cy,r*1.02,0,TAU);ctx.fill();
-      ctx.strokeStyle="rgba(194,226,255,.36)";
-      ctx.lineWidth=Math.max(.6,Math.min(1.1,r*.005));
-      ctx.beginPath();ctx.arc(cx,cy,r*.996,0,TAU);ctx.stroke();
-      ctx.strokeStyle="rgba(238,249,255,.62)";
-      ctx.lineWidth=Math.max(.6,Math.min(1.4,r*.006));
-      // The short specular arc and highlight slowly travel over the glass
-      // independently of the entire orb's drifting position.
-      const roll=held*.000125;
-      ctx.beginPath();
-      ctx.arc(cx,cy,r*.993,Math.PI*1.12+roll,Math.PI*1.60+roll);ctx.stroke();
-      const gx=cx+Math.cos(-2.25+roll)*r*.61;
-      const gy=cy+Math.sin(-2.25+roll)*r*.61;
-      const glint=ctx.createRadialGradient(gx,gy,0,gx,gy,r*.19);
-      glint.addColorStop(0,"rgba(238,249,255,.62)");
-      glint.addColorStop(.27,"rgba(198,233,255,.25)");
-      glint.addColorStop(1,"rgba(135,205,255,0)");
-      ctx.fillStyle=glint;
-      ctx.beginPath();ctx.arc(gx,gy,r*.19,0,TAU);ctx.fill();
-      // Reflection of a long softbox across the front hemisphere.
-      ctx.save();
-      ctx.translate(cx,cy);
-      ctx.rotate(roll*.63);
-      ctx.beginPath();ctx.arc(0,0,r*.88,Math.PI*.93,Math.PI*1.34);
-      ctx.strokeStyle="rgba(223,246,255,.15)";
-      ctx.lineWidth=Math.max(1.3,r*.013);ctx.stroke();
-      ctx.beginPath();ctx.arc(0,0,r*.70,Math.PI*.98,Math.PI*1.27);
-      ctx.strokeStyle="rgba(222,242,255,.095)";
-      ctx.lineWidth=Math.max(1,r*.035);ctx.stroke();
-      ctx.restore();
+      const optical=ensureGlassOptics();
+      ctx.drawImage(optical,cx-r*1.023,cy-r*1.023,r*2.046,r*2.046);
+      // Minute changes in the light source during the three-minute drift.
+      // No spinning arcs or repeated fixed-pattern reflection lines.
+      if(finalElapsed!==null){
+        const glowX=cx-r*.42+Math.sin(held*.00017)*r*.026;
+        const glowY=cy-r*.57+Math.sin(held*.00011+.8)*r*.020;
+        const glow=ctx.createRadialGradient(glowX,glowY,0,glowX,glowY,r*.095);
+        const brightness=.085+.04*Math.sin(held*.00012+.7)**2;
+        glow.addColorStop(0,"rgba(243,251,255,"+brightness.toFixed(4)+")");
+        glow.addColorStop(.45,"rgba(206,236,255,"+(brightness*.30).toFixed(4)+")");
+        glow.addColorStop(1,"rgba(181,221,255,0)");
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(glowX,glowY,r*.095,0,TAU);ctx.fill();
+      }
       ctx.restore();
     }
     // Sparkling stardust keeps arriving from every direction for the full
