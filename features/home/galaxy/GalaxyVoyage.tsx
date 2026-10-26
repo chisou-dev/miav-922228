@@ -362,15 +362,6 @@ export function GalaxyVoyage({
         opacity:.83+Math.random()*.17,
       };
     });
-    // Fixed, irregular pigment fragments. Darkness builds as a dusty
-    // mottled surface rather than a sudden, opaque fullscreen rectangle.
-    const peelingFlecks=Array.from({length:3600},(_,i)=>({
-      x:Math.random()*viewWidth,y:Math.random()*viewHeight,
-      size:2+Math.random()*12,
-      delay:Math.random()*.86,
-      alpha:.21+Math.random()*.47,
-      seed:Math.random()*TAU,
-    }));
     const dust: Dust[] = Array.from({length:3600},(_,i)=>{
       const p=sourcePoints[i%sourcePoints.length];
       return {
@@ -491,27 +482,44 @@ export function GalaxyVoyage({
 
     function peelBackground(amount:number,titleVisibility:number){
       if(amount<=0)return;
-      ctx!.save();
-      // The original blue homepage stays visible while matter is moving.
-      // Only towards the END of the three-second absorption does the
-      // universe emerge; a uniform early black fade concealed the storm.
       const p=clamp(amount,0,1);
-      const darkness=ease((p-.37)/.63);
-      const baseAlpha=.06*p+.94*darkness;
-      ctx!.fillStyle="rgba(0,2,9,"+baseAlpha.toFixed(3)+")";
-      ctx!.fillRect(0,0,viewWidth,viewHeight);
-      if(p<.99){
-        // A loose stipple of dissolving midnight-blue pigment. Flecks
-        // grow in random locations while their detached grains drift
-        // across the entire viewport to the galactic centre.
-        for(const f of peelingFlecks){
-          const age=clamp((p-f.delay)/.24,0,1);
-          if(age<=0)continue;
-          ctx!.fillStyle="rgba(0,2,9,"+(f.alpha*age*(1-darkness)).toFixed(3)+")";
-          const r=f.size*(.55+.45*age);
-          ctx!.fillRect(f.x-r*.5,f.y-r*.5,r,r);
-        }
-      }
+      // A single clean inward-moving peel from ALL FOUR PAGE EDGES.
+      // Do not paint random dark squares or a full-screen fade: the dark
+      // edges progressively consume the original navy wall toward the
+      // middle while the white/blue sand keeps travelling into the galaxy.
+      const reach=ease((p-.015)/.985);
+      const featherX=Math.max(14,viewWidth*.095);
+      const featherY=Math.max(18,viewHeight*.095);
+      const depthX=Math.max(1,reach*(viewWidth*.5+featherX));
+      const depthY=Math.max(1,reach*(viewHeight*.5+featherY));
+      const black="rgba(0,2,9,1)";
+      const clear="rgba(0,2,9,0)";
+      ctx!.save();
+      const left=ctx!.createLinearGradient(0,0,depthX,0);
+      left.addColorStop(0,black);
+      left.addColorStop(Math.max(0,1-featherX/depthX),black);
+      left.addColorStop(1,clear);
+      ctx!.fillStyle=left;
+      ctx!.fillRect(0,0,depthX,viewHeight);
+      const right=ctx!.createLinearGradient(viewWidth,0,viewWidth-depthX,0);
+      right.addColorStop(0,black);
+      right.addColorStop(Math.max(0,1-featherX/depthX),black);
+      right.addColorStop(1,clear);
+      ctx!.fillStyle=right;
+      ctx!.fillRect(viewWidth-depthX,0,depthX,viewHeight);
+      const top=ctx!.createLinearGradient(0,0,0,depthY);
+      top.addColorStop(0,black);
+      top.addColorStop(Math.max(0,1-featherY/depthY),black);
+      top.addColorStop(1,clear);
+      ctx!.fillStyle=top;
+      ctx!.fillRect(0,0,viewWidth,depthY);
+      const bottom=ctx!.createLinearGradient(0,viewHeight,0,viewHeight-depthY);
+      bottom.addColorStop(0,black);
+      bottom.addColorStop(Math.max(0,1-featherY/depthY),black);
+      bottom.addColorStop(1,clear);
+      ctx!.fillStyle=bottom;
+      ctx!.fillRect(0,viewHeight-depthY,viewWidth,depthY);
+      // Preserve the same original heading cutout as before.
       if(titleVisibility>0 && peelHeadingMask && peelHeadingBox){
         ctx!.globalCompositeOperation="destination-out";
         ctx!.globalAlpha=clamp(titleVisibility,0,1);
@@ -789,8 +797,8 @@ export function GalaxyVoyage({
       // 3rd: slow, complete disintegration. No instant puff.
       const stage=Math.min(3,target);
       if(stage===0)return 0;
-      const from=[0,0,.22,.52][stage];
-      const to=[0,.22,.52,1][stage];
+      const from=[0,0,.22,.40][stage];
+      const to=[0,.22,.40,1][stage];
       const ms=[0,1450,1700,4850][stage];
       return mix(from,to,ease((now-titleTapStartedAt)/ms));
     }
@@ -822,8 +830,8 @@ export function GalaxyVoyage({
       // the silhouette above has actually lost material at its edges.
       // The material, not a UI alpha fade, is what disappears. On tap 3
       // its last surviving strokes also become almost transparent.
-      const faded=target===2?mix(1,.87,ease((now-titleTapStartedAt)/1700)):
-        target===3?mix(.87,.035,ease((now-titleTapStartedAt)/4850)):1;
+      const faded=target===2?mix(1,.48,ease((now-titleTapStartedAt)/1700)):
+        target===3?mix(.48,0,ease((now-titleTapStartedAt)/4850)):1;
       ctx!.globalAlpha=faded*entering;
       ctx!.shadowColor="rgba(204,226,255,.045)";
       ctx!.shadowBlur=.5;
