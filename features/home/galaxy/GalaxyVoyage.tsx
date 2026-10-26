@@ -130,6 +130,9 @@ export function GalaxyVoyage({
     // Reaching the enclosing glass orb begins the three-minute quiet ending.
     let finalReachedAt: number | null = null;
     let lastAdvanceAt = 0;
+    // The fourth tap is the one-time inward sweep of released lettering.
+    // Subsequent taps keep their existing camera/galaxy distances.
+    let sandSuctionStartedAt: number | null = null;
 
     // The NASA images really are telescope observations. They are composited
     // as an artistic journey, not as an accurate atlas of galaxy positions.
@@ -390,7 +393,43 @@ export function GalaxyVoyage({
       brightness:.5+Math.random()*.5,
     }));
     function drawOrbitSand(now:number,step:number){
-      if(step>12)return;
+      // The small floating sand population stays unchanged through tap 3.
+      // On tap 4, capture its exact current location and pull it all in.
+      if(sandSuctionStartedAt!==null){
+        const elapsed=now-sandSuctionStartedAt;
+        if(elapsed>=1150)return;
+        const cx=viewWidth*.51,cy=viewHeight*.52;
+        const short=Math.min(viewWidth,viewHeight);
+        ctx!.save();
+        for(const grain of orbitSand){
+          const age=sandSuctionStartedAt-opened+grain.phase*grain.duration;
+          const t=((age%grain.duration)+grain.duration)%grain.duration/grain.duration;
+          const travel=ease(t);
+          const sx=cx+Math.cos(grain.bearing)*short*grain.distance;
+          const sy=cy+Math.sin(grain.bearing)*short*grain.distance*.68;
+          const dx=cx-sx,dy=cy-sy;
+          const d=Math.max(1,Math.hypot(dx,dy));
+          const curve=grain.bend*Math.sin(Math.PI*travel);
+          const px=sx+dx*travel-dy/d*curve+
+            Math.sin(t*23+grain.wobble)*2*(1-travel);
+          const py=sy+dy*travel+dx/d*curve+
+            Math.cos(t*19+grain.wobble)*2*(1-travel);
+          const wait=grain.phase*145;
+          const u=ease((elapsed-wait)/(700+grain.duration*.055));
+          if(u<=0||u>=1)continue;
+          const r=Math.hypot(px-cx,py-cy);
+          const bend=(grain.bend*.21)*Math.sin(Math.PI*u);
+          const x=px+(cx-px)*u-(py-cy)/Math.max(1,r)*bend;
+          const y=py+(cy-py)*u+(px-cx)/Math.max(1,r)*bend;
+          if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
+          const alpha=grain.brightness*(1-ease((u-.80)/.20));
+          ctx!.fillStyle="rgba(255,255,253,"+alpha.toFixed(3)+")";
+          ctx!.fillRect(x,y,grain.radius*.80,grain.radius*.80);
+        }
+        ctx!.restore();
+        return;
+      }
+      if(step>3)return;
       const intensity=step<=3?1:1-ease((step-3)/9);
       if(intensity<=.002)return;
       const cap=step<1?420:step<2?680:step<3?940:1500;
@@ -901,7 +940,39 @@ export function GalaxyVoyage({
       side:i%2===0?1:-1,
     }));
     function drawWanderingSand(now:number,step:number){
-      if(step<2||step>9)return;
+      if(sandSuctionStartedAt!==null){
+        const elapsed=now-sandSuctionStartedAt;
+        if(elapsed>=1150)return;
+        const cx=viewWidth*.51,cy=viewHeight*.52;
+        const short=Math.min(viewWidth,viewHeight);
+        ctx!.save();
+        for(const g of wanderingSand){
+          // Recover the precise drifting position at the fourth tap so the
+          // sweep is continuous rather than a new cloud appearing.
+          const t=((sandSuctionStartedAt-opened+g.delay*g.period)%g.period)/g.period;
+          const inward=ease(t);
+          const radius=short*(g.orbit*(1-inward*.90)+
+            .045*Math.sin(t*11+g.phase)*Math.sin(Math.PI*t));
+          const angle=g.angle+g.side*(1.5+g.curl)*inward+
+            .33*Math.sin(t*8+g.wobble)*Math.sin(Math.PI*t);
+          const px=cx+Math.cos(angle)*radius;
+          const py=cy+Math.sin(angle)*radius*.80;
+          const wait=g.delay*150;
+          const u=ease((elapsed-wait)/(690+g.period*.035));
+          if(u<=0||u>=1)continue;
+          const curl=Math.sin(Math.PI*u)*g.side*(18+35*g.orbit);
+          const x=px+(cx-px)*u+Math.cos(angle+Math.PI*.5)*curl;
+          const y=py+(cy-py)*u+Math.sin(angle+Math.PI*.5)*curl;
+          if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
+          const alpha=g.alpha*(1-ease((u-.78)/.22));
+          ctx!.fillStyle="rgba(255,255,253,"+alpha.toFixed(3)+")";
+          const size=g.radius*(1-.42*u);
+          ctx!.fillRect(x,y,size,size);
+        }
+        ctx!.restore();
+        return;
+      }
+      if(step<2||step>3)return;
       // Starts gathering during tap 2 and swells into an uneven sand cloud
       // on the third tap; it gradually fades as stars are revealed later.
       const stage=Math.min(3,target);
@@ -1019,9 +1090,9 @@ export function GalaxyVoyage({
       // The third tap finishes the title, leaving JUST the galaxy and
       // drifting sand. Stars begin revealing with the FOURTH tap and
       // accumulate and twinkle through the existing unchanged sky logic.
-      if(s>3){
+      if(s>4){
         ctx!.save();
-        ctx!.globalAlpha=ease((s-3)/.92);
+        ctx!.globalAlpha=ease((s-4)/.92);
         flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
         ctx!.restore();
       }
@@ -1073,11 +1144,16 @@ export function GalaxyVoyage({
       // rapidly tapping through an unfinished letter disintegration.
       if(target>0&&target<3&&now-titleTapStartedAt<900)return;
       if(target===3&&now-titleTapStartedAt<4850)return;
+      // Keep tap four on screen until the scattered dust has been
+      // swallowed; rapidly tapping cannot skip the one-time event.
+      if(target===4&&sandSuctionStartedAt!==null&&
+         now-sandSuctionStartedAt<1150)return;
       lastAdvanceAt = now;
       // The last orb is a contemplative scene, not a tap-to-exit button.
       // Only the existing spaceship control (or Escape) returns home early.
       if (target >= FINAL_STEP) return;
       target += 1;
+      if(target===4)sandSuctionStartedAt=now;
       if(target<=3)titleTapStartedAt=now;
       if (idleTimer !== undefined) clearTimeout(idleTimer);
       if (target >= FINAL_STEP) {
