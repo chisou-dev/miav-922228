@@ -273,6 +273,7 @@ export function ReentryLaunchControls({
 
           onNudgeAngle(
             (
+              (mode === "fine" ? -1 : 1) *
               rateDegPerS *
               dtS
             ) /
@@ -315,7 +316,7 @@ export function ReentryLaunchControls({
           : FINE_TAP_DEG;
 
       onNudgeAngle(
-        tapDeg / 360,
+        ((mode === "fine" ? -1 : 1) * tapDeg) / 360,
       );
 
       playDirectionTick(1);
@@ -378,8 +379,8 @@ export function ReentryLaunchControls({
           <button
             type="button"
             className={rotateBtnClass}
-            aria-label="Rotate clockwise by 0.1 degrees. Hold for very slow fine clockwise rotation."
-            title="Clockwise fine · 0.1° tap · 0.1–1° per second when held"
+            aria-label="Rotate counterclockwise by 0.1 degrees. Hold for very slow fine counterclockwise rotation."
+            title="Counterclockwise fine · 0.1° tap · 0.1–1° per second when held"
             onPointerDown={(event) =>
               startHold(
                 "fine",
@@ -391,7 +392,7 @@ export function ReentryLaunchControls({
             onPointerLeave={cancelHold}
           >
             <span className="text-[1.55rem] leading-none">
-              ↻
+              ↺
             </span>
             <span className="mt-1 text-[0.48rem] tabular-nums tracking-[0.08em] text-white/45">
               0.1°
@@ -401,7 +402,7 @@ export function ReentryLaunchControls({
       </div>
 
       <p className="text-[0.48rem] tracking-[0.10em] text-white/30">
-        CLOCKWISE ONLY · HOLD FOR CONTINUOUS ROTATION
+        FAST ↻ · FINE ↺ · HOLD FOR CONTINUOUS ROTATION
       </p>
 
       <button
