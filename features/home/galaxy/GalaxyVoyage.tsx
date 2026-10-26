@@ -151,7 +151,7 @@ export function GalaxyVoyage({
     const titleSpan=document.querySelector<HTMLElement>("[data-galaxy-title]");
     const titleStyle=titleSpan?getComputedStyle(titleSpan):null;
     const titleLabel=titleSpan?.textContent?.trim() || "MIAV-922228";
-    type TitleParticle={x:number;y:number;delay:number;radius:number;bend:number;phase:number};
+    type TitleParticle={x:number;y:number;delay:number;radius:number;bend:number;phase:number;band:number};
     let titleBase:HTMLCanvasElement|null=null;
     let titleEroded:HTMLCanvasElement|null=null;
     // Erosion thresholds follow the true GLYPH OUTLINE. This deliberately
@@ -263,19 +263,32 @@ export function GalaxyVoyage({
       }
       titleEdgeRank=ranks;
       titleOriginalPixels=new Uint8ClampedArray(mask);
-      // Dust launches from both exposed upper and lower letter edges,
-      // not a uniform middle strip. The random mix avoids a rigid wipe.
-      const upper=pixels.filter(p=>p.y<base.height*.49);
-      const lower=pixels.filter(p=>p.y>=base.height*.49);
-      titleParticles=Array.from({length:3600},(_,n)=>{
-        const pool=n%3===0?upper:n%3===1?lower:pixels;
-        const actual=pool.length?pool:pixels;
-        const p=actual[Math.floor(Math.random()*actual.length)];
-        return {x:p.x+(Math.random()-.5)*3,
-          y:p.y+(Math.random()-.5)*3,
-          delay:Math.random()*.77,
-          radius:.10+Math.random()*.32,
-          bend:(Math.random()-.5)*84,phase:Math.random()*TAU};
+      // Use ACTUAL vulnerable pixels of the glyph mask: exposed top and
+      // bottom strokes at tap 1, deeper broken strokes at tap 2, and the
+      // final surviving timber-like splinters at tap 3. Unlike a generic
+      // star layer, every newly released grain genuinely starts on a letter.
+      const pools=[pixels.filter(p=>{
+        const rank=ranks[p.y*w+p.x]/255;
+        return rank<=.24;
+      }),pixels.filter(p=>{
+        const rank=ranks[p.y*w+p.x]/255;
+        return rank>=.17&&rank<=.56;
+      }),pixels.filter(p=>{
+        const rank=ranks[p.y*w+p.x]/255;
+        return rank>=.43;
+      })];
+      titleParticles=Array.from({length:5700},(_,n)=>{
+        const band=n<1350?1:n<3400?2:3;
+        const selected=pools[band-1].length?pools[band-1]:pixels;
+        const p=selected[Math.floor(Math.random()*selected.length)];
+        return {x:p.x+(Math.random()-.5)*1.4,
+          y:p.y+(Math.random()-.5)*1.4,
+          delay:Math.random(),
+          // Tiny white sand, not luminous balls or streaks; just visible
+          // enough against deep space in desktop and mobile browsers.
+          radius:.48+Math.random()*.36,
+          bend:(Math.random()-.5)*135,
+          phase:Math.random()*TAU,band};
       });
       titleBase=base;titleEroded=document.createElement("canvas");
       titleEroded.width=base.width;titleEroded.height=base.height;
@@ -824,39 +837,89 @@ export function GalaxyVoyage({
       if(!titleBase)return;
       const pos=titleOrigin();
       const stage=Math.min(target,3);
-      const stageAge=now-titleTapStartedAt;
-      const final=stage===3;
+      const age=Math.max(0,now-titleTapStartedAt);
       ctx!.save();
       for(let i=0;i<titleParticles.length;i++){
         const grain=titleParticles[i];
+        if(grain.band>stage)continue;
+        // Previously lost material is mostly gone; a few remaining specks
+        // keep peeling from the broken tips rather than the same line forever.
+        if(grain.band<stage && i%4!==0)continue;
         let t:number;
-        if(final) {
-          // On the third tap each fragment makes one slow, final journey.
-          // Delayed departures and varied speeds preserve a ragged cloud.
-          t=(stageAge-grain.delay*1750)/
-            (2950+1750*(.5+.5*Math.sin(grain.phase*3.17)));
-        } else {
-          // When paused at tap 1 or 2, the glyph continuously sheds fine
-          // material. Do not freeze or leave static specks in mid-air.
-          const period=1950+980*(.5+.5*Math.sin(grain.phase*2.17));
-          t=((now-opened+grain.delay*period*3)/period)%1;
+        if(stage===3){
+          // A last, staggered outflow over the same unmodified 4.85 seconds
+          // used by the final erosion. No sudden explosion or straight rays.
+          const travelMs=2400+1300*(.5+.5*Math.sin(grain.phase*3.17));
+          t=(age-grain.delay*1650)/travelMs;
+        }else{
+          // Trickle continuously while the visitor pauses between taps.
+          const period=2050+850*(.5+.5*Math.sin(grain.phase*2.17));
+          t=((age+grain.delay*period)/period)%1;
         }
         if(t<=0||t>=1)continue;
-        const travel=ease(t);
+        const u=ease(t);
         const sx=pos.x+grain.x,sy=pos.y+grain.y;
         const dx=cx-sx,dy=cy-sy;
-        const length=Math.max(1,Math.hypot(dx,dy));
-        const curl=grain.bend*Math.sin(Math.PI*t);
-        const x=sx+dx*travel-dy/length*curl+
-          2.2*Math.sin(t*11+grain.phase)*(1-t);
-        const y=sy+dy*travel+dx/length*curl;
-        const alpha=(1-ease((t-.77)/.23))*ease(t/.10)*
-          (.42+.46*Math.sin(grain.phase+t*19)**2)*
-          (final?1.0:stage===1?.66:.85);
-        if(alpha<.023)continue;
-        ctx!.fillStyle="rgba(251,251,249,"+alpha.toFixed(3)+")";
-        const radius=grain.radius*(1-.60*t);
-        ctx!.fillRect(x,y,radius,radius);
+        const d=Math.max(1,Math.hypot(dx,dy));
+        const curl=grain.bend*Math.sin(Math.PI*u);
+        // Each grain curls and meanders through space before being swallowed.
+        const eddy=Math.sin(t*12+grain.phase)*5*Math.sin(Math.PI*t);
+        const x=sx+dx*u-dy/d*(curl+eddy);
+        const y=sy+dy*u+dx/d*(curl+eddy);
+        if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
+        const fade=ease(t/.075)*(1-ease((t-.85)/.15));
+        const alpha=fade*(.74+.26*Math.sin(grain.phase+t*13)**2);
+        if(alpha<.025)continue;
+        ctx!.fillStyle="rgba(255,255,251,"+alpha.toFixed(3)+")";
+        const size=grain.radius*(1-.37*u);
+        ctx!.fillRect(x,y,size,size);
+      }
+      ctx!.restore();
+    }
+
+    // After tap 3, the freed white grains wander on irregular, curved
+    // paths around the SAME galaxy before spiralling in. Nothing changes
+    // its source image, rotation, trajectory or the later planetary voyage.
+    const wanderingSand=Array.from({length:2400},(_,i)=>({
+      phase:Math.random()*TAU,
+      angle:Math.random()*TAU,
+      orbit:.37+Math.random()*.40,
+      period:2450+Math.random()*3700,
+      delay:Math.random(),
+      curl:(Math.random()-.5)*.75,
+      wobble:Math.random()*TAU,
+      radius:.42+Math.random()*.40,
+      alpha:.66+Math.random()*.34,
+      side:i%2===0?1:-1,
+    }));
+    function drawWanderingSand(now:number,step:number){
+      if(step<2||step>9)return;
+      // Starts gathering during tap 2 and swells into an uneven sand cloud
+      // on the third tap; it gradually fades as stars are revealed later.
+      const stage=Math.min(3,target);
+      const fade=step<=3?1:1-ease((step-3)/6);
+      const max=stage===2?470:stage===3?2300:100;
+      const short=Math.min(viewWidth,viewHeight);
+      const cx=viewWidth*.51,cy=viewHeight*.52;
+      ctx!.save();
+      for(let i=0;i<max;i++){
+        const g=wanderingSand[i];
+        const t=((now-opened+g.delay*g.period)%g.period)/g.period;
+        const inward=ease(t);
+        // Sweep around the nucleus, with unequal radial lengths and
+        // fluctuating directions: no uniform Saturn ring or rotating spokes.
+        const radius=short*(g.orbit*(1-inward*.90)+
+          .045*Math.sin(t*11+g.phase)*Math.sin(Math.PI*t));
+        const angle=g.angle+g.side*(1.5+g.curl)*inward+
+          .33*Math.sin(t*8+g.wobble)*Math.sin(Math.PI*t);
+        const x=cx+Math.cos(angle)*radius;
+        const y=cy+Math.sin(angle)*radius*.80;
+        if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
+        const alpha=g.alpha*fade*ease(t/.07)*
+          (1-ease((t-.87)/.13))*(.82+.18*Math.sin(now*.003+g.phase)**2);
+        if(alpha<.025)continue;
+        ctx!.fillStyle="rgba(255,255,253,"+alpha.toFixed(3)+")";
+        ctx!.fillRect(x,y,g.radius*(1-.27*inward),g.radius*(1-.27*inward));
       }
       ctx!.restore();
     }
@@ -961,7 +1024,6 @@ export function GalaxyVoyage({
       // The larger, chipped title sits BEHIND the foreground galaxy for
       // three taps. Its missing fragments depart from all parts of the text.
       drawRemainingTitle(now);
-      drawRemainingTitleDust(now,viewWidth*.51,viewHeight*.52);
       // Each phase advances ONLY on user tap: 3 title taps, faint stars,
       // close planetary passes, galaxy edge/half/exit, then the glass orb.
       const recession = Math.max(0, s - 3);
@@ -978,9 +1040,14 @@ export function GalaxyVoyage({
         ctx!.arc(viewWidth * 0.51, viewHeight * 0.52, 0.7, 0, TAU);
         ctx!.fill();
       }
+      // Foreground grains must not disappear behind the bright galaxy
+      // texture, which was why the eroded lettering looked like a fade.
+      drawRemainingTitleDust(now,viewWidth*.51,viewHeight*.52);
       drawOrbitSand(now,s);
+      drawWanderingSand(now,s);
 
-      // The eroded heading and departing dust were drawn BEHIND the galaxy.
+      // The original title still sits behind the galaxy; only its
+      // released grains can pass across the foreground until swallowed.
 
       // Planets remain off-axis in the same sky throughout the pull-back.
       flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
