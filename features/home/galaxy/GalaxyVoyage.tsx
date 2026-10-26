@@ -147,10 +147,12 @@ export function GalaxyVoyage({
     const titleStyle=titleSpan?getComputedStyle(titleSpan):null;
     const titleLabel=titleSpan?.textContent?.trim() || "MIAV-922228";
     type TitleParticle={x:number;y:number;delay:number;radius:number;bend:number;phase:number};
-    type Hole={x:number;y:number;radius:number};
     let titleBase:HTMLCanvasElement|null=null;
     let titleEroded:HTMLCanvasElement|null=null;
-    let titleHoles:Hole[]=[];
+    // Erosion thresholds follow the true GLYPH OUTLINE. This deliberately
+    // avoids random round holes (the previous insect-eaten appearance).
+    let titleEdgeRank:Uint8Array|null=null;
+    let titleOriginalPixels:Uint8ClampedArray|null=null;
     let titleParticles:TitleParticle[]=[];
     let titleErosionFrame=-1;
     // Render the heading as a large TRUE glyph mask. Removing pieces of
@@ -185,14 +187,54 @@ export function GalaxyVoyage({
         }
       }
       if(!pixels.length)return;
-      // Stable randomized erosion across ALL letters, not a horizontal
-      // wipe or uniformly dissolving opacity. Cache the cuts during pauses.
-      titleHoles=Array.from({length:3700},(_,n)=>{
-        const p=pixels[Math.floor(Math.random()*pixels.length)];
-        return {x:p.x+(Math.random()-.5)*3,
-          y:p.y+(Math.random()-.5)*3,
-          radius:.75+Math.pow(Math.random(),.7)*3.0};
-      });
+      // Chamfer distance to transparent exterior, calculated only once.
+      // Letter edges and weak serif ends crumble first; the thick strokes
+      // survive longer, like wood weathering from its exposed tips.
+      const w=base.width,h=base.height;
+      const len=w*h;
+      const distance=new Float32Array(len);
+      for(let idx=0;idx<len;idx++){
+        distance[idx]=mask[idx*4+3]>64?100:0;
+      }
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const idx=y*w+x;
+        if(distance[idx]===0)continue;
+        let d=distance[idx];
+        if(x>0)d=Math.min(d,distance[idx-1]+1);
+        if(y>0){
+          d=Math.min(d,distance[idx-w]+1);
+          if(x>0)d=Math.min(d,distance[idx-w-1]+1.414);
+          if(x<w-1)d=Math.min(d,distance[idx-w+1]+1.414);
+        }
+        distance[idx]=d;
+      }
+      for(let y=h-1;y>=0;y--)for(let x=w-1;x>=0;x--){
+        const idx=y*w+x;
+        if(distance[idx]===0)continue;
+        let d=distance[idx];
+        if(x<w-1)d=Math.min(d,distance[idx+1]+1);
+        if(y<h-1){
+          d=Math.min(d,distance[idx+w]+1);
+          if(x>0)d=Math.min(d,distance[idx+w-1]+1.414);
+          if(x<w-1)d=Math.min(d,distance[idx+w+1]+1.414);
+        }
+        distance[idx]=d;
+      }
+      const ranks=new Uint8Array(len);
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const idx=y*w+x;
+        if(mask[idx*4+3]<4){ranks[idx]=0;continue;}
+        const d=distance[idx];
+        // Smoothly correlated erosion rather than isolated damage dots.
+        const ripple=.5+.25*Math.sin(x*.039+y*.027)+
+          .18*Math.sin(x*.087-y*.051)+.07*Math.sin(y*.19+x*.025);
+        const edge=Math.min(1,Math.max(0,(d-.55)/4.3));
+        const vulnerability=.13+.68*edge+
+          (.12+.08*edge)*Math.max(0,Math.min(1,ripple));
+        ranks[idx]=Math.round(Math.max(.06,Math.min(.985,vulnerability))*255);
+      }
+      titleEdgeRank=ranks;
+      titleOriginalPixels=new Uint8ClampedArray(mask);
       titleParticles=Array.from({length:3600},(_,n)=>{
         const p=pixels[Math.floor(Math.random()*pixels.length)];
         return {x:p.x+(Math.random()-.5)*3,
@@ -256,7 +298,8 @@ export function GalaxyVoyage({
       canvas!.style.width = viewWidth + "px";
       canvas!.style.height = viewHeight + "px";
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      titleBase=null;titleEroded=null;titleErosionFrame=-1;
+      titleBase=null;titleEroded=null;titleEdgeRank=null;
+      titleOriginalPixels=null;titleErosionFrame=-1;
     }
 
     // The source photos are rectangular. A cached circular feather removes
@@ -471,27 +514,27 @@ export function GalaxyVoyage({
       const frame=Math.floor(fraction*190);
       if(frame!==titleErosionFrame){
         const b=titleEroded.getContext("2d");
-        if(!b)return;
-        b.clearRect(0,0,titleEroded.width,titleEroded.height);
-        b.globalCompositeOperation="source-over";
-        b.drawImage(titleBase,0,0);
-        b.globalCompositeOperation="destination-out";
-        const count=Math.floor(fraction<=.22
-          ? fraction/.22*340
-          : fraction<=.52
-            ? 340+(fraction-.22)/.30*990
-            : 1330+(fraction-.52)/.48*2370);
-        b.fillStyle="#000";
-        for(let i=0;i<Math.min(titleHoles.length,count);i++){
-          const hole=titleHoles[i];
-          b.beginPath();b.arc(hole.x,hole.y,hole.radius,0,TAU);b.fill();
+        if(!b||!titleOriginalPixels||!titleEdgeRank)return;
+        const data=b.createImageData(titleEroded.width,titleEroded.height);
+        data.data.set(titleOriginalPixels);
+        for(let i=0;i<titleEdgeRank.length;i++){
+          const rank=titleEdgeRank[i]/255;
+          const surviving=ease((rank-fraction)/.085);
+          data.data[i*4+3]=Math.round(data.data[i*4+3]*surviving);
         }
-        b.globalCompositeOperation="source-over";
-        if(fraction>=.997)b.clearRect(0,0,titleEroded.width,titleEroded.height);
+        b.clearRect(0,0,titleEroded.width,titleEroded.height);
+        b.putImageData(data,0,0);
         titleErosionFrame=frame;
       }
       const pos=titleOrigin();
-      ctx!.save();ctx!.shadowColor="rgba(204,226,255,.13)";
+      ctx!.save();
+      // Tap two becomes an almost translucent, fragile ivory-white.
+      // Do not mistake this subdued opacity for the erosion itself:
+      // the silhouette above has actually lost material at its edges.
+      const faded=target===2?mix(1,.47,ease((now-titleTapStartedAt)/1700)):
+        target===3?mix(.47,.32,ease((now-titleTapStartedAt)/4850)):1;
+      ctx!.globalAlpha=faded;
+      ctx!.shadowColor="rgba(204,226,255,.085)";
       ctx!.shadowBlur=2;
       ctx!.drawImage(titleEroded,pos.x,pos.y);
       ctx!.restore();
@@ -512,8 +555,8 @@ export function GalaxyVoyage({
         if(final) {
           // On the third tap each fragment makes one slow, final journey.
           // Delayed departures and varied speeds preserve a ragged cloud.
-          t=(stageAge-grain.delay*1550)/
-            (2500+1700*(.5+.5*Math.sin(grain.phase*3.17)));
+          t=(stageAge-grain.delay*1750)/
+            (2950+1750*(.5+.5*Math.sin(grain.phase*3.17)));
         } else {
           // When paused at tap 1 or 2, the glyph continuously sheds fine
           // material. Do not freeze or leave static specks in mid-air.
