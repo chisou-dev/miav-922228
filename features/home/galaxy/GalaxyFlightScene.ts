@@ -250,31 +250,37 @@ export function createGalaxyFlightScene() {
     if(!g)return c;
     const middle=n/2;
     g.save();g.translate(middle,middle);
-    g.scale(1,.66);
-    const haze=g.createRadialGradient(0,0,0,0,0,n*.47);
-    haze.addColorStop(0,"rgba(223,215,237,.26)");
-    haze.addColorStop(.12,"rgba(159,176,221,.18)");
-    haze.addColorStop(.35,"rgba(88,123,187,.12)");
-    haze.addColorStop(.80,"rgba(43,92,155,.035)");
+    g.scale(1,.78);
+    const haze=g.createRadialGradient(0,0,0,0,0,n*.49);
+    haze.addColorStop(0,"rgba(231,207,229,.32)");
+    haze.addColorStop(.13,"rgba(177,164,211,.23)");
+    haze.addColorStop(.36,"rgba(96,139,200,.17)");
+    haze.addColorStop(.80,"rgba(43,92,155,.050)");
     haze.addColorStop(1,"rgba(27,50,96,0)");
     g.fillStyle=haze;
-    g.beginPath();g.arc(0,0,n*.47,0,TAU);g.fill();
+    g.beginPath();g.arc(0,0,n*.49,0,TAU);g.fill();
     g.restore();
 
-    // This is a BARRED, inclined second galaxy rather than a duplicate of
-    // the original face-on spiral. Its warm elongated central stellar bar
-    // is embedded BELOW the gaseous arms and thousands of individual stars.
+    // An irregular three-dimensional-looking bulge: multiple translucent
+    // light concentrations dissolve into the diffuse disc rather than one
+    // narrow perfect ellipse (which looked like a drawn oval line).
     g.save();
     g.translate(middle,middle);
     g.rotate(-.33);
-    g.scale(1,.36);
-    const bar=g.createRadialGradient(0,0,0,0,0,n*.255);
-    bar.addColorStop(0,"rgba(255,242,216,.54)");
-    bar.addColorStop(.22,"rgba(252,213,184,.43)");
-    bar.addColorStop(.54,"rgba(201,174,192,.20)");
-    bar.addColorStop(1,"rgba(136,163,200,0)");
-    g.fillStyle=bar;
-    g.beginPath();g.arc(0,0,n*.255,0,TAU);g.fill();
+    g.scale(1,.69);
+    for(let k=0;k<11;k++){
+      const shift=(rnd(k*37+103)-.5)*n*.17;
+      const yshift=(rnd(k*61+71)-.5)*n*.07;
+      const radius=n*(.105+rnd(k*47+29)*.15);
+      const q=g.createRadialGradient(shift,yshift,0,shift,yshift,radius);
+      const strength=.12+.12*rnd(k*23+19);
+      q.addColorStop(0,"rgba(255,230,215,"+strength.toFixed(3)+")");
+      q.addColorStop(.38,"rgba(219,174,208,"+(strength*.37).toFixed(3)+")");
+      q.addColorStop(.75,"rgba(140,165,218,"+(strength*.10).toFixed(3)+")");
+      q.addColorStop(1,"rgba(100,130,190,0)");
+      g.fillStyle=q;
+      g.beginPath();g.arc(shift,yshift,radius,0,TAU);g.fill();
+    }
     g.restore();
 
     // Wide translucent interstellar gas wisps have their own scale and hue.
@@ -283,14 +289,14 @@ export function createGalaxyFlightScene() {
     // separate stage picture.
     g.save();
     g.globalCompositeOperation="screen";
-    for(let i=0;i<370;i++){
+    for(let i=0;i<470;i++){
       const radial=.10+rnd(i*43+117)*.79;
       const arm=i%2;
       // Two broad and unequal stellar arms: a galaxy, not a foggy circle.
       const theta=arm*TAU/2-.33+radial*4.15
         +(rnd(i*79+19)-.5)*(.67+.29*radial);
       const x=middle+Math.cos(theta)*radial*n*.42;
-      const y=middle+Math.sin(theta)*radial*n*.235;
+      const y=middle+Math.sin(theta)*radial*n*.275;
       const radius=34+rnd(i*37+101)*86;
       const q=g.createRadialGradient(x,y,0,x,y,radius);
       if(i%7<3){
@@ -319,7 +325,7 @@ export function createGalaxyFlightScene() {
       const theta=arm*TAU/2-.33+radial*4.15+
         (rnd(i*71+51)-.5)*(.39+.51*radial);
       const cx=middle+Math.cos(theta)*radial*n*.42;
-      const cy=middle+Math.sin(theta)*radial*n*.235;
+      const cy=middle+Math.sin(theta)*radial*n*.275;
       const rad=8+rnd(i*17+109)*31;
       const q=g.createRadialGradient(cx,cy,0,cx,cy,rad);
       const blue=i%9<6;
@@ -340,7 +346,7 @@ export function createGalaxyFlightScene() {
         :arm*TAU/2-.33+radial*4.15+(rnd(i*53+79)-.5)*(.41+.53*radial);
       const wobble=(rnd(i*73+33)-.5)*.10;
       const x=middle+Math.cos(theta)*(radial+wobble)*n*.43;
-      const y=middle+Math.sin(theta)*(radial+wobble)*n*.235;
+      const y=middle+Math.sin(theta)*(radial+wobble)*n*.275;
       const alpha=(.18+.62*rnd(i*19+47))*
         (diffuse?.52:1)*(1-smooth((radial-.73)/.27));
       const hue=[210,218,232,250,275,328,32,39][i%8];
@@ -348,15 +354,32 @@ export function createGalaxyFlightScene() {
       g.beginPath();
       g.arc(x,y,.22+rnd(i*29+31)*1.18,0,TAU);g.fill();
     }
-    // Soft luminous nucleus with a faint surrounding bulge.
-    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.123);
-    core.addColorStop(0,"rgba(255,250,238,1)");
-    core.addColorStop(.14,"rgba(255,228,215,.92)");
-    core.addColorStop(.35,"rgba(227,212,235,.63)");
-    core.addColorStop(.67,"rgba(152,152,205,.23)");
-    core.addColorStop(1,"rgba(95,121,180,0)");
+    // Layered nucleus has NO perfectly outlined oval. An off-centre
+    // ivory core melts into pale-rose and violet gas with a broad soft falloff.
+    // Its slight unevenness comes from overlapping clouds, not an ellipse.
+    for(let k=0;k<9;k++){
+      const offX=(rnd(k*91+43)-.5)*n*.075;
+      const offY=(rnd(k*101+73)-.5)*n*.060;
+      const rad=n*(.040+.064*rnd(k*79+15));
+      const glow=g.createRadialGradient(
+        middle+offX,middle+offY,0,middle+offX,middle+offY,rad);
+      const strength=(k===0?.57:.13+.19*rnd(k*61+41));
+      glow.addColorStop(0,"rgba(255,242,225,"+strength.toFixed(3)+")");
+      glow.addColorStop(.23,"rgba(252,208,209,"+(strength*.64).toFixed(3)+")");
+      glow.addColorStop(.54,"rgba(196,168,223,"+(strength*.27).toFixed(3)+")");
+      glow.addColorStop(1,"rgba(105,133,193,0)");
+      g.fillStyle=glow;
+      g.beginPath();g.arc(middle+offX,middle+offY,rad,0,TAU);g.fill();
+    }
+    // A pinpoint centre reads as a luminous stellar density peak rather
+    // than a concentric outlined ring.
+    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.035);
+    core.addColorStop(0,"rgba(255,248,233,.82)");
+    core.addColorStop(.20,"rgba(255,235,217,.54)");
+    core.addColorStop(.55,"rgba(227,201,225,.16)");
+    core.addColorStop(1,"rgba(150,150,205,0)");
     g.fillStyle=core;
-    g.beginPath();g.ellipse(middle,middle,n*.123,n*.052,-.33,0,TAU);g.fill();
+    g.beginPath();g.arc(middle,middle,n*.035,0,TAU);g.fill();
     nebulaCache=c;
     return c;
   }
@@ -773,7 +796,7 @@ export function createGalaxyFlightScene() {
     // glides into view and finally leaves across the top.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
-    ctx.drawImage(nebula,-size*.5,-size*.44,size,size*.88);
+    ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
     ctx.restore();
   }
 
