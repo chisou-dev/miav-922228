@@ -36,10 +36,10 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   glow.addColorStop(1,"rgba("+rgb.join(",")+",0)");
   g.fillStyle=glow;g.fillRect(0,0,128,128);
   const elliptical=variant===1||variant===2||variant===5;
-  const irregular=variant===3||variant===4;
-  // Only one of the six families is a resolved spiral; most are smooth
-  // lenticulars, irregular star-forming systems or asymmetric galaxies.
-  const arms=variant===0?2:0;
+  const irregular=variant===3;
+  // Two recognisable spirals, three edge-on/elliptical systems, one irregular.
+  // Individual galaxies must not resemble spheres or a cluster of planets.
+  const arms=variant===0?2:variant===4?3:0;
   for(let i=0;i<1030;i++){
     const rad=Math.sqrt(random(i*13+variant*397+9));
     let theta=TAU*random(i*41+variant*29+11);
@@ -47,32 +47,48 @@ function galaxySprite(variant:number):HTMLCanvasElement {
     if(arms){
       theta=TAU*arm/arms+rad*5.2+(random(i*27+variant*37)-.5)*(.85+.3*rad);
     }
-    const axial=elliptical?.28:irregular?.72:.54;
+    const axial=elliptical?.23:irregular?.72:.58;
     const distance=rad*(8+48*random(i*17+variant*97));
     const lopsided=irregular?Math.sin(theta*2.4+variant)*8:0;
     const x=center+Math.cos(theta)*(distance+lopsided);
     const y=center+Math.sin(theta)*(distance-lopsided*.3)*axial;
     const luminosity=Math.pow(1-rad,.42);
-    const alpha=(.18+.78*luminosity)*(.42+.58*random(i*53+17));
+    const alpha=(.23+.76*luminosity)*(.42+.58*random(i*53+17));
     const r=.28+random(i*7+variant*33)*(.43+luminosity*1.1);
     g.fillStyle="rgba("+rgb.join(",")+","+alpha.toFixed(3)+")";
     g.fillRect(x,y,r,r);
   }
-  const nucleus=g.createRadialGradient(center,center,0,center,center,elliptical?20:13);
+  // Flattened luminous bulge and a faint dust lane prevent the 'planet'
+  // silhouette at small sizes. The nuclei are larger than a pinpoint.
+  g.save();
+  g.translate(center,center);
+  g.scale(1,elliptical?.46:irregular?.76:.67);
+  const coreRadius=elliptical?25:17;
+  const nucleus=g.createRadialGradient(0,0,0,0,0,coreRadius);
   nucleus.addColorStop(0,"rgba(255,252,244,1)");
-  nucleus.addColorStop(.18,"rgba(255,238,212,.90)");
-  nucleus.addColorStop(.51,"rgba("+rgb.join(",")+",.54)");
+  nucleus.addColorStop(.18,"rgba(255,238,212,.93)");
+  nucleus.addColorStop(.52,"rgba("+rgb.join(",")+",.65)");
   nucleus.addColorStop(1,"rgba("+rgb.join(",")+",0)");
   g.fillStyle=nucleus;
-  g.beginPath();g.arc(center,center,elliptical?20:13,0,TAU);g.fill();
+  g.beginPath();g.arc(0,0,coreRadius,0,TAU);g.fill();
+  if(elliptical&&variant===5){
+    g.fillStyle="rgba(8,12,27,.20)";
+    g.beginPath();g.ellipse(0,4,39,1.3,-.06,0,TAU);g.fill();
+  }
+  g.restore();
   return c;
 }
 function makePoints():GalaxyPoint[] {
-  const knots=Array.from({length:15},(_,i)=>({
-    x:(random(i*37+201)-.5)*1.6,
-    y:(random(i*31+331)-.5)*1.5,
-    z:(random(i*53+431)-.5)*1.5,
-  }));
+  const knots=Array.from({length:15},(_,i)=>{
+    // Spherical knot distribution rather than a square point catalogue.
+    // Filament interpolation fills space organically, with no four corners.
+    const bearing=random(i*37+201)*TAU;
+    const elevation=(random(i*31+331)-.5)*Math.PI;
+    const radius=.26+.60*Math.pow(random(i*53+431),.60);
+    return {x:Math.cos(bearing)*Math.cos(elevation)*radius,
+      y:Math.sin(bearing)*Math.cos(elevation)*radius,
+      z:Math.sin(elevation)*radius};
+  });
   // Irregular clustered filaments: not a grid of planets or a regular spiral.
   return Array.from({length:118},(_,i)=>{
     const anchor=knots[Math.floor(random(i*17+14)*knots.length)];
