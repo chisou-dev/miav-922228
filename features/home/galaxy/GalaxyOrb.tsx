@@ -79,6 +79,15 @@ export function GalaxyOrb() {
     let titleBounds: DOMRect | null = null;
     let textPixels: Point[] = [];
     let grains: Grain[] = [];
+    // While the orb enlarges, grains come from real hero/header lettering
+    // across the top AND bottom of the visible screen (not a lower arc).
+    type ZoomGrain = Point & {
+      phase: number; delay: number; curve: number; life: number;
+      radius: number; brightness: number;
+    };
+    let zoomGrains: ZoomGrain[] = [];
+    let zoomStartedAt = 0;
+    let zoomTextStyles: Array<{el: HTMLElement; opacity: string}> = [];
     let from: Point = { x: 0, y: 0 };
     let to: Point = { x: 0, y: 0 };
     let orb: Point = { x: 0, y: 0 };
@@ -262,8 +271,115 @@ export function GalaxyOrb() {
       zoomButton!.style.transform = `translate3d(${orb.x - hitRadius}px, ${orb.y - hitRadius}px, 0)`;
     }
 
+    function prepareZoomAbsorption() {
+      // Sample the actual visible glyph rectangles once per enlargement:
+      // header, title, tagline and body can all supply scattered dust.
+      const sources: Point[] = [];
+      const els = [
+        ...Array.from(document.querySelectorAll<HTMLElement>(
+          "header a, header button, header span"
+        )),
+        ...Array.from(section!.querySelectorAll<HTMLElement>(
+          "h1, p, nav a"
+        )),
+      ];
+      const uniqueEls = Array.from(new Set(els));
+      const range = document.createRange();
+      for(const el of uniqueEls){
+        const box=el.getBoundingClientRect();
+        if(box.width<1 || box.height<1 || box.bottom<0 ||
+           box.top>window.innerHeight)continue;
+        const style=getComputedStyle(el);
+        if(style.visibility==="hidden"||style.display==="none")continue;
+        const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+        let node:Node|null;
+        while((node=walker.nextNode())!==null&&sources.length<2600){
+          const value=node.textContent??"";
+          for(let i=0;i<value.length&&sources.length<2600;i++){
+            if(!value[i].trim())continue;
+            range.setStart(node,i);range.setEnd(node,i+1);
+            const rect=range.getBoundingClientRect();
+            if(rect.width<1||rect.height<1 || rect.bottom<0 ||
+               rect.top>window.innerHeight)continue;
+            for(let j=0;j<3;j++){
+              sources.push({
+                x:rect.left+rect.width*rand(.06,.94),
+                y:rect.top+rect.height*rand(.07,.93)
+              });
+            }
+          }
+        }
+      }
+      if(!sources.length){
+        for(const p of textPixels)sources.push({
+          x:sectionBounds.left+p.x,y:sectionBounds.top+p.y
+        });
+      }
+      // Upper/lower sources deliberately interleave. An irregular mix
+      // preserves individual letter strokes instead of making two neat rows.
+      const upper=sources.filter(p=>p.y<window.innerHeight*.49);
+      const lower=sources.filter(p=>p.y>=window.innerHeight*.49);
+      zoomGrains=Array.from({length:1050},(_,i)=>{
+        const pool=i%3===0?upper:i%3===1?lower:sources;
+        const actual=pool.length?pool:sources;
+        const p=actual[Math.floor(Math.random()*actual.length)]||
+          {x:width*.5,y:height*.5};
+        return {...p, phase:rand(0,TAU),delay:Math.random(),
+          curve:rand(-64,64),life:rand(2200,5000),
+          radius:rand(.25,.85),brightness:rand(.32,.86)};
+      });
+      zoomStartedAt=performance.now();
+      // Only temporary opacity changes, always restored on close.
+      zoomTextStyles=Array.from(section!.querySelectorAll<HTMLElement>(
+        "h1, p, nav a"
+      )).filter(el=>el.getBoundingClientRect().width>0)
+        .map(el=>({el,opacity:el.style.opacity}));
+    }
+
+    function drawZoomAbsorption(now:number,inside:boolean){
+      if(!expanded||!zoomGrains.length)return;
+      const spread=clamp((radius-normalRadius)/
+        Math.max(1,maximumRadius-normalRadius),0,1);
+      const strength=.28+.72*smooth(spread);
+      // Smoothly let the original copy grow fragile while the stream
+      // intensifies; still recognisable when entering the voyage.
+      for(const saved of zoomTextStyles){
+        const isHeading=saved.el.matches("h1");
+        saved.el.style.opacity=String(1-strength*(isHeading?.32:.63));
+      }
+      ctx.save();
+      for(const g of zoomGrains){
+        const t=((now-zoomStartedAt+g.delay*g.life*3)/g.life)%1;
+        if(t<=.055||t>=.97)continue;
+        const u=smooth(clamp((t-.055)/.915,0,1));
+        const dx=orb.x-g.x,dy=orb.y-g.y;
+        const length=Math.max(1,Math.hypot(dx,dy));
+        const bend=Math.sin(Math.PI*u)*g.curve;
+        const x=mix(g.x,orb.x+dx/length*radius*.18,u)-
+          dy/length*bend;
+        const y=mix(g.y,orb.y+dy/length*radius*.18,u)+
+          dx/length*bend;
+        const inGlass=Math.hypot(x-orb.x,y-orb.y)<=radius*.98;
+        if(inGlass!==inside)continue;
+        const fade=smooth((u)/.10)*(1-smooth((u-.74)/.26));
+        const a=strength*g.brightness*fade*(inside?.38:.86);
+        if(a<.02)continue;
+        ctx.fillStyle="rgba(239,245,255,"+a.toFixed(3)+")";
+        const r=g.radius*(1-.55*u);
+        ctx.fillRect(x,y,r,r);
+      }
+      ctx.restore();
+    }
+
+    function restoreZoomText(){
+      for(const saved of zoomTextStyles)saved.el.style.opacity=saved.opacity;
+      zoomTextStyles=[];
+      zoomGrains=[];
+    }
+
     function closeExpanded() {
       if (!expanded) return;
+      restoreZoomText();
       expanded = false;
       atMaximum = false;
       zoomStep = 0;
@@ -339,6 +455,7 @@ export function GalaxyOrb() {
         surface!.setAttribute("aria-label", "Tap the glass galaxy to enlarge it");
         closeButton!.style.display = "grid";
         measure();
+        prepareZoomAbsorption();
       }
       zoomStep += 1;
       const proposed = normalRadius * Math.pow(1.3, zoomStep);
@@ -821,9 +938,11 @@ export function GalaxyOrb() {
           if (Math.abs(radius - targetRadius) < 0.15) radius = targetRadius;
         }
         updateZoomGeometry();
-        // Keep the GLASS sphere visible through the final 1.3x zoom.
-        // The separate space voyage begins only on the following tap.
+        // Text is siphoned from its original upper AND lower positions
+        // throughout the enlargement, not only after entering the voyage.
+        drawZoomAbsorption(now,false);
         drawSphere();
+        drawZoomAbsorption(now,true);
         return;
       }
       if (!reduced()) advance(now, elapsed);
