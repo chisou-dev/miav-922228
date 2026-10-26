@@ -138,14 +138,20 @@ export function createGalaxyFlightScene() {
       y:backY+(targetY-backY)*blend,
     };
   }
-  const farStars=Array.from({length:1900},(_,i)=>({
-    x:(rnd(i*109+31)-.5)*7.3,
-    y:(rnd(i*97+241)-.5)*7.3,
-    radius:.23+rnd(i*71+33)*.66,
-    phase:rnd(i*43+151)*TAU,
-    hue:[207,224,238,42,33,282][i%6],
-    power:.17+rnd(i*59+111)*.54,
-  }));
+  // Polar sky coordinates with gradual radial falloff. A rectangular
+  // sampling area becomes a conspicuous four-sided star cloud under zoom.
+  // A deep, round all-sky catalogue has no rectangular edge to reveal.
+  const farStars=Array.from({length:3400},(_,i)=>{
+    const angle=TAU*rnd(i*109+31);
+    const radius=6.35*Math.pow(rnd(i*97+241),.70);
+    return {
+      x:Math.cos(angle)*radius,y:Math.sin(angle)*radius,
+      radius:.22+rnd(i*71+33)*.70,
+      phase:rnd(i*43+151)*TAU,
+      hue:[207,224,238,42,33,282][i%6],
+      power:.17+rnd(i*59+111)*.57,
+    };
+  });
   const skyStars=Array.from({length:SKY_STARS},(_,i)=>({
     x:rnd(i*11+17),y:rnd(i*17+37),
     radius:.31+rnd(i*13+47)*.86,
@@ -257,26 +263,27 @@ export function createGalaxyFlightScene() {
     // separate stage picture.
     g.save();
     g.globalCompositeOperation="screen";
-    for(let i=0;i<240;i++){
+    for(let i=0;i<370;i++){
       const radial=.10+rnd(i*43+117)*.79;
-      const arm=i%4;
-      const theta=arm*TAU/4+radial*4.75
-        +(rnd(i*79+19)-.5)*(.48+.30*radial);
+      const arm=i%2;
+      // Two broad and unequal stellar arms: a galaxy, not a foggy circle.
+      const theta=arm*TAU/2+radial*5.4
+        +(rnd(i*79+19)-.5)*(.64+.27*radial);
       const x=middle+Math.cos(theta)*radial*n*.42;
       const y=middle+Math.sin(theta)*radial*n*.275;
-      const radius=29+rnd(i*37+101)*81;
+      const radius=34+rnd(i*37+101)*86;
       const q=g.createRadialGradient(x,y,0,x,y,radius);
       if(i%7<3){
-        q.addColorStop(0,"rgba(86,152,231,.048)");
-        q.addColorStop(.42,"rgba(83,142,214,.018)");
+        q.addColorStop(0,"rgba(86,152,231,.095)");
+        q.addColorStop(.42,"rgba(83,142,214,.042)");
         q.addColorStop(1,"rgba(55,112,191,0)");
       }else if(i%7<5){
-        q.addColorStop(0,"rgba(235,154,202,.038)");
-        q.addColorStop(.40,"rgba(214,130,177,.014)");
+        q.addColorStop(0,"rgba(235,154,202,.081)");
+        q.addColorStop(.40,"rgba(214,130,177,.034)");
         q.addColorStop(1,"rgba(194,107,159,0)");
       }else{
-        q.addColorStop(0,"rgba(211,222,247,.034)");
-        q.addColorStop(.44,"rgba(179,205,242,.012)");
+        q.addColorStop(0,"rgba(211,222,247,.075)");
+        q.addColorStop(.44,"rgba(179,205,242,.031)");
         q.addColorStop(1,"rgba(135,157,208,0)");
       }
       g.fillStyle=q;
@@ -286,17 +293,17 @@ export function createGalaxyFlightScene() {
 
     // Deliberately broken spiral: asymmetric branches, dust lanes and an
     // uneven light envelope prevent a white dotted pinwheel appearance.
-    for(let i=0;i<1950;i++){
+    for(let i=0;i<2500;i++){
       const radial=Math.sqrt(rnd(i*37+191))*.92;
-      const arm=i%4;
-      const theta=arm*TAU/4+radial*4.75+
-        (rnd(i*71+51)-.5)*(.42+.45*radial);
+      const arm=i%2;
+      const theta=arm*TAU/2+radial*5.4+
+        (rnd(i*71+51)-.5)*(.37+.48*radial);
       const cx=middle+Math.cos(theta)*radial*n*.42;
       const cy=middle+Math.sin(theta)*radial*n*.27;
       const rad=8+rnd(i*17+109)*31;
       const q=g.createRadialGradient(cx,cy,0,cx,cy,rad);
       const blue=i%9<6;
-      q.addColorStop(0,blue?"rgba(128,170,231,.10)":"rgba(231,171,202,.083)");
+      q.addColorStop(0,blue?"rgba(128,170,231,.15)":"rgba(231,171,202,.13)");
       q.addColorStop(1,"rgba(85,110,160,0)");
       g.fillStyle=q;
       g.beginPath();g.arc(cx,cy,rad,0,TAU);g.fill();
@@ -304,13 +311,13 @@ export function createGalaxyFlightScene() {
     // Stars are much less orderly than the old four perfect spiral tracks:
     // 40% are in the diffuse elliptical disc, the rest clustered along the
     // irregular arms. A radial limit softly blends away the last pixels.
-    for(let i=0;i<26500;i++){
+    for(let i=0;i<29500;i++){
       const radial=Math.sqrt(rnd(i*23+23))*.94;
-      const diffuse=rnd(i*61+17)<.46;
-      const arm=i%4;
+      const diffuse=rnd(i*61+17)<.35;
+      const arm=i%2;
       const theta=diffuse
         ?rnd(i*41+27)*TAU
-        :arm*TAU/4+radial*4.75+(rnd(i*53+79)-.5)*(.35+.65*radial);
+        :arm*TAU/2+radial*5.4+(rnd(i*53+79)-.5)*(.39+.51*radial);
       const wobble=(rnd(i*73+33)-.5)*.10;
       const x=middle+Math.cos(theta)*(radial+wobble)*n*.43;
       const y=middle+Math.sin(theta)*(radial+wobble)*n*.275;
@@ -322,13 +329,14 @@ export function createGalaxyFlightScene() {
       g.arc(x,y,.22+rnd(i*29+31)*1.18,0,TAU);g.fill();
     }
     // Soft luminous nucleus with a faint surrounding bulge.
-    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.075);
-    core.addColorStop(0,"rgba(255,244,242,.89)");
-    core.addColorStop(.17,"rgba(227,212,235,.60)");
-    core.addColorStop(.54,"rgba(152,152,205,.21)");
+    const core=g.createRadialGradient(middle,middle,0,middle,middle,n*.118);
+    core.addColorStop(0,"rgba(255,250,238,1)");
+    core.addColorStop(.14,"rgba(255,228,215,.92)");
+    core.addColorStop(.35,"rgba(227,212,235,.63)");
+    core.addColorStop(.67,"rgba(152,152,205,.23)");
     core.addColorStop(1,"rgba(95,121,180,0)");
     g.fillStyle=core;
-    g.beginPath();g.arc(middle,middle,n*.075,0,TAU);g.fill();
+    g.beginPath();g.ellipse(middle,middle,n*.118,n*.079,-.12,0,TAU);g.fill();
     nebulaCache=c;
     return c;
   }
@@ -668,8 +676,8 @@ export function createGalaxyFlightScene() {
         const x=w*.5+p.x*w*cam.scale+cam.panX;
         const y=h*.5+p.y*h*cam.scale+cam.panY;
         if(x<0||x>w||y<0||y>h)continue;
-        const angular=Math.max(Math.abs(p.x),Math.abs(p.y));
-        const entry=smooth((step-(122+angular*8))/40);
+        const angular=Math.hypot(p.x,p.y);
+        const entry=smooth((step-(118+angular*6))/49);
         const a=appearance*entry*p.power*
           (.82+.18*Math.sin(now*.00115+p.phase));
         if(a<.009)continue;
