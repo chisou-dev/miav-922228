@@ -207,6 +207,8 @@ export function createGalaxyClusterOrb() {
     c.width=c.height=n;
     const g=c.getContext("2d",{alpha:true});
     if(!g){glassOptics=c;return c;}
+    // Capture the narrowed, non-null canvas context for nested helpers.
+    const glassCtx:CanvasRenderingContext2D=g;
     const disc=new Path2D();
     disc.arc(mid,mid,rad,0,TAU);
     // Very slight cool transmission and local glass thickness. This
@@ -234,14 +236,14 @@ export function createGalaxyClusterOrb() {
       x:number,y:number,rx:number,ry:number,angle:number,opacity:number,
       rgb:string,
     ){
-      g.save();g.translate(x,y);g.rotate(angle);g.scale(rx,ry);
-      const q=g.createRadialGradient(-.14,-.13,.03,0,0,1);
+      glassCtx.save();glassCtx.translate(x,y);glassCtx.rotate(angle);glassCtx.scale(rx,ry);
+      const q=glassCtx.createRadialGradient(-.14,-.13,.03,0,0,1);
       q.addColorStop(0,"rgba("+rgb+","+opacity.toFixed(3)+")");
       q.addColorStop(.27,"rgba("+rgb+","+(opacity*.54).toFixed(3)+")");
       q.addColorStop(.65,"rgba("+rgb+","+(opacity*.15).toFixed(3)+")");
       q.addColorStop(1,"rgba("+rgb+",0)");
-      g.fillStyle=q;g.beginPath();g.arc(0,0,1,0,TAU);g.fill();
-      g.restore();
+      glassCtx.fillStyle=q;glassCtx.beginPath();glassCtx.arc(0,0,1,0,TAU);glassCtx.fill();
+      glassCtx.restore();
     }
     // An off-axis light source leaves a broad luminous smear high on the
     // left of the glass, tapering into smaller, much dimmer glints.
