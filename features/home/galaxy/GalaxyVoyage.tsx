@@ -159,26 +159,41 @@ export function GalaxyVoyage({
     // these glyphs is fundamentally different from fading the text layer.
     function prepareTitle() {
       if(titleBase&&titleEroded)return;
+      // Use the actual HOMEPAGE heading's computed CSS size and tracking,
+      // not a second oversized 52-88px title in the fullscreen animation.
       const maxWidth=Math.max(120,viewWidth*.94);
       const weight=titleStyle?.fontWeight||"500";
       const family=titleStyle?.fontFamily||'Georgia, "Yu Mincho", serif';
+      const cssSize=parseFloat(titleStyle?.fontSize||"")||34;
+      const cssSpacing=parseFloat(titleStyle?.letterSpacing||"")||0;
       const probe=document.createElement("canvas").getContext("2d");
       if(!probe)return;
-      let fontSize=Math.min(88,Math.max(52,viewWidth*.20));
-      for(let trial=0;trial<18;trial++){
-        probe.font=weight+" "+fontSize+"px "+family;
-        if(probe.measureText(titleLabel).width<=maxWidth-8)break;
-        fontSize*=.94;
+      let fontSize=cssSize;
+      let tracking=cssSpacing;
+      function textWidth(){
+        probe!.font=weight+" "+fontSize+"px "+family;
+        return probe!.measureText(titleLabel).width+
+          Math.max(0,titleLabel.length-1)*tracking;
       }
-      probe.font=weight+" "+fontSize+"px "+family;
-      const width=Math.min(viewWidth*.97,probe.measureText(titleLabel).width+12);
+      for(let trial=0;trial<20&&textWidth()>maxWidth-8;trial++){
+        fontSize*=.96;
+        tracking*=.96;
+      }
+      const inkWidth=textWidth();
       const base=document.createElement("canvas");
-      base.width=Math.ceil(width);base.height=Math.ceil(fontSize*1.62);
+      base.width=Math.ceil(Math.min(maxWidth,inkWidth+12));
+      base.height=Math.ceil(fontSize*1.62);
       const b=base.getContext("2d",{willReadFrequently:true});
       if(!b)return;
-      b.font=probe.font;b.textAlign="center";b.textBaseline="middle";
+      b.font=probe.font;b.textAlign="left";b.textBaseline="middle";
       b.fillStyle="rgba(251,245,235,1)";
-      b.fillText(titleLabel,base.width*.5,base.height*.53);
+      // Canvas letterSpacing varies by Android version: draw characters
+      // explicitly to match the homepage's 0.04em tracking everywhere.
+      let drawX=(base.width-inkWidth)*.5;
+      for(const char of titleLabel){
+        b.fillText(char,drawX,base.height*.53);
+        drawX+=b.measureText(char).width+tracking;
+      }
       const mask=b.getImageData(0,0,base.width,base.height).data;
       const pixels:Point[]=[];
       for(let y=1;y<base.height-1;y+=2){
@@ -235,8 +250,14 @@ export function GalaxyVoyage({
       }
       titleEdgeRank=ranks;
       titleOriginalPixels=new Uint8ClampedArray(mask);
+      // Dust launches from both exposed upper and lower letter edges,
+      // not a uniform middle strip. The random mix avoids a rigid wipe.
+      const upper=pixels.filter(p=>p.y<base.height*.49);
+      const lower=pixels.filter(p=>p.y>=base.height*.49);
       titleParticles=Array.from({length:3600},(_,n)=>{
-        const p=pixels[Math.floor(Math.random()*pixels.length)];
+        const pool=n%3===0?upper:n%3===1?lower:pixels;
+        const actual=pool.length?pool:pixels;
+        const p=actual[Math.floor(Math.random()*actual.length)];
         return {x:p.x+(Math.random()-.5)*3,
           y:p.y+(Math.random()-.5)*3,
           delay:Math.random()*.77,
