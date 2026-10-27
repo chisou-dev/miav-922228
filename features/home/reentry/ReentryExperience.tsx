@@ -24,6 +24,7 @@ import { getReentryUserVolume, startReentryAmbience, stopReentryAudio } from "./
 import { startStage2CabinAudio } from "./reentryStage2CabinAudio";
 import { ReentryAudioControl } from "./ReentryAudioControl";
 import { GalaxyOrb } from "../galaxy/GalaxyOrb";
+import { hasClearedStage1, rememberStage1Clear } from "../galaxy/galaxyStage1Unlock";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
@@ -69,6 +70,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     typeof window !== "undefined" && devPresetRequiresExpand(),
   );
   const [clearAssist, setClearAssist] = useState(false);
+  // Start locked for SSR/hydration; restore a prior win after mounting.
+  const [galaxyUnlocked, setGalaxyUnlocked] = useState(false);
   const [showStage2Notice, setShowStage2Notice] = useState(false);
   const miavTitleTapRef = useRef<{
     count: number;
@@ -102,6 +105,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
   useEffect(() => {
     void preloadReentryPreviewAssets();
+    setGalaxyUnlocked(hasClearedStage1());
   }, []);
 
   const onFlightStart = useCallback(() => {
@@ -129,6 +133,15 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     onFlightStart,
     guaranteedClear: clearAssist,
   });
+
+  // Only a completed, successful Stage 1 run unlocks the galaxy.
+  // Failed attempts, loading the page and starting a flight do not.
+  useEffect(() => {
+    if (phase !== "result" || result?.outcome !== "EARTH_REACHED" ||
+        flightProgress < 1) return;
+    rememberStage1Clear();
+    setGalaxyUnlocked(true);
+  }, [phase, result?.outcome, flightProgress]);
 
   const nearbySuccess = useNearbySuccess({
     enabled:
@@ -264,7 +277,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
         aria-label="MIAV Stage 1 — atmospheric reentry"
         className="relative scroll-mt-24"
       >
-        <GalaxyOrb />
+        <GalaxyOrb unlocked={galaxyUnlocked} />
         <div
           className="relative z-[1] grid items-center gap-10 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-10 xl:gap-14"
         >
