@@ -1141,10 +1141,13 @@ export function GalaxyVoyage({
       const glassJoin=ease((finalGlass.sphereVisibility-.025)/.74);
       const galaxyAnchor=glassJoin>.001
         ? {
-          x:finalGlass.cx-finalGlass.r*.25,
-          y:finalGlass.cy+finalGlass.r*.36,
-          r:finalGlass.r,
+          // The lead galaxy is one rotating member of the final collection,
+          // with the same foreground/background perspective as its peers.
+          x:finalGlass.leadX,
+          y:finalGlass.leadY,
+          r:finalGlass.r*finalGlass.leadPerspective,
           blend:glassJoin,
+          turn:finalGlass.yaw,
         }
         :undefined;
       // Transparent galactic gas stays below the original galaxy stars.
