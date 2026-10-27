@@ -789,9 +789,59 @@ export function createGalaxyFlightScene() {
     }
   }
 
+  function drawTravelSkyGlints(
+    ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    step:number,elapsed:number,seed:number,
+    projection:ReturnType<typeof galaxyProjection>,
+  ){
+    // One soft sparkle somewhere in the travelling sky every ~3-5 seconds,
+    // beginning several seconds after a tap. Vary the stars every time.
+    if(step<31||step>=150||elapsed<0||elapsed>=20000)return;
+    const cam=camera(step,w,h);
+    const hues=[212,193,228,39,348,207,18];
+    let start=2700+900*rnd(seed+97);
+    for(let event=0;event<6&&start<20000;event++){
+      const age=elapsed-start;
+      const duration=570+520*rnd(seed+event*73+291);
+      if(age>=0&&age<duration){
+        const pulse=smooth(age/(duration*.27))*
+          (1-smooth((age-duration*.43)/(duration*.57)));
+        if(pulse>.025){
+          // Pick a currently visible ACTUAL star, not a random position
+          // on the screen. Its world position stays fixed between frames.
+          let found=false,x=0,y=0;
+          for(let trial=0;trial<14;trial++){
+            const key=seed+event*613+trial*97+27;
+            if(step>=122&&trial<10){
+              const p=farStars[Math.floor(rnd(key)*farStars.length)];
+              x=w*.5+p.x*w*cam.scale+cam.panX;
+              y=h*.5+p.y*h*cam.scale+cam.panY;
+            }else{
+              const i=Math.floor(rnd(key+721)*skyStars.length);
+              const p=skyStars[i];
+              const projected=projectedStar(p,i%3!==0,step,w,h,now,projection);
+              x=projected.x;y=projected.y;
+            }
+            if(x>9&&y>9&&x<w-9&&y<h-9){found=true;break;}
+          }
+          if(found){
+            const color=hues[Math.floor(rnd(seed+event*43+193)*hues.length)];
+            const radius=2.5+3.3*rnd(seed+event*51+57);
+            const power=(.33+.42*rnd(seed+event*19+43))*pulse;
+            ctx.save();ctx.globalCompositeOperation="screen";
+            paintSubtleGlint(ctx,x,y,radius,color,power);
+            ctx.restore();
+          }
+        }
+      }
+      start+=3100+1750*rnd(seed+event*179+113);
+    }
+  }
+
   function drawSky(
     ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
     step:number,anchor?:GalaxyAnchor,
+    elapsedSinceTap=21000,glintSeed=0,
   ) {
     const count=visibleStarCount(step);
     if(count<=0)return;
@@ -864,23 +914,9 @@ export function createGalaxyFlightScene() {
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
-    // Hold the field and its slowly turning galactic disc between taps.
-    if(step>=18&&step<145){
-      const whole=Math.floor(step),partial=step-whole;
-      const pulse=Math.sin(Math.PI*partial);
-      if(pulse>.03){
-        for(let j=0;j<4;j++){
-          const idx=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
-          const p=skyStars[idx];
-          const loc=projectedStar(p,idx%3!==0,step,w,h,now,projection);
-          const rad=4+p.radius*4;
-          const glow=ctx.createRadialGradient(loc.x,loc.y,0,loc.x,loc.y,rad);
-          glow.addColorStop(0,"hsla("+p.hue+",55%,91%,"+(pulse*.22).toFixed(3)+")");
-          glow.addColorStop(1,"hsla("+p.hue+",55%,72%,0)");
-          ctx.fillStyle=glow;ctx.beginPath();ctx.arc(loc.x,loc.y,rad,0,TAU);ctx.fill();
-        }
-      }
-    }
+    // Avoid the former one-off flash tied to the click transition. The
+    // sky now glints at uneven intervals throughout the next 20 seconds.
+    drawTravelSkyGlints(ctx,now,w,h,step,elapsedSinceTap,glintSeed,projection);
   }
 
   function drawThickGalaxy(
