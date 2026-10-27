@@ -9,7 +9,6 @@ import {
 } from "react";
 import { ReentryFullscreenPortal } from "./ReentryFullscreenPortal";
 import { ReentryHybridStage } from "./ReentryHybridStage";
-import { ReentryStage2Prototype } from "./ReentryStage2Prototype";
 import { ReentryLaunchControls } from "./ReentryLaunchControls";
 import { ReentryShellProvider } from "./reentryShellContext";
 import { useBodyScrollLock } from "./useBodyScrollLock";
@@ -20,11 +19,15 @@ import { REENTRY_SCENE } from "./reentrySceneLayout";
 import { preloadReentryPreviewAssets } from "./reentryAssets";
 import { shouldShowNearbySuccess } from "./reentryNearbySuccess";
 import type { ReentryOutcome } from "./reentryTypes";
-import { getReentryUserVolume, startReentryAmbience, stopReentryAudio } from "./reentryAudio";
-import { startStage2CabinAudio } from "./reentryStage2CabinAudio";
+import { startReentryAmbience, stopReentryAudio } from "./reentryAudio";
 import { ReentryAudioControl } from "./ReentryAudioControl";
 import { GalaxyOrb } from "../galaxy/GalaxyOrb";
-import { hasClearedStage1, rememberStage1Clear } from "../galaxy/galaxyStage1Unlock";
+import {
+  acknowledgeGalaxyUnlock,
+  hasAcknowledgedGalaxyUnlock,
+  hasClearedStage1,
+  rememberStage1Clear,
+} from "../galaxy/galaxyStage1Unlock";
 
 const actionClass =
   "text-[0.72rem] tracking-[0.16em] text-white/85 underline decoration-white/35 underline-offset-[0.45em] transition-colors duration-300 hover:text-white";
@@ -72,7 +75,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const [clearAssist, setClearAssist] = useState(false);
   // Start locked for SSR/hydration; restore a prior win after mounting.
   const [galaxyUnlocked, setGalaxyUnlocked] = useState(false);
-  const [showStage2Notice, setShowStage2Notice] = useState(false);
+  const [galaxyTwinkle, setGalaxyTwinkle] = useState(false);
   const miavTitleTapRef = useRef<{
     count: number;
     lastAt: number;
@@ -105,7 +108,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
   useEffect(() => {
     void preloadReentryPreviewAssets();
-    setGalaxyUnlocked(hasClearedStage1());
+    const cleared = hasClearedStage1();
+    setGalaxyUnlocked(cleared);
+    setGalaxyTwinkle(cleared && !hasAcknowledgedGalaxyUnlock());
   }, []);
 
   const onFlightStart = useCallback(() => {
@@ -141,7 +146,13 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
         flightProgress < 1) return;
     rememberStage1Clear();
     setGalaxyUnlocked(true);
+    setGalaxyTwinkle(!hasAcknowledgedGalaxyUnlock());
   }, [phase, result?.outcome, flightProgress]);
+
+  const onGalaxyFirstTap = useCallback(() => {
+    acknowledgeGalaxyUnlock();
+    setGalaxyTwinkle(false);
+  }, []);
 
   const nearbySuccess = useNearbySuccess({
     enabled:
@@ -207,7 +218,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const closeSession = useCallback(() => {
     stopReentryAudio();
     retry();
-    setShowStage2Notice(false);
     setClearAssist(false);
     setExpanded(false);
   }, [retry]);
@@ -277,7 +287,11 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
         aria-label="MIAV Stage 1 — atmospheric reentry"
         className="relative scroll-mt-24"
       >
-        <GalaxyOrb unlocked={galaxyUnlocked} />
+        <GalaxyOrb
+          unlocked={galaxyUnlocked}
+          twinkle={galaxyTwinkle}
+          onFirstTap={onGalaxyFirstTap}
+        />
         <div
           className="relative z-[1] grid items-center gap-10 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-10 xl:gap-14"
         >
@@ -331,7 +345,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
             role="application"
           >
-            {!showStage2Notice && (<>
+
             <ReentryHybridStage
               state={fullscreenState}
               playbackProgressRef={flightProgressRef}
@@ -364,7 +378,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 {REENTRY_SCENE.hintText}
               </p>
             )}
-            </>)}
+
           </div>
           {phase === "result" &&
             result &&
@@ -406,7 +420,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             )}
 
           {/* The flight reaches result only at the escape timeline endpoint. */}
-          {!showStage2Notice && phase === "result" && result &&
+          {phase === "result" && result &&
             (result.outcome !== "EARTH_REACHED" || flightProgress >= 1) && (
             result.outcome === "EARTH_REACHED" ? (
               <div
@@ -415,23 +429,15 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 aria-label="Stage 1 clear controls"
               >
                 <div className="flex flex-wrap items-center justify-center gap-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      stopReentryAudio();
-                      // This click is the browser's audio-unlock gesture.
-                      startStage2CabinAudio(getReentryUserVolume());
-                      setShowStage2Notice(true);
-                    }}
-                    className="rounded-sm border border-cyan-100/50 bg-[#061626]/75 px-5 py-2 text-[0.82rem] tracking-[0.20em] text-white shadow-[0_0_18px_rgba(120,208,250,0.13)] backdrop-blur-sm transition-colors hover:border-cyan-50 hover:bg-[#143148] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
-                    aria-label="Stage 2 preview"
+                  <span
+                    className="inline-flex min-h-10 items-center rounded-sm border border-cyan-100/20 bg-[#061626]/45 px-4 py-2 text-[0.72rem] tracking-[0.14em] text-cyan-50/70"
+                    aria-label="Stage 2 coming soon"
                   >
-                    STAGE 2
-                  </button>
+                    STAGE 2 · COMING SOON
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
-                      setShowStage2Notice(false);
                       startReentryAmbience();
                       retry();
                     }}
@@ -481,12 +487,6 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 </div>
               </div>
             )
-          )}
-          {showStage2Notice && (
-            <ReentryStage2Prototype
-              onClose={() => setShowStage2Notice(false)}
-              onExitHome={closeSession}
-            />
           )}
         </div>
         </ReentryFullscreenPortal>

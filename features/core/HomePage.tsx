@@ -40,15 +40,17 @@ export function HomePage({ firstRead }: { firstRead: FirstRead | null }) {
 
   const heroCopy = (
     <>
-      <div className="flex items-start gap-4 sm:gap-5">
-        <h1 className="min-w-0 flex-1 text-[clamp(1.75rem,6.2vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
-          <GalaxyHeading>{t("home.brand")}</GalaxyHeading>
-        </h1>
+      <h1 className="min-w-0 text-[clamp(1.75rem,6.2vw,4.25rem)] font-medium leading-[1.15] tracking-[0.04em] text-[var(--foreground)]">
+        <GalaxyHeading>{t("home.brand")}</GalaxyHeading>
+      </h1>
+      <div className="mt-5 flex max-w-xl items-center gap-3 sm:mt-9 sm:gap-5">
+        <p className="min-w-0 flex-1 text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:text-lg sm:leading-8">
+          {t("home.tagline")}
+        </p>
+        {/* On mobile the real Stage 1 entry now lives beside the tagline,
+            rather than floating beside the MIAV heading. */}
         <ReentryHeroTeaser />
       </div>
-      <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed tracking-[0.02em] text-[var(--foreground-muted)] sm:mt-9 sm:text-lg sm:leading-8">
-        {t("home.tagline")}
-      </p>
       <p className="mt-7 max-w-md text-[0.95rem] leading-[1.9] tracking-[0.01em] text-[var(--foreground-muted)] sm:mt-12 sm:text-base sm:leading-[2]">
         {t("home.lead")}
       </p>
