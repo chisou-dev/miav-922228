@@ -1,0 +1,10 @@
+# MIAV Firebase App Hosting STAGING ONLY.
+# This file is on the staging branch and must not be merged until tested.
+# Limits Cloud Run instance count; NOT a hard cap on CDN, billing or requests.
+# The separate Firebase project must use its own billing and spend cap.
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 40
+  cpu: 1
+  memoryMiB: 1024
