@@ -19,63 +19,94 @@ function random(seed:number) {
   return ((x^(x>>>16))>>>0)/4294967295;
 }
 function galaxySprite(variant:number):HTMLCanvasElement {
+  // Six cached, transparent, detailed galaxy silhouettes. No downloaded
+  // images, circular planet icons or glowing rectangular picture surfaces.
   const c=document.createElement("canvas");
-  c.width=c.height=128;
+  const n=224,mid=n*.5;
+  c.width=c.height=n;
   const g=c.getContext("2d",{alpha:true});
   if(!g)return c;
   const schemes=[
-    [214,233,255], [255,221,184], [228,208,245],
-    [202,237,235], [244,212,203], [205,218,249],
+    [188,217,255],[247,211,169],[221,205,243],
+    [181,225,230],[246,188,203],[185,199,239],
   ];
   const rgb=schemes[variant%schemes.length];
-  const center=64;
-  const glow=g.createRadialGradient(center,center,0,center,center,61);
-  glow.addColorStop(0,"rgba("+rgb.join(",")+",.66)");
-  glow.addColorStop(.12,"rgba("+rgb.join(",")+",.30)");
-  glow.addColorStop(.48,"rgba("+rgb.join(",")+",.075)");
-  glow.addColorStop(1,"rgba("+rgb.join(",")+",0)");
-  g.fillStyle=glow;g.fillRect(0,0,128,128);
-  const elliptical=variant===1||variant===2||variant===5;
+  const rgbText=rgb.join(",");
+  const elliptic=variant===1||variant===2||variant===5;
   const irregular=variant===3;
-  // Two recognisable spirals, three edge-on/elliptical systems, one irregular.
-  // Individual galaxies must not resemble spheres or a cluster of planets.
   const arms=variant===0?2:variant===4?3:0;
-  for(let i=0;i<1030;i++){
-    const rad=Math.sqrt(random(i*13+variant*397+9));
-    let theta=TAU*random(i*41+variant*29+11);
-    const arm=arms ? i%arms : 0;
-    if(arms){
-      theta=TAU*arm/arms+rad*5.2+(random(i*27+variant*37)-.5)*(.85+.3*rad);
-    }
-    const axial=elliptical?.23:irregular?.72:.58;
-    const distance=rad*(8+48*random(i*17+variant*97));
-    const lopsided=irregular?Math.sin(theta*2.4+variant)*8:0;
-    const x=center+Math.cos(theta)*(distance+lopsided);
-    const y=center+Math.sin(theta)*(distance-lopsided*.3)*axial;
-    const luminosity=Math.pow(1-rad,.42);
-    const alpha=(.23+.76*luminosity)*(.42+.58*random(i*53+17));
-    const r=.28+random(i*7+variant*33)*(.43+luminosity*1.1);
-    g.fillStyle="rgba("+rgb.join(",")+","+alpha.toFixed(3)+")";
-    g.fillRect(x,y,r,r);
-  }
-  // Flattened luminous bulge and a faint dust lane prevent the 'planet'
-  // silhouette at small sizes. The nuclei are larger than a pinpoint.
-  g.save();
-  g.translate(center,center);
-  g.scale(1,elliptical?.46:irregular?.76:.67);
-  const coreRadius=elliptical?25:17;
-  const nucleus=g.createRadialGradient(0,0,0,0,0,coreRadius);
-  nucleus.addColorStop(0,"rgba(255,252,244,1)");
-  nucleus.addColorStop(.18,"rgba(255,238,212,.93)");
-  nucleus.addColorStop(.52,"rgba("+rgb.join(",")+",.65)");
-  nucleus.addColorStop(1,"rgba("+rgb.join(",")+",0)");
-  g.fillStyle=nucleus;
-  g.beginPath();g.arc(0,0,coreRadius,0,TAU);g.fill();
-  if(elliptical&&variant===5){
-    g.fillStyle="rgba(8,12,27,.20)";
-    g.beginPath();g.ellipse(0,4,39,1.3,-.06,0,TAU);g.fill();
-  }
+  const axial=elliptic?.39:irregular?.82:.69;
+  g.save();g.translate(mid,mid);
+
+  // Broad, feathered luminous outskirts. Cores are concentrated; angular
+  // irregularity comes from actual stars and dust, not a drawn oval ring.
+  g.save();g.scale(1,axial);
+  const fog=g.createRadialGradient(0,0,0,0,0,n*.48);
+  fog.addColorStop(0,"rgba("+rgbText+",.43)");
+  fog.addColorStop(.14,"rgba("+rgbText+",.21)");
+  fog.addColorStop(.49,"rgba("+rgbText+",.065)");
+  fog.addColorStop(1,"rgba("+rgbText+",0)");
+  g.fillStyle=fog;g.beginPath();g.arc(0,0,n*.48,0,TAU);g.fill();
   g.restore();
+
+  // Small knots of stellar gas embedded between stellar populations.
+  for(let i=0;i<190;i++){
+    const radius=.11+.75*random(i*47+variant*29);
+    const arm=i%Math.max(arms,1);
+    const angle=arms
+      ?arm*TAU/arms+radius*4.8+(random(i*59+variant*17)-.5)*.70
+      :TAU*random(i*37+variant*67);
+    const x=Math.cos(angle)*radius*n*.41;
+    const y=Math.sin(angle)*radius*n*.41*axial;
+    const cloudRadius=n*(.017+.029*random(i*13+variant*83));
+    const cloud=g.createRadialGradient(x,y,0,x,y,cloudRadius);
+    const alpha=(.045+.10*(1-radius))*(elliptic?.55:1);
+    const tone=i%5===0?"255,207,189":i%3===0?"154,187,255":rgbText;
+    cloud.addColorStop(0,"rgba("+tone+","+alpha.toFixed(3)+")");
+    cloud.addColorStop(1,"rgba("+tone+",0)");
+    g.fillStyle=cloud;
+    g.beginPath();g.arc(x,y,cloudRadius,0,TAU);g.fill();
+  }
+  // Resolve thousands of stars; a curved irregular spiral branch has a
+  // nonuniform thickness, unlike a thin geometrical line or flat plate.
+  for(let i=0;i<3700;i++){
+    const radius=Math.pow(random(i*17+variant*53+19),.72);
+    const isDiffuse=elliptic||random(i*23+variant*71)<(irregular?.76:.31);
+    const arm=arms?i%arms:0;
+    const angle= !isDiffuse&&arms
+      ?arm*TAU/arms+radius*5.05+
+        (random(i*37+variant*89)-.5)*(.53+.52*radius)
+      :TAU*random(i*31+variant*43+57);
+    const scatter=(random(i*79+variant*61)-.5)*.10*radius;
+    const x=Math.cos(angle)*(radius+scatter)*n*.43;
+    const y=Math.sin(angle)*(radius+scatter)*n*.43*axial;
+    const fade=1-smooth((radius-.74)/.26);
+    const central=Math.pow(1-radius,.70);
+    const opacity=(.17+.74*central)*fade*
+      (.50+.50*random(i*67+variant*29));
+    if(opacity<.007)continue;
+    const warm=i%9===0;
+    const color=warm?"255,223,187":i%7===0?"171,208,255":rgbText;
+    g.fillStyle="rgba("+color+","+opacity.toFixed(3)+")";
+    const spot=.20+.94*random(i*71+variant*23);
+    g.fillRect(x,y,spot,spot);
+  }
+
+  // Luminous galactic nucleus is a soft stellar density peak, not a
+  // painted circle or reflective glass marbling.
+  g.save();g.scale(1,elliptic?.48:irregular?.78:.63);
+  const cr=elliptic?39:29;
+  const core=g.createRadialGradient(0,0,0,0,0,cr);
+  core.addColorStop(0,"rgba(255,248,231,.97)");
+  core.addColorStop(.19,"rgba(255,232,205,.72)");
+  core.addColorStop(.46,"rgba("+rgbText+",.36)");
+  core.addColorStop(1,"rgba("+rgbText+",0)");
+  g.fillStyle=core;g.beginPath();g.arc(0,0,cr,0,TAU);g.fill();
+  if(elliptic&&variant===5){
+    g.fillStyle="rgba(6,10,26,.17)";
+    g.beginPath();g.ellipse(0,5,46,1.7,-.05,0,TAU);g.fill();
+  }
+  g.restore();g.restore();
   return c;
 }
 function makePoints():GalaxyPoint[] {
