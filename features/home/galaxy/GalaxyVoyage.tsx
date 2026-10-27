@@ -402,29 +402,33 @@ export function GalaxyVoyage({
         const short=Math.min(viewWidth,viewHeight);
         ctx!.save();
         for(const grain of orbitSand){
+          // Continue each grain's OWN old path after tap four. The old
+          // one-time suction pulled all 1500 dots through the same centre,
+          // briefly drawing a perfect round shell. No collective sweep now.
           const age=sandSuctionStartedAt-opened+grain.phase*grain.duration;
           const t=((age%grain.duration)+grain.duration)%grain.duration/grain.duration;
-          const travel=ease(t);
+          const u=t+(1-t)*ease(elapsed/(970+grain.phase*180));
           const sx=cx+Math.cos(grain.bearing)*short*grain.distance;
           const sy=cy+Math.sin(grain.bearing)*short*grain.distance*.68;
           const dx=cx-sx,dy=cy-sy;
           const d=Math.max(1,Math.hypot(dx,dy));
-          const curve=grain.bend*Math.sin(Math.PI*travel);
-          const px=sx+dx*travel-dy/d*curve+
-            Math.sin(t*23+grain.wobble)*2*(1-travel);
-          const py=sy+dy*travel+dx/d*curve+
-            Math.cos(t*19+grain.wobble)*2*(1-travel);
-          const wait=grain.phase*145;
-          const u=ease((elapsed-wait)/(700+grain.duration*.055));
-          if(u<=0||u>=1)continue;
-          const r=Math.hypot(px-cx,py-cy);
-          const bend=(grain.bend*.21)*Math.sin(Math.PI*u);
-          const x=px+(cx-px)*u-(py-cy)/Math.max(1,r)*bend;
-          const y=py+(cy-py)*u+(px-cx)/Math.max(1,r)*bend;
+          const curve=grain.bend*Math.sin(Math.PI*u);
+          const x=sx+dx*u-dy/d*curve+
+            Math.sin(u*23+grain.wobble)*2*(1-u);
+          const y=sy+dy*u+dx/d*curve+
+            Math.cos(u*19+grain.wobble)*2*(1-u);
           if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
-          const alpha=grain.brightness*(1-ease((u-.80)/.20));
+          // Each dot disappears on its own timetable; the population
+          // simply thins away, without forming another ring or burst.
+          const lifetime=610+grain.phase*410;
+          const delay=grain.phase*115;
+          const remaining=1-ease((elapsed-delay)/lifetime);
+          const alpha=grain.brightness*remaining*
+            ease(u/.08)*(1-ease((u-.83)/.17))*.91;
+          if(alpha<.02)continue;
           ctx!.fillStyle="rgba(255,255,253,"+alpha.toFixed(3)+")";
-          ctx!.fillRect(x,y,grain.radius*.80,grain.radius*.80);
+          const size=grain.radius*(1-.42*u);
+          ctx!.fillRect(x,y,size,size);
         }
         ctx!.restore();
         return;
@@ -991,26 +995,26 @@ export function GalaxyVoyage({
         const short=Math.min(viewWidth,viewHeight);
         ctx!.save();
         for(const g of wanderingSand){
-          // Recover the precise drifting position at the fourth tap so the
-          // sweep is continuous rather than a new cloud appearing.
+          // The pre-click meander continues uninterrupted; nothing draws
+          // the entire cloud together or redirects it into a perfect circle.
           const t=((sandSuctionStartedAt-opened+g.delay*g.period)%g.period)/g.period;
-          const inward=ease(t);
-          const radius=short*(g.orbit*(1-inward*.90)+
-            .045*Math.sin(t*11+g.phase)*Math.sin(Math.PI*t));
-          const angle=g.angle+g.side*(1.5+g.curl)*inward+
-            .33*Math.sin(t*8+g.wobble)*Math.sin(Math.PI*t);
-          const px=cx+Math.cos(angle)*radius;
-          const py=cy+Math.sin(angle)*radius*.80;
-          const wait=g.delay*150;
-          const u=ease((elapsed-wait)/(690+g.period*.035));
-          if(u<=0||u>=1)continue;
-          const curl=Math.sin(Math.PI*u)*g.side*(18+35*g.orbit);
-          const x=px+(cx-px)*u+Math.cos(angle+Math.PI*.5)*curl;
-          const y=py+(cy-py)*u+Math.sin(angle+Math.PI*.5)*curl;
+          const u=t+(1-t)*ease(elapsed/(900+g.delay*350));
+          const radius=short*(g.orbit*(1-u*.90)+
+            .045*Math.sin(u*11+g.phase)*Math.sin(Math.PI*u));
+          const angle=g.angle+g.side*(1.5+g.curl)*u+
+            .33*Math.sin(u*8+g.wobble)*Math.sin(Math.PI*u);
+          const x=cx+Math.cos(angle)*radius;
+          const y=cy+Math.sin(angle)*radius*.80;
           if(x<0||x>=viewWidth||y<0||y>=viewHeight)continue;
-          const alpha=g.alpha*(1-ease((u-.78)/.22));
+          const lifetime=620+g.delay*435;
+          const delay=g.delay*75;
+          const remaining=1-ease((elapsed-delay)/lifetime);
+          const alpha=g.alpha*remaining*ease(u/.07)*
+            (1-ease((u-.87)/.13))*
+            (.82+.18*Math.sin(now*.003+g.phase)**2);
+          if(alpha<.02)continue;
           ctx!.fillStyle="rgba(255,255,253,"+alpha.toFixed(3)+")";
-          const size=g.radius*(1-.42*u);
+          const size=g.radius*(1-.27*u);
           ctx!.fillRect(x,y,size,size);
         }
         ctx!.restore();

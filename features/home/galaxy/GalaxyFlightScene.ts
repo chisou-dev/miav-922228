@@ -103,39 +103,57 @@ export function createGalaxyFlightScene() {
   function galaxySightline(step:number,w:number,h:number){
     const reveal=smooth((step-132)/83);
     const depart=smooth((step-224)/49);
+    const bend=Math.sin(Math.PI*depart);
     return {
-      // The second galaxy clears the frame diagonally to upper LEFT,
-      // never marching straight up a fixed vertical track.
-      x:w*(1.38-.54*reveal-.44*depart),
-      y:h*(.47-1.26*depart),
-      scale:1-.42*depart,
+      // Maintain the same first appearance; then drift down-left along a
+      // slight arc. Even on departure the galaxy keeps nearly all its size.
+      // The large disc passes out of frame instead of shrinking to a dot.
+      x:w*(1.38-.54*reveal-.99*depart-.035*bend),
+      y:h*(.47+.90*depart+.028*bend),
+      scale:1-.12*depart,
       depart,
+    };
+  }
+  function galaxyProjection(step:number,w:number,h:number,now:number){
+    const sight=galaxySightline(step,w,h);
+    // One complete turn about an almost vertical, slightly tipped axis
+    // while departing. The right edge leans gently toward the viewer.
+    // Gas, photographed texture and stellar members share this projection.
+    const yaw=sight.depart*TAU*1.025+now*.000046*sight.depart;
+    const roll=-.20+now*.000031*smooth((step-144)/48);
+    return {
+      sight,roll,
+      cr:Math.cos(roll),sr:Math.sin(roll),
+      cy:Math.cos(yaw),
+      tilt:.09+.14*Math.sin(yaw),
+      shear:.065*Math.sin(yaw),
     };
   }
   function projectedStar(
     p:{x:number;y:number},member:boolean,step:number,
     w:number,h:number,now=0,
+    projection?:ReturnType<typeof galaxyProjection>,
   ){
     const cam=camera(step,w,h);
     const backX=w*.5+(p.x-.5)*w*cam.scale+cam.panX;
     const backY=h*.5+(p.y-.5)*h*cam.scale+cam.panY;
     if(!member)return {x:backX,y:backY};
-    const sight=galaxySightline(step,w,h);
+    const pose=projection??galaxyProjection(step,w,h,now);
+    const sight=pose.sight;
     const short=Math.min(w,h);
-    // The sky sample is originally rectangular in screen coordinates.
-    // Reproject its permanent indices onto an elliptical galactic disc;
-    // otherwise compressing the rectangular cloud exposes four corners.
+    // Same irregular galactic membership as before. Project its local
+    // points through the EXACT SAME slightly tipped vertical-axis turn
+    // as the diffuse galaxy artwork, so the stars never slide separately.
     const theta=TAU*((p.x*.971+p.y*.163)%1);
     const rad=Math.sqrt(p.y);
-    const drift=cam.distant*smooth((step-144)/46);
-    const turn=(now*.000031)*drift;
-    const radiusX=Math.cos(theta)*rad*short*.93*sight.scale;
-    const radiusY=Math.sin(theta)*rad*short*.30*sight.scale;
-    const cs=Math.cos(turn),sn=Math.sin(turn);
-    const targetX=sight.x+radiusX*cs-radiusY*sn+
+    const localX=Math.cos(theta)*rad*short*.93*sight.scale+
       Math.sin(theta*3.1+p.y*5)*short*.045*sight.scale;
-    const targetY=sight.y+radiusX*sn+radiusY*cs+
+    const localY=Math.sin(theta)*rad*short*.30*sight.scale+
       Math.sin(theta*2.2+p.x*4)*short*.034*sight.scale;
+    const turnedX=localX*pose.cy+localY*pose.shear;
+    const turnedY=localX*pose.tilt+localY;
+    const targetX=sight.x+turnedX*pose.cr-turnedY*pose.sr;
+    const targetY=sight.y+turnedX*pose.sr+turnedY*pose.cr;
     const blend=smooth((step-123)/105);
     return {
       x:backX+(targetX-backX)*blend,
@@ -713,13 +731,14 @@ export function createGalaxyFlightScene() {
     const count=visibleStarCount(step);
     if(count<=0)return;
     const cam=camera(step,w,h);
+    const projection=galaxyProjection(step,w,h,now);
     const appearance=smooth((step-125)/58);
     // Crucial: the old full-screen LOCAL star catalogue is rectangular.
     // Compressing its non-galaxy members into 23% of their original field
     // created the conspicuous little square in the user's screenshots.
     // As the camera pulls back, those nearby stars pass below visibility,
     // while the much deeper, spherical farStars catalogue fills the sky.
-    const oldGalaxyFade=1-smooth((step-225)/65);
+    const oldGalaxyFade=1-smooth((step-261)/42);
     const localFieldFade=1-smooth((step-175)/83);
     const fadeSpan=step<31?36:84;
     for(let i=0;i<skyStars.length;i++){
@@ -727,7 +746,7 @@ export function createGalaxyFlightScene() {
       if(appearing<=.0001)continue;
       const member=i%3!==0;
       const p=skyStars[i];
-      const {x,y}=projectedStar(p,member,step,w,h,now);
+      const {x,y}=projectedStar(p,member,step,w,h,now,projection);
       if(x<-3||y<-3||x>w+3||y>h+3)continue;
       const shimmer=.79+.21*Math.sin(now*.00145+p.phase);
       // No remnant rectangle at the end: BOTH populations eventually fade.
@@ -784,7 +803,7 @@ export function createGalaxyFlightScene() {
         for(let j=0;j<4;j++){
           const idx=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
           const p=skyStars[idx];
-          const loc=projectedStar(p,idx%3!==0,step,w,h,now);
+          const loc=projectedStar(p,idx%3!==0,step,w,h,now,projection);
           const rad=4+p.radius*4;
           const glow=ctx.createRadialGradient(loc.x,loc.y,0,loc.x,loc.y,rad);
           glow.addColorStop(0,"hsla("+p.hue+",55%,91%,"+(pulse*.22).toFixed(3)+")");
@@ -796,24 +815,24 @@ export function createGalaxyFlightScene() {
   }
 
   function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
-    const sight=galaxySightline(step,w,h);
-    // Nebulous gas and broken arms are part of ONE stellar disc. Both the
-    // dust cloud and its stars revolve even while the camera stops moving.
+    const pose=galaxyProjection(step,w,h,now);
+    const sight=pose.sight;
+    // Its gaseous arms and stellar members keep the same tilted axis
+    // as the whole galaxy slides down-left and leaves the frame.
     const reveal=smooth((step-147)/63);
-    const exit=1-smooth((step-250)/39);
+    const exit=1-smooth((step-269)/32);
     const strength=reveal*exit;
     if(strength<.001)return;
     const short=Math.min(w,h);
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(sight.x,sight.y);
-    // The gaseous arms and their stars share the same angular velocity.
-    // Rotation is now perceptible on a phone while the camera is parked.
-    ctx.rotate(-.20+now*.000031*smooth((step-144)/48));
+    ctx.rotate(pose.roll);
+    // Canvas local->world matrix exactly matches projectedStar above.
+    ctx.transform(pose.cy,pose.tilt,pose.shear,1,0,0);
     ctx.globalAlpha=.45*strength;
-    // Prebaked transparent nebula, NOT a square NASA photograph. Only a
-    // portion of the outer spiral is visible before the rest of its body
-    // glides into view and finally leaves across the top.
+    // Keep the full translucent galaxy big until it clears the lower-left
+    // corner. No upright ascent, stamp-like fade or sudden pinprick zoom.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
     ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
