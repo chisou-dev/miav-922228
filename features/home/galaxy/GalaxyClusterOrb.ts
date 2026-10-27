@@ -280,32 +280,18 @@ export function createGalaxyClusterOrb() {
     return c;
   }
 
-  function draw(
-    ctx:CanvasRenderingContext2D,w:number,h:number,step:number,
-    now:number,finalElapsed:number|null,
-  ){
-    // Start alongside the off-axis star cloud, not with a different giant
-    // spiral appearing in the centre. Each tap opens more of the same region.
+  // Keep the final sphere and the departing MAIN galaxy on the same
+  // sightline. The lead galaxy is not replaced by a different illustration:
+  // it becomes one member of this widening, increasingly populated view.
+  function geometry(w:number,h:number,step:number,finalElapsed:number|null){
     const reveal=smooth((step-154)/30);
-    if(reveal<=.001)return;
     const short=Math.min(w,h);
-    // Slightly larger than the first approved orb; always fit on a phone.
     const r=short*.405;
     const sphereVisibility=smooth((reveal-.62)/.35);
-    // One widening camera, without a gallery of pictures sliding from the
-    // edge of the display. Their bearings remain in the same sky.
-    // The initial, uncased field occupies the *entire* sky. As we pull
-    // back, those same points compress into the sphere without revealing
-    // the edges of a rectangular sprite catalogue.
     const zoom=1+3.8*Math.pow(1-reveal,1.1);
     const held=Math.max(0,finalElapsed??0);
     const drift=sphereVisibility*smooth(held/1900);
-    // Fixed cosmic sightline: each miniature system is already somewhere
-    // in this large field; expanding FOV gradually resolves its light.
-    const centreX=w*.515;
-    const centreY=h*.515;
-    // After the initial arrival, keep a clearly perceptible but smooth
-    // wander throughout the entire three-minute observation.
+    const centreX=w*.515,centreY=h*.515;
     const wanderX=Math.min(w*.14,68)*
       (.55*Math.sin(held*.00034)+.29*Math.sin(held*.000157+1.7)
        +.16*Math.sin(held*.000091+.6));
@@ -315,6 +301,18 @@ export function createGalaxyClusterOrb() {
     const cx=lerp(centreX,clamp(centreX+drift*wanderX,r+8,w-r-8),drift);
     const cy=lerp(centreY,clamp(centreY+drift*wanderY,r+12,h-r-12),drift);
     const alpha=smooth((reveal-.015)/.54);
+    return {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha};
+  }
+
+  function draw(
+    ctx:CanvasRenderingContext2D,w:number,h:number,step:number,
+    now:number,finalElapsed:number|null,
+  ){
+    // Start alongside the off-axis star cloud, not with a different giant
+    // spiral appearing in the centre. Each tap opens more of the same region.
+    const {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha}=
+      geometry(w,h,step,finalElapsed);
+    if(reveal<=.001)return;
     // Rotation and drift continue for the entire three-minute hold, with no
     // single-loop path or automatic advancement to another scene.
     const yaw=held*.000058+Math.sin(held*.000089)*.22;
@@ -461,5 +459,5 @@ export function createGalaxyClusterOrb() {
       ctx.restore();
     }
   }
-  return {draw};
+  return {draw,geometry};
 }
