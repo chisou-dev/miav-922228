@@ -141,6 +141,7 @@ export function createGalaxyFlightScene() {
       sight,roll,
       cr:Math.cos(roll),sr:Math.sin(roll),
       cy:Math.cos(yaw),
+      sy:Math.sin(yaw),
       tilt:.09+.085*Math.sin(yaw),
       shear:.045*Math.sin(yaw),
     };
@@ -866,8 +867,7 @@ export function createGalaxyFlightScene() {
     if(near<.004)return;
     const size=Math.min(w,h)*2.6*pose.sight.scale;
     if(size<5)return;
-    const yaw=Math.acos(clamp(pose.cy,-1,1));
-    const depthWidth=.16+.19*Math.abs(Math.sin(yaw));
+    const depthWidth=.16+.19*Math.abs(pose.sy);
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(pose.sight.x,pose.sight.y);
@@ -897,7 +897,7 @@ export function createGalaxyFlightScene() {
 
     // Projection of each individual 3D star: z adds actual width when the
     // spiral faces sideways. These points are not a flat image being squeezed.
-    const sn=Math.sin(yaw);
+    const sn=pose.sy;
     for(const p of galaxyVolumeStars){
       const x=(p.x*pose.cy+p.z*sn+p.y*pose.shear)*size;
       const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
