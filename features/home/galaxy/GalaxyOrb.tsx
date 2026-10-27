@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { GALAXY } from "./GalaxyHeading";
 import { isolatedSpiral } from "./isolatedSpiral";
 import { GalaxyVoyage } from "./GalaxyVoyage";
+import { playGalaxyCue } from "./galaxyInteractionAudio";
 
 type Point = { x: number; y: number };
 type Grain = { source: Point; born: number; life: number; angle: number };
@@ -579,6 +580,7 @@ export function GalaxyOrb() {
 
     function enterVoyage() {
       if (!expanded || !atMaximum) return;
+      playGalaxyCue("entry");
       const capture = { x: orb.x, y: orb.y, radius: Math.min(radius, maximumRadius) };
       // Hide only the animation layer; leave original homepage untouched.
       // The real ship, title and NASA/planetary journey stay in GalaxyVoyage.
@@ -595,6 +597,8 @@ export function GalaxyOrb() {
         enterVoyage();
         return;
       }
+      // Only actual successful enlargement taps ring the soft crystal.
+      playGalaxyCue("glass", zoomStep);
       if (!expanded) {
         priorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         normalRadius = radius;
