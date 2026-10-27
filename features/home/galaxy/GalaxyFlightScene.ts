@@ -10,6 +10,7 @@
  */
 type Kind = "jovian" | "storm" | "vortex" | "ice" | "rock" | "cloud" | "sun";
 type Side = "left" | "right" | "top" | "bottom";
+type GalaxyAnchor = { x: number; y: number; r: number; blend: number };
 type Body = {
   id: number; peek: number; depth: number; radius: number;
   side: Side; transverse: number; kind: Kind; hue: number;
@@ -102,31 +103,44 @@ export function createGalaxyFlightScene() {
   }
   function galaxySightline(step:number,w:number,h:number){
     const reveal=smooth((step-132)/83);
-    const depart=smooth((step-224)/49);
-    const bend=Math.sin(Math.PI*depart);
+    const depart=smooth((step-224)/85);
+    const arc=Math.sin(Math.PI*depart);
     return {
-      // Maintain the same first appearance; then drift down-left along a
-      // slight arc. Even on departure the galaxy keeps nearly all its size.
-      // The large disc passes out of frame instead of shrinking to a dot.
-      x:w*(1.38-.54*reveal-.99*depart-.035*bend),
-      y:h*(.47+.90*depart+.028*bend),
-      scale:1-.12*depart,
+      // The original galaxy remains onscreen throughout the pull-back.
+      // It drifts gently left/down, rather than escaping below the screen.
+      x:w*(1.38-.54*reveal-.44*depart-.022*arc),
+      y:h*(.47+.12*depart+.018*arc),
+      // Progressive recession continues until the same galaxy fits inside
+      // the final glass. The large initial view remains spectacular.
+      scale:1-.72*depart,
       depart,
     };
   }
-  function galaxyProjection(step:number,w:number,h:number,now:number){
-    const sight=galaxySightline(step,w,h);
-    // One complete turn about an almost vertical, slightly tipped axis
-    // while departing. The right edge leans gently toward the viewer.
-    // Gas, photographed texture and stellar members share this projection.
-    const yaw=sight.depart*TAU*1.025+now*.000046*sight.depart;
-    const roll=-.20+now*.000031*smooth((step-144)/48);
+  function galaxyProjection(
+    step:number,w:number,h:number,now:number,
+    anchor?:GalaxyAnchor,
+  ){
+    const original=galaxySightline(step,w,h);
+    const join=smooth(anchor?.blend??0);
+    const targetSize=anchor?anchor.r*1.52/(Math.min(w,h)*2.6):original.scale;
+    const sight={
+      ...original,
+      x:original.x+((anchor?.x??original.x)-original.x)*join,
+      y:original.y+((anchor?.y??original.y)-original.y)*join,
+      scale:original.scale+(targetSize-original.scale)*join,
+    };
+    // Less than one turn, across ALL departure taps. No unbounded time
+    // multiplier: pausing on one tap never causes rapid repeated flips.
+    // A slight off-axis tilt puts the right edge fractionally forward.
+    const yaw=TAU*.78*original.depart+
+      Math.sin(now*.000045)*.045*original.depart;
+    const roll=-.20+.055*Math.sin(now*.000065);
     return {
       sight,roll,
       cr:Math.cos(roll),sr:Math.sin(roll),
       cy:Math.cos(yaw),
-      tilt:.09+.14*Math.sin(yaw),
-      shear:.065*Math.sin(yaw),
+      tilt:.09+.085*Math.sin(yaw),
+      shear:.045*Math.sin(yaw),
     };
   }
   function projectedStar(
@@ -727,18 +741,23 @@ export function createGalaxyFlightScene() {
     }
   }
 
-  function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,step:number) {
+  function drawSky(
+    ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    step:number,anchor?:GalaxyAnchor,
+  ) {
     const count=visibleStarCount(step);
     if(count<=0)return;
     const cam=camera(step,w,h);
-    const projection=galaxyProjection(step,w,h,now);
+    const projection=galaxyProjection(step,w,h,now,anchor);
     const appearance=smooth((step-125)/58);
     // Crucial: the old full-screen LOCAL star catalogue is rectangular.
     // Compressing its non-galaxy members into 23% of their original field
     // created the conspicuous little square in the user's screenshots.
     // As the camera pulls back, those nearby stars pass below visibility,
     // while the much deeper, spherical farStars catalogue fills the sky.
-    const oldGalaxyFade=1-smooth((step-261)/42);
+    // Some of this SAME main galaxy's resolved stars remain visible inside
+    // the final glass, instead of the original galaxy vanishing wholesale.
+    const oldGalaxyFade=1-.79*smooth((step-272)/42);
     const localFieldFade=1-smooth((step-175)/83);
     const fadeSpan=step<31?36:84;
     for(let i=0;i<skyStars.length;i++){
@@ -750,8 +769,8 @@ export function createGalaxyFlightScene() {
       if(x<-3||y<-3||x>w+3||y>h+3)continue;
       const shimmer=.79+.21*Math.sin(now*.00145+p.phase);
       // No remnant rectangle at the end: BOTH populations eventually fade.
-      // The old galaxy-side stars follow its upward departure; the rest
-      // gradually become too faint to distinguish at this distance.
+      // Main-galaxy stars follow the disk as it settles into the glass;
+      // unrelated local stars thin as the view travels farther away.
       const survival=member?oldGalaxyFade:localFieldFade;
       const alpha=Math.min(.94,p.power*appearing*shimmer*survival);
       if(alpha<.008)continue;
@@ -814,15 +833,16 @@ export function createGalaxyFlightScene() {
     }
   }
 
-  function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
-    const pose=galaxyProjection(step,w,h,now);
+  function drawDistantGalaxy(
+    ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
+    now=0,anchor?:GalaxyAnchor,
+  ) {
+    const pose=galaxyProjection(step,w,h,now,anchor);
     const sight=pose.sight;
-    // Its gaseous arms and stellar members keep the same tilted axis
-    // as the whole galaxy slides down-left and leaves the frame.
+    // Remains the SAME galaxy throughout its retreat, finally sharing
+    // the glass sphere with the new systems revealed around it.
     const reveal=smooth((step-147)/63);
-    const exit=1-smooth((step-269)/32);
-    const strength=reveal*exit;
-    if(strength<.001)return;
+    if(reveal<.001)return;
     const short=Math.min(w,h);
     ctx.save();
     ctx.globalCompositeOperation="screen";
@@ -830,9 +850,9 @@ export function createGalaxyFlightScene() {
     ctx.rotate(pose.roll);
     // Canvas local->world matrix exactly matches projectedStar above.
     ctx.transform(pose.cy,pose.tilt,pose.shear,1,0,0);
-    ctx.globalAlpha=.45*strength;
-    // Keep the full translucent galaxy big until it clears the lower-left
-    // corner. No upright ascent, stamp-like fade or sudden pinprick zoom.
+    ctx.globalAlpha=.45*reveal;
+    // Recede over many taps and settle inside glass; no exit fade, sudden
+    // replacement galaxy or fast repetitive tumble.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
     ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
@@ -898,8 +918,11 @@ export function createGalaxyFlightScene() {
       // Different off-axis worlds remain in fixed positions behind the ship.
       if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h,now);
     },
-    drawGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
-      drawDistantGalaxy(ctx,step,w,h,now);
+    drawGalaxy(
+      ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
+      now=0,anchor?:GalaxyAnchor,
+    ) {
+      drawDistantGalaxy(ctx,step,w,h,now,anchor);
     },
   };
 }
