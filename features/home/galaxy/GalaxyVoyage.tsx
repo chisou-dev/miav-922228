@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { GALAXY } from "./GalaxyHeading";
 import { drawStage1EntryCraft } from "./drawStage1EntryCraft";
 import { createGalaxyFlightScene } from "./GalaxyFlightScene";
 import { createGalaxyClusterOrb } from "./GalaxyClusterOrb";
 import { isolatedSpiral } from "./isolatedSpiral";
+import { isGalaxySoundEnabled, playGalaxyCue, setGalaxySoundEnabled } from "./galaxyInteractionAudio";
 
 type Point = { x: number; y: number };
 type Star = { x: number; y: number; r: number; alpha: number; speed: number; phase: number; hue: number };
@@ -84,6 +85,7 @@ export function GalaxyVoyage({
   const spacecraftIconRef = useRef<HTMLCanvasElement>(null);
   const exitRef = useRef(onExit);
   const advanceRef = useRef<() => void>(() => {});
+  const [soundOn, setSoundOn] = useState(isGalaxySoundEnabled);
   exitRef.current = onExit;
 
   useEffect(() => {
@@ -116,6 +118,11 @@ export function GalaxyVoyage({
     // Timers used by the existing shattering/galaxy sequence start AFTER
     // the pre-rupture peel; existing IMPLOSION_MS timing remains unchanged.
     const opened = previous + PEEL_MS;
+    // Pitched, airy glass release after the 3-second pigment absorption.
+    // Scheduled from the enter-voyage click; cancelled if the user exits.
+    const ruptureTimer = window.setTimeout(() => {
+      if (!document.hidden) playGalaxyCue("rupture");
+    }, PEEL_MS + IMPLOSION_MS * .64);
     let viewWidth = window.innerWidth;
     let viewHeight = window.innerHeight;
     let progress = 0;
@@ -1197,6 +1204,13 @@ export function GalaxyVoyage({
       // Only the existing spaceship control (or Escape) returns home early.
       if (target >= FINAL_STEP) return;
       target += 1;
+      // Play only when a step genuinely advances; blocked rapid taps are silent.
+      playGalaxyCue(
+        target===FINAL_STEP ? "arrival" :
+        target===4 ? "suction" :
+        target<=3 ? "letter" : "space",
+        target,
+      );
       if(target===4)sandSuctionStartedAt=now;
       if(target<=3)titleTapStartedAt=now;
       if (idleTimer !== undefined) clearTimeout(idleTimer);
@@ -1253,6 +1267,7 @@ export function GalaxyVoyage({
       cancelAnimationFrame(frame);
       if (finalTimer !== undefined) clearTimeout(finalTimer);
       if (idleTimer !== undefined) clearTimeout(idleTimer);
+      window.clearTimeout(ruptureTimer);
       window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", keydown);
     };
@@ -1272,6 +1287,22 @@ export function GalaxyVoyage({
       style={{ zIndex: 2147483000, touchAction: "manipulation", background: "transparent" }}
     >
       <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 block" />
+      <button
+        type="button"
+        aria-label={soundOn ? "Mute galaxy sound effects" : "Unmute galaxy sound effects"}
+        aria-pressed={soundOn}
+        title={soundOn ? "Sound on — tap to mute" : "Sound muted — tap to enable"}
+        onClick={(event) => {
+          event.stopPropagation();
+          const next = !soundOn;
+          setGalaxySoundEnabled(next);
+          setSoundOn(next);
+        }}
+        className="absolute right-3 top-3 rounded-full border border-white/20 bg-[#071426]/65 px-3 py-2 text-[0.65rem] tracking-[0.12em] text-white/75 backdrop-blur-sm hover:border-sky-200/55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+        style={{ zIndex: 2 }}
+      >
+        {soundOn ? "SOUND ON" : "SOUND OFF"}
+      </button>
       <button
         type="button"
         aria-label="Return to MIAV home using the Stage 1 atmosphere-entry spaceship"
