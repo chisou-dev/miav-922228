@@ -13,7 +13,11 @@ const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
-export function GalaxyOrb() {
+export function GalaxyOrb({ unlocked }: { unlocked: boolean }) {
+  // The animated orb remains decorative until a verified Stage 1 clear.
+  // A ref keeps event-handler checks current without restarting animation.
+  const unlockedRef = useRef(unlocked);
+  unlockedRef.current = unlocked;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const zoomButtonRef = useRef<HTMLButtonElement>(null);
@@ -578,7 +582,7 @@ export function GalaxyOrb() {
     }
 
     function enterVoyage() {
-      if (!expanded || !atMaximum) return;
+      if (!unlockedRef.current || !expanded || !atMaximum) return;
       const capture = { x: orb.x, y: orb.y, radius: Math.min(radius, maximumRadius) };
       // Hide only the animation layer; leave original homepage untouched.
       // The real ship, title and NASA/planetary journey stay in GalaxyVoyage.
@@ -589,6 +593,7 @@ export function GalaxyOrb() {
     }
 
     function enlargeOneStep() {
+      if (!unlockedRef.current) return;
       // Original approved interaction restored: every tap expands the GLASS
       // sphere by 1.3x. The tap AFTER reaching full size enters the journey.
       if (expanded && atMaximum) {
@@ -650,7 +655,8 @@ export function GalaxyOrb() {
     }
 
     function onBackdropClick(event: MouseEvent) {
-      if (!expanded || !atMaximum || event.target === zoomButton) return;
+      if (!unlockedRef.current || !expanded || !atMaximum ||
+          event.target === zoomButton) return;
       if (event.target === closeButton || closeButton!.contains(event.target as Node)) {
         closeExpanded();
         return;
@@ -1198,8 +1204,11 @@ export function GalaxyOrb() {
       <button
         ref={zoomButtonRef}
         type="button"
-        aria-label="Enter galaxy voyage"
-        title="Enter the galaxy"
+        aria-label={unlocked
+          ? "Enter galaxy voyage"
+          : "Locked: finish atmospheric reentry Stage 1 to unlock this galaxy"}
+        title={unlocked ? "Enter the galaxy" : "Complete Stage 1 to unlock"}
+        disabled={!unlocked}
         className="pointer-events-auto absolute left-0 top-0 rounded-full border-0 bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-200"
         style={{ touchAction: "manipulation" }}
       />
