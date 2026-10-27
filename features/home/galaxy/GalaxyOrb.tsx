@@ -13,11 +13,23 @@ const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
-export function GalaxyOrb({ unlocked }: { unlocked: boolean }) {
-  // The animated orb remains decorative until a verified Stage 1 clear.
-  // A ref keeps event-handler checks current without restarting animation.
+export function GalaxyOrb({
+  unlocked,
+  twinkle,
+  onFirstTap,
+}: {
+  unlocked: boolean;
+  twinkle: boolean;
+  onFirstTap: () => void;
+}) {
+  // The globe stays visually present while locked. Keep input and reward
+  // state fresh without restarting the original 3-D galaxy animation.
   const unlockedRef = useRef(unlocked);
   unlockedRef.current = unlocked;
+  const twinkleRef = useRef(twinkle);
+  twinkleRef.current = twinkle;
+  const firstTapRef = useRef(onFirstTap);
+  firstTapRef.current = onFirstTap;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const zoomButtonRef = useRef<HTMLButtonElement>(null);
@@ -152,6 +164,19 @@ export function GalaxyOrb({ unlocked }: { unlocked: boolean }) {
         z: altitude * distance,
         brightness: rand(0.12, 0.44),
         size: rand(0.36, 0.86),
+      };
+    });
+    // Stable twinkling points live INSIDE the moving glass orb, not on
+    // the surrounding page. Their phases vary smoothly without a hard blink.
+    const rewardLights = Array.from({ length: 19 }, (_, i) => {
+      const angle = i * 2.39996 + 0.45;
+      const distance = 0.13 + 0.63 * Math.sqrt((i + 0.5) / 19);
+      return {
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        phase: i * 1.83,
+        speed: 0.00105 + (i % 5) * 0.00018,
+        size: 0.62 + (i % 4) * 0.18,
       };
     });
     const reduced = () => media.matches;
@@ -594,6 +619,12 @@ export function GalaxyOrb({ unlocked }: { unlocked: boolean }) {
 
     function enlargeOneStep() {
       if (!unlockedRef.current) return;
+      // The first deliberate tap acknowledges the Stage 1 reward. Subsequent
+      // visits keep the unlock, but its invitation no longer needs to flash.
+      if (twinkleRef.current) {
+        twinkleRef.current = false;
+        firstTapRef.current();
+      }
       // Original approved interaction restored: every tap expands the GLASS
       // sphere by 1.3x. The tap AFTER reaching full size enters the journey.
       if (expanded && atMaximum) {
@@ -1034,6 +1065,63 @@ export function GalaxyOrb({ unlocked }: { unlocked: boolean }) {
       ctx.restore();
     }
 
+    function drawEarnedStarlight(now: number) {
+      if (!twinkleRef.current || expanded) return;
+      const r = radius;
+      ctx.save();
+      ctx.translate(orb.x, orb.y);
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.97, 0, TAU);
+      ctx.clip();
+      ctx.globalCompositeOperation = "screen";
+
+      // Soft pulsing light through the real rotating spiral, not a blinking
+      // shell, border, lens ring or pasted sparkle picture.
+      const breath = 0.60 + 0.40 * Math.sin(now * 0.00145) ** 2;
+      const bloom = ctx.createRadialGradient(0, 0, r * 0.04, 0, 0, r * 0.77);
+      bloom.addColorStop(0, "rgba(255,245,228," + (0.32 * breath).toFixed(3) + ")");
+      bloom.addColorStop(0.23, "rgba(190,219,255," + (0.19 * breath).toFixed(3) + ")");
+      bloom.addColorStop(0.56, "rgba(130,173,255," + (0.095 * breath).toFixed(3) + ")");
+      bloom.addColorStop(1, "rgba(130,173,255,0)");
+      ctx.fillStyle = bloom;
+      ctx.fillRect(-r, -r, 2 * r, 2 * r);
+
+      for (const [i, light] of rewardLights.entries()) {
+        const wave = 0.5 + 0.5 * Math.sin(now * light.speed + light.phase);
+        const glint = Math.pow(wave, 4.2);
+        if (glint < 0.045) continue;
+        const x = light.x * r;
+        const y = light.y * r;
+        const size = r * (0.046 + light.size * 0.031);
+        const peak = 0.33 + 0.67 * glint;
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.95);
+        const white = i % 3 === 0 ? "255,237,209" : "225,240,255";
+        glow.addColorStop(0, "rgba(" + white + "," + (0.93 * peak).toFixed(3) + ")");
+        glow.addColorStop(0.18, "rgba(" + white + "," + (0.55 * peak).toFixed(3) + ")");
+        glow.addColorStop(0.55, "rgba(149,192,255," + (0.15 * peak).toFixed(3) + ")");
+        glow.addColorStop(1, "rgba(149,192,255,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 1.95, 0, TAU);
+        ctx.fill();
+
+        // Only a few points flare into tiny optical diffraction stars;
+        // most remain soft stellar pinpricks. Never draw a full-screen flash.
+        if (i % 5 === 0 && glint > 0.49) {
+          const arm = r * (0.055 + 0.055 * glint);
+          ctx.strokeStyle = "rgba(243,249,255," + (0.46 * glint).toFixed(3) + ")";
+          ctx.lineWidth = Math.max(0.40, r * 0.006);
+          ctx.beginPath();
+          ctx.moveTo(x - arm, y);
+          ctx.lineTo(x + arm, y);
+          ctx.moveTo(x, y - arm * 0.74);
+          ctx.lineTo(x, y + arm * 0.74);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
     function drawCosmicJourney(elapsed: number) {
       // Progress changes ONLY when tapped; interpolate each individual tap
       // gently rather than starting an automatic film.
@@ -1135,6 +1223,7 @@ export function GalaxyOrb({ unlocked }: { unlocked: boolean }) {
       if (!reduced()) emit(now);
       drawGrains(now, false);
       drawSphere();
+      drawEarnedStarlight(now);
       drawGrains(now, true);
       // Only this circular transparent hit target accepts taps; the
       // surrounding page and its existing navigation remain interactive.
