@@ -873,7 +873,7 @@ export function createGalaxyFlightScene() {
     // skinny luminous line when the 2-D disc rotates edge-on.
     // On recession the extra optical depth gradually fades, so distant
     // galaxies can still read as thin discs inside the final glass.
-    const near=1-smooth((step-240)/68);
+    const near=1-smooth((step-258)/48);
     if(near<.004)return;
     const size=Math.min(w,h)*2.6*pose.sight.scale;
     if(size<5)return;
@@ -883,25 +883,30 @@ export function createGalaxyFlightScene() {
     ctx.translate(pose.sight.x,pose.sight.y);
     ctx.rotate(pose.roll);
 
-    // Several unequal transparent volumes; no clean elliptical outline,
-    // solid sphere, sharp ring, or symmetrical artificial halo.
-    for(let k=0;k<9;k++){
-      const ox=(rnd(k*53+79)-.5)*size*.10;
-      const oy=(rnd(k*41+117)-.5)*size*.085;
-      const rx=size*(depthWidth*(.61+.49*rnd(k*31+9)));
-      const ry=size*(.20+.12*rnd(k*19+7));
+    // Project the galactic bulge as many overlapping, irregular star
+    // concentrations. Avoid broad equally shaped elliptical fog layers:
+    // those read as a flat luminous plate when the disc turns sideways.
+    const sideOn=Math.abs(pose.sy);
+    for(let k=0;k<34;k++){
+      const core=Math.pow(rnd(k*79+61),1.6);
+      const angle=TAU*rnd(k*43+19);
+      const ox=(Math.cos(angle)*core*.22*(.50+.50*Math.abs(pose.cy))
+        +(rnd(k*29+111)-.5)*sideOn*.19)*size;
+      const oy=(Math.sin(angle)*core*.14+(rnd(k*31+217)-.5)*.055)*size;
+      const cloudRadius=size*(.035+.09*rnd(k*47+103))*(1-.28*core);
+      const rx=cloudRadius*(.72+.70*rnd(k*53+27));
+      const ry=cloudRadius*(.67+.63*rnd(k*59+31));
+      const fog=ctx.createRadialGradient(ox,oy,0,ox,oy,Math.max(rx,ry));
+      const strength=near*(.05+.11*(1-core))*(.60+.40*rnd(k*23+19));
+      const tint=k%5===0?"250,218,209":k%3===0?"181,193,239":"141,172,227";
+      fog.addColorStop(0,"rgba("+tint+","+(strength*.90).toFixed(3)+")");
+      fog.addColorStop(.34,"rgba("+tint+","+(strength*.35).toFixed(3)+")");
+      fog.addColorStop(1,"rgba("+tint+",0)");
       ctx.save();
       ctx.translate(ox,oy);
-      ctx.scale(rx,ry);
-      const fog=ctx.createRadialGradient(0,0,0,0,0,1);
-      const strength=(.080+.10*rnd(k*17+51))*near;
-      const warm=k%3===0?"238,192,209":"120,151,212";
-      fog.addColorStop(0,"rgba("+warm+","+(strength*1.55).toFixed(3)+")");
-      fog.addColorStop(.27,"rgba("+warm+","+(strength*.73).toFixed(3)+")");
-      fog.addColorStop(.69,"rgba(105,135,204,"+(strength*.22).toFixed(3)+")");
-      fog.addColorStop(1,"rgba(75,113,182,0)");
+      ctx.scale(rx/Math.max(rx,ry),ry/Math.max(rx,ry));
       ctx.fillStyle=fog;
-      ctx.fillRect(-1,-1,2,2);
+      ctx.beginPath();ctx.arc(0,0,Math.max(rx,ry),0,TAU);ctx.fill();
       ctx.restore();
     }
 
@@ -916,9 +921,11 @@ export function createGalaxyFlightScene() {
       const x=(p.x*pose.cy+p.z*sn+p.y*pose.shear)*size;
       const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
       if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
-      const alpha=p.opacity*near;
+      // Strong core density without turning the full galaxy into a fog
+      // disc. Individual stellar knots stay visible on narrow projections.
+      const alpha=p.opacity*near*(.76+.24*Math.abs(pose.sy));
       if(alpha<.018)continue;
-      ctx.fillStyle="hsla("+p.hue+",47%,89%,"+alpha.toFixed(3)+")";
+      ctx.fillStyle="hsla("+p.hue+",48%,88%,"+alpha.toFixed(3)+")";
       ctx.fillRect(x,y,p.radius,p.radius);
     }
     ctx.restore();
@@ -946,9 +953,12 @@ export function createGalaxyFlightScene() {
     // to provide the actual galactic volume. No extreme matrix scaling.
     const edge=Math.abs(pose.cy);
     const projectedWidth=Math.sign(pose.cy||1)*
-      Math.sqrt(pose.cy*pose.cy+.19*.19);
+      Math.max(.40,Math.abs(pose.cy));
     ctx.transform(projectedWidth,pose.tilt,pose.shear,1,0,0);
-    ctx.globalAlpha=.45*reveal*(.17+.83*smooth((edge-.06)/.54));
+    // Hide the mathematically flat spiral artwork when nearly edge-on,
+    // leaving the genuine depth-distributed stellar bulge to carry the
+    // silhouette. The old intense thin luminous stripe cannot return.
+    ctx.globalAlpha=.56*reveal*smooth((edge-.12)/.51);
     // Recede over many taps into the glass as one continuous star system.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
