@@ -156,17 +156,33 @@ export function GalaxyOrb({
     let priorFocus: HTMLElement | null = null;
     // Fixed 3-D stars around the disk; an edge-on galaxy is not empty space.
     // Generate once so the stars do not flicker between rendered frames.
-    const galaxyHaloStars = Array.from({ length: 82 }, () => {
+    const galaxyHaloStars = Array.from({ length: 132 }, () => {
       const angle = rand(0, TAU);
       const altitude = rand(-1, 1);
-      const distance = Math.cbrt(Math.random()) * 0.88;
+      const distance = Math.pow(Math.random(), 0.58) * 0.86;
       const across = Math.sqrt(1 - altitude * altitude) * distance;
       return {
         x: Math.cos(angle) * across,
         y: Math.sin(angle) * across,
         z: altitude * distance,
-        brightness: rand(0.12, 0.44),
-        size: rand(0.36, 0.86),
+        brightness: rand(0.10, 0.35),
+        size: rand(0.25, 0.68),
+      };
+    });
+    // Separate stellar-gas pockets inside the glass, fixed in 3-D so that
+    // they rotate coherently with the galaxy rather than forming a painted
+    // oval ring. Generated once, not randomised on every frame.
+    const galaxyGasPockets=Array.from({length:29},(_,i)=>{
+      const angle=rand(0,TAU);
+      const distance=Math.pow(Math.random(),.70)*.73;
+      return {
+        x:Math.cos(angle)*distance*.74,
+        y:Math.sin(angle)*distance*.69,
+        z:rand(-.36,.36)*(1-.48*distance),
+        scale:rand(.10,.23)*(1-.24*distance),
+        opacity:rand(.035,.088),
+        tint:i%7===0?"229,166,212":i%5===0?"119,167,228":
+          i%3===0?"157,144,213":"118,153,208",
       };
     });
     // Stable twinkling points live INSIDE the moving glass orb, not on
@@ -835,68 +851,41 @@ export function GalaxyOrb({
       ctx.arc(0, 0, r, 0, TAU);
       ctx.clip();
 
-      // Dark transparent optical body, not an opaque circular tunnel.
-      const glass = ctx.createRadialGradient(-r * 0.32, -r * 0.4, r * 0.02, r * 0.20, r * 0.25, r * 1.35);
-      glass.addColorStop(0, "rgba(47,82,131,0.32)");
-      glass.addColorStop(0.49, "rgba(23,43,80,0.25)");
-      glass.addColorStop(1, "rgba(3,10,27,0.42)");
-      ctx.fillStyle = glass;
-      ctx.fillRect(-r, -r, r * 2, r * 2);
+      // Almost transparent glass, preserving the homepage letters behind it.
+      // The former dark fill created an obvious round photo background.
+      const glass=ctx.createRadialGradient(
+        -r*.27,-r*.35,r*.04,r*.25,r*.21,r*1.42);
+      glass.addColorStop(0,"rgba(75,124,175,.095)");
+      glass.addColorStop(.53,"rgba(29,64,109,.055)");
+      glass.addColorStop(1,"rgba(7,20,43,.115)");
+      ctx.fillStyle=glass;
+      ctx.fillRect(-r,-r,r*2,r*2);
 
       const orientation = galaxyOrientation();
       const face = orientation.face;
       const edge = 1 - face;
 
-      // A galaxy has a thick stellar disk, a brighter central bulge and a
-      // surrounding halo. Draw their volume BEHIND the sharp spiral texture,
-      // becoming more visible as the disk turns edge-on. Keep the sphere size
-      // unchanged and avoid the previous flat pink line / empty dark bubble.
-      if (edge > 0.05) {
-        ctx.save();
-        ctx.rotate(orientation.longAxis);
-
-        // Very diffuse stars above and below the thin disk.
-        ctx.save();
-        ctx.scale(1, 0.62);
-        const halo = ctx.createRadialGradient(0, 0, r * 0.06, 0, 0, r * 0.93);
-        halo.addColorStop(0, `rgba(116,115,212,${0.24 * edge})`);
-        halo.addColorStop(0.42, `rgba(71,94,177,${0.19 * edge})`);
-        halo.addColorStop(1, "rgba(32,52,108,0)");
-        ctx.fillStyle = halo;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.93, 0, TAU);
-        ctx.fill();
-        ctx.restore();
-
-        // Thick but still recognisably flattened stellar disk.
-        ctx.save();
-        ctx.scale(1, 0.30 + 0.12 * face);
-        const thickDisk = ctx.createRadialGradient(0, 0, r * 0.015, 0, 0, r * 0.83);
-        thickDisk.addColorStop(0, `rgba(219,180,246,${0.30 * edge})`);
-        thickDisk.addColorStop(0.26, `rgba(142,115,224,${0.34 * edge})`);
-        thickDisk.addColorStop(0.72, `rgba(75,109,192,${0.22 * edge})`);
-        thickDisk.addColorStop(1, "rgba(46,72,134,0)");
-        ctx.fillStyle = thickDisk;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.83, 0, TAU);
-        ctx.fill();
-        ctx.restore();
-
-        // Gently enlarged nucleus: lens-shaped when seen sideways, never a dot.
-        ctx.save();
-        ctx.scale(1, 0.67);
-        const bulge = ctx.createRadialGradient(0, 0, r * 0.008, 0, 0, r * 0.32);
-        bulge.addColorStop(0, `rgba(250,224,245,${0.62 * edge})`);
-        bulge.addColorStop(0.28, `rgba(209,166,244,${0.54 * edge})`);
-        bulge.addColorStop(0.76, `rgba(142,111,221,${0.20 * edge})`);
-        bulge.addColorStop(1, "rgba(89,87,172,0)");
-        ctx.fillStyle = bulge;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.32, 0, TAU);
-        ctx.fill();
-        ctx.restore();
-        ctx.restore();
+      // Separate irregular pockets of luminous gas, projecting true 3-D
+      // positions. No concentric ellipse, mechanical halo or dark centre.
+      ctx.save();
+      ctx.globalCompositeOperation="screen";
+      for(const pocket of galaxyGasPockets){
+        const gx=(orientation.a*pocket.x+orientation.c*pocket.y+
+          orientation.e*pocket.z)*r;
+        const gy=(orientation.b*pocket.x+orientation.d*pocket.y+
+          orientation.f*pocket.z)*r;
+        const reach=r*pocket.scale*(1+.20*edge);
+        const cloud=ctx.createRadialGradient(gx,gy,0,gx,gy,reach);
+        const strength=pocket.opacity*(.74+.26*edge);
+        cloud.addColorStop(0,"rgba("+pocket.tint+","+
+          strength.toFixed(3)+")");
+        cloud.addColorStop(.32,"rgba("+pocket.tint+","+
+          (strength*.43).toFixed(3)+")");
+        cloud.addColorStop(1,"rgba("+pocket.tint+",0)");
+        ctx.fillStyle=cloud;
+        ctx.beginPath();ctx.arc(gx,gy,reach,0,TAU);ctx.fill();
       }
+      ctx.restore();
 
       // The voyage used to replace this glass's built-in galaxy with a
       // DIFFERENT NASA galaxy the moment it broke. Use the very same M100
@@ -908,35 +897,17 @@ export function GalaxyOrb({
       if (isolated) {
         ctx.save();
         ctx.globalCompositeOperation = "screen";
-        // A faint displaced stellar layer supplies depth when the galaxy is
-        // oblique or edge-on, while the crisp main spiral remains intact.
-        if (edge > 0.18) {
-          ctx.save();
-          ctx.globalAlpha = edge * 0.12;
-          ctx.translate(orientation.e * r * 0.07, orientation.f * r * 0.07);
-          ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
-          ctx.drawImage(isolated, -r * 0.73, -r * 0.73, r * 1.46, r * 1.46);
-          ctx.restore();
-        }
-        ctx.transform(orientation.a, orientation.b, orientation.c, orientation.d, 0, 0);
-        // Make the existing photographic arms slightly easier to read inside
-        // the glass, without replacing the approved image or drawing a fake
-        // mathematical spiral. Both passes share the SAME 3-D orientation.
-        ctx.drawImage(isolated, -r * 0.80, -r * 0.80, r * 1.60, r * 1.60);
-        ctx.globalAlpha = 0.14;
-        ctx.drawImage(isolated, -r * 0.80, -r * 0.80, r * 1.60, r * 1.60);
-        ctx.restore();
-      }
-
-      // A halo exists above and below the disk. If the face turns edge-on,
-      // retain its central bulge but never paste another square or flat JPEG.
-      if (edge > 0.27 && isolated) {
-        ctx.save();
-        ctx.rotate(orientation.longAxis);
-        ctx.scale(1, 0.30);
-        ctx.globalAlpha = 0.15 * Math.pow((edge - 0.27) / 0.73, 1.2);
-        ctx.globalCompositeOperation = "screen";
-        ctx.drawImage(isolated, -r * 0.70, -r * 0.70, r * 1.40, r * 1.40);
+        // One transparent photograph of the SAME M100 galaxy that emerges
+        // from the glass. Surrounding gas/stars supply subtle optical depth,
+        // so no concentric copies or separate rotating photo-card remain.
+        const depth=.12*(1-face);
+        ctx.transform(
+          orientation.a+orientation.e*depth,
+          orientation.b+orientation.f*depth,
+          orientation.c+orientation.e*.065,
+          orientation.d+orientation.f*.065,0,0);
+        ctx.globalAlpha=.87;
+        ctx.drawImage(isolated,-r*.80,-r*.80,r*1.60,r*1.60);
         ctx.restore();
       }
 
@@ -972,10 +943,10 @@ export function GalaxyOrb({
         ctx.fill();
       }
 
-      const shade = ctx.createLinearGradient(-r, -r, r, r);
-      shade.addColorStop(0, "rgba(174,216,255,0.13)");
-      shade.addColorStop(0.52, "rgba(5,16,35,0)");
-      shade.addColorStop(1, "rgba(1,5,15,0.56)");
+      const shade=ctx.createLinearGradient(-r,-r,r,r);
+      shade.addColorStop(0,"rgba(174,216,255,.085)");
+      shade.addColorStop(.52,"rgba(5,16,35,0)");
+      shade.addColorStop(1,"rgba(1,5,15,.18)");
       ctx.fillStyle = shade;
       ctx.fillRect(-r, -r, 2 * r, 2 * r);
 
