@@ -130,6 +130,8 @@ export function GalaxyVoyage({
     // Reaching the enclosing glass orb begins the three-minute quiet ending.
     let finalReachedAt: number | null = null;
     let lastAdvanceAt = 0;
+    // Accepted clicks start fresh 20-second stellar light patterns.
+    let glintSeed = Math.floor(Math.random()*1_000_000_000);
     // The fourth tap is the one-time inward sweep of released lettering.
     // Subsequent taps keep their existing camera/galaxy distances.
     let sandSuctionStartedAt: number | null = null;
@@ -1153,7 +1155,7 @@ export function GalaxyVoyage({
       // Transparent galactic gas stays below the original galaxy stars.
       flightScene.drawGalaxy(
         ctx!,sceneStep,viewWidth,viewHeight,now,galaxyAnchor,
-        now-lastAdvanceAt);
+        now-lastAdvanceAt,glintSeed);
       // The third tap finishes the title, leaving JUST the galaxy and
       // drifting sand. Stars begin revealing with the FOURTH tap and
       // accumulate and twinkle through the existing unchanged sky logic.
@@ -1161,7 +1163,8 @@ export function GalaxyVoyage({
         ctx!.save();
         ctx!.globalAlpha=ease((s-4)/.92);
         flightScene.drawSky(
-          ctx!,now,viewWidth,viewHeight,sceneStep,galaxyAnchor);
+          ctx!,now,viewWidth,viewHeight,sceneStep,galaxyAnchor,
+          now-lastAdvanceAt,glintSeed);
         ctx!.restore();
       }
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
@@ -1217,6 +1220,7 @@ export function GalaxyVoyage({
       if(target===4&&sandSuctionStartedAt!==null&&
          now-sandSuctionStartedAt<1150)return;
       lastAdvanceAt = now;
+      glintSeed = Math.floor(Math.random()*1_000_000_000);
       // The last orb is a contemplative scene, not a tap-to-exit button.
       // Only the existing spaceship control (or Escape) returns home early.
       if (target >= FINAL_STEP) return;
