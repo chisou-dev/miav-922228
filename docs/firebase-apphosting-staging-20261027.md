@@ -6,10 +6,19 @@
 ## 検証ブランチ
 `feature/firebase-apphosting-staging-20261027`
 
-Next.js 16.2.10 の MIAV は App Hosting の現行アクティブサポート版より新しく、まず試験ビルドが必要。
-`next.config.ts` と既存のビルドスクリプト `npm run build` は変更しない。
+Next.js 16.2.10 の MIAV は、2026-10-27時点で Firebase App Hosting の正式なアクティブサポート表にまだ掲載されず、プレビュー扱い。
+**バージョンを15へ下げない。Firebaseでの公開はNext.js 16の正式アクティブ対応を確認できてからにする。**
+Googleが正式対応の日程を公表した事実はまだ確認できていないため、日付は決め打ちしない。
+`package.json` の Next.js 16.2.10、`next.config.ts` と既存のビルドスクリプト `npm run build` は変更しない。
 `apphosting.yaml` はこのブランチ専用の低リソース設定（minInstances: 0, maxInstances: 2）。
 **同時実行数と台数の制限は通信費の上限ではない。**
+
+## 公開待機の方針
+- **現時点ではFirebase App Hostingバックエンドを作らず課金を開始しない。**
+- Firebase公式の「Next.jsサポートスケジュール」で16系が「アクティブ」になったことを再確認してから、以下のステージング手順を行う。
+- すでに動作中のVercel本番サイトとドメインは維持し、機能追加や本番のプログラム更新は通常どおりGitHub側で進める。
+- 正式対応が進んでもNext.js 16.2.10の互換性と本番用シークレット等は検証してから切り替える。
+- Firebaseの設定を仮作成する場合でも、無断で課金プロジェクトを作らない。
 
 ## Google / Firebase コンソールで必要な操作
 
@@ -20,7 +29,7 @@ Next.js 16.2.10 の MIAV は App Hosting の現行アクティブサポート版
 5. 地域を選ぶ（日本の読者中心なら東京近辺が候補。地域ごとの提供可否と料金は管理画面で確認）。
 6. 環境変数・Secret Manager の設定を確認。Vercel にのみ登録している環境変数は自動移転しない。機密値をGitHubに書き込まない。
 7. ドメインは Firebase が発行するテストURLのまま使用。**miav-922228.com のDNSは変更しない。**
-8. 最初のロールアウトの Build logs/Cloud Run logs を確認。Next.js 16 のアダプタの互換性が最優先の検証項目。
+8. 正式サポート表でNext.js 16系がアクティブになった後、最初のロールアウトの Build logs/Cloud Run logs を確認。互換性が最優先の検証項目。
 
 ## 費用を守る
 
