@@ -35,7 +35,10 @@ export function GalaxyOrb({
   const zoomButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const photoCreditRef = useRef<HTMLDivElement>(null);
-  const [voyage, setVoyage] = useState<{ x: number; y: number; radius: number } | null>(null);
+  const [voyage, setVoyage] = useState<{
+    x:number;y:number;radius:number;
+    galaxyYaw:number;galaxyPitch:number;galaxyRoll:number;
+  }|null>(null);
 
   function finishVoyage() {
     document.documentElement.removeAttribute("data-galaxy-voyage");
@@ -608,7 +611,12 @@ export function GalaxyOrb({
 
     function enterVoyage() {
       if (!unlockedRef.current || !expanded || !atMaximum) return;
-      const capture = { x: orb.x, y: orb.y, radius: Math.min(radius, maximumRadius) };
+      // Preserve this EXACT turning galaxy's orientation through the glass
+      // rupture; the voyage must not start a newly rotated galaxy picture.
+      const capture = {
+        x:orb.x,y:orb.y,radius:Math.min(radius,maximumRadius),
+        galaxyYaw,galaxyPitch,galaxyRoll,
+      };
       // Hide only the animation layer; leave original homepage untouched.
       // The real ship, title and NASA/planetary journey stay in GalaxyVoyage.
       closeExpanded();
