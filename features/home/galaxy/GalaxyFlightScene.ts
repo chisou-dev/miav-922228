@@ -877,7 +877,6 @@ export function createGalaxyFlightScene() {
     if(near<.004)return;
     const size=Math.min(w,h)*2.6*pose.sight.scale;
     if(size<5)return;
-    const depthWidth=.22+.20*Math.abs(pose.sy);
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(pose.sight.x,pose.sight.y);
@@ -896,15 +895,15 @@ export function createGalaxyFlightScene() {
       const cloudRadius=size*(.035+.09*rnd(k*47+103))*(1-.28*core);
       const rx=cloudRadius*(.72+.70*rnd(k*53+27));
       const ry=cloudRadius*(.67+.63*rnd(k*59+31));
-      const fog=ctx.createRadialGradient(ox,oy,0,ox,oy,Math.max(rx,ry));
       const strength=near*(.05+.11*(1-core))*(.60+.40*rnd(k*23+19));
       const tint=k%5===0?"250,218,209":k%3===0?"181,193,239":"141,172,227";
-      fog.addColorStop(0,"rgba("+tint+","+(strength*.90).toFixed(3)+")");
-      fog.addColorStop(.34,"rgba("+tint+","+(strength*.35).toFixed(3)+")");
-      fog.addColorStop(1,"rgba("+tint+",0)");
       ctx.save();
       ctx.translate(ox,oy);
       ctx.scale(rx/Math.max(rx,ry),ry/Math.max(rx,ry));
+      const fog=ctx.createRadialGradient(0,0,0,0,0,Math.max(rx,ry));
+      fog.addColorStop(0,"rgba("+tint+","+(strength*.90).toFixed(3)+")");
+      fog.addColorStop(.34,"rgba("+tint+","+(strength*.35).toFixed(3)+")");
+      fog.addColorStop(1,"rgba("+tint+",0)");
       ctx.fillStyle=fog;
       ctx.beginPath();ctx.arc(0,0,Math.max(rx,ry),0,TAU);ctx.fill();
       ctx.restore();
