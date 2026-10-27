@@ -138,8 +138,11 @@ export function createGalaxyFlightScene() {
     // Less than one turn, across ALL departure taps. No unbounded time
     // multiplier: pausing on one tap never causes rapid repeated flips.
     // A slight off-axis tilt puts the right edge fractionally forward.
-    const travellingYaw=TAU*.78*original.depart+
-      Math.sin(now*.000045)*.045*original.depart;
+    // A full side-on turn makes a false straight stripe in projection.
+    // Let the close galaxy slowly change its inclination instead: its
+    // stellar body stays broad, even before it joins the glass collection.
+    const travellingYaw=.15+1.04*original.depart+
+      Math.sin(now*.000045)*.035*original.depart;
     // On entering the glass the original spiral settles into a readable,
     // slightly inclined face, not the nearly edge-on illuminated slab seen
     // at the end of the previous preview. Then it revolves with its peers.
@@ -171,12 +174,17 @@ export function createGalaxyFlightScene() {
     // Same irregular galactic membership as before. Project its local
     // points through the EXACT SAME slightly tipped vertical-axis turn
     // as the diffuse galaxy artwork, so the stars never slide separately.
-    const theta=TAU*((p.x*.971+p.y*.163)%1);
-    const rad=Math.sqrt(p.y);
-    const localX=Math.cos(theta)*rad*short*.93*sight.scale+
-      Math.sin(theta*3.1+p.y*5)*short*.045*sight.scale;
-    const localY=Math.sin(theta)*rad*short*.30*sight.scale+
-      Math.sin(theta*2.2+p.x*4)*short*.034*sight.scale;
+    // Disperse the legacy catalogue through a THICK irregular disc.
+    // Its former rigid 2-D mapping collapsed many stars into one line.
+    const theta=TAU*p.x+p.y*2.6+
+      .21*Math.sin(p.x*19.3+p.y*37.1);
+    const rad=Math.pow(p.y,.65);
+    const height=(Math.sin(p.x*97.1+p.y*61.9)*
+      Math.sin(p.x*37.7-p.y*43.3))*(.16+.19*(1-rad));
+    const depth=(Math.sin(p.x*73.3+p.y*113.1)*
+      Math.sin(p.x*141.7-p.y*29.3))*(.19+.22*(1-rad));
+    const localX=(Math.cos(theta)*rad*.77+depth*pose.sy)*short*sight.scale;
+    const localY=(Math.sin(theta)*rad*.41+height)*short*sight.scale;
     const turnedX=localX*pose.cy+localY*pose.shear;
     const turnedY=localX*pose.tilt+localY;
     const targetX=sight.x+turnedX*pose.cr-turnedY*pose.sr;
@@ -221,22 +229,25 @@ export function createGalaxyFlightScene() {
   // Unlike a flat sprite, depth still projects to a visible width when the
   // spiral is nearly edge-on.
   const galaxyVolumeStars=Array.from({length:11800},(_,i)=>{
-    // Nonuniform, softly clustered stellar matter: most stars inhabit
-    // the bright inner bulge; a much smaller fraction reaches the edges.
-    // An explicit depth coordinate gives the galaxy a wide stellar body
-    // even when the spinning 2D arm texture faces the viewer edge-on.
-    const core=i%5!==0;
-    const radius=Math.pow(rnd(i*41+637),core?2.25:.88);
-    const theta=TAU*rnd(i*53+79);
-    const clump=.035*Math.sin(theta*3.3+radius*8.7+i%7);
-    const depth=(rnd(i*71+107)*2-1)*
-      (.115+.30*Math.pow(1-radius,1.35));
+    // A softly concentrated spheroid and thick, irregular spiral wings.
+    // Stars are distributed along THREE axes, not densely aligned on a
+    // geometric spine. The core is still brighter than the outskirts.
+    const inner=i%5!==0;
+    const radius=Math.pow(rnd(i*41+637),inner?1.42:.84);
+    const arm=i%3;
+    const theta=TAU*rnd(i*53+79)+
+      (inner?0:arm*TAU/3+radius*2.1);
+    const clump=.025*Math.sin(theta*4.1+radius*7.3+i%11);
+    const z=(rnd(i*71+107)*2-1)*
+      (.17+.27*Math.pow(1-radius,1.10));
+    const vertical=(rnd(i*113+37)*2-1)*
+      (.11+.20*Math.pow(1-radius,1.28));
     return {
-      x:Math.cos(theta)*(radius+clump)*.43,
-      y:Math.sin(theta)*(radius+clump)*.30,
-      z:depth,
-      radius:.34+.79*rnd(i*47+29),
-      opacity:(.22+.76*Math.pow(1-radius,1.15))*
+      x:Math.cos(theta)*(radius+clump)*.46,
+      y:Math.sin(theta)*(radius+clump)*.39+vertical,
+      z,
+      radius:.30+.72*rnd(i*47+29),
+      opacity:(.21+.67*Math.pow(1-radius,1.13))*
         (.55+.45*rnd(i*17+91)),
       hue:[218,231,258,324,34,205,242][i%7],
     };
@@ -796,7 +807,9 @@ export function createGalaxyFlightScene() {
     // while the much deeper, spherical farStars catalogue fills the sky.
     // Some of this SAME main galaxy's resolved stars remain visible inside
     // the final glass, instead of the original galaxy vanishing wholesale.
-    const oldGalaxyFade=1-.79*smooth((step-272)/42);
+    // The dense real 3-D galaxy takes over. Legacy sky stars must fully
+    // dissolve before their old 2-D projection can form a white spine.
+    const oldGalaxyFade=1-smooth((step-167)/82);
     const localFieldFade=1-smooth((step-175)/83);
     const fadeSpan=step<31?36:84;
     for(let i=0;i<skyStars.length;i++){
@@ -930,7 +943,7 @@ export function createGalaxyFlightScene() {
       if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
       // Strong core density without turning the full galaxy into a fog
       // disc. Individual stellar knots stay visible on narrow projections.
-      const alpha=p.opacity*near*(.76+.24*Math.abs(pose.sy));
+      const alpha=p.opacity*near*(.84+.16*Math.abs(pose.sy));
       if(alpha<.018)continue;
       ctx.fillStyle="hsla("+p.hue+",48%,88%,"+alpha.toFixed(3)+")";
       ctx.fillRect(x,y,p.radius,p.radius);
@@ -960,7 +973,7 @@ export function createGalaxyFlightScene() {
     // to provide the actual galactic volume. No extreme matrix scaling.
     const edge=Math.abs(pose.cy);
     const projectedWidth=Math.sign(pose.cy||1)*
-      Math.max(.40,Math.abs(pose.cy));
+      Math.max(.61,Math.abs(pose.cy));
     ctx.transform(projectedWidth,pose.tilt,pose.shear,1,0,0);
     // Hide the mathematically flat spiral artwork when nearly edge-on,
     // leaving the genuine depth-distributed stellar bulge to carry the
