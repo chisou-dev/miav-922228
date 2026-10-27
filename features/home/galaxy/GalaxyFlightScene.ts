@@ -122,7 +122,9 @@ export function createGalaxyFlightScene() {
   ){
     const original=galaxySightline(step,w,h);
     const join=smooth(anchor?.blend??0);
-    const targetSize=anchor?anchor.r*1.52/(Math.min(w,h)*2.6):original.scale;
+    // At the final glass, the lead galaxy has the same visual scale as
+    // its neighbors, not the previous enormous 76%-of-sphere diameter.
+    const targetSize=anchor?anchor.r*.205/(Math.min(w,h)*2.6):original.scale;
     const sight={
       ...original,
       x:original.x+((anchor?.x??original.x)-original.x)*join,
@@ -202,6 +204,24 @@ export function createGalaxyFlightScene() {
     power:.42+rnd(i*13+61)*.37,
     phase:rnd(i*17+129)*TAU,
   }));
+  // A fixed three-dimensional stellar volume surrounding the SAME main
+  // galactic disc, generated once per voyage (not per frame). The bulge is
+  // dense around the nucleus, then thins gradually into a broad halo.
+  // Unlike a flat sprite, depth still projects to a visible width when the
+  // spiral is nearly edge-on.
+  const galaxyVolumeStars=Array.from({length:3900},(_,i)=>{
+    const radius=Math.pow(rnd(i*41+637),1.65);
+    const theta=TAU*rnd(i*53+79);
+    const depth=(rnd(i*71+107)*2-1)*(.075+.24*Math.pow(1-radius,1.18));
+    return {
+      x:Math.cos(theta)*radius*.45,
+      y:Math.sin(theta)*radius*.29,
+      z:depth,
+      radius:.28+.78*rnd(i*47+29),
+      opacity:(.27+.68*Math.pow(1-radius,1.28))*(.48+.52*rnd(i*17+91)),
+      hue:[218,231,258,324,34,205,242][i%7],
+    };
+  });
   // Historical galaxy-image support is retained but not used in the sky.
   // Much fainter, fixed, separately distributed points become resolvable
   // at intergalactic distances. They never inherit spiral coordinates.
@@ -833,6 +853,63 @@ export function createGalaxyFlightScene() {
     }
   }
 
+  function drawThickGalaxy(
+    ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
+    pose:ReturnType<typeof galaxyProjection>,
+  ){
+    // Nearby viewpoint: the galaxy occupies almost the full frame, with
+    // a real-looking thick central stellar population rather than a
+    // skinny luminous line when the 2-D disc rotates edge-on.
+    // On recession the extra optical depth gradually fades, so distant
+    // galaxies can still read as thin discs inside the final glass.
+    const near=1-smooth((step-240)/68);
+    if(near<.004)return;
+    const size=Math.min(w,h)*2.6*pose.sight.scale;
+    if(size<5)return;
+    const yaw=Math.acos(clamp(pose.cy,-1,1));
+    const depthWidth=.16+.19*Math.abs(Math.sin(yaw));
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    ctx.translate(pose.sight.x,pose.sight.y);
+    ctx.rotate(pose.roll);
+
+    // Several unequal transparent volumes; no clean elliptical outline,
+    // solid sphere, sharp ring, or symmetrical artificial halo.
+    for(let k=0;k<6;k++){
+      const ox=(rnd(k*53+79)-.5)*size*.075;
+      const oy=(rnd(k*41+117)-.5)*size*.068;
+      const rx=size*(depthWidth*(.68+.37*rnd(k*31+9)));
+      const ry=size*(.18+.09*rnd(k*19+7));
+      ctx.save();
+      ctx.translate(ox,oy);
+      ctx.scale(rx,ry);
+      const fog=ctx.createRadialGradient(0,0,0,0,0,1);
+      const strength=(.075+.09*rnd(k*17+51))*near;
+      const warm=k%3===0?"238,192,209":"120,151,212";
+      fog.addColorStop(0,"rgba("+warm+","+(strength*1.55).toFixed(3)+")");
+      fog.addColorStop(.27,"rgba("+warm+","+(strength*.73).toFixed(3)+")");
+      fog.addColorStop(.69,"rgba(105,135,204,"+(strength*.22).toFixed(3)+")");
+      fog.addColorStop(1,"rgba(75,113,182,0)");
+      ctx.fillStyle=fog;
+      ctx.fillRect(-1,-1,2,2);
+      ctx.restore();
+    }
+
+    // Projection of each individual 3D star: z adds actual width when the
+    // spiral faces sideways. These points are not a flat image being squeezed.
+    const sn=Math.sin(yaw);
+    for(const p of galaxyVolumeStars){
+      const x=(p.x*pose.cy+p.z*sn+p.y*pose.shear)*size;
+      const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
+      if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
+      const alpha=p.opacity*near;
+      if(alpha<.018)continue;
+      ctx.fillStyle="hsla("+p.hue+",47%,89%,"+alpha.toFixed(3)+")";
+      ctx.fillRect(x,y,p.radius,p.radius);
+    }
+    ctx.restore();
+  }
+
   function drawDistantGalaxy(
     ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
     now=0,anchor?:GalaxyAnchor,
@@ -844,6 +921,7 @@ export function createGalaxyFlightScene() {
     const reveal=smooth((step-147)/63);
     if(reveal<.001)return;
     const short=Math.min(w,h);
+    drawThickGalaxy(ctx,step,w,h,pose);
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(sight.x,sight.y);
