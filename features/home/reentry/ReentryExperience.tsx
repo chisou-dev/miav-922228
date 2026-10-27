@@ -345,7 +345,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
             role="application"
           >
-            {!showStage2Notice && (<>
+
             <ReentryHybridStage
               state={fullscreenState}
               playbackProgressRef={flightProgressRef}
@@ -378,7 +378,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 {REENTRY_SCENE.hintText}
               </p>
             )}
-            </>)}
+
           </div>
           {phase === "result" &&
             result &&
