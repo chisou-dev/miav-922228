@@ -908,7 +908,11 @@ export function createGalaxyFlightScene() {
     // Projection of each individual 3D star: z adds actual width when the
     // spiral faces sideways. These points are not a flat image being squeezed.
     const sn=pose.sy;
-    for(const p of galaxyVolumeStars){
+    // Keep older phones smooth while retaining a dense central cluster.
+    const starCount=Math.min(galaxyVolumeStars.length,
+      w<600?8600:galaxyVolumeStars.length);
+    for(let i=0;i<starCount;i++){
+      const p=galaxyVolumeStars[i];
       const x=(p.x*pose.cy+p.z*sn+p.y*pose.shear)*size;
       const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
       if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
@@ -936,18 +940,15 @@ export function createGalaxyFlightScene() {
     ctx.globalCompositeOperation="screen";
     ctx.translate(sight.x,sight.y);
     ctx.rotate(pose.roll);
-    // Canvas local->world matrix exactly matches projectedStar above.
-    ctx.transform(pose.cy,pose.tilt,pose.shear,1,0,0);
-    // The prior image collapsed into a dazzling one-pixel line whenever
-    // its rotating plane became edge-on. The REAL star volume now supplies
-    // that side profile; keep the transparent arm texture softly broadened
-    // and subdued at extreme angles rather than compressing to a bright ray.
+    // At an edge-on view the original flat artwork would collapse to a
+    // luminous pixel-width streak. Give its optical projection a soft
+    // minimum width and fade it, while the independent 3-D stars continue
+    // to provide the actual galactic volume. No extreme matrix scaling.
     const edge=Math.abs(pose.cy);
+    const projectedWidth=Math.sign(pose.cy||1)*
+      Math.sqrt(pose.cy*pose.cy+.19*.19);
+    ctx.transform(projectedWidth,pose.tilt,pose.shear,1,0,0);
     ctx.globalAlpha=.45*reveal*(.17+.83*smooth((edge-.06)/.54));
-    const planeWidth=Math.sqrt(pose.cy*pose.cy+.19*.19);
-    // Preserve the 3D turn direction without a discontinuous hard flip.
-    ctx.transform(planeWidth/Math.max(.0001,Math.abs(pose.cy)),
-      0,0,1,0,0);
     // Recede over many taps into the glass as one continuous star system.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
