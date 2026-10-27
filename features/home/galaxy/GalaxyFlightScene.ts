@@ -905,16 +905,23 @@ export function createGalaxyFlightScene() {
     // concentrations. Avoid broad equally shaped elliptical fog layers:
     // those read as a flat luminous plate when the disc turns sideways.
     const sideOn=Math.abs(pose.sy);
-    for(let k=0;k<34;k++){
-      const core=Math.pow(rnd(k*79+61),1.6);
+    for(let k=0;k<42;k++){
+      // Real bulge depth stays visible when the disc turns edge-on.
+      // Asymmetric cloud knots are spread across the vertical and line-
+      // of-sight volumes, never packed into one straight ruled stripe.
+      const core=Math.pow(rnd(k*79+61),1.37);
       const angle=TAU*rnd(k*43+19);
-      const ox=(Math.cos(angle)*core*.22*(.50+.50*Math.abs(pose.cy))
-        +(rnd(k*29+111)-.5)*sideOn*.19)*size;
-      const oy=(Math.sin(angle)*core*.14+(rnd(k*31+217)-.5)*.055)*size;
-      const cloudRadius=size*(.035+.09*rnd(k*47+103))*(1-.28*core);
-      const rx=cloudRadius*(.72+.70*rnd(k*53+27));
-      const ry=cloudRadius*(.67+.63*rnd(k*59+31));
-      const strength=near*(.05+.11*(1-core))*(.60+.40*rnd(k*23+19));
+      const depth=(rnd(k*29+111)-.5)*(.22+.44*(1-core));
+      const height=(rnd(k*31+217)-.5)*(.13+.28*(1-core));
+      const ox=(Math.cos(angle)*core*.30*pose.cy+
+        depth*pose.sy+height*pose.shear)*size;
+      const oy=(Math.sin(angle)*core*.25+height+
+        depth*.16+Math.cos(angle*2.9+k*.38)*.025)*size;
+      const cloudRadius=size*(.030+.075*rnd(k*47+103))*(1-.28*core);
+      const rx=cloudRadius*(.82+.55*rnd(k*53+27));
+      const ry=cloudRadius*(.86+.68*rnd(k*59+31))*
+        (1+.22*sideOn);
+      const strength=near*(.067+.13*(1-core))*(.55+.45*rnd(k*23+19));
       const tint=k%5===0?"250,218,209":k%3===0?"181,193,239":"141,172,227";
       ctx.save();
       ctx.translate(ox,oy);
@@ -936,8 +943,11 @@ export function createGalaxyFlightScene() {
       w<600?8600:galaxyVolumeStars.length);
     for(let i=0;i<starCount;i++){
       const p=galaxyVolumeStars[i];
+      // The centre includes overlapping thick stellar populations; its
+      // vertical scatter increases mildly on edge-on views without growing
+      // an artificial geometric stripe.
       const x=(p.x*pose.cy+p.z*sn+p.y*pose.shear)*size;
-      const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
+      const y=(p.y+p.x*pose.tilt+p.z*(.13+.11*sideOn))*size;
       if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
       // Strong core density without turning the full galaxy into a fog
       // disc. Individual stellar knots stay visible on narrow projections.
@@ -973,10 +983,11 @@ export function createGalaxyFlightScene() {
     const projectedWidth=Math.sign(pose.cy||1)*
       Math.max(.61,Math.abs(pose.cy));
     ctx.transform(projectedWidth,pose.tilt,pose.shear,1,0,0);
-    // Hide the mathematically flat spiral artwork when nearly edge-on,
-    // leaving the genuine depth-distributed stellar bulge to carry the
-    // silhouette. The old intense thin luminous stripe cannot return.
-    ctx.globalAlpha=.56*reveal*smooth((edge-.12)/.51);
+    // Never turn the gas OFF when the disc is nearly edge-on: that made
+    // the first vertical turn a bare pencil line of stars. Keep a diffuse,
+    // low-contrast nebular presence behind its thick stellar population.
+    // Screen opacity stays low near edge-on, preventing a luminous plate.
+    ctx.globalAlpha=.54*reveal*(.37+.63*smooth((edge-.06)/.56));
     // Recede over many taps into the glass as one continuous star system.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
