@@ -1147,7 +1147,7 @@ export function GalaxyVoyage({
           y:finalGlass.leadY,
           r:finalGlass.r*finalGlass.leadPerspective,
           blend:glassJoin,
-          turn:finalGlass.yaw,
+          turn:finalGlass.rotation.angle,
         }
         :undefined;
       // Transparent galactic gas stays below the original galaxy stars.
