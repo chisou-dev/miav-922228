@@ -1152,7 +1152,8 @@ export function GalaxyVoyage({
         :undefined;
       // Transparent galactic gas stays below the original galaxy stars.
       flightScene.drawGalaxy(
-        ctx!,sceneStep,viewWidth,viewHeight,now,galaxyAnchor);
+        ctx!,sceneStep,viewWidth,viewHeight,now,galaxyAnchor,
+        now-lastAdvanceAt);
       // The third tap finishes the title, leaving JUST the galaxy and
       // drifting sand. Stars begin revealing with the FOURTH tap and
       // accumulate and twinkle through the existing unchanged sky logic.
