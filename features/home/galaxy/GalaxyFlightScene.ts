@@ -10,7 +10,9 @@
  */
 type Kind = "jovian" | "storm" | "vortex" | "ice" | "rock" | "cloud" | "sun";
 type Side = "left" | "right" | "top" | "bottom";
-type GalaxyAnchor = { x: number; y: number; r: number; blend: number };
+type GalaxyAnchor = {
+  x: number; y: number; r: number; blend: number; turn?: number;
+};
 type Body = {
   id: number; peek: number; depth: number; radius: number;
   side: Side; transverse: number; kind: Kind; hue: number;
@@ -137,7 +139,8 @@ export function createGalaxyFlightScene() {
     // multiplier: pausing on one tap never causes rapid repeated flips.
     // A slight off-axis tilt puts the right edge fractionally forward.
     const yaw=TAU*.78*original.depart+
-      Math.sin(now*.000045)*.045*original.depart;
+      Math.sin(now*.000045)*.045*original.depart+
+      join*(anchor?.turn??0);
     const roll=-.20+.055*Math.sin(now*.000065);
     return {
       sight,roll,
