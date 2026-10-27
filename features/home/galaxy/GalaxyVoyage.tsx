@@ -118,11 +118,6 @@ export function GalaxyVoyage({
     // Timers used by the existing shattering/galaxy sequence start AFTER
     // the pre-rupture peel; existing IMPLOSION_MS timing remains unchanged.
     const opened = previous + PEEL_MS;
-    // Pitched, airy glass release after the 3-second pigment absorption.
-    // Scheduled from the enter-voyage click; cancelled if the user exits.
-    const ruptureTimer = window.setTimeout(() => {
-      if (!document.hidden) playGalaxyCue("rupture");
-    }, PEEL_MS + IMPLOSION_MS * .64);
     let viewWidth = window.innerWidth;
     let viewHeight = window.innerHeight;
     let progress = 0;
@@ -1267,7 +1262,6 @@ export function GalaxyVoyage({
       cancelAnimationFrame(frame);
       if (finalTimer !== undefined) clearTimeout(finalTimer);
       if (idleTimer !== undefined) clearTimeout(idleTimer);
-      window.clearTimeout(ruptureTimer);
       window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", keydown);
     };
