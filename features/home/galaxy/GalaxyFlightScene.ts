@@ -147,15 +147,22 @@ export function createGalaxyFlightScene() {
     const correction=Math.atan2(
       Math.sin(-.45-travellingYaw),Math.cos(-.45-travellingYaw));
     const yaw=travellingYaw+join*correction+join*(anchor?.turn??0);
-    const roll=-.18+.16*Math.sin(now*.000085+.7);
-    return {
-      sight,roll,
-      cr:Math.cos(roll),sr:Math.sin(roll),
-      cy:Math.cos(yaw),
-      sy:Math.sin(yaw),
+    // These are accumulated from the SAME running clock; neither a click
+    // nor a change in camera distance restarts any of the three rotations.
+    const pitch=.24+now*.000057;
+    const roll=-.18+now*.000063;
+    const cy=Math.cos(yaw),sy=Math.sin(yaw);
+    const cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const cr=Math.cos(roll),sr=Math.sin(roll);
+    // Orthographic 3-D rotation Rz(roll) * Rx(pitch) * Ry(yaw).
+    // BOTH nebular matter and individual stars use this very same frame.
+    const a=cr*cy-sr*sp*sy,b=sr*cy+cr*sp*sy;
+    const c=-sr*cp,d=cr*cp;
+    const e=cr*sy+sr*sp*cy,f=sr*sy-cr*sp*cy;
+    return {sight,yaw,pitch,roll,cy,sy,cr,sr,a,b,c,d,e,f,
       tilt:.14+.13*Math.sin(now*.000105+1.1),
-      shear:.065*Math.sin(yaw),
-    };
+      shear:.065*Math.sin(yaw)};
+
   }
   function projectedStar(
     p:{x:number;y:number},member:boolean,step:number,
@@ -181,12 +188,11 @@ export function createGalaxyFlightScene() {
       Math.sin(p.x*37.7-p.y*43.3))*(.16+.19*(1-rad));
     const depth=(Math.sin(p.x*73.3+p.y*113.1)*
       Math.sin(p.x*141.7-p.y*29.3))*(.19+.22*(1-rad));
-    const localX=(Math.cos(theta)*rad*.77+depth*pose.sy)*short*sight.scale;
-    const localY=(Math.sin(theta)*rad*.41+height)*short*sight.scale;
-    const turnedX=localX*pose.cy+localY*pose.shear;
-    const turnedY=localX*pose.tilt+localY;
-    const targetX=sight.x+turnedX*pose.cr-turnedY*pose.sr;
-    const targetY=sight.y+turnedX*pose.sr+turnedY*pose.cr;
+    const px=Math.cos(theta)*rad*.77*short*sight.scale;
+    const py=(Math.sin(theta)*rad*.41+height)*short*sight.scale;
+    const pz=depth*short*sight.scale;
+    const targetX=sight.x+pose.a*px+pose.c*py+pose.e*pz;
+    const targetY=sight.y+pose.b*px+pose.d*py+pose.f*pz;
     const blend=smooth((step-123)/105);
     return {
       x:backX+(targetX-backX)*blend,
@@ -935,7 +941,6 @@ export function createGalaxyFlightScene() {
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(pose.sight.x,pose.sight.y);
-    ctx.rotate(pose.roll);
 
     // Project the galactic bulge as many overlapping, irregular star
     // concentrations. Avoid broad equally shaped elliptical fog layers:
@@ -949,10 +954,11 @@ export function createGalaxyFlightScene() {
       const angle=TAU*rnd(k*43+19);
       const depth=(rnd(k*29+111)-.5)*(.22+.44*(1-core));
       const height=(rnd(k*31+217)-.5)*(.13+.28*(1-core));
-      const ox=(Math.cos(angle)*core*.30*pose.cy+
-        depth*pose.sy+height*pose.shear)*size;
-      const oy=(Math.sin(angle)*core*.25+height+
-        depth*.16+Math.cos(angle*2.9+k*.38)*.025)*size;
+      const px=Math.cos(angle)*core*.34;
+      const py=Math.sin(angle)*core*.31+height;
+      const pz=depth+Math.cos(angle*2.9+k*.38)*.04;
+      const ox=(pose.a*px+pose.c*py+pose.e*pz)*size;
+      const oy=(pose.b*px+pose.d*py+pose.f*pz)*size;
       const cloudRadius=size*(.030+.075*rnd(k*47+103))*(1-.28*core);
       const rx=cloudRadius*(.82+.55*rnd(k*53+27));
       const ry=cloudRadius*(.86+.68*rnd(k*59+31))*
@@ -973,7 +979,6 @@ export function createGalaxyFlightScene() {
 
     // Projection of each individual 3D star: z adds actual width when the
     // spiral faces sideways. These points are not a flat image being squeezed.
-    const sn=pose.sy;
     // Keep older phones smooth while retaining a dense central cluster.
     const starCount=Math.min(galaxyVolumeStars.length,
       w<600?8600:galaxyVolumeStars.length);
@@ -982,8 +987,8 @@ export function createGalaxyFlightScene() {
       // The centre includes overlapping thick stellar populations; its
       // vertical scatter increases mildly on edge-on views without growing
       // an artificial geometric stripe.
-      const x=(p.x*pose.cy+p.z*sn+p.y*pose.shear)*size;
-      const y=(p.y+p.x*pose.tilt+p.z*(.13+.11*sideOn))*size;
+      const x=(pose.a*p.x+pose.c*p.y+pose.e*p.z)*size;
+      const y=(pose.b*p.x+pose.d*p.y+pose.f*p.z)*size;
       if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
       // Strong core density without turning the full galaxy into a fog
       // disc. Individual stellar knots stay visible on narrow projections.
@@ -1010,20 +1015,16 @@ export function createGalaxyFlightScene() {
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(sight.x,sight.y);
-    ctx.rotate(pose.roll);
-    // At an edge-on view the original flat artwork would collapse to a
-    // luminous pixel-width streak. Give its optical projection a soft
-    // minimum width and fade it, while the independent 3-D stars continue
-    // to provide the actual galactic volume. No extreme matrix scaling.
-    const edge=Math.abs(pose.cy);
-    const projectedWidth=Math.sign(pose.cy||1)*
-      Math.max(.61,Math.abs(pose.cy));
-    ctx.transform(projectedWidth,pose.tilt,pose.shear,1,0,0);
-    // Never turn the gas OFF when the disc is nearly edge-on: that made
-    // the first vertical turn a bare pencil line of stars. Keep a diffuse,
-    // low-contrast nebular presence behind its thick stellar population.
-    // Screen opacity stays low near edge-on, preventing a luminous plate.
-    ctx.globalAlpha=.54*reveal*(.37+.63*smooth((edge-.06)/.56));
+    // A photograph is a 2-D slice; its exact 3-D edge-on projection would
+    // collapse to a line. Let the cached GAS texture inherit the THREE-axis
+    // frame with a faint, wide depth offset while the independently
+    // projected 3-D clouds and stars supply the real thickness. Never fade
+    // the entire gas image to zero at the side-on angle.
+    const edge=Math.abs(pose.cy*Math.cos(pose.pitch));
+    const depthWidth=.26*Math.pow(1-edge,1.3);
+    ctx.transform(pose.a+pose.e*depthWidth,pose.b+pose.f*depthWidth,
+      pose.c+pose.e*.12,pose.d+pose.f*.12,0,0);
+    ctx.globalAlpha=.48*reveal*(.67+.33*smooth((edge-.04)/.55));
     // Recede over many taps into the glass as one continuous star system.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
@@ -1064,7 +1065,6 @@ export function createGalaxyFlightScene() {
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(pose.sight.x,pose.sight.y);
-    ctx.rotate(pose.roll);
     for(let burst=0;burst<3;burst++){
       const start=[3700,9700,16300][burst]+
         (rnd(seed+burst*971+119)-.5)*1800;
@@ -1086,8 +1086,8 @@ export function createGalaxyFlightScene() {
           p=galaxyVolumeStars[i];
           if(Math.hypot(p.x,p.y*.8,p.z)<(j===0?.28:.45))break;
         }
-        const x=(p.x*pose.cy+p.z*pose.sy+p.y*pose.shear)*size;
-        const y=(p.y+p.x*pose.tilt+p.z*(.13+.11*Math.abs(pose.sy)))*size;
+        const x=(pose.a*p.x+pose.c*p.y+pose.e*p.z)*size;
+        const y=(pose.b*p.x+pose.d*p.y+pose.f*p.z)*size;
         if(Math.abs(x)>w*.85||Math.abs(y)>h*.83)continue;
         const hue=hues[Math.floor(rnd(seed+burst*131+j*79+41)*hues.length)];
         const radius=2.1+3.5*rnd(seed+burst*73+j*37);
