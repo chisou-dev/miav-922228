@@ -28,22 +28,29 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   c.width=c.height=n;
   const g=c.getContext("2d",{alpha:true});
   if(!g)return c;
-  const family=variant%7;
+  // Eleven visibly different types: deeply wound red spirals, open blue
+  // spirals, giant old ellipticals, barred spirals and irregular galaxies.
+  const family=variant%11;
   const palette=[
-    [184,215,255],[242,211,178],[216,204,244],[186,228,228],
-    [240,191,204],[192,205,233],[215,228,245],[229,198,176],
-  ][Math.floor(random(variant*37+19)*8)];
+    [159,203,255], [245,146,132], [126,212,248],
+    [248,198,151], [183,205,255], [247,214,171],
+    [141,226,238], [251,128,149], [237,149,200],
+    [200,204,251], [255,186,136],
+  ][family];
   const base=palette.join(",");
-  const ellipse=family===1||family===5;
+  const ellipse=family===1||family===5||family===10;
   const edgeOn=family===4;
-  const irregular=family===6;
+  const irregular=family===6||family===7;
   const barred=family===3;
-  const arms=family===0||family===3?2:family===2?3:0;
-  const axial=edgeOn?.22+.13*random(variant*17+21):
-    ellipse?.59+.28*random(variant*29+33):
-    irregular?.68+.26*random(variant*31+17):
-    .56+.30*random(variant*23+91);
-  const winding=(2.8+3.7*random(variant*71+39))*
+  const arms=family===0||family===3?2:
+    family===2||family===9?4:family===8?3:0;
+  const axial=edgeOn?.19+.13*random(variant*17+21):
+    ellipse?.68+.20*random(variant*29+33):
+    irregular?.70+.22*random(variant*31+17):
+    .66+.28*random(variant*23+91);
+  const winding=(family===8?8.2:family===9?4.2:
+    family===0?6.1:family===2?3.2:
+    3.2+2.8*random(variant*71+39))*
     (variant%3===0?-1:1);
   const startAngle=TAU*random(variant*59+13);
   const lop=.03+.11*random(variant*83+23);
@@ -54,7 +61,7 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   const offsetY=(random(variant*43+61)-.5)*n*.035;
   g.save();g.translate(offsetX,offsetY);g.scale(1,axial);
   const halo=g.createRadialGradient(0,0,0,0,0,n*.49);
-  const bright=irregular?.40:ellipse?.57:.50;
+  const bright=irregular?.31:ellipse?.65:family===8?.40:.45;
   halo.addColorStop(0,"rgba("+base+","+(bright*.89).toFixed(3)+")");
   halo.addColorStop(.16,"rgba("+base+","+(bright*.39).toFixed(3)+")");
   halo.addColorStop(.58,"rgba("+base+","+(bright*.072).toFixed(3)+")");
@@ -62,7 +69,7 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   g.fillStyle=halo;g.beginPath();g.arc(0,0,n*.49,0,TAU);g.fill();
   g.restore();
 
-  for(let j=0;j<43;j++){
+  for(let j=0;j<56;j++){
     const r=.06+.88*random(j*29+variant*71+31);
     const a=startAngle+TAU*random(j*37+variant*89)+r*.6;
     const x=offsetX+Math.cos(a)*n*.40*r;
@@ -81,7 +88,8 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   for(let j=0;j<1750;j++){
     const r=Math.pow(random(j*17+variant*151+29),.79);
     const diffuse=random(j*23+variant*109+31)<
-      (ellipse?1:edgeOn?.88:irregular?.80:.43);
+      (ellipse?1:edgeOn?.86:irregular?.86:
+       family===8?.18:family===0?.24:family===2?.30:.37);
     const lane=arms?j%arms:0;
     const theta=!diffuse&&arms
       ?startAngle+lane*TAU/arms+winding*r+
@@ -89,8 +97,14 @@ function galaxySprite(variant:number):HTMLCanvasElement {
       :startAngle+TAU*random(j*31+variant*127);
     const scatter=(random(j*61+variant*47)-.5)*(.08+.11*r);
     const bend=1+lop*Math.sin(theta*2.2+variant*.67+r*3.7);
-    const x=offsetX+Math.cos(theta)*(r+scatter)*n*.43*bend;
-    const y=offsetY+Math.sin(theta)*(r+scatter)*n*.43*axial/bend;
+    const stellarR=(r+scatter)*n*.43;
+    const bar=barred&&r<.32&&!diffuse;
+    const x=offsetX+(bar
+      ?Math.cos(startAngle)*stellarR*(.95+random(j*59+31)*.12)
+      :Math.cos(theta)*stellarR*bend);
+    const y=offsetY+(bar
+      ?Math.sin(startAngle)*stellarR*.38*axial
+      :Math.sin(theta)*stellarR*axial/bend);
     const rim=1-smooth((r-.75)/.25);
     const density=Math.pow(1-r,ellipse?.41:.68);
     const alpha=(.15+.72*density)*rim*
@@ -104,10 +118,12 @@ function galaxySprite(variant:number):HTMLCanvasElement {
   // One softly embedded nucleus per galaxy (offset for the irregulars).
   g.save();g.translate(offsetX,offsetY);
   g.scale(1,edgeOn?.48:ellipse?.80:.66);
-  const coreRadius=irregular?19:ellipse?30:25;
+  const coreRadius=irregular?15:family===10?21:ellipse?28:23;
   const core=g.createRadialGradient(0,0,0,0,0,coreRadius);
-  core.addColorStop(0,"rgba(255,246,229,"+(irregular?.60:.91)+")");
-  core.addColorStop(.18,"rgba(255,231,208,.67)");
+  const warmCore=family===1||family===7||family===8||family===10;
+  core.addColorStop(0,"rgba("+(warmCore?"255,215,189":"249,247,237")+
+    ","+(irregular?.65:.89)+")");
+  core.addColorStop(.18,"rgba("+(warmCore?"255,184,172":"255,231,218")+",.70)");
   core.addColorStop(.51,"rgba("+base+",.30)");
   core.addColorStop(1,"rgba("+base+",0)");
   g.fillStyle=core;g.beginPath();g.arc(0,0,coreRadius,0,TAU);g.fill();
