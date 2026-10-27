@@ -301,7 +301,22 @@ export function createGalaxyClusterOrb() {
     const cx=lerp(centreX,clamp(centreX+drift*wanderX,r+8,w-r-8),drift);
     const cy=lerp(centreY,clamp(centreY+drift*wanderY,r+12,h-r-12),drift);
     const alpha=smooth((reveal-.015)/.54);
-    return {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha};
+    // A known member of the same 3-D galaxy group is the original lead
+    // galaxy from the voyage. Give it the SAME yaw/pitch/perspective as the
+    // other members so it neither freezes nor becomes a flat stationary
+    // plate during the three-minute glass observation.
+    const yaw=held*.000058+Math.sin(held*.000089)*.22;
+    const pitch=held*.000044+Math.sin(held*.000063+1.4)*.18;
+    const lx=-.31,ly=.24,lz=.18;
+    const leadAx=lx*Math.cos(yaw)+lz*Math.sin(yaw);
+    const leadAz=lz*Math.cos(yaw)-lx*Math.sin(yaw);
+    const leadAy=ly*Math.cos(pitch)-leadAz*Math.sin(pitch);
+    const leadDepth=ly*Math.sin(pitch)+leadAz*Math.cos(pitch);
+    const leadPerspective=clamp(1/(1-.57*leadDepth),.67,1.75);
+    const leadX=cx+leadAx*r*.94*leadPerspective;
+    const leadY=cy+leadAy*r*.94*leadPerspective;
+    return {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha,
+      yaw,pitch,leadX,leadY,leadPerspective};
   }
 
   function draw(
@@ -310,13 +325,10 @@ export function createGalaxyClusterOrb() {
   ){
     // Start alongside the off-axis star cloud, not with a different giant
     // spiral appearing in the centre. Each tap opens more of the same region.
-    const {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha}=
+    const {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha,yaw,pitch}=
       geometry(w,h,step,finalElapsed);
     if(reveal<=.001)return;
-    // Rotation and drift continue for the entire three-minute hold, with no
-    // single-loop path or automatic advancement to another scene.
-    const yaw=held*.000058+Math.sin(held*.000089)*.22;
-    const pitch=held*.000044+Math.sin(held*.000063+1.4)*.18;
+    // The same 3-D rotation controls all galaxy positions and sizes.
     const textures=ensureSprites();
     // The sky must remain rich from edge to edge, even before any galaxy
     // becomes large enough to identify, and long after the sphere appears.
@@ -342,7 +354,9 @@ export function createGalaxyClusterOrb() {
       return {...p,i,px:ax,py:ay,depth};
     }).sort((a,b)=>a.depth-b.depth);
     for(const p of rotated){
-      const perspective=1+p.depth*.15;
+      // True depth cue: galaxies behind the centre are smaller and dimmer,
+      // nearby galaxies become larger and brighter as the system rotates.
+      const perspective=clamp(1/(1-.57*p.depth),.67,1.75);
       // Previously these clustered filaments were visible as a conspicuous
       // rectangle of point lights BEFORE the sphere existed. Give every
       // member its own bearing across the full celestial field, then reveal
@@ -365,22 +379,28 @@ export function createGalaxyClusterOrb() {
       // remain visible on a phone; the rest stay as tiny galaxies.
       // A few recognisable, resolved galaxies among many small systems.
       // Reducing the number of overlapping glows lets their shapes read.
-      const prominent=p.i%13===0?2.35:p.i%7===0?1.55:1;
+      const prominent=p.i%13===0?1.65:p.i%7===0?1.32:1;
       // Apparent positions follow camera distance more strongly than the
       // individual light discs. This keeps early galaxies separate instead
       // of creating square patches of overlapping nebular sprites.
       const apparentDiameter=Math.pow(zoom,.48);
-      const size=Math.max(.8,r*(.029+p.size*.058)*
+      const size=Math.max(.8,r*(.026+p.size*.054)*
         apparentDiameter*perspective*prominent*(.12+.88*settle));
       const radial=Math.hypot((x-cx)/r,(y-cy)/r);
       const feather=1-sphereVisibility*smooth((radial-.84)/.32);
-      const opacity=local*p.opacity*feather*
+      const depthLight=clamp(.85+.28*p.depth,.59,1.13);
+      const opacity=local*p.opacity*feather*depthLight*
         (.45+.55*settle)*(.91+.09*Math.sin(now*.00061+p.phase));
       if(opacity<.003)continue;
       ctx.globalAlpha=opacity;
       ctx.save();
       ctx.translate(x,y);
       ctx.rotate(p.phase+held*.000006*(p.i%3===0?-1:1));
+      // Individual galaxies have different orientations in space:
+      // broad face-on spirals, tilted ellipses and slim edge-on discs.
+      // Keep their cores 3-D and vary the tilt gently as the ball turns.
+      const tilt=.77+.20*Math.sin(yaw*.58+p.phase+p.depth);
+      ctx.scale(1,tilt);
       ctx.drawImage(textures[p.variant],-size/2,-size/2,size,size);
       ctx.restore();
     }
