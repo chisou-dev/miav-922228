@@ -106,10 +106,12 @@ export function createGalaxyFlightScene() {
     const depart=smooth((step-224)/85);
     const arc=Math.sin(Math.PI*depart);
     return {
-      // The original galaxy remains onscreen throughout the pull-back.
-      // It drifts gently left/down, rather than escaping below the screen.
-      x:w*(1.38-.54*reveal-.44*depart-.022*arc),
-      y:h*(.47+.12*depart+.018*arc),
+      // Enter from the UPPER RIGHT, showing the leading outer stars first.
+      // The already-established main galaxy crosses diagonally into the
+      // frame before following its gentle lower-left recession. No side
+      // entrance or abrupt repositioning during the glass transition.
+      x:w*(1.10-.41*reveal-.29*depart-.015*arc),
+      y:h*(-.36+.77*reveal+.14*depart+.012*arc),
       // Progressive recession continues until the same galaxy fits inside
       // the final glass. The large initial view remains spectacular.
       scale:1-.72*depart,
@@ -210,16 +212,24 @@ export function createGalaxyFlightScene() {
   // dense around the nucleus, then thins gradually into a broad halo.
   // Unlike a flat sprite, depth still projects to a visible width when the
   // spiral is nearly edge-on.
-  const galaxyVolumeStars=Array.from({length:3900},(_,i)=>{
-    const radius=Math.pow(rnd(i*41+637),1.65);
+  const galaxyVolumeStars=Array.from({length:11800},(_,i)=>{
+    // Nonuniform, softly clustered stellar matter: most stars inhabit
+    // the bright inner bulge; a much smaller fraction reaches the edges.
+    // An explicit depth coordinate gives the galaxy a wide stellar body
+    // even when the spinning 2D arm texture faces the viewer edge-on.
+    const core=i%5!==0;
+    const radius=Math.pow(rnd(i*41+637),core?2.25:.88);
     const theta=TAU*rnd(i*53+79);
-    const depth=(rnd(i*71+107)*2-1)*(.075+.24*Math.pow(1-radius,1.18));
+    const clump=.035*Math.sin(theta*3.3+radius*8.7+i%7);
+    const depth=(rnd(i*71+107)*2-1)*
+      (.115+.30*Math.pow(1-radius,1.35));
     return {
-      x:Math.cos(theta)*radius*.45,
-      y:Math.sin(theta)*radius*.29,
+      x:Math.cos(theta)*(radius+clump)*.43,
+      y:Math.sin(theta)*(radius+clump)*.30,
       z:depth,
-      radius:.28+.78*rnd(i*47+29),
-      opacity:(.27+.68*Math.pow(1-radius,1.28))*(.48+.52*rnd(i*17+91)),
+      radius:.34+.79*rnd(i*47+29),
+      opacity:(.22+.76*Math.pow(1-radius,1.15))*
+        (.55+.45*rnd(i*17+91)),
       hue:[218,231,258,324,34,205,242][i%7],
     };
   });
@@ -867,7 +877,7 @@ export function createGalaxyFlightScene() {
     if(near<.004)return;
     const size=Math.min(w,h)*2.6*pose.sight.scale;
     if(size<5)return;
-    const depthWidth=.16+.19*Math.abs(pose.sy);
+    const depthWidth=.22+.20*Math.abs(pose.sy);
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(pose.sight.x,pose.sight.y);
@@ -875,16 +885,16 @@ export function createGalaxyFlightScene() {
 
     // Several unequal transparent volumes; no clean elliptical outline,
     // solid sphere, sharp ring, or symmetrical artificial halo.
-    for(let k=0;k<6;k++){
-      const ox=(rnd(k*53+79)-.5)*size*.075;
-      const oy=(rnd(k*41+117)-.5)*size*.068;
-      const rx=size*(depthWidth*(.68+.37*rnd(k*31+9)));
-      const ry=size*(.18+.09*rnd(k*19+7));
+    for(let k=0;k<9;k++){
+      const ox=(rnd(k*53+79)-.5)*size*.10;
+      const oy=(rnd(k*41+117)-.5)*size*.085;
+      const rx=size*(depthWidth*(.61+.49*rnd(k*31+9)));
+      const ry=size*(.20+.12*rnd(k*19+7));
       ctx.save();
       ctx.translate(ox,oy);
       ctx.scale(rx,ry);
       const fog=ctx.createRadialGradient(0,0,0,0,0,1);
-      const strength=(.075+.09*rnd(k*17+51))*near;
+      const strength=(.080+.10*rnd(k*17+51))*near;
       const warm=k%3===0?"238,192,209":"120,151,212";
       fog.addColorStop(0,"rgba("+warm+","+(strength*1.55).toFixed(3)+")");
       fog.addColorStop(.27,"rgba("+warm+","+(strength*.73).toFixed(3)+")");
@@ -928,9 +938,17 @@ export function createGalaxyFlightScene() {
     ctx.rotate(pose.roll);
     // Canvas local->world matrix exactly matches projectedStar above.
     ctx.transform(pose.cy,pose.tilt,pose.shear,1,0,0);
-    ctx.globalAlpha=.45*reveal;
-    // Recede over many taps and settle inside glass; no exit fade, sudden
-    // replacement galaxy or fast repetitive tumble.
+    // The prior image collapsed into a dazzling one-pixel line whenever
+    // its rotating plane became edge-on. The REAL star volume now supplies
+    // that side profile; keep the transparent arm texture softly broadened
+    // and subdued at extreme angles rather than compressing to a bright ray.
+    const edge=Math.abs(pose.cy);
+    ctx.globalAlpha=.45*reveal*(.17+.83*smooth((edge-.06)/.54));
+    const planeWidth=Math.sqrt(pose.cy*pose.cy+.19*.19);
+    // Preserve the 3D turn direction without a discontinuous hard flip.
+    ctx.transform(planeWidth/Math.max(.0001,Math.abs(pose.cy)),
+      0,0,1,0,0);
+    // Recede over many taps into the glass as one continuous star system.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
     ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
