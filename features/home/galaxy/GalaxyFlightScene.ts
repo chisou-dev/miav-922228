@@ -961,7 +961,7 @@ export function createGalaxyFlightScene() {
 
   function drawDistantGalaxy(
     ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
-    now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,
+    now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,glintSeed=0,
   ) {
     const pose=galaxyProjection(step,w,h,now,anchor);
     const sight=pose.sight;
@@ -993,53 +993,71 @@ export function createGalaxyFlightScene() {
     const nebula=ensureNebula();
     ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
     ctx.restore();
-    drawGalacticGlints(ctx,step,w,h,now,pose,elapsedSinceTap);
+    drawGalacticGlints(ctx,step,w,h,now,pose,elapsedSinceTap,glintSeed);
+  }
+
+  function paintSubtleGlint(
+    ctx:CanvasRenderingContext2D,x:number,y:number,
+    radius:number,hue:number,strength:number,
+  ){
+    const glow=ctx.createRadialGradient(x,y,0,x,y,radius);
+    glow.addColorStop(0,"hsla("+hue+",64%,94%,"+(strength*.69).toFixed(3)+")");
+    glow.addColorStop(.24,"hsla("+hue+",66%,80%,"+(strength*.28).toFixed(3)+")");
+    glow.addColorStop(1,"hsla("+hue+",54%,57%,0)");
+    ctx.fillStyle=glow;
+    ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+    ctx.fillStyle="hsla("+hue+",31%,98%,"+(strength*.74).toFixed(3)+")";
+    ctx.beginPath();ctx.arc(x,y,Math.max(.35,radius*.11),0,TAU);ctx.fill();
   }
 
   function drawGalacticGlints(
     ctx:CanvasRenderingContext2D,
     step:number,w:number,h:number,now:number,
-    pose:ReturnType<typeof galaxyProjection>,elapsedSinceTap:number,
+    pose:ReturnType<typeof galaxyProjection>,
+    elapsedSinceTap:number,seed:number,
   ){
-    // Only the FIRST twenty seconds after an accepted tap sparkle. Each
-    // transient highlight belongs to a different actual 3-D star; they turn
-    // WITH the galaxy, rather than resembling UI lights stuck to the screen.
+    // Three unequal constellations of tiny flashes, SPREAD across 20 s.
+    // Nothing flashes automatically right when the finger taps. Star
+    // selection, color, size and event times change for every accepted tap.
     if(step<150||step>307||elapsedSinceTap<0||elapsedSinceTap>=20000)return;
     const size=Math.min(w,h)*2.6*pose.sight.scale;
     const visibility=smooth((step-150)/33)*
-      (1-smooth((step-264)/43))*
-      Math.min(1,size/125);
+      (1-smooth((step-264)/43))*Math.min(1,size/125);
     if(visibility<.015)return;
-    const interval=310;
-    const latest=Math.floor(elapsedSinceTap/interval);
+    const hues=[205,218,235,344,10,43,198];
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(pose.sight.x,pose.sight.y);
     ctx.rotate(pose.roll);
-    for(let event=Math.max(0,latest-4);event<=latest;event++){
-      const age=elapsedSinceTap-event*interval;
-      const lifetime=610+350*rnd(event*29+171);
-      if(age<0||age>lifetime)continue;
-      const pulse=smooth(age/(lifetime*.24))*
-        (1-smooth((age-lifetime*.43)/(lifetime*.57)));
-      if(pulse<.03)continue;
-      const index=Math.floor(rnd(event*131+179)*galaxyVolumeStars.length);
-      const p=galaxyVolumeStars[index];
-      // Project the stellar volume by the SAME 3-D transform as its stars.
-      const x=(p.x*pose.cy+p.z*pose.sy+p.y*pose.shear)*size;
-      const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
-      if(Math.abs(x)>w*.75||Math.abs(y)>h*.73)continue;
-      const brightness=visibility*pulse*(.58+.42*rnd(event*47+37));
-      const rad=2.8+4.2*rnd(event*71+19);
-      const hue=[211,187,235,32,339,201][event%6];
-      const light=ctx.createRadialGradient(x,y,0,x,y,rad);
-      light.addColorStop(0,"hsla("+hue+",70%,95%,"+(brightness*.64).toFixed(3)+")");
-      light.addColorStop(.23,"hsla("+hue+",70%,79%,"+(brightness*.27).toFixed(3)+")");
-      light.addColorStop(1,"hsla("+hue+",65%,59%,0)");
-      ctx.fillStyle=light;
-      ctx.beginPath();ctx.arc(x,y,rad,0,TAU);ctx.fill();
-      ctx.fillStyle="rgba(247,251,255,"+(brightness*.73).toFixed(3)+")";
-      ctx.beginPath();ctx.arc(x,y,.45+.45*rnd(event*47+11),0,TAU);ctx.fill();
+    for(let burst=0;burst<3;burst++){
+      const start=[3700,9700,16300][burst]+
+        (rnd(seed+burst*971+119)-.5)*1800;
+      const count=3+Math.floor(rnd(seed+burst*47+551)*3);
+      for(let j=0;j<count;j++){
+        const startAt=start+j*(110+90*rnd(seed+burst*193+j*7));
+        const age=elapsedSinceTap-startAt;
+        const duration=650+700*rnd(seed+burst*311+j*19);
+        if(age<0||age>=duration)continue;
+        const pulse=smooth(age/(duration*.26))*
+          (1-smooth((age-duration*.37)/(duration*.63)));
+        if(pulse<.035)continue;
+        // Prefer the dense nucleus, but leave some flashes in the outer
+        // spiral. Every point is a real stellar member in its 3-D position.
+        let p=galaxyVolumeStars[0];
+        for(let trial=0;trial<5;trial++){
+          const i=Math.floor(rnd(seed+burst*431+j*113+trial*53+29)*
+            galaxyVolumeStars.length);
+          p=galaxyVolumeStars[i];
+          if(Math.hypot(p.x,p.y*.8,p.z)<(j===0?.28:.45))break;
+        }
+        const x=(p.x*pose.cy+p.z*pose.sy+p.y*pose.shear)*size;
+        const y=(p.y+p.x*pose.tilt+p.z*(.13+.11*Math.abs(pose.sy)))*size;
+        if(Math.abs(x)>w*.85||Math.abs(y)>h*.83)continue;
+        const hue=hues[Math.floor(rnd(seed+burst*131+j*79+41)*hues.length)];
+        const radius=2.1+3.5*rnd(seed+burst*73+j*37);
+        const strength=visibility*pulse*(.40+.39*rnd(seed+burst*67+j*17));
+        paintSubtleGlint(ctx,x,y,radius,hue,strength);
+      }
     }
     ctx.restore();
   }
@@ -1105,9 +1123,9 @@ export function createGalaxyFlightScene() {
     },
     drawGalaxy(
       ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
-      now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,
+      now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,glintSeed=0,
     ) {
-      drawDistantGalaxy(ctx,step,w,h,now,anchor,elapsedSinceTap);
+      drawDistantGalaxy(ctx,step,w,h,now,anchor,elapsedSinceTap,glintSeed);
     },
   };
 }
