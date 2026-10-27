@@ -24,12 +24,12 @@ export function isGalaxySoundEnabled(): boolean {
 
 export function setGalaxySoundEnabled(value: boolean): void {
   enabled = value;
-  // Pending soft chimes stay very short. An explicit mute also silences
-  // anything currently decaying, including the delayed glass-rupture cue.
-  if (context && !value) {
-    void context.suspend().catch(() => {});
-  } else if (context && value) {
-    void context.resume().catch(() => {});
+  // Closing instead of suspending discards queued notes as well, so
+  // switching sound back on cannot replay a delayed cue unexpectedly.
+  if (!value && context) {
+    const old = context;
+    context = null;
+    void old.close().catch(() => {});
   }
 }
 
