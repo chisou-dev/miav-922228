@@ -168,15 +168,15 @@ export function GalaxyOrb({
     });
     // Stable twinkling points live INSIDE the moving glass orb, not on
     // the surrounding page. Their phases vary smoothly without a hard blink.
-    const rewardLights = Array.from({ length: 19 }, (_, i) => {
+    const rewardLights = Array.from({ length: 25 }, (_, i) => {
       const angle = i * 2.39996 + 0.45;
-      const distance = 0.13 + 0.63 * Math.sqrt((i + 0.5) / 19);
+      const distance = 0.13 + 0.62 * Math.sqrt((i + 0.5) / 25);
       return {
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
         phase: i * 1.83,
-        speed: 0.00105 + (i % 5) * 0.00018,
-        size: 0.62 + (i % 4) * 0.18,
+        speed: 0.0019 + (i % 5) * 0.00029,
+        size: 0.48 + (i % 4) * 0.12,
       };
     });
     const reduced = () => media.matches;
@@ -1071,51 +1071,45 @@ export function GalaxyOrb({
       ctx.save();
       ctx.translate(orb.x, orb.y);
       ctx.beginPath();
-      ctx.arc(0, 0, r * 0.97, 0, TAU);
+      ctx.arc(0, 0, r * 0.96, 0, TAU);
       ctx.clip();
       ctx.globalCompositeOperation = "screen";
 
-      // Soft pulsing light through the real rotating spiral, not a blinking
-      // shell, border, lens ring or pasted sparkle picture.
-      const breath = 0.60 + 0.40 * Math.sin(now * 0.00145) ** 2;
-      const bloom = ctx.createRadialGradient(0, 0, r * 0.04, 0, 0, r * 0.77);
-      bloom.addColorStop(0, "rgba(255,245,228," + (0.32 * breath).toFixed(3) + ")");
-      bloom.addColorStop(0.23, "rgba(190,219,255," + (0.19 * breath).toFixed(3) + ")");
-      bloom.addColorStop(0.56, "rgba(130,173,255," + (0.095 * breath).toFixed(3) + ")");
-      bloom.addColorStop(1, "rgba(130,173,255,0)");
-      ctx.fillStyle = bloom;
-      ctx.fillRect(-r, -r, 2 * r, 2 * r);
-
+      // The earned reward is an irregular constellation of tiny colored
+      // stellar pinpricks. Avoid a single broad white flash or glowing ring.
+      // Blue/cyan, rose/red, pale gold and a few neutral stars share the
+      // ORIGINAL galaxy, which remains visible underneath.
+      const colors = [
+        "126,192,255", "255,128,149", "189,220,255",
+        "255,187,155", "105,224,250", "242,231,201",
+      ];
       for (const [i, light] of rewardLights.entries()) {
-        const wave = 0.5 + 0.5 * Math.sin(now * light.speed + light.phase);
-        const glint = Math.pow(wave, 4.2);
-        if (glint < 0.045) continue;
-        const x = light.x * r;
-        const y = light.y * r;
-        const size = r * (0.046 + light.size * 0.031);
-        const peak = 0.33 + 0.67 * glint;
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, size * 1.95);
-        const white = i % 3 === 0 ? "255,237,209" : "225,240,255";
-        glow.addColorStop(0, "rgba(" + white + "," + (0.93 * peak).toFixed(3) + ")");
-        glow.addColorStop(0.18, "rgba(" + white + "," + (0.55 * peak).toFixed(3) + ")");
-        glow.addColorStop(0.55, "rgba(149,192,255," + (0.15 * peak).toFixed(3) + ")");
-        glow.addColorStop(1, "rgba(149,192,255,0)");
-        ctx.fillStyle = glow;
+        const wave = .5+.5*Math.sin(now*light.speed+light.phase);
+        const spark=Math.pow(wave,6.0);
+        if(spark<.075)continue;
+        const x=light.x*r, y=light.y*r;
+        const size=r*(.016+light.size*.023);
+        const power=spark*(.65+.35*(i%4)/3);
+        const color=colors[i%colors.length];
+        const glow=ctx.createRadialGradient(x,y,0,x,y,size*1.55);
+        glow.addColorStop(0,"rgba("+color+","+(power*.75).toFixed(3)+")");
+        glow.addColorStop(.24,"rgba("+color+","+(power*.38).toFixed(3)+")");
+        glow.addColorStop(.68,"rgba("+color+","+(power*.10).toFixed(3)+")");
+        glow.addColorStop(1,"rgba("+color+",0)");
+        ctx.fillStyle=glow;
         ctx.beginPath();
-        ctx.arc(x, y, size * 1.95, 0, TAU);
+        ctx.arc(x,y,size*1.55,0,TAU);
         ctx.fill();
 
-        // Only a few points flare into tiny optical diffraction stars;
-        // most remain soft stellar pinpricks. Never draw a full-screen flash.
-        if (i % 5 === 0 && glint > 0.49) {
-          const arm = r * (0.055 + 0.055 * glint);
-          ctx.strokeStyle = "rgba(243,249,255," + (0.46 * glint).toFixed(3) + ")";
-          ctx.lineWidth = Math.max(0.40, r * 0.006);
+        // Very short optical rays on occasional peaks only, never a
+        // large white starburst covering the galactic spiral.
+        if(i%7===0&&spark>.76){
+          const arm=r*(.021+.019*spark);
+          ctx.strokeStyle="rgba("+color+","+(power*.52).toFixed(3)+")";
+          ctx.lineWidth=Math.max(.35,r*.0032);
           ctx.beginPath();
-          ctx.moveTo(x - arm, y);
-          ctx.lineTo(x + arm, y);
-          ctx.moveTo(x, y - arm * 0.74);
-          ctx.lineTo(x, y + arm * 0.74);
+          ctx.moveTo(x-arm,y);ctx.lineTo(x+arm,y);
+          ctx.moveTo(x,y-arm*.7);ctx.lineTo(x,y+arm*.7);
           ctx.stroke();
         }
       }
