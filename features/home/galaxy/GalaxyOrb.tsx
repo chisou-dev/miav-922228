@@ -890,10 +890,13 @@ export function GalaxyOrb({
         ctx.restore();
       }
 
-      // NEVER transform the original opaque JPEG: its rectangular navy sky
-      // would rotate inside the glass as a visible flat card. Instead project
-      // the cached transparent spiral / stellar arms along all three axes.
-      const isolated = isolatedSpiral(galaxy);
+      // The voyage used to replace this glass's built-in galaxy with a
+      // DIFFERENT NASA galaxy the moment it broke. Use the very same M100
+      // photograph that emerges after rupture (with a soft alpha feather);
+      // while the asset loads, keep the existing bundled galaxy fallback.
+      const isolated = unlockedRef.current
+        ? getFeatheredGalaxy(nasaM100) ?? isolatedSpiral(galaxy)
+        : isolatedSpiral(galaxy);
       if (isolated) {
         ctx.save();
         ctx.globalCompositeOperation = "screen";
@@ -1196,6 +1199,10 @@ export function GalaxyOrb({
 
     function render(now: number, elapsed: number) {
       if (!width || !height) return;
+      // The first voyage galaxy is NASA M100. Only visitors who have
+      // unlocked Stage 1 need its photograph; load it before they enter,
+      // so the visible galaxy inside this glass matches what emerges.
+      if(unlockedRef.current && !nasaPreloaded)preloadNasa();
       ctx.clearRect(0, 0, width, height);
       if (expanded) {
         if (!reduced()) {
