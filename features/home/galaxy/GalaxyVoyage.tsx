@@ -1132,16 +1132,32 @@ export function GalaxyVoyage({
         : 280 + (s - 160) * 1.2;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // Transparent galactic gas is BELOW its own orbiting stars. The camera
-      // and star positions share the same distance: no stage picture swap.
-      flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight, now);
+      // Share EXACTLY the same destination as the final glass. The original
+      // spiral carries on rotating gently and receding, then settles inside
+      // the sphere as other smaller galaxies reveal themselves around it.
+      const finalElapsed=finalReachedAt===null?null:now-finalReachedAt;
+      const finalGlass=clusterOrb.geometry(
+        viewWidth,viewHeight,s,finalElapsed);
+      const glassJoin=ease((finalGlass.sphereVisibility-.025)/.74);
+      const galaxyAnchor=glassJoin>.001
+        ? {
+          x:finalGlass.cx-finalGlass.r*.25,
+          y:finalGlass.cy+finalGlass.r*.36,
+          r:finalGlass.r,
+          blend:glassJoin,
+        }
+        :undefined;
+      // Transparent galactic gas stays below the original galaxy stars.
+      flightScene.drawGalaxy(
+        ctx!,sceneStep,viewWidth,viewHeight,now,galaxyAnchor);
       // The third tap finishes the title, leaving JUST the galaxy and
       // drifting sand. Stars begin revealing with the FOURTH tap and
       // accumulate and twinkle through the existing unchanged sky logic.
       if(s>4){
         ctx!.save();
         ctx!.globalAlpha=ease((s-4)/.92);
-        flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
+        flightScene.drawSky(
+          ctx!,now,viewWidth,viewHeight,sceneStep,galaxyAnchor);
         ctx!.restore();
       }
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
@@ -1178,10 +1194,10 @@ export function GalaxyVoyage({
 
       // Planets remain off-axis in the same sky throughout the pull-back.
       flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
-      // Other galaxies resolve along the receding upper-right sightline.
-      // The sphere boundary emerges later, enclosing those same galaxies.
-      clusterOrb.draw(ctx!, viewWidth, viewHeight, s, now,
-        finalReachedAt === null ? null : now - finalReachedAt);
+      // Newly revealed systems join the existing lead galaxy. Glass skin
+      // emerges around all of them without removing or replacing the lead.
+      clusterOrb.draw(
+        ctx!,viewWidth,viewHeight,s,now,finalElapsed);
     }
 
     function stepForward() {
