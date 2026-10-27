@@ -138,9 +138,14 @@ export function createGalaxyFlightScene() {
     // Less than one turn, across ALL departure taps. No unbounded time
     // multiplier: pausing on one tap never causes rapid repeated flips.
     // A slight off-axis tilt puts the right edge fractionally forward.
-    const yaw=TAU*.78*original.depart+
-      Math.sin(now*.000045)*.045*original.depart+
-      join*(anchor?.turn??0);
+    const travellingYaw=TAU*.78*original.depart+
+      Math.sin(now*.000045)*.045*original.depart;
+    // On entering the glass the original spiral settles into a readable,
+    // slightly inclined face, not the nearly edge-on illuminated slab seen
+    // at the end of the previous preview. Then it revolves with its peers.
+    const correction=Math.atan2(
+      Math.sin(-.45-travellingYaw),Math.cos(-.45-travellingYaw));
+    const yaw=travellingYaw+join*correction+join*(anchor?.turn??0);
     const roll=-.20+.055*Math.sin(now*.000065);
     return {
       sight,roll,
