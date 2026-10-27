@@ -135,28 +135,26 @@ export function createGalaxyFlightScene() {
       y:original.y+((anchor?.y??original.y)-original.y)*join,
       scale:original.scale+(targetSize-original.scale)*join,
     };
-    // Less than one turn, across ALL departure taps. No unbounded time
-    // multiplier: pausing on one tap never causes rapid repeated flips.
-    // A slight off-axis tilt puts the right edge fractionally forward.
-    // A full side-on turn makes a false straight stripe in projection.
-    // Let the close galaxy slowly change its inclination instead: its
-    // stellar body stays broad, even before it joins the glass collection.
-    const travellingYaw=.15+1.04*original.depart+
-      Math.sin(now*.000045)*.035*original.depart;
+    // The galaxy must KEEP MOVING between clicks. The old .035-radian
+    // oscillation was effectively frozen. Gently rotate about a slightly
+    // tipped vertical axis, at one turn every ~43 seconds, while the camera
+    // position remains entirely tap-driven. The 3-D stellar bulge preserves
+    // its thickness when the projected disc turns edge-on.
+    const travellingYaw=.15+.96*original.depart+now*.000145;
     // On entering the glass the original spiral settles into a readable,
     // slightly inclined face, not the nearly edge-on illuminated slab seen
     // at the end of the previous preview. Then it revolves with its peers.
     const correction=Math.atan2(
       Math.sin(-.45-travellingYaw),Math.cos(-.45-travellingYaw));
     const yaw=travellingYaw+join*correction+join*(anchor?.turn??0);
-    const roll=-.20+.055*Math.sin(now*.000065);
+    const roll=-.18+.16*Math.sin(now*.000085+.7);
     return {
       sight,roll,
       cr:Math.cos(roll),sr:Math.sin(roll),
       cy:Math.cos(yaw),
       sy:Math.sin(yaw),
-      tilt:.09+.085*Math.sin(yaw),
-      shear:.045*Math.sin(yaw),
+      tilt:.14+.13*Math.sin(now*.000105+1.1),
+      shear:.065*Math.sin(yaw),
     };
   }
   function projectedStar(
@@ -755,7 +753,7 @@ export function createGalaxyFlightScene() {
     // from the other planets. Its ring flecks orbit counter to those clouds.
     // Once a planet becomes too small, freeze the rotation entirely.
     const spinVisible=r>9;
-    const angularSpeed=.000148+world.id*.000006;
+    const angularSpeed=.00023+world.id*.000007;
     const direction=world.ring?-1:1;
     const turns=spinVisible ? direction*now*angularSpeed+world.id*.071 : 0;
     const movingFrame=spinVisible ? ((turns*12)%12) : 0;
@@ -953,7 +951,7 @@ export function createGalaxyFlightScene() {
 
   function drawDistantGalaxy(
     ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
-    now=0,anchor?:GalaxyAnchor,
+    now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,
   ) {
     const pose=galaxyProjection(step,w,h,now,anchor);
     const sight=pose.sight;
@@ -983,6 +981,55 @@ export function createGalaxyFlightScene() {
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
     ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
+    ctx.restore();
+    drawGalacticGlints(ctx,step,w,h,now,pose,elapsedSinceTap);
+  }
+
+  function drawGalacticGlints(
+    ctx:CanvasRenderingContext2D,
+    step:number,w:number,h:number,now:number,
+    pose:ReturnType<typeof galaxyProjection>,elapsedSinceTap:number,
+  ){
+    // Only the FIRST twenty seconds after an accepted tap sparkle. Each
+    // transient highlight belongs to a different actual 3-D star; they turn
+    // WITH the galaxy, rather than resembling UI lights stuck to the screen.
+    if(step<150||step>307||elapsedSinceTap<0||elapsedSinceTap>=20000)return;
+    const size=Math.min(w,h)*2.6*pose.sight.scale;
+    const visibility=smooth((step-150)/33)*
+      (1-smooth((step-264)/43))*
+      Math.min(1,size/125);
+    if(visibility<.015)return;
+    const interval=310;
+    const latest=Math.floor(elapsedSinceTap/interval);
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    ctx.translate(pose.sight.x,pose.sight.y);
+    ctx.rotate(pose.roll);
+    for(let event=Math.max(0,latest-4);event<=latest;event++){
+      const age=elapsedSinceTap-event*interval;
+      const lifetime=610+350*rnd(event*29+171);
+      if(age<0||age>lifetime)continue;
+      const pulse=smooth(age/(lifetime*.24))*
+        (1-smooth((age-lifetime*.43)/(lifetime*.57)));
+      if(pulse<.03)continue;
+      const index=Math.floor(rnd(event*131+179)*galaxyVolumeStars.length);
+      const p=galaxyVolumeStars[index];
+      // Project the stellar volume by the SAME 3-D transform as its stars.
+      const x=(p.x*pose.cy+p.z*pose.sy+p.y*pose.shear)*size;
+      const y=(p.y+p.x*pose.tilt+p.z*.13)*size;
+      if(Math.abs(x)>w*.75||Math.abs(y)>h*.73)continue;
+      const brightness=visibility*pulse*(.58+.42*rnd(event*47+37));
+      const rad=2.8+4.2*rnd(event*71+19);
+      const hue=[211,187,235,32,339,201][event%6];
+      const light=ctx.createRadialGradient(x,y,0,x,y,rad);
+      light.addColorStop(0,"hsla("+hue+",70%,95%,"+(brightness*.64).toFixed(3)+")");
+      light.addColorStop(.23,"hsla("+hue+",70%,79%,"+(brightness*.27).toFixed(3)+")");
+      light.addColorStop(1,"hsla("+hue+",65%,59%,0)");
+      ctx.fillStyle=light;
+      ctx.beginPath();ctx.arc(x,y,rad,0,TAU);ctx.fill();
+      ctx.fillStyle="rgba(247,251,255,"+(brightness*.73).toFixed(3)+")";
+      ctx.beginPath();ctx.arc(x,y,.45+.45*rnd(event*47+11),0,TAU);ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -1047,9 +1094,9 @@ export function createGalaxyFlightScene() {
     },
     drawGalaxy(
       ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
-      now=0,anchor?:GalaxyAnchor,
+      now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,
     ) {
-      drawDistantGalaxy(ctx,step,w,h,now,anchor);
+      drawDistantGalaxy(ctx,step,w,h,now,anchor,elapsedSinceTap);
     },
   };
 }
