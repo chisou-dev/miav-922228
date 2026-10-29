@@ -257,6 +257,25 @@ const jeffFictionChapters: readonly SeriesChapter[] = [
   { number: 14, pathSlug: "chapter-14", title: "My Town" },
 ];
 
+/** Approved advanced English Santa's Shelf fiction; prose comes directly from its existing manuscript. */
+const santaShelfFictionChapters: readonly SeriesChapter[] = [
+  { number: 1, pathSlug: "chapter-1", title: "Off We Go" },
+  { number: 2, pathSlug: "chapter-2", title: "Across the Sea" },
+  { number: 3, pathSlug: "chapter-3", title: "A Day by the Sea" },
+  { number: 4, pathSlug: "chapter-4", title: "Who Is It For?" },
+  { number: 5, pathSlug: "chapter-5", title: "Are Those Santa's Bells?" },
+  { number: 6, pathSlug: "chapter-6", title: "Santa's Shelf" },
+];
+
+export const santaShelfFictionChapterDescriptions: readonly string[] = [
+  "Santa asks the toys who wants to leave his shelf. An old train chooses to stay, while a worn stuffed cat longs to be held again.",
+  "A toy robot keeps falling over. Santa finds a yellow car with a missing wheel and a little piano whose missing keys have yet to be replaced.",
+  "Santa enjoys the seaside and an amusement park before discovering a one-legged doll he remembers delivering three years earlier.",
+  "In a grassy field, Santa wonders which children will enjoy the toys he has collected. His journey home brings Christmas a little closer.",
+  "On Christmas Eve, a young girl hears bells. At a children's home, a familiar stuffed cat is joined by a new black cat wearing a ribbon.",
+  "After Christmas, Santa repairs the toys he found. A doll recalls life with a little girl before finding a place beside the old train.",
+];
+
 export const seriesList: readonly Series[] = [
   {
     id: "miav-922228",
@@ -382,6 +401,21 @@ export const seriesList: readonly Series[] = [
       description: after50MillionSummary,
     },
     chapters: after50MillionChapters,
+  },
+  {
+    id: "santas-shelf",
+    categoryId: "literary-sf",
+    title: "Santa's Shelf",
+    summary: "Every year, Santa finds toys to bring to children. Some leave his shelf, while others choose to stay. Six connected stories about old toys, new journeys, and the places they find.",
+    cardDescription: "An old toy train stays behind. A worn cat hopes to be held again.",
+    genre: "Children's Literature",
+    language: "English",
+    previewNote: "A complete children's story in six chapters. Read online for free.",
+    seo: {
+      title: "Santa's Shelf — Free Children's Literature in Six Chapters | Takashi Yabe",
+      description: "Read Santa's Shelf, a free six-chapter children's story about Santa, a worn stuffed cat, an old toy train and the toys he finds. A gentle story for children and adults.",
+    },
+    chapters: santaShelfFictionChapters,
   },
   {
     id: "jeff",
@@ -688,6 +722,15 @@ export function chapterSeo(
         chapter.number,
         series.seo.description,
       ),
+    };
+  }
+
+  if (series.id === "santas-shelf") {
+    return {
+      title: `${chapter.title} — Santa's Shelf, Chapter ${chapter.number} | Takashi Yabe`,
+      description:
+        santaShelfFictionChapterDescriptions[chapter.number - 1] ??
+        series.seo.description,
     };
   }
 

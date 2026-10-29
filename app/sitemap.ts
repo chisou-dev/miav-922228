@@ -242,12 +242,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     nextTimeISeeYouWorkId,
     after50MillionWorkId,
     "jeff",
+    "santas-shelf",
   ]);
   const storyChapterRoutes: MetadataRoute.Sitemap = seriesList.flatMap(
     (series) => {
       if (!indexedStoryIds.has(series.id)) return [];
       return series.chapters
-        .filter((chapter) => (series.id === "jeff" || chapter.contentSlug) && !chapter.continueReading)
+        .filter((chapter) => (series.id === "jeff" || series.id === "santas-shelf" || chapter.contentSlug) && !chapter.continueReading)
         .map((chapter) => ({
           url: `${baseUrl}${chapterHref(series.id, chapter.pathSlug)}`,
           lastModified,

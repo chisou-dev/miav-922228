@@ -43,7 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (
     found.series.id === nextTimeISeeYouWorkId ||
     found.series.id === after50MillionWorkId ||
-    found.series.id === "jeff"
+    found.series.id === "jeff" ||
+    found.series.id === "santas-shelf"
   ) {
     return libraryPageMetadata({
       title: seo.title,
