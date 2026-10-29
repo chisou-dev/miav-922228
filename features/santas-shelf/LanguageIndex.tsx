@@ -18,6 +18,7 @@ const summaries = {
 export function SantaLanguageIndex({language}: {language: SantaLanguage}) {
   return (
     <ReadingTestFrame
+      language={language}
       eyebrow={"MIAV LEARN · READING · " + SANTA_LANGUAGE_LABELS[language]}
       title={SANTA_TITLES[language]}
       summary={summaries[language]}

@@ -310,7 +310,7 @@ export function ListeningSession({
   const unavailable = speechError != null && !heard;
 
   return (
-    <ReadingTestFrame eyebrow="Listening" title={title}>
+    <ReadingTestFrame eyebrow="Listening" title={title} language={language}>
       {attempt == null ? (
         <ReadingLayout label="Choose a listening speed">
         <section className="mx-auto mt-12 max-w-md text-center" aria-labelledby="listening-setup">

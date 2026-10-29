@@ -5,15 +5,17 @@ export function ReadingTestFrame({
   title,
   summary,
   children,
+  language = "en",
 }: {
   eyebrow?: string;
   title: string;
   summary?: string;
+  language?: "en" | "es" | "fr";
   children?: ReactNode;
 }) {
   return (
     <div className="relative z-10 mx-auto w-full max-w-[760px] px-5 sm:px-8">
-      <main className="pb-28 sm:pb-36">
+      <main lang={language} className="pb-28 sm:pb-36">
         <header className="pt-14 pl-11 text-center sm:pt-20 lg:pl-0">
           {eyebrow ? (
             <p className="text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase">
