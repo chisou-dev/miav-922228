@@ -47,6 +47,7 @@ import {
 } from "@/features/stories/fourth-period/store";
 import { SeriesChapterList } from "@/features/library/SeriesChapterList";
 import { SeriesChapterReader } from "@/features/library/SeriesChapterReader";
+import { getJeffAdvancedChapter } from "@/features/stories/jeff/reader";
 import { seriesChapterNumberLabel } from "@/features/library/seriesChapterLabel";
 
 function SeriesCover({ cover }: { cover: NonNullable<Series["cover"]> }) {
@@ -156,7 +157,8 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
           )}
         />
       ) : series.id === nextTimeISeeYouWorkId ||
-        series.id === after50MillionWorkId ? (
+        series.id === after50MillionWorkId ||
+        series.id === "jeff" ? (
         <BookJsonLd
           title={series.title}
           description={series.seo.description}
@@ -168,7 +170,7 @@ export async function SeriesIndexPage({ seriesId }: { seriesId: string }) {
               : undefined
           }
           hasPart={series.chapters.flatMap((chapter) =>
-            chapter.contentSlug && !chapter.continueReading
+            (series.id === "jeff" || chapter.contentSlug) && !chapter.continueReading
               ? [
                   {
                     name: `${seriesChapterNumberLabel(chapter)} — ${chapter.title}`,
@@ -316,12 +318,20 @@ export async function SeriesChapterPage({
     series.id === nextTimeISeeYouWorkId && !continueReading;
   const isAfter50Chapter =
     series.id === after50MillionWorkId && !continueReading;
+  const isJeffChapter = series.id === "jeff" && !continueReading;
 
   let bodyHtml: string | undefined;
   let bodyText: string | null = !isMiavChapter ? (chapter.body ?? null) : null;
   let presentation: "reading" | "threshold" = "reading";
 
-  if (isMiavChapter) {
+  if (isJeffChapter) {
+    const original = await getJeffAdvancedChapter(chapter.number);
+    if (original.title !== chapter.title) {
+      throw new Error(`Jeff chapter title mismatch: ${chapter.number}`);
+    }
+    bodyHtml = original.bodyHtml;
+    bodyText = null;
+  } else if (isMiavChapter) {
     const meta = chapter.contentSlug
       ? getChapterMetaBySlug(chapter.contentSlug, locale)
       : null;
@@ -415,7 +425,7 @@ export async function SeriesChapterPage({
           workName={series.title}
           workUrl="/chapters"
         />
-      ) : isNtsiyChapter || isAfter50Chapter ? (
+      ) : isNtsiyChapter || isAfter50Chapter || isJeffChapter ? (
         <ChapterJsonLd
           name={`${seriesChapterNumberLabel(chapter)} — ${chapter.title}`}
           description={
@@ -471,7 +481,7 @@ export async function SeriesChapterPage({
               listLabel="All chapters"
               hideNextOnThreshold
             />
-          ) : (isNtsiyChapter || isAfter50Chapter) && bodyHtml ? (
+          ) : (isNtsiyChapter || isAfter50Chapter || isJeffChapter) && bodyHtml ? (
             <SeriesChapterReader
               bodyHtml={bodyHtml}
               previous={previous}
@@ -512,7 +522,7 @@ export async function SeriesChapterPage({
             </div>
           ) : null}
 
-          {!continueReading && !isMiavChapter && !isNtsiyChapter && !isAfter50Chapter ? (
+          {!continueReading && !isMiavChapter && !isNtsiyChapter && !isAfter50Chapter && !isJeffChapter ? (
             <nav
               aria-label="Chapter navigation"
               className="mt-20 grid grid-cols-1 gap-10 border-t border-[var(--line)] pt-10 sm:mt-28 sm:grid-cols-2 sm:gap-8 sm:pt-14"

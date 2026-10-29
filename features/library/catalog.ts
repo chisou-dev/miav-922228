@@ -239,6 +239,24 @@ const miavChapters: readonly SeriesChapter[] = [
   },
 ];
 
+/** Chapter names follow the approved Jeff English advanced manuscript. */
+const jeffFictionChapters: readonly SeriesChapter[] = [
+  { number: 1, pathSlug: "chapter-1", title: "Arrival" },
+  { number: 2, pathSlug: "chapter-2", title: "The Apartment" },
+  { number: 3, pathSlug: "chapter-3", title: "A Day at Takao" },
+  { number: 4, pathSlug: "chapter-4", title: "Plum Blossoms" },
+  { number: 5, pathSlug: "chapter-5", title: "The Maze" },
+  { number: 6, pathSlug: "chapter-6", title: "Again" },
+  { number: 7, pathSlug: "chapter-7", title: "The Chopstick Sleeve" },
+  { number: 8, pathSlug: "chapter-8", title: "The Book" },
+  { number: 9, pathSlug: "chapter-9", title: "Jeff's Sunday" },
+  { number: 10, pathSlug: "chapter-10", title: "Trash Day" },
+  { number: 11, pathSlug: "chapter-11", title: "At the Counter" },
+  { number: 12, pathSlug: "chapter-12", title: "Tokyo at Night" },
+  { number: 13, pathSlug: "chapter-13", title: "The Mikoshi" },
+  { number: 14, pathSlug: "chapter-14", title: "My Town" },
+];
+
 export const seriesList: readonly Series[] = [
   {
     id: "miav-922228",
@@ -364,6 +382,21 @@ export const seriesList: readonly Series[] = [
       description: after50MillionSummary,
     },
     chapters: after50MillionChapters,
+  },
+  {
+    id: "jeff",
+    categoryId: "literary-sf",
+    title: "Jeff",
+    summary: "In a small restaurant and on the streets he walks each day, Jeff starts to recognize the people around him. Not every encounter is easy.",
+    cardDescription: "A new life, an old friend, and the ordinary misunderstandings that refuse to stay small.",
+    genre: "Contemporary Fiction",
+    language: "English",
+    cover: EDITORIAL_ART.jeff,
+    seo: {
+      title: "Jeff — Complete Contemporary Fiction in 14 Chapters | MIAV-922228",
+      description: "Read Jeff, a complete contemporary fiction story in 14 chapters, free online. Follow an American working in Japan through everyday encounters, friendship, and misunderstandings.",
+    },
+    chapters: jeffFictionChapters,
   },
   {
     id: nextTimeISeeYouWorkId,

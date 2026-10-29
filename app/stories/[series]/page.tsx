@@ -7,6 +7,8 @@ import { getSeries, seriesHref } from "@/features/library/catalog";
 import { libraryPageMetadata } from "@/features/library/pageMetadata";
 import { after50MillionWorkId } from "@/features/stories/after-50-million/work";
 import { after50MillionOgMetadataImages } from "@/features/stories/after-50-million/visual";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
+import { getSiteUrl } from "@/features/shared/site";
 
 type Props = {
   params: Promise<{ series: string }>;
@@ -31,7 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     images:
       series.id === after50MillionWorkId
         ? after50MillionOgMetadataImages()
-        : undefined,
+        : series.id === "jeff"
+          ? [{ url: `${getSiteUrl()}${EDITORIAL_ART.jeff.src}`, width: EDITORIAL_ART.jeff.width, height: EDITORIAL_ART.jeff.height, alt: EDITORIAL_ART.jeff.alt }]
+          : undefined,
   });
 }
 

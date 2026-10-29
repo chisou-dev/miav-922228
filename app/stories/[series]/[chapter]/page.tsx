@@ -13,6 +13,8 @@ import { nextTimeISeeYouWorkId } from "@/features/stories/next-time-i-see-you/wo
 import { fourthPeriodWorkId } from "@/features/stories/fourth-period/store";
 import { after50MillionWorkId } from "@/features/stories/after-50-million/work";
 import { after50MillionOgMetadataImages } from "@/features/stories/after-50-million/visual";
+import { EDITORIAL_ART } from "@/features/library/editorialArt";
+import { getSiteUrl } from "@/features/shared/site";
 
 type Props = {
   params: Promise<{ series: string; chapter: string }>;
@@ -40,7 +42,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (
     found.series.id === nextTimeISeeYouWorkId ||
-    found.series.id === after50MillionWorkId
+    found.series.id === after50MillionWorkId ||
+    found.series.id === "jeff"
   ) {
     return libraryPageMetadata({
       title: seo.title,
@@ -50,7 +53,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images:
         found.series.id === after50MillionWorkId
           ? after50MillionOgMetadataImages()
-          : undefined,
+          : found.series.id === "jeff"
+            ? [{ url: `${getSiteUrl()}${EDITORIAL_ART.jeff.src}`, width: EDITORIAL_ART.jeff.width, height: EDITORIAL_ART.jeff.height, alt: EDITORIAL_ART.jeff.alt }]
+            : undefined,
     });
   }
 
