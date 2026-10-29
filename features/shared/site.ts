@@ -3,7 +3,7 @@ const PRODUCTION_SITE_URL = "https://miav-922228.com";
 export const SITE_NAME = "MIAV-922228";
 
 export const SITE_DESCRIPTION =
-  "Official website of MIAV-922228 — quiet, character-driven stories, browser games, apps, and digital experiments.";
+  "Explore MIAV-922228: original character-driven fiction, an interactive galaxy journey, an atmospheric reentry game, browser games, and digital experiments.";
 
 export function getSiteUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
