@@ -17,6 +17,7 @@ import {
 import { getSiteUrl } from "@/features/shared/site";
 import { JEFF_EPISODE_COUNT, JEFF_LANGUAGES, JEFF_LEVELS, jeffChapterHref } from "@/features/jeff/catalog";
 import { SANTA_LEVELS, SANTA_EPISODE_COUNT, santaChapterHref } from "@/features/santas-shelf/catalog";
+import { SANTA_LANGUAGES, SANTA_TRANSLATED_LANGUAGES, santaLocalizedChapterHref } from "@/features/santas-shelf/localized";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
@@ -146,6 +147,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.8,
     },
+    ...SANTA_LANGUAGES.map(language => ({
+      url: baseUrl + "/learn/santas-shelf/" + language,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    })),
     ...SANTA_LEVELS.flatMap(level =>
       Array.from({ length: SANTA_EPISODE_COUNT }, (_, i) => ({
         url: baseUrl + santaChapterHref(level, i + 1),
@@ -153,6 +160,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
         changeFrequency: "monthly" as const,
         priority: 0.65,
       }))
+    ),
+    ...SANTA_TRANSLATED_LANGUAGES.flatMap(language =>
+      SANTA_LEVELS.flatMap(level =>
+        Array.from({ length: SANTA_EPISODE_COUNT }, (_, i) => ({
+          url: baseUrl + santaLocalizedChapterHref(language, level, i + 1),
+          lastModified,
+          changeFrequency: "monthly" as const,
+          priority: 0.65,
+        }))
+      )
     ),
   ];
 

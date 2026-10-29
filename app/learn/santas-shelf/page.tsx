@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
-import { countEnglishWords } from "@/features/reading-test/measure";
-import { getSantaChapters, SANTA_LEVELS, SANTA_LEVEL_LABELS, santaChapterHref } from "@/features/santas-shelf/catalog";
+import { SANTA_LANGUAGES, SANTA_LANGUAGE_LABELS, SANTA_TITLES } from "@/features/santas-shelf/localized";
 
 export const metadata: Metadata = readingTestMetadata({
-  title: "Santa's Shelf — Six Stories, Three English Levels | MIAV LEARN",
-  description: "Read Santa's Shelf, six connected stories in American English at beginner, intermediate, or advanced level. Read each chapter and try five comprehension questions.",
+  title: "Santa's Shelf — Six Stories in English, Spanish & French | MIAV LEARN",
+  description: "Read Santa's Shelf in English, European Spanish, or French, at beginner, intermediate, or advanced level. Six connected chapters per level, followed by comprehension questions.",
   path: "/learn/santas-shelf",
 });
 
@@ -18,31 +17,24 @@ export default function SantasShelfIndex() {
       title="Santa's Shelf"
       summary="Six connected stories about Santa, the toys he finds, and a shelf where each toy has a place."
     >
-      <div className="mx-auto mt-12 max-w-3xl space-y-12">
-        {SANTA_LEVELS.map((level) => (
-          <section key={level} id={level}>
-            <h2 className="text-xl font-medium">{SANTA_LEVEL_LABELS[level]}</h2>
-            <ol className="mt-5 space-y-4">
-              {getSantaChapters(level).map((chapter) => (
-                <li key={chapter.episode} className="border-b border-[var(--line)] pb-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-medium">{String(chapter.episode).padStart(2,"0")} · {chapter.title}</h3>
-                      <p className="mt-1 text-sm text-[var(--foreground-muted)]">{countEnglishWords(chapter.body)} words</p>
-                    </div>
-                    <Link className="underline underline-offset-4" href={santaChapterHref(level, chapter.episode)}>
-                      Reading
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ))}
-        <p className="text-center text-sm text-[var(--foreground-muted)]">
-          Levels are editorial guides, not formal language assessments.
+      <section className="mx-auto mt-12 max-w-3xl">
+        <h2 className="text-center text-lg">Choose a language</h2>
+        <ul className="mt-7 grid gap-4 sm:grid-cols-3">
+          {SANTA_LANGUAGES.map(language => (
+            <li key={language}>
+              <Link href={"/learn/santas-shelf/" + language}
+                className="block border border-[var(--line)] px-5 py-8 text-center transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_6%,transparent)]">
+                <span className="block text-lg">{SANTA_LANGUAGE_LABELS[language]}</span>
+                <span className="mt-2 block text-sm text-[var(--foreground-muted)]">{SANTA_TITLES[language]}</span>
+                <span className="mt-3 block text-sm text-[var(--foreground-muted)]">3 levels · 6 chapters</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-10 text-center text-sm text-[var(--foreground-muted)]">
+          Choose a level, read at your pace, then answer five questions for each chapter.
         </p>
-      </div>
+      </section>
     </ReadingTestFrame>
   );
 }

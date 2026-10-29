@@ -71,7 +71,7 @@ export function StoryIndex({ mode }: { mode: "reading" | "listening" }) {
           <p className="text-xs uppercase tracking-[0.14em] text-[var(--foreground-muted)]">Santa's Shelf · 6 chapters</p>
           <h2 className="mt-3 text-2xl">Santa's Shelf</h2>
           <p className="mt-3 text-sm leading-[1.8] text-[var(--foreground-muted)]">
-            Six connected stories in three English reading levels, each with five questions.
+            Six connected stories in English, Spanish, and French. Three levels and five questions per chapter.
           </p>
           <Link href="/learn/santas-shelf" className="mt-4 inline-flex min-h-11 items-center underline underline-offset-4">
             Choose a reading level →

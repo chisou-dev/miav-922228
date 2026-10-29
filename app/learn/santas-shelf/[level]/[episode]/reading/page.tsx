@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ReadingSession } from "@/features/reading-test/ReadingSession";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
 import { SANTA_LEVELS, SANTA_EPISODE_COUNT, isSantaLevel, getSantaChapter, santaChapterHref, santaSessionSlug } from "@/features/santas-shelf/catalog";
+import { santaLocalizedChapterHref } from "@/features/santas-shelf/localized";
 
 type Props = { params: Promise<{ level: string; episode: string }> };
 
@@ -21,6 +22,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: chapter.title + " — Santa's Shelf Chapter " + chapter.episode + " | " + level + " Reading · MIAV LEARN",
     description: "Read " + chapter.title + ", chapter " + chapter.episode + " of Santa's Shelf in " + level + " American English, then answer five comprehension questions.",
     path: santaChapterHref(level, chapter.episode),
+    languageAlternates: {
+      "en-US": santaChapterHref(level, chapter.episode),
+      "es-ES": santaLocalizedChapterHref("es", level, chapter.episode),
+      "fr-FR": santaLocalizedChapterHref("fr", level, chapter.episode),
+    },
   });
 }
 
