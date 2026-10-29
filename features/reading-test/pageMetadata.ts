@@ -10,10 +10,14 @@ export function readingTestMetadata({
   title,
   description,
   path,
+  locale = "en_US",
+  languageAlternates,
 }: {
   title: string;
   description: string;
   path: string;
+  locale?: "en_US" | "es_ES" | "fr_FR";
+  languageAlternates?: Record<string, string>;
 }): Metadata {
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
   const canonicalUrl = `${getSiteUrl()}${canonicalPath}`;
@@ -26,6 +30,7 @@ export function readingTestMetadata({
     creator: null,
     alternates: {
       canonical: canonicalPath,
+      ...(languageAlternates ? { languages: languageAlternates } : {}),
     },
     openGraph: {
       title,
@@ -33,7 +38,7 @@ export function readingTestMetadata({
       url: canonicalUrl,
       type: "website",
       siteName: "MIAV-922228",
-      locale: "en_US",
+      locale,
       images,
     },
     twitter: {

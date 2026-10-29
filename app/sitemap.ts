@@ -15,6 +15,7 @@ import {
   chapterPath,
 } from "@/features/stories/miav/edition";
 import { getSiteUrl } from "@/features/shared/site";
+import { JEFF_EPISODE_COUNT, JEFF_LANGUAGES, JEFF_LEVELS, jeffChapterHref } from "@/features/jeff/catalog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
@@ -111,6 +112,32 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  // Keep the playable listening sessions discoverable through the language indexes,
+  // while listing the 126 primary reading chapters without duplicate session URLs.
+  const jeffRoutes: MetadataRoute.Sitemap = [
+    "/learn",
+    "/learn/jeff",
+    "/reading-test",
+    "/listening-test",
+    ...JEFF_LANGUAGES.map((language) => `/learn/jeff/${language}`),
+  ].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified,
+    changeFrequency: "monthly" as const,
+    priority: route === "/learn/jeff" ? 0.85 : 0.75,
+  }));
+
+  const jeffEpisodeRoutes: MetadataRoute.Sitemap = JEFF_LANGUAGES.flatMap((language) =>
+    JEFF_LEVELS.flatMap((level) =>
+      Array.from({ length: JEFF_EPISODE_COUNT }, (_, i) => ({
+        url: `${baseUrl}${jeffChapterHref(language, level, i + 1, "reading")}`,
+        lastModified,
+        changeFrequency: "monthly" as const,
+        priority: 0.65,
+      })),
+    ),
+  );
+
   const libraryRoutes: MetadataRoute.Sitemap = [
     ...categories.map((category) => ({
       url: `${baseUrl}${category.path}`,
@@ -196,6 +223,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticRoutes,
+    ...jeffRoutes,
+    ...jeffEpisodeRoutes,
     ...libraryRoutes,
     ...chapterRoutes,
     ...storyChapterRoutes,

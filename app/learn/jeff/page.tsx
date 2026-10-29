@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import { EDITORIAL_ART } from "@/features/library/editorialArt";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
+import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
 import { JEFF_LANGUAGES, JEFF_LANGUAGE_LABELS } from "@/features/jeff/catalog";
 
-export const metadata: Metadata = {
-  title: "Jeff — Learn with Stories | MIAV LEARN",
-  description: "Follow Jeff in Japan. Practice reading and listening in English, Spanish, or French at three levels.",
-};
+export const metadata = readingTestMetadata({
+  title: "Jeff — 14-Episode Fiction in Three Languages | MIAV LEARN",
+  description: "Read Jeff, a free 14-episode fiction series in English, Spanish, or French, with beginner, intermediate, and advanced editions. Read or listen, then answer five comprehension questions.",
+  path: "/learn/jeff",
+});
 export default function JeffHome() {
   return (
     <ReadingTestFrame eyebrow="MIAV LEARN · FEATURED" title="Jeff" summary="An American working in Japan slowly becomes part of a place he barely knows. Fourteen connected stories, told in three languages.">
