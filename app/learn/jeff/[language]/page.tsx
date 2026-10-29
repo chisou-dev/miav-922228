@@ -47,7 +47,7 @@ export default async function JeffLanguagePage({ params }: Props) {
   const { language } = await params;
   if (!isJeffLanguage(language)) notFound();
   return (
-    <ReadingTestFrame eyebrow="MIAV LEARN · Jeff" title={JEFF_LANGUAGE_LABELS[language]} summary="Choose your level and episode. Read or listen, then answer five questions.">
+    <ReadingTestFrame language={language} eyebrow="MIAV LEARN · Jeff" title={JEFF_LANGUAGE_LABELS[language]} summary="Choose your level and episode. Read or listen, then answer five questions.">
       <p className="mt-5 text-center text-sm"><Link className="underline underline-offset-4" href="/learn/jeff">Change language</Link></p>
       <div className="mx-auto mt-12 max-w-3xl space-y-12">
         {JEFF_LEVELS.map((level) => (

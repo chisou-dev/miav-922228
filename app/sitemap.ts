@@ -23,30 +23,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
   const enChapters = getAllChapters("en");
   const frChapters = getAllChapters("fr");
-  const lastModified = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
-      lastModified,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
+      url: `${baseUrl}/start-here`,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
       url: `${baseUrl}/works`,
-      lastModified,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
       url: `${baseUrl}${chapterArchivePath("en")}`,
-      lastModified,
       changeFrequency: "weekly",
       priority: 0.9,
       alternates: {
@@ -59,7 +59,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}${chapterArchivePath("fr")}`,
-      lastModified,
       changeFrequency: "weekly",
       priority: 0.9,
       alternates: {
@@ -72,43 +71,36 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/books`,
-      lastModified,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/apps`,
-      lastModified,
       changeFrequency: "monthly",
       priority: 0.75,
     },
     {
       url: `${baseUrl}/author`,
-      lastModified,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/contact`,
-      lastModified,
       changeFrequency: "yearly",
       priority: 0.5,
     },
     {
       url: `${baseUrl}/world-map`,
-      lastModified,
       changeFrequency: "daily",
       priority: 0.85,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified,
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
       url: `${baseUrl}/site-policy`,
-      lastModified,
       changeFrequency: "yearly",
       priority: 0.3,
     },
@@ -124,7 +116,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...JEFF_LANGUAGES.map((language) => `/learn/jeff/${language}`),
   ].map((route) => ({
     url: `${baseUrl}${route}`,
-    lastModified,
     changeFrequency: "monthly" as const,
     priority: route === "/learn/jeff" ? 0.85 : 0.75,
   }));
@@ -133,7 +124,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     JEFF_LEVELS.flatMap((level) =>
       Array.from({ length: JEFF_EPISODE_COUNT }, (_, i) => ({
         url: `${baseUrl}${jeffChapterHref(language, level, i + 1, "reading")}`,
-        lastModified,
         changeFrequency: "monthly" as const,
         priority: 0.65,
       })),
@@ -143,20 +133,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const santaRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl + "/learn/santas-shelf",
-      lastModified,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     ...SANTA_LANGUAGES.map(language => ({
       url: baseUrl + "/learn/santas-shelf/" + language,
-      lastModified,
       changeFrequency: "monthly" as const,
       priority: 0.75,
     })),
     ...SANTA_LEVELS.flatMap(level =>
       Array.from({ length: SANTA_EPISODE_COUNT }, (_, i) => ({
         url: baseUrl + santaChapterHref(level, i + 1),
-        lastModified,
         changeFrequency: "monthly" as const,
         priority: 0.65,
       }))
@@ -165,7 +152,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       SANTA_LEVELS.flatMap(level =>
         Array.from({ length: SANTA_EPISODE_COUNT }, (_, i) => ({
           url: baseUrl + santaLocalizedChapterHref(language, level, i + 1),
-          lastModified,
           changeFrequency: "monthly" as const,
           priority: 0.65,
         }))
@@ -176,19 +162,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const libraryRoutes: MetadataRoute.Sitemap = [
     ...categories.map((category) => ({
       url: `${baseUrl}${category.path}`,
-      lastModified,
       changeFrequency: "monthly" as const,
       priority: 0.75,
     })),
     ...seriesList.map((series) => ({
       url: `${baseUrl}${seriesHref(series.id)}`,
-      lastModified,
       changeFrequency: "monthly" as const,
       priority: series.id === "miav-922228" ? 0.85 : 0.7,
     })),
     ...flashPieces.map((piece) => ({
       url: `${baseUrl}${flashHref(piece.slug)}`,
-      lastModified,
       changeFrequency: "monthly" as const,
       priority: 0.65,
     })),
@@ -201,7 +184,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const frPath = chapterPath(chapter.slug, "fr");
     const modified = chapter.published
       ? new Date(`${chapter.published}T00:00:00Z`)
-      : lastModified;
+      : undefined;
     const languages = {
       en: `${baseUrl}${enPath}`,
       fr: `${baseUrl}${frPath}`,
@@ -222,7 +205,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const frPath = chapterPath(chapter.slug, "fr");
     const modified = chapter.published
       ? new Date(`${chapter.published}T00:00:00Z`)
-      : lastModified;
+      : undefined;
     const languages = {
       en: `${baseUrl}${enPath}`,
       fr: `${baseUrl}${frPath}`,
@@ -251,7 +234,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
         .filter((chapter) => (series.id === "jeff" || series.id === "santas-shelf" || chapter.contentSlug) && !chapter.continueReading)
         .map((chapter) => ({
           url: `${baseUrl}${chapterHref(series.id, chapter.pathSlug)}`,
-          lastModified,
           changeFrequency: "monthly" as const,
           priority: 0.72,
         }));

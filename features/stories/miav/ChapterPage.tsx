@@ -84,7 +84,7 @@ export async function ChapterPage({ params, edition = "en" }: Props) {
         inLanguage={edition}
       />
       <BreadcrumbJsonLd items={breadcrumbs} />
-      <main className="pb-24 sm:pb-32">
+      <main lang={edition} className="pb-24 sm:pb-32">
         <LibraryBreadcrumbs items={breadcrumbs} />
         <ChapterHeader chapter={meta} edition={edition} />
 

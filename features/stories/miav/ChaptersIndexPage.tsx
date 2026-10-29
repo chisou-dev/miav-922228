@@ -42,7 +42,7 @@ export async function ChaptersIndexPage({ edition = "en" }: Props) {
         }))}
       />
       <BreadcrumbJsonLd items={breadcrumbs} />
-      <main className="pb-36 sm:pb-48">
+      <main lang={edition} className="pb-36 sm:pb-48">
         <LibraryBreadcrumbs items={breadcrumbs} />
         <section className="py-28 sm:py-36">
           <p className="text-[0.72rem] tracking-[0.22em] text-[var(--foreground-muted)] uppercase">
