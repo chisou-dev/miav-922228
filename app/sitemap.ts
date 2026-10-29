@@ -16,6 +16,7 @@ import {
 } from "@/features/stories/miav/edition";
 import { getSiteUrl } from "@/features/shared/site";
 import { JEFF_EPISODE_COUNT, JEFF_LANGUAGES, JEFF_LEVELS, jeffChapterHref } from "@/features/jeff/catalog";
+import { SANTA_LEVELS, SANTA_EPISODE_COUNT, santaChapterHref } from "@/features/santas-shelf/catalog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteUrl();
@@ -138,6 +139,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ),
   );
 
+  const santaRoutes: MetadataRoute.Sitemap = [
+    {
+      url: baseUrl + "/learn/santas-shelf",
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...SANTA_LEVELS.flatMap(level =>
+      Array.from({ length: SANTA_EPISODE_COUNT }, (_, i) => ({
+        url: baseUrl + santaChapterHref(level, i + 1),
+        lastModified,
+        changeFrequency: "monthly" as const,
+        priority: 0.65,
+      }))
+    ),
+  ];
+
   const libraryRoutes: MetadataRoute.Sitemap = [
     ...categories.map((category) => ({
       url: `${baseUrl}${category.path}`,
@@ -226,6 +244,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...staticRoutes,
     ...jeffRoutes,
     ...jeffEpisodeRoutes,
+    ...santaRoutes,
     ...libraryRoutes,
     ...chapterRoutes,
     ...storyChapterRoutes,

@@ -26,6 +26,9 @@ const readingAuthors: Readonly<Record<string, { name: string; slug: string }>> =
 };
 
 export function revealAuthor(slug: string) {
+  if (/^santas-shelf-(beginner|intermediate|advanced)-0[1-6]$/.test(slug)) {
+    return { name: "Takashi Yabe", slug: "takashi-yabe" };
+  }
   if (/^jeff-(en|es|fr)-(beginner|intermediate|advanced)-(0[1-9]|1[0-4])$/.test(slug)) {
     return { name: "Takashi Yabe", slug: "takashi-yabe" };
   }
