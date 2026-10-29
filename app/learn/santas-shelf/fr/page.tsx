@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
 import { SantaLanguageIndex } from "@/features/santas-shelf/LanguageIndex";
+import { SANTA_LANGUAGE_SEO } from "@/features/santas-shelf/seo";
 
 export const metadata: Metadata = readingTestMetadata({
-  title: "L’étagère du Père Noël — 6 Chapters in 3 Levels | MIAV LEARN",
-  description: "Lisez six chapitres en français de France, en trois niveaux et avec cinq questions de compréhension par chapitre.",
+  title: SANTA_LANGUAGE_SEO.fr.title,
+  description: SANTA_LANGUAGE_SEO.fr.description,
   path: "/learn/santas-shelf/fr",
   locale: "fr_FR",
   languageAlternates: {

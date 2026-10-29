@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReadingSession } from "@/features/reading-test/ReadingSession";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
+import { santaChapterSeo } from "@/features/santas-shelf/seo";
 import { SANTA_LEVELS, SANTA_EPISODE_COUNT, isSantaLevel, getSantaChapter, santaChapterHref, santaSessionSlug } from "@/features/santas-shelf/catalog";
 import { santaLocalizedChapterHref } from "@/features/santas-shelf/localized";
 
@@ -18,9 +19,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isSantaLevel(level) || !/^[1-6]$/.test(episode)) notFound();
   const chapter = getSantaChapter(level, Number(episode));
   if (!chapter) notFound();
+  const seo = santaChapterSeo("en", level, chapter.episode, chapter.title);
   return readingTestMetadata({
-    title: chapter.title + " — Santa's Shelf Chapter " + chapter.episode + " | " + level + " Reading · MIAV LEARN",
-    description: "Read " + chapter.title + ", chapter " + chapter.episode + " of Santa's Shelf in " + level + " American English, then answer five comprehension questions.",
+    title: seo.title,
+    description: seo.description,
     path: santaChapterHref(level, chapter.episode),
     languageAlternates: {
       "en-US": santaChapterHref(level, chapter.episode),

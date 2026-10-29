@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReadingSession } from "@/features/reading-test/ReadingSession";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
+import { santaChapterSeo } from "@/features/santas-shelf/seo";
 import {
   SANTA_LEVELS, SANTA_EPISODE_COUNT, isSantaLevel, santaChapterHref
 } from "@/features/santas-shelf/catalog";
 import {
-  SANTA_TITLES, getSantaTranslatedChapter, santaLocalizedChapterHref,
+  getSantaTranslatedChapter, santaLocalizedChapterHref,
   santaLocalizedSessionSlug, type SantaTranslatedLanguage
 } from "@/features/santas-shelf/localized";
 
@@ -32,10 +33,10 @@ export function santaTranslatedMetadata(
 ): Metadata {
   const validated = validatedChapter(language, level, episode);
   const { chapter } = validated;
-  const name = SANTA_TITLES[language];
+  const seo = santaChapterSeo(language, validated.level, chapter.episode, chapter.title);
   return readingTestMetadata({
-    title: chapter.title + " — " + name + " · " + level + " Reading | MIAV LEARN",
-    description: name + ": " + chapter.title + ", chapter " + chapter.episode + " of six, " + level + " reading edition. Five comprehension questions.",
+    title: seo.title,
+    description: seo.description,
     path: santaLocalizedChapterHref(language, validated.level, chapter.episode),
     locale: language === "es" ? "es_ES" : "fr_FR",
     languageAlternates: {

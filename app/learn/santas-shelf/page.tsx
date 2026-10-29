@@ -3,11 +3,18 @@ import type { Metadata } from "next";
 import { ReadingTestFrame } from "@/features/reading-test/ReadingTestFrame";
 import { readingTestMetadata } from "@/features/reading-test/pageMetadata";
 import { SANTA_LANGUAGES, SANTA_LANGUAGE_LABELS, SANTA_TITLES } from "@/features/santas-shelf/localized";
+import { SANTA_SITE_DESCRIPTION } from "@/features/santas-shelf/seo";
 
 export const metadata: Metadata = readingTestMetadata({
   title: "Santa's Shelf — Six Stories in English, Spanish & French | MIAV LEARN",
-  description: "Read Santa's Shelf in English, European Spanish, or French, at beginner, intermediate, or advanced level. Six connected chapters per level, followed by comprehension questions.",
+  description: SANTA_SITE_DESCRIPTION,
   path: "/learn/santas-shelf",
+  languageAlternates: {
+    "en-US": "/learn/santas-shelf/en",
+    "es-ES": "/learn/santas-shelf/es",
+    "fr-FR": "/learn/santas-shelf/fr",
+    "x-default": "/learn/santas-shelf",
+  },
 });
 
 export default function SantasShelfIndex() {
