@@ -1274,8 +1274,9 @@ function drawAlienRaisedTentacle(
   const endX = mix(x + side * scale * 0.43, targetX, p);
   const endY = mix(y + scale * 0.20, targetY, p);
   const rootR = scale * 0.084;
-  const bendX = rootX + (endX - rootX) * 0.40 - side * scale * 0.13;
-  const bendY = rootY + (endY - rootY) * 0.38 + scale * 0.18;
+  const wave = Math.sin((typeof performance !== "undefined" ? performance.now() : 0) * 0.0015 + side * 1.6) * p;
+  const bendX = rootX + (endX - rootX) * 0.34 - side * scale * (0.19 + wave * 0.055);
+  const bendY = rootY + (endY - rootY) * 0.42 + scale * (0.21 + wave * 0.025);
 
   // Tapered soft arm, not a straight yellow line.
   const arm = new Path2D();
@@ -1286,7 +1287,7 @@ function drawAlienRaisedTentacle(
     endX, endY
   );
   arm.bezierCurveTo(
-    bendX + rootR * 0.36, bendY + scale * 0.045,
+    bendX + side * scale * 0.09 + rootR * 0.36, bendY + scale * 0.125,
     rootX + rootR * 1.26, rootY + scale * 0.11,
     rootX + rootR, rootY
   );
@@ -2947,16 +2948,16 @@ function drawStage1ClearSequence(
    */
   // Stage 1 escape is playback driven: the squid rises, creates the skiff,
   // boards its deck, lifts both arms and draws in the original craft.
-  const hatchOpen = smoothstep((splashAge - 1.2) / 1.4);
-  const alienRise = smoothstep((splashAge - 2.6) / 2.6);
-  const climbCraft = smoothstep((splashAge - 5.2) / 1.6);
-  const pointGesture = smoothstep((splashAge - 6.8) / 0.80) *
-    (1 - smoothstep((splashAge - 9.3) / 0.50));
-  const vehicleFormation = smoothstep((splashAge - 6.8) / 3.0);
+  const hatchOpen = smoothstep((splashAge - 5.0) / 1.1);
+  const alienRise = smoothstep((splashAge - 6.0) / 2.2);
+  const climbCraft = smoothstep((splashAge - 8.3) / 1.3);
+  const pointGesture = smoothstep((splashAge - 9.9) / 0.80) *
+    (1 - smoothstep((splashAge - 13.1) / 0.50));
+  const vehicleFormation = smoothstep((splashAge - 9.9) / 3.0);
   // The old 1s move covered most of the distance to the skiff. A longer
   // eased approach prevents the rider appearing to teleport when FPS dips.
-  const boardApproach = smoothstep((splashAge - 9.8) /
-    (STAGE1_ABSORB_START_S - 9.8));
+  const boardApproach = smoothstep((splashAge - 13.1) /
+    (STAGE1_ABSORB_START_S - 13.1));
   const absorbT = smoothstep((splashAge - STAGE1_ABSORB_START_S) /
     (STAGE1_ABSORB_END_S - STAGE1_ABSORB_START_S));
   // The squid stands ON the skiff and visibly recovers the original hull.
@@ -2989,7 +2990,8 @@ function drawStage1ClearSequence(
   const hatchY = landedCraftPose.y -
     Math.sin(landedCraftPose.angle) * minSide * 0.041;
   const emergeX = hatchX + Math.sin(landedTilt) * minSide * 0.015;
-  const emergeY = hatchY + minSide * mix(0.036, -0.028, alienRise);
+  const emergeY = hatchY + minSide * mix(0.042, -0.074, alienRise) +
+    Math.sin(splashAge * 1.7 + seed * 0.013) * minSide * 0.004 * alienRise;
   const topX = landedCraftPose.x + minSide * 0.028;
   const topY = landedCraftPose.y - minSide * 0.060;
   const sourceAlienX = mix(emergeX, topX, climbCraft);
@@ -3033,25 +3035,8 @@ function drawStage1ClearSequence(
       y: boardY + tip.x * sin + tip.y * cos };
   };
 
-  // The rear hatch opening and two soft, gripping limbs are connected to
-  // the floating craft. Nothing appears independently in midair.
-  if (hatchOpen > 0 && alienRise > 0 && climbCraft < 0.98) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(105,222,168," +
-      (0.85 * alienRise * (1 - climbCraft)) + ")";
-    ctx.lineWidth = Math.max(0.9, minDim * 0.0038);
-    ctx.lineCap = "round";
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(boardX + side * alienScale * 0.12, boardY + alienScale * 0.15);
-      ctx.quadraticCurveTo(
-        hatchX + side * minDim * 0.028, hatchY - minDim * 0.011,
-        hatchX + side * minDim * 0.012, hatchY + minDim * 0.004,
-      );
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  // The creature surfaces under its own buoyancy. No grabbing arms or
+  // rigid lines connect it to the hatch during emergence.
 
   // At the rear hatch the creature is occluded by the solid fuselage.
   // At the hovercraft, only the portion above the black entrance is visible:

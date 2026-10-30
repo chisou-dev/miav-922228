@@ -302,6 +302,12 @@ export function ReentryStage2Prototype({
   const stickPointerRef=useRef<number|null>(null);
   const [stage3Notice,setStage3Notice]=useState(false);
   const [help,setHelp]=useState(false);
+  // Show the mouse-control instructions on the first desktop entry.
+  useEffect(()=>{
+    if(!window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;
+    const id=window.setTimeout(()=>setHelp(true),0);
+    return()=>window.clearTimeout(id);
+  },[]);
   const [opticGone,setOpticGone]=useState(false);
   const opticGoneRef=useRef(false);
   const [assistedTestClear,setAssistedTestClear]=useState(false);
@@ -521,17 +527,22 @@ export function ReentryStage2Prototype({
         className={ctrl+" px-3 py-1.5"} aria-label="Controls help">?</button>
     </div>
     {opticGone&&<p className="pointer-events-none absolute right-4 top-[4.65rem] z-[94] rounded border border-cyan-100/30 bg-[#082533]/70 px-2 py-1 font-mono text-[.54rem] tracking-wider">VISUAL CONTACT</p>}
-    {help&&<div className="absolute left-3 top-[7.65rem] z-[97] max-w-[17rem] rounded bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl">
-      Drag the circular pad toward the direction you want to steer.
-      Drag the left stick up and down to change flight altitude, and release
-      to hold that height. Turn sideways to steer. Hold the upper part of
-      SPEED to increase cruise speed, or the lower part to slow down.
-      Release SPEED to maintain that cruising speed. Blood is consumed
-      during flight, faster at high speed and extra when changing height.
-      A fly-by that misses the island is reported as a failed approach.
+    {help&&<div className="absolute left-3 top-[7.65rem] z-[97] max-w-[17rem] rounded-lg border border-cyan-100/40 bg-[#061f2a]/95 p-3 text-[.72rem] leading-5 shadow-xl sm:left-1/2 sm:top-[4.65rem] sm:w-[min(34vw,26rem)] sm:max-w-none sm:-translate-x-1/2">
+      <div className="mb-1 flex items-center justify-between gap-2 font-mono text-cyan-50">
+        <strong>CONTROLS · PC / TOUCH</strong>
+        <button type="button" onClick={()=>setHelp(false)}
+          className="rounded border border-cyan-100/40 px-2 py-0.5 text-xs"
+          aria-label="Close controls help">×</button>
+      </div>
+      <p><strong>PC:</strong> Click and drag the TURN / ALT circle to steer
+        left/right or rise/descend. Release the mouse to hold altitude.</p>
+      <p className="mt-1">Click and drag the upper half of CRUISE SPEED to
+        accelerate, or the lower half to slow down. Release to hold speed.</p>
+      <p className="mt-1 text-cyan-100/75">On touchscreens, use the same two
+        controls with your fingers. Blood drains faster at high speed.</p>
     </div>}
 
-    <div className={"absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] transition-opacity duration-1000 "+(opticGone?"pointer-events-none opacity-0":"opacity-100")+" sm:right-5"}
+    <div className={"absolute right-2 top-[5.2rem] z-[94] w-[min(44vw,17rem)] min-w-[8rem] overflow-hidden rounded-lg border border-cyan-200/55 bg-[#051925]/95 shadow-[0_8px_24px_rgba(0,0,0,.55)] transition-opacity duration-1000 "+(opticGone?"pointer-events-none opacity-0":"opacity-100")+" sm:right-[6.5rem]"}
       aria-hidden={opticGone}>
       <div className="flex items-center justify-between border-b border-cyan-100/20 px-2 py-1 font-mono text-[.52rem] tracking-wider">
         <span>COCKPIT · OPTICS</span><span>{STAGE2_ZOOMS[zoomIndex]}×</span>
@@ -610,7 +621,7 @@ export function ReentryStage2Prototype({
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center gap-1 rounded-xl border border-rose-200/25 bg-[#031823]/85 p-2">
+      <div className="mr-14 flex flex-col items-center gap-1 rounded-xl border border-rose-200/25 bg-[#031823]/85 p-2 sm:mr-[6.5rem]">
         <div className="font-mono text-[.52rem] tracking-wide text-rose-100/85">CRUISE SPEED</div>
         <button type="button"
           className="relative h-28 w-20 touch-none overflow-hidden rounded-xl border border-rose-100/70 bg-gradient-to-b from-[#bc6340] via-[#7e324a] to-[#301536] text-rose-50 shadow-lg active:brightness-125 sm:h-32 sm:w-24"
