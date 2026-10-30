@@ -10,6 +10,9 @@
  */
 type Kind = "jovian" | "storm" | "vortex" | "ice" | "rock" | "cloud" | "sun";
 type Side = "left" | "right" | "top" | "bottom";
+type GalaxyAnchor = {
+  x: number; y: number; r: number; blend: number; turn?: number;
+};
 type Body = {
   id: number; peek: number; depth: number; radius: number;
   side: Side; transverse: number; kind: Kind; hue: number;
@@ -102,32 +105,64 @@ export function createGalaxyFlightScene() {
   }
   function galaxySightline(step:number,w:number,h:number){
     const reveal=smooth((step-132)/83);
-    const depart=smooth((step-224)/49);
-    const bend=Math.sin(Math.PI*depart);
+    const depart=smooth((step-224)/85);
+    const arc=Math.sin(Math.PI*depart);
     return {
-      // Maintain the same first appearance; then drift down-left along a
-      // slight arc. Even on departure the galaxy keeps nearly all its size.
-      // The large disc passes out of frame instead of shrinking to a dot.
-      x:w*(1.38-.54*reveal-.99*depart-.035*bend),
-      y:h*(.47+.90*depart+.028*bend),
-      scale:1-.12*depart,
+      // Enter from the UPPER RIGHT, showing the leading outer stars first.
+      // The already-established main galaxy crosses diagonally into the
+      // frame before following its gentle lower-left recession. No side
+      // entrance or abrupt repositioning during the glass transition.
+      x:w*(1.10-.41*reveal-.29*depart-.015*arc),
+      y:h*(-.36+.77*reveal+.14*depart+.012*arc),
+      // Progressive recession continues until the same galaxy fits inside
+      // the final glass. The large initial view remains spectacular.
+      scale:1-.72*depart,
       depart,
     };
   }
-  function galaxyProjection(step:number,w:number,h:number,now:number){
-    const sight=galaxySightline(step,w,h);
-    // One complete turn about an almost vertical, slightly tipped axis
-    // while departing. The right edge leans gently toward the viewer.
-    // Gas, photographed texture and stellar members share this projection.
-    const yaw=sight.depart*TAU*1.025+now*.000046*sight.depart;
-    const roll=-.20+now*.000031*smooth((step-144)/48);
-    return {
-      sight,roll,
-      cr:Math.cos(roll),sr:Math.sin(roll),
-      cy:Math.cos(yaw),
-      tilt:.09+.14*Math.sin(yaw),
-      shear:.065*Math.sin(yaw),
+  function galaxyProjection(
+    step:number,w:number,h:number,now:number,
+    anchor?:GalaxyAnchor,
+  ){
+    const original=galaxySightline(step,w,h);
+    const join=smooth(anchor?.blend??0);
+    // At the final glass, the lead galaxy has the same visual scale as
+    // its neighbors, not the previous enormous 76%-of-sphere diameter.
+    const targetSize=anchor?anchor.r*.205/(Math.min(w,h)*2.6):original.scale;
+    const sight={
+      ...original,
+      x:original.x+((anchor?.x??original.x)-original.x)*join,
+      y:original.y+((anchor?.y??original.y)-original.y)*join,
+      scale:original.scale+(targetSize-original.scale)*join,
     };
+    // The galaxy must KEEP MOVING between clicks. The old .035-radian
+    // oscillation was effectively frozen. Gently rotate about a slightly
+    // tipped vertical axis, at one turn every ~43 seconds, while the camera
+    // position remains entirely tap-driven. The 3-D stellar bulge preserves
+    // its thickness when the projected disc turns edge-on.
+    const travellingYaw=.15+.96*original.depart+now*.000145;
+    // On entering the glass the original spiral settles into a readable,
+    // slightly inclined face, not the nearly edge-on illuminated slab seen
+    // at the end of the previous preview. Then it revolves with its peers.
+    const correction=Math.atan2(
+      Math.sin(-.45-travellingYaw),Math.cos(-.45-travellingYaw));
+    const yaw=travellingYaw+join*correction+join*(anchor?.turn??0);
+    // These are accumulated from the SAME running clock; neither a click
+    // nor a change in camera distance restarts any of the three rotations.
+    const pitch=.24+now*.000057;
+    const roll=-.18+now*.000063;
+    const cy=Math.cos(yaw),sy=Math.sin(yaw);
+    const cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const cr=Math.cos(roll),sr=Math.sin(roll);
+    // Orthographic 3-D rotation Rz(roll) * Rx(pitch) * Ry(yaw).
+    // BOTH nebular matter and individual stars use this very same frame.
+    const a=cr*cy-sr*sp*sy,b=sr*cy+cr*sp*sy;
+    const c=-sr*cp,d=cr*cp;
+    const e=cr*sy+sr*sp*cy,f=sr*sy-cr*sp*cy;
+    return {sight,yaw,pitch,roll,cy,sy,cr,sr,a,b,c,d,e,f,
+      tilt:.14+.13*Math.sin(now*.000105+1.1),
+      shear:.065*Math.sin(yaw)};
+
   }
   function projectedStar(
     p:{x:number;y:number},member:boolean,step:number,
@@ -144,16 +179,20 @@ export function createGalaxyFlightScene() {
     // Same irregular galactic membership as before. Project its local
     // points through the EXACT SAME slightly tipped vertical-axis turn
     // as the diffuse galaxy artwork, so the stars never slide separately.
-    const theta=TAU*((p.x*.971+p.y*.163)%1);
-    const rad=Math.sqrt(p.y);
-    const localX=Math.cos(theta)*rad*short*.93*sight.scale+
-      Math.sin(theta*3.1+p.y*5)*short*.045*sight.scale;
-    const localY=Math.sin(theta)*rad*short*.30*sight.scale+
-      Math.sin(theta*2.2+p.x*4)*short*.034*sight.scale;
-    const turnedX=localX*pose.cy+localY*pose.shear;
-    const turnedY=localX*pose.tilt+localY;
-    const targetX=sight.x+turnedX*pose.cr-turnedY*pose.sr;
-    const targetY=sight.y+turnedX*pose.sr+turnedY*pose.cr;
+    // Disperse the legacy catalogue through a THICK irregular disc.
+    // Its former rigid 2-D mapping collapsed many stars into one line.
+    const theta=TAU*p.x+p.y*2.6+
+      .21*Math.sin(p.x*19.3+p.y*37.1);
+    const rad=Math.pow(p.y,.65);
+    const height=(Math.sin(p.x*97.1+p.y*61.9)*
+      Math.sin(p.x*37.7-p.y*43.3))*(.16+.19*(1-rad));
+    const depth=(Math.sin(p.x*73.3+p.y*113.1)*
+      Math.sin(p.x*141.7-p.y*29.3))*(.19+.22*(1-rad));
+    const px=Math.cos(theta)*rad*.77*short*sight.scale;
+    const py=(Math.sin(theta)*rad*.41+height)*short*sight.scale;
+    const pz=depth*short*sight.scale;
+    const targetX=sight.x+pose.a*px+pose.c*py+pose.e*pz;
+    const targetY=sight.y+pose.b*px+pose.d*py+pose.f*pz;
     const blend=smooth((step-123)/105);
     return {
       x:backX+(targetX-backX)*blend,
@@ -188,6 +227,35 @@ export function createGalaxyFlightScene() {
     power:.42+rnd(i*13+61)*.37,
     phase:rnd(i*17+129)*TAU,
   }));
+  // A fixed three-dimensional stellar volume surrounding the SAME main
+  // galactic disc, generated once per voyage (not per frame). The bulge is
+  // dense around the nucleus, then thins gradually into a broad halo.
+  // Unlike a flat sprite, depth still projects to a visible width when the
+  // spiral is nearly edge-on.
+  const galaxyVolumeStars=Array.from({length:11800},(_,i)=>{
+    // A softly concentrated spheroid and thick, irregular spiral wings.
+    // Stars are distributed along THREE axes, not densely aligned on a
+    // geometric spine. The core is still brighter than the outskirts.
+    const inner=i%5!==0;
+    const radius=Math.pow(rnd(i*41+637),inner?1.42:.84);
+    const arm=i%3;
+    const theta=TAU*rnd(i*53+79)+
+      (inner?0:arm*TAU/3+radius*2.1);
+    const clump=.025*Math.sin(theta*4.1+radius*7.3+i%11);
+    const z=(rnd(i*71+107)*2-1)*
+      (.17+.27*Math.pow(1-radius,1.10));
+    const vertical=(rnd(i*113+37)*2-1)*
+      (.11+.20*Math.pow(1-radius,1.28));
+    return {
+      x:Math.cos(theta)*(radius+clump)*.46,
+      y:Math.sin(theta)*(radius+clump)*.39+vertical,
+      z,
+      radius:.30+.72*rnd(i*47+29),
+      opacity:(.21+.67*Math.pow(1-radius,1.13))*
+        (.55+.45*rnd(i*17+91)),
+      hue:[218,231,258,324,34,205,242][i%7],
+    };
+  });
   // Historical galaxy-image support is retained but not used in the sky.
   // Much fainter, fixed, separately distributed points become resolvable
   // at intergalactic distances. They never inherit spiral coordinates.
@@ -691,7 +759,7 @@ export function createGalaxyFlightScene() {
     // from the other planets. Its ring flecks orbit counter to those clouds.
     // Once a planet becomes too small, freeze the rotation entirely.
     const spinVisible=r>9;
-    const angularSpeed=.000148+world.id*.000006;
+    const angularSpeed=.00023+world.id*.000007;
     const direction=world.ring?-1:1;
     const turns=spinVisible ? direction*now*angularSpeed+world.id*.071 : 0;
     const movingFrame=spinVisible ? ((turns*12)%12) : 0;
@@ -727,18 +795,75 @@ export function createGalaxyFlightScene() {
     }
   }
 
-  function drawSky(ctx:CanvasRenderingContext2D,now:number,w:number,h:number,step:number) {
+  function drawTravelSkyGlints(
+    ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    step:number,elapsed:number,seed:number,
+    projection:ReturnType<typeof galaxyProjection>,
+  ){
+    // One soft sparkle somewhere in the travelling sky every ~3-5 seconds,
+    // beginning several seconds after a tap. Vary the stars every time.
+    if(step<31||step>=150||elapsed<0||elapsed>=20000)return;
+    const cam=camera(step,w,h);
+    const hues=[212,193,228,39,348,207,18];
+    let start=2700+900*rnd(seed+97);
+    for(let event=0;event<6&&start<20000;event++){
+      const age=elapsed-start;
+      const duration=570+520*rnd(seed+event*73+291);
+      if(age>=0&&age<duration){
+        const pulse=smooth(age/(duration*.27))*
+          (1-smooth((age-duration*.43)/(duration*.57)));
+        if(pulse>.025){
+          // Pick a currently visible ACTUAL star, not a random position
+          // on the screen. Its world position stays fixed between frames.
+          let found=false,x=0,y=0;
+          for(let trial=0;trial<14;trial++){
+            const key=seed+event*613+trial*97+27;
+            if(step>=122&&trial<10){
+              const p=farStars[Math.floor(rnd(key)*farStars.length)];
+              x=w*.5+p.x*w*cam.scale+cam.panX;
+              y=h*.5+p.y*h*cam.scale+cam.panY;
+            }else{
+              const i=Math.floor(rnd(key+721)*skyStars.length);
+              const p=skyStars[i];
+              const projected=projectedStar(p,i%3!==0,step,w,h,now,projection);
+              x=projected.x;y=projected.y;
+            }
+            if(x>9&&y>9&&x<w-9&&y<h-9){found=true;break;}
+          }
+          if(found){
+            const color=hues[Math.floor(rnd(seed+event*43+193)*hues.length)];
+            const radius=2.5+3.3*rnd(seed+event*51+57);
+            const power=(.33+.42*rnd(seed+event*19+43))*pulse;
+            ctx.save();ctx.globalCompositeOperation="screen";
+            paintSubtleGlint(ctx,x,y,radius,color,power);
+            ctx.restore();
+          }
+        }
+      }
+      start+=3100+1750*rnd(seed+event*179+113);
+    }
+  }
+
+  function drawSky(
+    ctx:CanvasRenderingContext2D,now:number,w:number,h:number,
+    step:number,anchor?:GalaxyAnchor,
+    elapsedSinceTap=21000,glintSeed=0,
+  ) {
     const count=visibleStarCount(step);
     if(count<=0)return;
     const cam=camera(step,w,h);
-    const projection=galaxyProjection(step,w,h,now);
+    const projection=galaxyProjection(step,w,h,now,anchor);
     const appearance=smooth((step-125)/58);
     // Crucial: the old full-screen LOCAL star catalogue is rectangular.
     // Compressing its non-galaxy members into 23% of their original field
     // created the conspicuous little square in the user's screenshots.
     // As the camera pulls back, those nearby stars pass below visibility,
     // while the much deeper, spherical farStars catalogue fills the sky.
-    const oldGalaxyFade=1-smooth((step-261)/42);
+    // Some of this SAME main galaxy's resolved stars remain visible inside
+    // the final glass, instead of the original galaxy vanishing wholesale.
+    // The dense real 3-D galaxy takes over. Legacy sky stars must fully
+    // dissolve before their old 2-D projection can form a white spine.
+    const oldGalaxyFade=1-smooth((step-167)/82);
     const localFieldFade=1-smooth((step-175)/83);
     const fadeSpan=step<31?36:84;
     for(let i=0;i<skyStars.length;i++){
@@ -750,8 +875,8 @@ export function createGalaxyFlightScene() {
       if(x<-3||y<-3||x>w+3||y>h+3)continue;
       const shimmer=.79+.21*Math.sin(now*.00145+p.phase);
       // No remnant rectangle at the end: BOTH populations eventually fade.
-      // The old galaxy-side stars follow its upward departure; the rest
-      // gradually become too faint to distinguish at this distance.
+      // Main-galaxy stars follow the disk as it settles into the glass;
+      // unrelated local stars thin as the view travels farther away.
       const survival=member?oldGalaxyFade:localFieldFade;
       const alpha=Math.min(.94,p.power*appearing*shimmer*survival);
       if(alpha<.008)continue;
@@ -795,47 +920,181 @@ export function createGalaxyFlightScene() {
       ctx.fillStyle="hsla("+p.hue+",39%,95%,"+a.toFixed(3)+")";
       ctx.beginPath();ctx.arc(x,y,p.radius,0,TAU);ctx.fill();
     }
-    // Hold the field and its slowly turning galactic disc between taps.
-    if(step>=18&&step<145){
-      const whole=Math.floor(step),partial=step-whole;
-      const pulse=Math.sin(Math.PI*partial);
-      if(pulse>.03){
-        for(let j=0;j<4;j++){
-          const idx=Math.floor(rnd(whole*131+j*17+39)*skyStars.length);
-          const p=skyStars[idx];
-          const loc=projectedStar(p,idx%3!==0,step,w,h,now,projection);
-          const rad=4+p.radius*4;
-          const glow=ctx.createRadialGradient(loc.x,loc.y,0,loc.x,loc.y,rad);
-          glow.addColorStop(0,"hsla("+p.hue+",55%,91%,"+(pulse*.22).toFixed(3)+")");
-          glow.addColorStop(1,"hsla("+p.hue+",55%,72%,0)");
-          ctx.fillStyle=glow;ctx.beginPath();ctx.arc(loc.x,loc.y,rad,0,TAU);ctx.fill();
-        }
-      }
-    }
+    // Avoid the former one-off flash tied to the click transition. The
+    // sky now glints at uneven intervals throughout the next 20 seconds.
+    drawTravelSkyGlints(ctx,now,w,h,step,elapsedSinceTap,glintSeed,projection);
   }
 
-  function drawDistantGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
-    const pose=galaxyProjection(step,w,h,now);
+  function drawThickGalaxy(
+    ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
+    pose:ReturnType<typeof galaxyProjection>,
+  ){
+    // Nearby viewpoint: the galaxy occupies almost the full frame, with
+    // a real-looking thick central stellar population rather than a
+    // skinny luminous line when the 2-D disc rotates edge-on.
+    // On recession the extra optical depth gradually fades, so distant
+    // galaxies can still read as thin discs inside the final glass.
+    const near=1-smooth((step-258)/48);
+    if(near<.004)return;
+    const size=Math.min(w,h)*2.6*pose.sight.scale;
+    if(size<5)return;
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    ctx.translate(pose.sight.x,pose.sight.y);
+
+    // Project the galactic bulge as many overlapping, irregular star
+    // concentrations. Avoid broad equally shaped elliptical fog layers:
+    // those read as a flat luminous plate when the disc turns sideways.
+    const sideOn=Math.abs(pose.sy);
+    for(let k=0;k<42;k++){
+      // Real bulge depth stays visible when the disc turns edge-on.
+      // Asymmetric cloud knots are spread across the vertical and line-
+      // of-sight volumes, never packed into one straight ruled stripe.
+      const core=Math.pow(rnd(k*79+61),1.37);
+      const angle=TAU*rnd(k*43+19);
+      const depth=(rnd(k*29+111)-.5)*(.22+.44*(1-core));
+      const height=(rnd(k*31+217)-.5)*(.13+.28*(1-core));
+      const px=Math.cos(angle)*core*.34;
+      const py=Math.sin(angle)*core*.31+height;
+      const pz=depth+Math.cos(angle*2.9+k*.38)*.04;
+      const ox=(pose.a*px+pose.c*py+pose.e*pz)*size;
+      const oy=(pose.b*px+pose.d*py+pose.f*pz)*size;
+      const cloudRadius=size*(.030+.075*rnd(k*47+103))*(1-.28*core);
+      const rx=cloudRadius*(.82+.55*rnd(k*53+27));
+      const ry=cloudRadius*(.86+.68*rnd(k*59+31))*
+        (1+.22*sideOn);
+      const strength=near*(.067+.13*(1-core))*(.55+.45*rnd(k*23+19));
+      const tint=k%5===0?"250,218,209":k%3===0?"181,193,239":"141,172,227";
+      ctx.save();
+      ctx.translate(ox,oy);
+      ctx.scale(rx/Math.max(rx,ry),ry/Math.max(rx,ry));
+      const fog=ctx.createRadialGradient(0,0,0,0,0,Math.max(rx,ry));
+      fog.addColorStop(0,"rgba("+tint+","+(strength*.90).toFixed(3)+")");
+      fog.addColorStop(.34,"rgba("+tint+","+(strength*.35).toFixed(3)+")");
+      fog.addColorStop(1,"rgba("+tint+",0)");
+      ctx.fillStyle=fog;
+      ctx.beginPath();ctx.arc(0,0,Math.max(rx,ry),0,TAU);ctx.fill();
+      ctx.restore();
+    }
+
+    // Projection of each individual 3D star: z adds actual width when the
+    // spiral faces sideways. These points are not a flat image being squeezed.
+    // Keep older phones smooth while retaining a dense central cluster.
+    const starCount=Math.min(galaxyVolumeStars.length,
+      w<600?8600:galaxyVolumeStars.length);
+    for(let i=0;i<starCount;i++){
+      const p=galaxyVolumeStars[i];
+      // The centre includes overlapping thick stellar populations; its
+      // vertical scatter increases mildly on edge-on views without growing
+      // an artificial geometric stripe.
+      const x=(pose.a*p.x+pose.c*p.y+pose.e*p.z)*size;
+      const y=(pose.b*p.x+pose.d*p.y+pose.f*p.z)*size;
+      if(Math.abs(x)>w*1.3||Math.abs(y)>h*1.3)continue;
+      // Strong core density without turning the full galaxy into a fog
+      // disc. Individual stellar knots stay visible on narrow projections.
+      const alpha=p.opacity*near*(.84+.16*Math.abs(pose.sy));
+      if(alpha<.018)continue;
+      ctx.fillStyle="hsla("+p.hue+",48%,88%,"+alpha.toFixed(3)+")";
+      ctx.fillRect(x,y,p.radius,p.radius);
+    }
+    ctx.restore();
+  }
+
+  function drawDistantGalaxy(
+    ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
+    now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,glintSeed=0,
+  ) {
+    const pose=galaxyProjection(step,w,h,now,anchor);
     const sight=pose.sight;
-    // Its gaseous arms and stellar members keep the same tilted axis
-    // as the whole galaxy slides down-left and leaves the frame.
+    // Remains the SAME galaxy throughout its retreat, finally sharing
+    // the glass sphere with the new systems revealed around it.
     const reveal=smooth((step-147)/63);
-    const exit=1-smooth((step-269)/32);
-    const strength=reveal*exit;
-    if(strength<.001)return;
+    if(reveal<.001)return;
     const short=Math.min(w,h);
+    drawThickGalaxy(ctx,step,w,h,pose);
     ctx.save();
     ctx.globalCompositeOperation="screen";
     ctx.translate(sight.x,sight.y);
-    ctx.rotate(pose.roll);
-    // Canvas local->world matrix exactly matches projectedStar above.
-    ctx.transform(pose.cy,pose.tilt,pose.shear,1,0,0);
-    ctx.globalAlpha=.45*strength;
-    // Keep the full translucent galaxy big until it clears the lower-left
-    // corner. No upright ascent, stamp-like fade or sudden pinprick zoom.
+    // A photograph is a 2-D slice; its exact 3-D edge-on projection would
+    // collapse to a line. Let the cached GAS texture inherit the THREE-axis
+    // frame with a faint, wide depth offset while the independently
+    // projected 3-D clouds and stars supply the real thickness. Never fade
+    // the entire gas image to zero at the side-on angle.
+    const edge=Math.abs(pose.cy*Math.cos(pose.pitch));
+    const depthWidth=.26*Math.pow(1-edge,1.3);
+    ctx.transform(pose.a+pose.e*depthWidth,pose.b+pose.f*depthWidth,
+      pose.c+pose.e*.12,pose.d+pose.f*.12,0,0);
+    ctx.globalAlpha=.48*reveal*(.67+.33*smooth((edge-.04)/.55));
+    // Recede over many taps into the glass as one continuous star system.
     const size=short*2.6*sight.scale;
     const nebula=ensureNebula();
     ctx.drawImage(nebula,-size*.5,-size*.485,size,size*.97);
+    ctx.restore();
+    drawGalacticGlints(ctx,step,w,h,now,pose,elapsedSinceTap,glintSeed);
+  }
+
+  function paintSubtleGlint(
+    ctx:CanvasRenderingContext2D,x:number,y:number,
+    radius:number,hue:number,strength:number,
+  ){
+    const glow=ctx.createRadialGradient(x,y,0,x,y,radius);
+    glow.addColorStop(0,"hsla("+hue+",64%,94%,"+(strength*.69).toFixed(3)+")");
+    glow.addColorStop(.24,"hsla("+hue+",66%,80%,"+(strength*.28).toFixed(3)+")");
+    glow.addColorStop(1,"hsla("+hue+",54%,57%,0)");
+    ctx.fillStyle=glow;
+    ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.fill();
+    ctx.fillStyle="hsla("+hue+",31%,98%,"+(strength*.74).toFixed(3)+")";
+    ctx.beginPath();ctx.arc(x,y,Math.max(.35,radius*.11),0,TAU);ctx.fill();
+  }
+
+  function drawGalacticGlints(
+    ctx:CanvasRenderingContext2D,
+    step:number,w:number,h:number,now:number,
+    pose:ReturnType<typeof galaxyProjection>,
+    elapsedSinceTap:number,seed:number,
+  ){
+    // Three unequal constellations of tiny flashes, SPREAD across 20 s.
+    // Nothing flashes automatically right when the finger taps. Star
+    // selection, color, size and event times change for every accepted tap.
+    if(step<150||step>307||elapsedSinceTap<0||elapsedSinceTap>=20000)return;
+    const size=Math.min(w,h)*2.6*pose.sight.scale;
+    const visibility=smooth((step-150)/33)*
+      (1-smooth((step-264)/43))*Math.min(1,size/125);
+    if(visibility<.015)return;
+    const hues=[205,218,235,344,10,43,198];
+    ctx.save();
+    ctx.globalCompositeOperation="screen";
+    ctx.translate(pose.sight.x,pose.sight.y);
+    for(let burst=0;burst<3;burst++){
+      const start=[3700,9700,16300][burst]+
+        (rnd(seed+burst*971+119)-.5)*1800;
+      const count=3+Math.floor(rnd(seed+burst*47+551)*3);
+      for(let j=0;j<count;j++){
+        const startAt=start+j*(110+90*rnd(seed+burst*193+j*7));
+        const age=elapsedSinceTap-startAt;
+        const duration=650+700*rnd(seed+burst*311+j*19);
+        if(age<0||age>=duration)continue;
+        const pulse=smooth(age/(duration*.26))*
+          (1-smooth((age-duration*.37)/(duration*.63)));
+        if(pulse<.035)continue;
+        // Prefer the dense nucleus, but leave some flashes in the outer
+        // spiral. Every point is a real stellar member in its 3-D position.
+        let p=galaxyVolumeStars[0];
+        for(let trial=0;trial<5;trial++){
+          const i=Math.floor(rnd(seed+burst*431+j*113+trial*53+29)*
+            galaxyVolumeStars.length);
+          p=galaxyVolumeStars[i];
+          if(Math.hypot(p.x,p.y*.8,p.z)<(j===0?.28:.45))break;
+        }
+        const x=(pose.a*p.x+pose.c*p.y+pose.e*p.z)*size;
+        const y=(pose.b*p.x+pose.d*p.y+pose.f*p.z)*size;
+        if(Math.abs(x)>w*.85||Math.abs(y)>h*.83)continue;
+        const hue=hues[Math.floor(rnd(seed+burst*131+j*79+41)*hues.length)];
+        const radius=2.1+3.5*rnd(seed+burst*73+j*37);
+        const strength=visibility*pulse*(.40+.39*rnd(seed+burst*67+j*17));
+        paintSubtleGlint(ctx,x,y,radius,hue,strength);
+      }
+    }
     ctx.restore();
   }
 
@@ -898,8 +1157,11 @@ export function createGalaxyFlightScene() {
       // Different off-axis worlds remain in fixed positions behind the ship.
       if(step>=31) for(let k=bodies.length-1;k>=0;k--)body(ctx,bodies[k],step,w,h,now);
     },
-    drawGalaxy(ctx:CanvasRenderingContext2D,step:number,w:number,h:number,now=0) {
-      drawDistantGalaxy(ctx,step,w,h,now);
+    drawGalaxy(
+      ctx:CanvasRenderingContext2D,step:number,w:number,h:number,
+      now=0,anchor?:GalaxyAnchor,elapsedSinceTap=21000,glintSeed=0,
+    ) {
+      drawDistantGalaxy(ctx,step,w,h,now,anchor,elapsedSinceTap,glintSeed);
     },
   };
 }

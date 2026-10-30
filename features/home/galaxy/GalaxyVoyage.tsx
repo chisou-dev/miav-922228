@@ -77,7 +77,10 @@ function sampleTextLocations(includeHeading = true): Point[] {
 export function GalaxyVoyage({
   origin, onExit,
 }: {
-  origin: { x: number; y: number; radius: number };
+  origin: {
+    x:number;y:number;radius:number;
+    galaxyYaw?:number;galaxyPitch?:number;galaxyRoll?:number;
+  };
   onExit: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -123,13 +126,15 @@ export function GalaxyVoyage({
     let titleTapStartedAt = performance.now();
     // Start both galaxies face-on. Independent rotations are accumulated
     // only while they are visibly large enough to appreciate the tumbling.
-    let firstRotation = 0.08;
-    let nextRotation = 0.16;
+    // Each visible first-galaxy frame is derived from the opening globe's
+    // angles and the continuous clock, never restarted by a tap.
     let finalTimer: number | undefined;
     let idleTimer: number | undefined;
     // Reaching the enclosing glass orb begins the three-minute quiet ending.
     let finalReachedAt: number | null = null;
     let lastAdvanceAt = 0;
+    // Accepted clicks start fresh 20-second stellar light patterns.
+    let glintSeed = Math.floor(Math.random()*1_000_000_000);
     // The fourth tap is the one-time inward sweep of released lettering.
     // Subsequent taps keep their existing camera/galaxy distances.
     let sandSuctionStartedAt: number | null = null;
@@ -708,6 +713,87 @@ export function GalaxyVoyage({
       return output;
     }
 
+    // Same galaxy photographed inside the HOME glass, during the rupture
+    // and while shrinking past the first planets. Its 3-D orientation
+    // carries over verbatim from the glass orb; tap progression changes only
+    // camera distance, never the orientation.
+    function openingPose(now:number){
+      const since=now-previous;
+      const yaw=(origin.galaxyYaw??.1)+since*.00011;
+      const pitch=(origin.galaxyPitch??.1)+since*.00008;
+      const roll=(origin.galaxyRoll??.2)+since*.00014;
+      const cy=Math.cos(yaw),sy=Math.sin(yaw);
+      const cp=Math.cos(pitch),sp=Math.sin(pitch);
+      const cr=Math.cos(roll),sr=Math.sin(roll);
+      return {
+        a:cr*cy-sr*sp*sy,b:sr*cy+cr*sp*sy,
+        c:-sr*cp,d:cr*cp,
+        e:cr*sy+sr*sp*cy,f:sr*sy-cr*sp*cy,
+        side:1-Math.abs(cy*cp),
+      };
+    }
+    function firstGalaxySource(){
+      // Use the SAME M100 photo and feather before/after the break.
+      return preparedGalaxy(first)??isolatedSpiral(globe);
+    }
+    function drawOpeningGalaxy(
+      x:number,y:number,diameter:number,now:number,alpha=1,
+    ){
+      const texture=firstGalaxySource();
+      if(!texture||diameter<1||alpha<=.001)return;
+      const p=openingPose(now);
+      ctx!.save();
+      ctx!.translate(x,y);
+      ctx!.globalCompositeOperation="screen";
+      ctx!.globalAlpha=clamp(alpha,0,1);
+      const r=diameter*.5;
+      // Layer nearby, offset gaseous knots in actual 3-D space so the
+      // galaxy remains thick as it rolls sideways, with no flat image card.
+      for(let i=0;i<16;i++){
+        const theta=i*2.399963;
+        const distance=.04+.46*Math.sqrt((i+.5)/16);
+        const px=Math.cos(theta)*distance*.43;
+        const py=Math.sin(theta)*distance*.27;
+        const pz=Math.sin(i*23.31)*(.13+.19*(1-distance));
+        const xx=(p.a*px+p.c*py+p.e*pz)*diameter;
+        const yy=(p.b*px+p.d*py+p.f*pz)*diameter;
+        const rad=r*(.06+.09*((i*7)%11)/11);
+        const neb=ctx!.createRadialGradient(xx,yy,0,xx,yy,rad);
+        const shade=i%5===0?"245,184,215":i%3===0?"134,182,241":"170,159,227";
+        const intensity=alpha*(.045+.085*(1-distance));
+        neb.addColorStop(0,"rgba("+shade+","+intensity.toFixed(3)+")");
+        neb.addColorStop(1,"rgba("+shade+",0)");
+        ctx!.fillStyle=neb;
+        ctx!.beginPath();ctx!.arc(xx,yy,rad,0,TAU);ctx!.fill();
+      }
+      // Real starlight above and below the spiral disk travels with it.
+      // Restrained density at small sizes prevents noisy "sparkly snow."
+      const count=diameter>45?460:180;
+      for(let i=0;i<count;i++){
+        const rad=Math.pow(((i*137+37)%997)/997,1.18);
+        const angle=i*2.399963;
+        const px=Math.cos(angle)*rad*.42;
+        const py=Math.sin(angle)*rad*.29+
+          Math.sin(i*14.7)*(.07+.12*(1-rad));
+        const pz=Math.cos(i*29.3)*(.09+.19*(1-rad));
+        const sx=(p.a*px+p.c*py+p.e*pz)*diameter;
+        const sy=(p.b*px+p.d*py+p.f*pz)*diameter;
+        const strength=alpha*(.11+.34*(1-rad));
+        ctx!.fillStyle="rgba(221,218,249,"+strength.toFixed(3)+")";
+        ctx!.fillRect(sx,sy,.38+.45*(i%4)/4,.38+.45*(i%4)/4);
+      }
+      ctx!.save();
+      // The attached transparent gas photo never vanishes at edge-on
+      // angles: a low-strength depth offset accompanies its 3-D projection.
+      const breadth=.17+.10*p.side;
+      ctx!.transform(p.a+p.e*breadth,p.b+p.f*breadth,
+        p.c+p.e*.09,p.d+p.f*.09,0,0);
+      ctx!.globalAlpha=alpha*(.77+.23*(1-p.side));
+      ctx!.drawImage(texture,-r,-r,diameter,diameter);
+      ctx!.restore();
+      ctx!.restore();
+    }
+
     function galaxyImage(img: HTMLImageElement, x: number, y: number, size: number, rotation: number, alpha = 1) {
       if (size < 1 || alpha <= 0) return;
       const source = preparedGalaxy(img);
@@ -736,16 +822,14 @@ export function GalaxyVoyage({
       ctx!.fillRect(-r,-r,2*r,2*r);
       ctx!.save();
       ctx!.globalCompositeOperation = "screen";
-      // The glass holds a 3D-turning spiral with no rectangular JPEG sky.
-      const spiral = isolatedSpiral(globe);
-      if (spiral) {
-        const yaw = Math.sin(now * .00017) * .55;
-        const pitch = Math.sin(now * .00013 + .5) * .42;
-        const roll = now * .000095;
-        const cy = Math.cos(yaw), sy = Math.sin(yaw);
-        const cp = Math.cos(pitch), sp = Math.sin(pitch);
-        const cr = Math.cos(roll), sr = Math.sin(roll);
-        ctx!.transform(cr*cy-sr*sp*sy, sr*cy+cr*sp*sy, -sr*cp, cr*cp, 0, 0);
+      // The glass encloses the VERY SAME first galaxy and 3-D orientation
+      // that will come out of it. Only the glass shell breaks.
+      const spiral=firstGalaxySource();
+      if(spiral){
+        const p=openingPose(now);
+        const breadth=.17+.10*p.side;
+        ctx!.transform(p.a+p.e*breadth,p.b+p.f*breadth,
+          p.c+p.e*.09,p.d+p.f*.09,0,0);
         ctx!.drawImage(spiral,-r*.78,-r*.78,r*1.56,r*1.56);
       }
       ctx!.restore();
@@ -857,11 +941,11 @@ export function GalaxyVoyage({
         drawGlass(cx,cy,origin.radius*(1+.045*glide),now);
         ctx!.restore();
       }
-      // Galaxy continues moving out of its glass shell; its size and
-      // position carry seamlessly into the starless voyage start.
-      galaxyImage(first.complete&&first.naturalWidth?first:globe,
-        cx,cy,mix(origin.radius*1.48,short*.86,glide),
-        firstRotation,.32+.68*ease((p-.38)/.50));
+      // As the glass breaks only the SAME 3-D spiral, plus its diffuse
+      // stellar volume, continues outward. No change of galaxy image.
+      drawOpeningGalaxy(cx,cy,
+        mix(origin.radius*1.48,short*.86,glide),now,
+        .32+.68*ease((p-.38)/.50));
       drawGlassPerimeterGrains(now,cx,cy,
         origin.radius*(1+.04*glide),1-ease((p-.48)/.48));
       // Draw sand AFTER the dark overlay so the grains are visible until
@@ -1132,16 +1216,37 @@ export function GalaxyVoyage({
         : 280 + (s - 160) * 1.2;
       ctx!.fillStyle = "#01040c";
       ctx!.fillRect(0, 0, viewWidth, viewHeight);
-      // Transparent galactic gas is BELOW its own orbiting stars. The camera
-      // and star positions share the same distance: no stage picture swap.
-      flightScene.drawGalaxy(ctx!, sceneStep, viewWidth, viewHeight, now);
+      // Share EXACTLY the same destination as the final glass. The original
+      // spiral carries on rotating gently and receding, then settles inside
+      // the sphere as other smaller galaxies reveal themselves around it.
+      const finalElapsed=finalReachedAt===null?null:now-finalReachedAt;
+      const finalGlass=clusterOrb.geometry(
+        viewWidth,viewHeight,s,finalElapsed);
+      const glassJoin=ease((finalGlass.sphereVisibility-.025)/.74);
+      const galaxyAnchor=glassJoin>.001
+        ? {
+          // The lead galaxy is one rotating member of the final collection,
+          // with the same foreground/background perspective as its peers.
+          x:finalGlass.leadX,
+          y:finalGlass.leadY,
+          r:finalGlass.r*finalGlass.leadPerspective,
+          blend:glassJoin,
+          turn:finalGlass.rotation.angle,
+        }
+        :undefined;
+      // Transparent galactic gas stays below the original galaxy stars.
+      flightScene.drawGalaxy(
+        ctx!,sceneStep,viewWidth,viewHeight,now,galaxyAnchor,
+        now-lastAdvanceAt,glintSeed);
       // The third tap finishes the title, leaving JUST the galaxy and
       // drifting sand. Stars begin revealing with the FOURTH tap and
       // accumulate and twinkle through the existing unchanged sky logic.
       if(s>4){
         ctx!.save();
         ctx!.globalAlpha=ease((s-4)/.92);
-        flightScene.drawSky(ctx!, now, viewWidth, viewHeight, sceneStep);
+        flightScene.drawSky(
+          ctx!,now,viewWidth,viewHeight,sceneStep,galaxyAnchor,
+          now-lastAdvanceAt,glintSeed);
         ctx!.restore();
       }
       if (finalReachedAt !== null && s >= FINAL_STEP - 0.08) {
@@ -1155,12 +1260,10 @@ export function GalaxyVoyage({
       // close planetary passes, galaxy edge/half/exit, then the glass orb.
       const recession = Math.max(0, s - 3);
       const firstSize = short * 0.86 * Math.pow(0.855, Math.min(FIRST_STAR_STEP - 3, recession));
-      if (!reduced && firstSize > short * 0.10) firstRotation += dt * 0.000175;
-      const firstTexture = first.complete && first.naturalWidth ? first : globe;
       const firstOpacity = 1 - ease((s - FIRST_STAR_STEP + 2) / 5);
       if (s < FIRST_PLANET_STEP) {
-        drawGalaxy3D(firstTexture, viewWidth * 0.51, viewHeight * 0.52,
-          firstSize, firstRotation, firstOpacity, 0.2);
+        drawOpeningGalaxy(viewWidth*.51,viewHeight*.52,
+          firstSize,now,firstOpacity);
       } else if (s < 112) {
         ctx!.fillStyle = "rgba(235,209,255,0.42)";
         ctx!.beginPath();
@@ -1178,10 +1281,10 @@ export function GalaxyVoyage({
 
       // Planets remain off-axis in the same sky throughout the pull-back.
       flightScene.drawForeground(ctx!, sceneStep, viewWidth, viewHeight, now);
-      // Other galaxies resolve along the receding upper-right sightline.
-      // The sphere boundary emerges later, enclosing those same galaxies.
-      clusterOrb.draw(ctx!, viewWidth, viewHeight, s, now,
-        finalReachedAt === null ? null : now - finalReachedAt);
+      // Newly revealed systems join the existing lead galaxy. Glass skin
+      // emerges around all of them without removing or replacing the lead.
+      clusterOrb.draw(
+        ctx!,viewWidth,viewHeight,s,now,finalElapsed);
     }
 
     function stepForward() {
@@ -1197,6 +1300,7 @@ export function GalaxyVoyage({
       if(target===4&&sandSuctionStartedAt!==null&&
          now-sandSuctionStartedAt<1150)return;
       lastAdvanceAt = now;
+      glintSeed = Math.floor(Math.random()*1_000_000_000);
       // The last orb is a contemplative scene, not a tap-to-exit button.
       // Only the existing spaceship control (or Escape) returns home early.
       if (target >= FINAL_STEP) return;

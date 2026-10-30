@@ -19,62 +19,122 @@ function random(seed:number) {
   return ((x^(x>>>16))>>>0)/4294967295;
 }
 function galaxySprite(variant:number):HTMLCanvasElement {
+  // A DISTINCT deterministic galaxy for each individual cluster member.
+  // Seven morphological families, with a different spiral winding, disc
+  // aspect, core asymmetry, hue and star distribution for every instance.
+  // One small transparent canvas per member, built lazily over many frames.
   const c=document.createElement("canvas");
-  c.width=c.height=128;
+  const n=160,mid=n*.5;
+  c.width=c.height=n;
   const g=c.getContext("2d",{alpha:true});
   if(!g)return c;
-  const schemes=[
-    [214,233,255], [255,221,184], [228,208,245],
-    [202,237,235], [244,212,203], [205,218,249],
-  ];
-  const rgb=schemes[variant%schemes.length];
-  const center=64;
-  const glow=g.createRadialGradient(center,center,0,center,center,61);
-  glow.addColorStop(0,"rgba("+rgb.join(",")+",.66)");
-  glow.addColorStop(.12,"rgba("+rgb.join(",")+",.30)");
-  glow.addColorStop(.48,"rgba("+rgb.join(",")+",.075)");
-  glow.addColorStop(1,"rgba("+rgb.join(",")+",0)");
-  g.fillStyle=glow;g.fillRect(0,0,128,128);
-  const elliptical=variant===1||variant===2||variant===5;
-  const irregular=variant===3;
-  // Two recognisable spirals, three edge-on/elliptical systems, one irregular.
-  // Individual galaxies must not resemble spheres or a cluster of planets.
-  const arms=variant===0?2:variant===4?3:0;
-  for(let i=0;i<1030;i++){
-    const rad=Math.sqrt(random(i*13+variant*397+9));
-    let theta=TAU*random(i*41+variant*29+11);
-    const arm=arms ? i%arms : 0;
-    if(arms){
-      theta=TAU*arm/arms+rad*5.2+(random(i*27+variant*37)-.5)*(.85+.3*rad);
-    }
-    const axial=elliptical?.23:irregular?.72:.58;
-    const distance=rad*(8+48*random(i*17+variant*97));
-    const lopsided=irregular?Math.sin(theta*2.4+variant)*8:0;
-    const x=center+Math.cos(theta)*(distance+lopsided);
-    const y=center+Math.sin(theta)*(distance-lopsided*.3)*axial;
-    const luminosity=Math.pow(1-rad,.42);
-    const alpha=(.23+.76*luminosity)*(.42+.58*random(i*53+17));
-    const r=.28+random(i*7+variant*33)*(.43+luminosity*1.1);
-    g.fillStyle="rgba("+rgb.join(",")+","+alpha.toFixed(3)+")";
-    g.fillRect(x,y,r,r);
+  // Eleven visibly different types: deeply wound red spirals, open blue
+  // spirals, giant old ellipticals, barred spirals and irregular galaxies.
+  const family=variant%11;
+  const palette=[
+    [159,203,255], [245,146,132], [126,212,248],
+    [248,198,151], [183,205,255], [247,214,171],
+    [141,226,238], [251,128,149], [237,149,200],
+    [200,204,251], [255,186,136],
+  ][family];
+  const base=palette.join(",");
+  const ellipse=family===1||family===5||family===10;
+  const edgeOn=family===4;
+  const irregular=family===6||family===7;
+  const barred=family===3;
+  const arms=family===0||family===3?2:
+    family===2||family===9?4:family===8?3:0;
+  const axial=edgeOn?.19+.13*random(variant*17+21):
+    ellipse?.68+.20*random(variant*29+33):
+    irregular?.70+.22*random(variant*31+17):
+    .66+.28*random(variant*23+91);
+  const winding=(family===8?8.2:family===9?4.2:
+    family===0?6.1:family===2?3.2:
+    3.2+2.8*random(variant*71+39))*
+    (variant%3===0?-1:1);
+  const startAngle=TAU*random(variant*59+13);
+  const lop=.03+.11*random(variant*83+23);
+  g.save();g.translate(mid,mid);
+
+  // Soft, slightly offset stellar body, never a repeated oval texture.
+  const offsetX=(random(variant*47+21)-.5)*n*.055;
+  const offsetY=(random(variant*43+61)-.5)*n*.035;
+  g.save();g.translate(offsetX,offsetY);g.scale(1,axial);
+  const halo=g.createRadialGradient(0,0,0,0,0,n*.49);
+  const bright=irregular?.31:ellipse?.65:family===8?.40:.45;
+  halo.addColorStop(0,"rgba("+base+","+(bright*.89).toFixed(3)+")");
+  halo.addColorStop(.16,"rgba("+base+","+(bright*.39).toFixed(3)+")");
+  halo.addColorStop(.58,"rgba("+base+","+(bright*.072).toFixed(3)+")");
+  halo.addColorStop(1,"rgba("+base+",0)");
+  g.fillStyle=halo;g.beginPath();g.arc(0,0,n*.49,0,TAU);g.fill();
+  g.restore();
+
+  for(let j=0;j<56;j++){
+    const r=.06+.88*random(j*29+variant*71+31);
+    const a=startAngle+TAU*random(j*37+variant*89)+r*.6;
+    const x=offsetX+Math.cos(a)*n*.40*r;
+    const y=offsetY+Math.sin(a)*n*.38*r*axial;
+    const radius=n*(.016+.027*random(j*53+variant*107));
+    const neb=g.createRadialGradient(x,y,0,x,y,radius);
+    const strength=(.036+.115*(1-r))*(irregular?1.12:1);
+    const tint=j%7===0?"255,198,178":j%5===0?"141,188,255":base;
+    neb.addColorStop(0,"rgba("+tint+","+strength.toFixed(3)+")");
+    neb.addColorStop(1,"rgba("+tint+",0)");
+    g.fillStyle=neb;g.beginPath();g.arc(x,y,radius,0,TAU);g.fill();
   }
-  // Flattened luminous bulge and a faint dust lane prevent the 'planet'
-  // silhouette at small sizes. The nuclei are larger than a pinpoint.
-  g.save();
-  g.translate(center,center);
-  g.scale(1,elliptical?.46:irregular?.76:.67);
-  const coreRadius=elliptical?25:17;
-  const nucleus=g.createRadialGradient(0,0,0,0,0,coreRadius);
-  nucleus.addColorStop(0,"rgba(255,252,244,1)");
-  nucleus.addColorStop(.18,"rgba(255,238,212,.93)");
-  nucleus.addColorStop(.52,"rgba("+rgb.join(",")+",.65)");
-  nucleus.addColorStop(1,"rgba("+rgb.join(",")+",0)");
-  g.fillStyle=nucleus;
-  g.beginPath();g.arc(0,0,coreRadius,0,TAU);g.fill();
-  if(elliptical&&variant===5){
-    g.fillStyle="rgba(8,12,27,.20)";
-    g.beginPath();g.ellipse(0,4,39,1.3,-.06,0,TAU);g.fill();
+
+  // Unique, broad and broken stellar arms. Diffuse stars prevent a stamped
+  // whirlpool; no perfectly straight luminous ridge or uniform rings.
+  for(let j=0;j<1750;j++){
+    const r=Math.pow(random(j*17+variant*151+29),.79);
+    const diffuse=random(j*23+variant*109+31)<
+      (ellipse?1:edgeOn?.86:irregular?.86:
+       family===8?.18:family===0?.24:family===2?.30:.37);
+    const lane=arms?j%arms:0;
+    const theta=!diffuse&&arms
+      ?startAngle+lane*TAU/arms+winding*r+
+       (random(j*41+variant*73)-.5)*(.81+.57*r)
+      :startAngle+TAU*random(j*31+variant*127);
+    const scatter=(random(j*61+variant*47)-.5)*(.08+.11*r);
+    const bend=1+lop*Math.sin(theta*2.2+variant*.67+r*3.7);
+    const stellarR=(r+scatter)*n*.43;
+    const bar=barred&&r<.32&&!diffuse;
+    const x=offsetX+(bar
+      ?Math.cos(startAngle)*stellarR*(.95+random(j*59+31)*.12)
+      :Math.cos(theta)*stellarR*bend);
+    const y=offsetY+(bar
+      ?Math.sin(startAngle)*stellarR*.38*axial
+      :Math.sin(theta)*stellarR*axial/bend);
+    const rim=1-smooth((r-.75)/.25);
+    const density=Math.pow(1-r,ellipse?.41:.68);
+    const alpha=(.15+.72*density)*rim*
+      (.44+.56*random(j*67+variant*79));
+    if(alpha<.009)continue;
+    const tint=j%11===0?"255,226,196":j%7===0?"172,208,255":base;
+    g.fillStyle="rgba("+tint+","+alpha.toFixed(3)+")";
+    const size=.22+.92*random(j*71+variant*53);
+    g.fillRect(x,y,size,size);
   }
+  // One softly embedded nucleus per galaxy (offset for the irregulars).
+  g.save();g.translate(offsetX,offsetY);
+  g.scale(1,edgeOn?.48:ellipse?.80:.66);
+  const coreRadius=irregular?15:family===10?21:ellipse?28:23;
+  const core=g.createRadialGradient(0,0,0,0,0,coreRadius);
+  const warmCore=family===1||family===7||family===8||family===10;
+  core.addColorStop(0,"rgba("+(warmCore?"255,215,189":"249,247,237")+
+    ","+(irregular?.65:.89)+")");
+  core.addColorStop(.18,"rgba("+(warmCore?"255,184,172":"255,231,218")+",.70)");
+  core.addColorStop(.51,"rgba("+base+",.30)");
+  core.addColorStop(1,"rgba("+base+",0)");
+  g.fillStyle=core;g.beginPath();g.arc(0,0,coreRadius,0,TAU);g.fill();
+  if(edgeOn){
+    // Uneven dusty lane, not a white line or a perfectly ruled stripe.
+    g.save();g.rotate((random(variant*101+9)-.5)*.18);
+    g.fillStyle="rgba(9,15,35,.15)";
+    g.beginPath();g.ellipse(1.8,2.2,38,1.6,0,0,TAU);g.fill();
+    g.restore();
+  }
+  g.restore();
   g.restore();
   return c;
 }
@@ -117,13 +177,54 @@ function makePoints():GalaxyPoint[] {
       x,y,z,
       size:(.42+Math.pow(random(i*71+19),2)*2.35)*(diffuse?.70:1),
       phase:random(i*73+31)*TAU,
-      variant:Math.floor(random(i*79+91)*6),
+      // No exact duplicate galaxy silhouette anywhere in the glass.
+      variant:i,
       opacity:(.53+random(i*83+19)*.47)*(diffuse?.65:1),
     };
   });
 }
 export function createGalaxyClusterOrb() {
   const points=makePoints();
+  // Ten oblique, genuinely different 3-D rotation axes. Each observation
+  // picks three distinct axes and performs ONE slow revolution per minute.
+  // Ease in/out at each minute's join so the motion never jerks.
+  const axes=[
+    [.35,.82,.45],[.81,.25,.53],[.58,-.44,.68],[-.37,.64,.67],
+    [.22,-.84,.50],[-.72,.39,.57],[.66,.66,-.35],[-.51,-.56,.65],
+    [.78,-.55,.29],[-.28,.45,.85],
+  ].map(([x,y,z])=>{
+    const norm=Math.hypot(x,y,z);
+    return {x:x/norm,y:y/norm,z:z/norm};
+  });
+  const initialAxis=Math.floor(Math.random()*axes.length);
+  const chosenAxes=[0,3,7].map(v=>axes[(initialAxis+v)%axes.length]);
+  function orientation(held:number) {
+    const minutes=clamp(held/60000,0,3);
+    const minute=Math.min(2,Math.floor(minutes));
+    const u=clamp(minutes-minute,0,1);
+    // A full 360° each minute returns to the same physical orientation,
+    // allowing a different 3-D axis without snapping at the transition.
+    const smoothU=u*u*u*(u*(u*6-15)+10);
+    const angle=TAU*smoothU;
+    const axis=chosenAxes[minute];
+    const co=Math.cos(angle),si=Math.sin(angle),one=1-co;
+    function rotate(x:number,y:number,z:number){
+      const dot=x*axis.x+y*axis.y+z*axis.z;
+      return {
+        x:x*co+(axis.y*z-axis.z*y)*si+axis.x*dot*one,
+        y:y*co+(axis.z*x-axis.x*z)*si+axis.y*dot*one,
+        z:z*co+(axis.x*y-axis.y*x)*si+axis.z*dot*one,
+      };
+    }
+    return {rotate,angle,minute};
+  }
+  function depthSize(depth:number) {
+    // Near galaxies are resolved, while far ones contract continuously
+    // down to pinprick stars. Never switch them off as they travel behind.
+    const u=clamp((depth+.95)/1.90,0,1);
+    return .075+2.10*Math.pow(u,2.35);
+  }
+
   // A separate, truly full-frame deep sky, not the former compact square
   // patch around the nebula. Fixed coordinates make paused frames stable.
   // During the final three minutes a changing subset of the tiny stars
@@ -191,10 +292,17 @@ export function createGalaxyClusterOrb() {
     ctx.restore();
   }
   // Lazy texture construction: no work or remote image transfer until needed.
-  let sprites:HTMLCanvasElement[]|null=null;
-  function ensureSprites(){
-    if(!sprites)sprites=Array.from({length:6},(_,i)=>galaxySprite(i));
-    return sprites;
+  const sprites:(HTMLCanvasElement|null)[]=Array.from(
+    {length:158},()=>null);
+  // Keep creation spread across many frames on phones: drawing 158 distinct
+  // galactic star fields in one synchronous burst would stall interaction.
+  function ensureSprite(variant:number,budget:{left:number}){
+    if(sprites[variant])return sprites[variant];
+    if(budget.left<=0)return null;
+    budget.left--;
+    const result=galaxySprite(variant);
+    sprites[variant]=result;
+    return result;
   }
   // This glass is a cached optical layer, not a set of ideal concentric
   // vector rings. Broad, irregular reflections and an angle-dependent edge
@@ -280,32 +388,18 @@ export function createGalaxyClusterOrb() {
     return c;
   }
 
-  function draw(
-    ctx:CanvasRenderingContext2D,w:number,h:number,step:number,
-    now:number,finalElapsed:number|null,
-  ){
-    // Start alongside the off-axis star cloud, not with a different giant
-    // spiral appearing in the centre. Each tap opens more of the same region.
+  // Keep the final sphere and the departing MAIN galaxy on the same
+  // sightline. The lead galaxy is not replaced by a different illustration:
+  // it becomes one member of this widening, increasingly populated view.
+  function geometry(w:number,h:number,step:number,finalElapsed:number|null){
     const reveal=smooth((step-154)/30);
-    if(reveal<=.001)return;
     const short=Math.min(w,h);
-    // Slightly larger than the first approved orb; always fit on a phone.
     const r=short*.405;
     const sphereVisibility=smooth((reveal-.62)/.35);
-    // One widening camera, without a gallery of pictures sliding from the
-    // edge of the display. Their bearings remain in the same sky.
-    // The initial, uncased field occupies the *entire* sky. As we pull
-    // back, those same points compress into the sphere without revealing
-    // the edges of a rectangular sprite catalogue.
     const zoom=1+3.8*Math.pow(1-reveal,1.1);
     const held=Math.max(0,finalElapsed??0);
     const drift=sphereVisibility*smooth(held/1900);
-    // Fixed cosmic sightline: each miniature system is already somewhere
-    // in this large field; expanding FOV gradually resolves its light.
-    const centreX=w*.515;
-    const centreY=h*.515;
-    // After the initial arrival, keep a clearly perceptible but smooth
-    // wander throughout the entire three-minute observation.
+    const centreX=w*.515,centreY=h*.515;
     const wanderX=Math.min(w*.14,68)*
       (.55*Math.sin(held*.00034)+.29*Math.sin(held*.000157+1.7)
        +.16*Math.sin(held*.000091+.6));
@@ -315,11 +409,28 @@ export function createGalaxyClusterOrb() {
     const cx=lerp(centreX,clamp(centreX+drift*wanderX,r+8,w-r-8),drift);
     const cy=lerp(centreY,clamp(centreY+drift*wanderY,r+12,h-r-12),drift);
     const alpha=smooth((reveal-.015)/.54);
-    // Rotation and drift continue for the entire three-minute hold, with no
-    // single-loop path or automatic advancement to another scene.
-    const yaw=held*.000058+Math.sin(held*.000089)*.22;
-    const pitch=held*.000044+Math.sin(held*.000063+1.4)*.18;
-    const textures=ensureSprites();
+    // The incoming lead spiral is one individual 3-D member of the
+    // EXACT SAME turning collection as all the other galaxies.
+    const rotation=orientation(held);
+    const lead=rotation.rotate(-.31,.24,.18);
+    const leadPerspective=depthSize(lead.z);
+    const leadX=cx+lead.x*r*zoom*.87;
+    const leadY=cy+lead.y*r*zoom*.87;
+    return {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha,
+      rotation,leadX,leadY,leadPerspective};
+  }
+
+  function draw(
+    ctx:CanvasRenderingContext2D,w:number,h:number,step:number,
+    now:number,finalElapsed:number|null,
+  ){
+    // Start alongside the off-axis star cloud, not with a different giant
+    // spiral appearing in the centre. Each tap opens more of the same region.
+    const {reveal,r,sphereVisibility,zoom,held,cx,cy,alpha,rotation}=
+      geometry(w,h,step,finalElapsed);
+    if(reveal<=.001)return;
+    // The same 3-D rotation controls all galaxy positions and sizes.
+    const newSpriteBudget={left:4};
     // The sky must remain rich from edge to edge, even before any galaxy
     // becomes large enough to identify, and long after the sphere appears.
     drawFullSky(ctx,w,h,now,reveal,sphereVisibility,cx,cy,r);
@@ -337,14 +448,13 @@ export function createGalaxyClusterOrb() {
     // Do not suddenly clip a galaxy as the glass becomes visible. Distant
     // members fade gradually at the emerging edge as the field contracts.
     const rotated=points.map((p,i)=>{
-      const ax=p.x*Math.cos(yaw)+p.z*Math.sin(yaw);
-      const az=p.z*Math.cos(yaw)-p.x*Math.sin(yaw);
-      const ay=p.y*Math.cos(pitch)-az*Math.sin(pitch);
-      const depth=p.y*Math.sin(pitch)+az*Math.cos(pitch);
-      return {...p,i,px:ax,py:ay,depth};
+      const place=rotation.rotate(p.x,p.y,p.z);
+      return {...p,i,px:place.x,py:place.y,depth:place.z};
     }).sort((a,b)=>a.depth-b.depth);
     for(const p of rotated){
-      const perspective=1+p.depth*.15;
+      // True depth cue: galaxies behind the centre are smaller and dimmer,
+      // nearby galaxies become larger and brighter as the system rotates.
+      const perspective=depthSize(p.depth);
       // Previously these clustered filaments were visible as a conspicuous
       // rectangle of point lights BEFORE the sphere existed. Give every
       // member its own bearing across the full celestial field, then reveal
@@ -352,8 +462,11 @@ export function createGalaxyClusterOrb() {
       const broadX=w*(.025+.95*random(p.i*101+1709));
       const broadY=h*(.02+.96*random(p.i*131+3119));
       const settle=smooth((reveal-.19-random(p.i*29+17)*.08)/.72);
-      const x=lerp(broadX,cx+p.px*r*zoom*perspective,settle);
-      const y=lerp(broadY,cy+p.py*r*zoom*perspective,settle);
+      // Position is 3-D rotation of the same physical points. Apparent
+      // diameter varies much more than position so nearby spirals don't
+      // leave the glass solely because they look larger.
+      const x=lerp(broadX,cx+p.px*r*zoom*.87,settle);
+      const y=lerp(broadY,cy+p.py*r*zoom*.87,settle);
       if(x<-35||x>w+35||y<-35||y>h+35)continue;
       // Extended view starts with only the known last galaxy visible;
       // each individual cluster member emerges softly at its own distance.
@@ -367,23 +480,50 @@ export function createGalaxyClusterOrb() {
       // remain visible on a phone; the rest stay as tiny galaxies.
       // A few recognisable, resolved galaxies among many small systems.
       // Reducing the number of overlapping glows lets their shapes read.
-      const prominent=p.i%13===0?2.35:p.i%7===0?1.55:1;
+      const prominent=p.i%13===0?1.26:p.i%7===0?1.12:1;
       // Apparent positions follow camera distance more strongly than the
       // individual light discs. This keeps early galaxies separate instead
       // of creating square patches of overlapping nebular sprites.
       const apparentDiameter=Math.pow(zoom,.48);
-      const size=Math.max(.8,r*(.029+p.size*.058)*
+      const size=Math.max(.65,r*(.038+p.size*.057)*
         apparentDiameter*perspective*prominent*(.12+.88*settle));
       const radial=Math.hypot((x-cx)/r,(y-cy)/r);
       const feather=1-sphereVisibility*smooth((radial-.84)/.32);
-      const opacity=local*p.opacity*feather*
+      // The rear side never disappears or switches textures: it simply
+      // becomes a dim pinpoint at the farthest point of its orbit.
+      const depthLight=clamp(.60+.50*p.depth,.23,1.16);
+      const opacity=local*p.opacity*feather*depthLight*
         (.45+.55*settle)*(.91+.09*Math.sin(now*.00061+p.phase));
       if(opacity<.003)continue;
-      ctx.globalAlpha=opacity;
       ctx.save();
       ctx.translate(x,y);
-      ctx.rotate(p.phase+held*.000006*(p.i%3===0?-1:1));
-      ctx.drawImage(textures[p.variant],-size/2,-size/2,size,size);
+      if(size<4.1){
+        // Far side: the same galaxy contracts to a star-sized glow.
+        // It will resolve again as its orbit brings it to the front.
+        const glowSize=Math.max(.55,size*.35);
+        const glow=ctx.createRadialGradient(0,0,0,0,0,glowSize*2.1);
+        glow.addColorStop(0,"rgba(240,235,229,"+clamp(opacity*.76,.08,.87).toFixed(3)+")");
+        glow.addColorStop(.35,"rgba(185,207,244,"+(opacity*.25).toFixed(3)+")");
+        glow.addColorStop(1,"rgba(140,168,215,0)");
+        ctx.fillStyle=glow;
+        ctx.beginPath();ctx.arc(0,0,glowSize*2.1,0,TAU);ctx.fill();
+      }else{
+        const texture=ensureSprite(p.variant,newSpriteBudget);
+        if(texture){
+          ctx.globalAlpha=opacity;
+          // In addition to moving through 3-D space, each galaxy turns
+          // slowly around its own DIFFERENT axis. None flips into a thin,
+          // hard line or shares exactly the same orientation.
+          const direction=p.i%2===0?1:-1;
+          const selfSpin=held*(.000010+random(p.i*37+93)*.000018)*direction;
+          const spin=p.phase+selfSpin+rotation.angle*.035*direction;
+          const incline=.39+.57*Math.abs(
+            Math.cos(p.phase*.71+held*(.000012+random(p.i*13+33)*.000015)));
+          ctx.rotate(spin);
+          ctx.scale(1,incline);
+          ctx.drawImage(texture,-size/2,-size/2,size,size);
+        }
+      }
       ctx.restore();
     }
     ctx.restore();
@@ -461,5 +601,5 @@ export function createGalaxyClusterOrb() {
       ctx.restore();
     }
   }
-  return {draw};
+  return {draw,geometry};
 }
