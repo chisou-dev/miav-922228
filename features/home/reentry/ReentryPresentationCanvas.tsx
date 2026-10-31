@@ -4235,6 +4235,17 @@ function drawCraft(
   ctx.restore();
 }
 
+/** Paint the same blue enamel spacecraft used on the main Stage 1 canvas. */
+export function paintStage1FleetShip(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  muted = false,
+): void {
+  ctx.clearRect(0, 0, width, height);
+  drawCraft(ctx, width / 2, height / 2, Math.PI, width * 0.66, muted ? 0.25 : 1, 0);
+}
+
 function drawFlowLines(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -4886,6 +4897,7 @@ export function ReentryPresentationCanvas({
   powerNorm,
   variant,
   assistMode = false,
+  hideIdleCraft = false,
 }: {
   phase: ReentryPhase;
   result: ReentryResult | null;
@@ -4897,6 +4909,7 @@ export function ReentryPresentationCanvas({
   powerNorm: number;
   variant: ReentryArtVariant;
   assistMode?: boolean;
+  hideIdleCraft?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const earthRef = useRef<HTMLImageElement | null>(null);
@@ -4919,11 +4932,11 @@ export function ReentryPresentationCanvas({
   // cadence jitter. Read current props from one ref in a stable animation loop.
   const presentationRef = useRef({
     phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
-    powerNorm, variant, assistMode,
+    powerNorm, variant, assistMode, hideIdleCraft,
   });
   presentationRef.current = {
     phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
-    powerNorm, variant, assistMode,
+    powerNorm, variant, assistMode, hideIdleCraft,
   };
 
   // SPACE integration may take thousands of steps. Preview it only when
@@ -5037,7 +5050,7 @@ export function ReentryPresentationCanvas({
     const draw = () => {
       const {
         phase, result, flightProgress, angleNorm, spaceApproach, spaceShare,
-        powerNorm, variant, assistMode,
+        powerNorm, variant, assistMode, hideIdleCraft,
       } = presentationRef.current;
       // The sea is active only in the surface shot of this actual frame.
       renderPerfRef.current.oceanActive = false;
@@ -6026,7 +6039,7 @@ const failureTravelT =
         }
       }
 
-      if (craftAlpha > 0.015 && !burnGone) {
+      if (craftAlpha > 0.015 && !burnGone && !(idle && hideIdleCraft)) {
         const landingPalette =
           outcome === "EARTH_REACHED" && latched && !miss
             ? smoothstep((timeSinceVisualAtmosphereEntryS - 10.5) / 3.5)
