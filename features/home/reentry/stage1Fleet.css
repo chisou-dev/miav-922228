@@ -1,0 +1,55 @@
+/* Docked ships use the exact Stage 1 blue craft painting; no independent icon. */
+.stage1-fleet-arrival-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 72;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/*
+ * User-marked route:
+ * rack at right/bottom -> down and out -> return from right edge
+ * -> climb over top-right -> settle at original craft anchor (77%,23%).
+ * The original idle craft is hidden until this transfer completes.
+ */
+@keyframes stage1ShipArrival {
+  0%   { left: 93%; top: 72%; opacity: 1; transform: translate(-50%,-50%) rotate(0deg) scale(.65); }
+  8%   { left: 91%; top: 83%; opacity: 1; transform: translate(-50%,-50%) rotate(37deg) scale(.8); }
+  22%  { left: 83%; top: 106%; opacity: 1; transform: translate(-50%,-50%) rotate(55deg) scale(.8); }
+  27%  { left: 81%; top: 113%; opacity: 0; transform: translate(-50%,-50%) rotate(55deg) scale(.65); }
+  32%  { left: 111%; top: 46%; opacity: 0; transform: translate(-50%,-50%) rotate(18deg) scale(.78); }
+  38%  { left: 106%; top: 37%; opacity: 1; transform: translate(-50%,-50%) rotate(25deg) scale(1); }
+  51%  { left: 99%; top: 17%; opacity: 1; transform: translate(-50%,-50%) rotate(29deg) scale(1); }
+  /* Line up with the heading of the *actual* waiting craft by the last bend. */
+  67%  { left: 91%; top: 11%; opacity: 1; transform: translate(-50%,-50%) rotate(calc(var(--stage1-settle-turn) + 16deg)) scale(1); }
+  82%  { left: 83%; top: 13%; opacity: 1; transform: translate(-50%,-50%) rotate(calc(var(--stage1-settle-turn) + 5deg)) scale(1); }
+  94%  { left: 77%; top: 23%; opacity: 1; transform: translate(-50%,-50%) rotate(var(--stage1-settle-turn)) scale(1); }
+  /* Do not fade out before the main craft becomes visible on this frame. */
+  100% { left: 77%; top: 23%; opacity: 1; transform: translate(-50%,-50%) rotate(var(--stage1-settle-turn)) scale(1); }
+}
+.stage1-fleet-arriving-ship {
+  position: absolute;
+  animation: stage1ShipArrival 3100ms linear both;
+  will-change: left, top, transform, opacity;
+}
+@keyframes stage1ExtinctionFlicker {
+  0%, 87%, 100% { text-shadow: 0 0 14px rgba(248,113,113,0.63), 0 0 45px rgba(220,38,38,0.30); opacity: 1; }
+  90% { text-shadow: 0 0 4px rgba(248,113,113,0.36); opacity: .85; }
+}
+@keyframes stage1CountdownPulse {
+  0%, 40%, 100% { text-shadow: 0 0 12px rgba(248,113,113,.55), 0 0 32px rgba(220,38,38,.25); opacity: 1; }
+  42%, 48% { text-shadow: 0 0 4px rgba(248,113,113,.15); opacity: .67; }
+  50% { text-shadow: 0 0 22px rgba(248,113,113,.95), 0 0 48px rgba(220,38,38,.60); opacity: 1; }
+}
+.stage1-extinction-glow {
+  animation: stage1ExtinctionFlicker 5s linear infinite;
+}
+.stage1-countdown {
+  font-variant-numeric: tabular-nums;
+  animation: stage1CountdownPulse 2.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage1-fleet-arriving-ship { animation: none; display: none; }
+  .stage1-extinction-glow, .stage1-countdown { animation: none; }
+}

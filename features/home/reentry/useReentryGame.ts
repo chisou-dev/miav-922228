@@ -7,6 +7,11 @@ import {
   stage1AssistedDirectionNorm,
 } from "./reentryLaunchPipeline";
 import { launchAnchorPx } from "./reentryCraftProjection";
+import {
+  applyStage1DailyDrift,
+  stage1DailyWeatherSeed,
+  stage1JstDayKey,
+} from "./reentryDailyChallenge";
 import { launchEarthView } from "./reentryEarthCamera";
 import { useReentryDevPreset } from "./useReentryDevPreset";
 import type {
@@ -48,6 +53,8 @@ export function createReentrySeed(): number {
 export function useReentryGame(options?: {
   onFlightStart?: () => void;
   guaranteedClear?: boolean;
+  canLaunch?: boolean;
+  onAttemptResult?: (outcome: ReentryResult["outcome"]) => boolean;
 }) {
   const [phase, setPhase] = useState<ReentryPhase>("power");
   const [seed, setSeed] = useState(() => createReentrySeed());
@@ -73,6 +80,10 @@ export function useReentryGame(options?: {
   const flightStartRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const powerRafRef = useRef<number | null>(null);
+  const launchingRef = useRef(false);
+  // Record a failed ship only when its cinematic outcome is confirmed.
+  // Keeping this separate from LAUNCH prevents a 24h timer starting early.
+  const pendingOutcomeRef = useRef<ReentryResult["outcome"] | null>(null);
 
   const stopFlightLoop = useCallback(() => {
     if (rafRef.current !== null) {
@@ -164,6 +175,11 @@ export function useReentryGame(options?: {
         }
 
         if (p >= 1) {
+          const completedOutcome = pendingOutcomeRef.current;
+          pendingOutcomeRef.current = null;
+          if (completedOutcome !== null) {
+            options?.onAttemptResult?.(completedOutcome);
+          }
           stopFlightLoop();
           setPhase("result");
           return;
@@ -179,6 +195,8 @@ export function useReentryGame(options?: {
   useReentryDevPreset(surfaceRef, beginFlight, setSeedState);
 
   const retry = useCallback(() => {
+    launchingRef.current = false;
+    pendingOutcomeRef.current = null;
     stopFlightLoop();
     setResult(null);
     setPlayRecord(null);
@@ -195,7 +213,7 @@ export function useReentryGame(options?: {
   }, [stopFlightLoop]);
 
   const lockPower = useCallback(() => {
-    if (phase !== "power") return;
+    if (phase !== "power" || !options?.canLaunch) return;
 
     const locked = powerOscillatorNorm(
       performance.now(),
@@ -204,10 +222,16 @@ export function useReentryGame(options?: {
 
     setLockedPowerNorm(locked);
     setPhase("angle");
-  }, [phase]);
+  }, [phase, options?.canLaunch]);
 
   const launch = useCallback(() => {
-    if (phase !== "angle" || lockedPowerNorm === null) return;
+    if (
+      phase !== "angle" ||
+      lockedPowerNorm === null ||
+      !options?.canLaunch ||
+      launchingRef.current
+    ) return;
+    launchingRef.current = true;
 
     const rect =
       surfaceRef.current?.getBoundingClientRect();
@@ -256,9 +280,12 @@ export function useReentryGame(options?: {
     );
     const simStarted = performance.now();
 
-    const assistedDirection = stage1AssistedDirectionNorm(
-      angleNorm, earthBearingScreenRad,
+    const day = stage1JstDayKey();
+    const assistedDirection = applyStage1DailyDrift(
+      stage1AssistedDirectionNorm(angleNorm, earthBearingScreenRad),
+      day,
     );
+    const challengeSeed = stage1DailyWeatherSeed(seed, day);
     const guaranteed =
       options?.guaranteedClear
         ? findGuaranteedStage1Clear(
@@ -274,10 +301,14 @@ export function useReentryGame(options?: {
       runStage1Launch(
         lockedPowerNorm,
         assistedDirection,
-        seed,
+        challengeSeed,
         earthBearingScreenRad,
         spaceStartAltitudeM,
       );
+
+    // No countdown or life loss yet: the result must finish playing first.
+    // Only this normal launch path queues an attempt (not development presets).
+    pendingOutcomeRef.current = launched.result.outcome;
 
     if (guaranteed) {
       setAngleNorm(
@@ -297,6 +328,8 @@ export function useReentryGame(options?: {
       }
     }
 
+    if (!guaranteed) setSeed(challengeSeed);
+
     if (surfaceRef.current) {
       surfaceRef.current.dataset.simMs = (
         performance.now() - simStarted
@@ -312,6 +345,7 @@ export function useReentryGame(options?: {
     angleNorm,
     beginFlight,
     lockedPowerNorm,
+    options?.canLaunch,
     options?.guaranteedClear,
     phase,
     seed,
