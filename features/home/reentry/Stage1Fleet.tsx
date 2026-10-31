@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { ReentryOutcome, ReentryPhase } from "./reentryTypes";
 import { paintStage1FleetShip } from "./ReentryPresentationCanvas";
 import "./stage1Fleet.css";
@@ -148,7 +148,7 @@ function ShipIcon({
       width={100}
       height={60}
       className={large
-        ? "block h-[36px] w-[60px] drop-shadow-[0_0_10px_rgba(52,145,246,0.3)]"
+        ? "block h-auto w-[7.42vmin] drop-shadow-[0_0_10px_rgba(52,145,246,0.3)]"
         : "block h-[24px] w-[39px] drop-shadow-[0_0_4px_rgba(52,145,246,0.25)]"}
       aria-hidden="true"
     />
@@ -158,6 +158,7 @@ function ShipIcon({
 export function Stage1FleetHud({
   fleet,
   phase,
+  angleNorm,
   flightProgress,
   spaceShare,
   introSequence,
@@ -165,6 +166,7 @@ export function Stage1FleetHud({
 }: {
   fleet: FleetState;
   phase: ReentryPhase;
+  angleNorm: number;
   flightProgress: number;
   spaceShare: number;
   introSequence: number;
@@ -186,11 +188,17 @@ export function Stage1FleetHud({
     (phase === "flight" && flightProgress < spaceShare);
   if (!fleet.loaded || !inSpace || fleet.remaining === 0) return null;
 
-  const activeShipPreparing = (phase === "power" || phase === "angle") &&
-    introSequence > 0 && undocked;
+  const activeShipPreparing = phase === "flight" ||
+    ((phase === "power" || phase === "angle") && introSequence > 0 && undocked);
   // The active craft is now flying up to the fixed launch anchor, while
   // failed attempts have already been consumed by recordAttempt().
   const docked = Math.max(0, fleet.remaining - (activeShipPreparing ? 1 : 0));
+
+  // The main craft starts from a +X-oriented drawing rotated by its actual
+  // in-game heading. The little fleet icon is painted pointing left (180deg).
+  // Match its final rotation to the real idle craft, not a guessed CSS angle.
+  const realHeadingDeg = -90 + (((angleNorm % 1) + 1) % 1) * 360;
+  const settleTurnDeg = ((realHeadingDeg - 180 + 540) % 360) - 180;
 
   return (
     <>
@@ -214,7 +222,11 @@ export function Stage1FleetHud({
       </div>
       {arrivalPlaying && phase === "power" && introSequence > 0 && (
         <div className="stage1-fleet-arrival-layer" aria-hidden="true">
-          <div key={introSequence} className="stage1-fleet-arriving-ship">
+          <div
+            key={introSequence}
+            className="stage1-fleet-arriving-ship"
+            style={{ "--stage1-settle-turn": `${settleTurnDeg}deg` } as CSSProperties}
+          >
             <ShipIcon large />
           </div>
         </div>
@@ -241,22 +253,22 @@ export function Stage1Extinction({
     <div
       className="pointer-events-auto absolute inset-0 z-[85] flex flex-col items-center justify-center bg-[#020509]/90 px-4 text-center backdrop-blur-sm"
       role="region"
-      aria-label="Humanity extinct. Fleet restoration countdown."
+      aria-label="Signal lost. Signal restoration countdown."
     >
       <div className="mb-4 text-[0.65rem] tracking-[0.5em] text-red-300/70">
         FINAL TRANSMISSION · STAGE 1
       </div>
       <h2 className="stage1-extinction-glow text-[clamp(1.7rem,6vw,4.7rem)] font-black tracking-[0.12em] text-red-300">
-        HUMANITY EXTINCT
+        SIGNAL LOST
       </h2>
       <p className="mt-5 text-[0.7rem] tracking-[0.25em] text-cyan-100/60">
-        FLEET RECONSTRUCTION IN
+        SIGNAL RESTORATION IN
       </p>
       <div className="stage1-countdown mt-2 whitespace-nowrap font-mono text-[clamp(2.0rem,9vw,6.5rem)] font-medium tabular-nums tracking-[0.015em] text-red-400">
         {displayTime}
       </div>
       <p className="mt-3 max-w-sm text-[0.67rem] leading-relaxed tracking-[0.1em] text-cyan-100/45">
-        All three ships have been lost. Three ships return 24 hours after the final failed launch.
+        No response from the fleet.
       </p>
       <button
         type="button"
