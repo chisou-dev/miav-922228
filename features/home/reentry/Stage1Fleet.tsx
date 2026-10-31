@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReentryOutcome, ReentryPhase } from "./reentryTypes";
+import { paintStage1FleetShip } from "./ReentryPresentationCanvas";
 import "./stage1Fleet.css";
 
 const STORE_KEY = "miav_stage1_fleet_v1";
@@ -126,60 +127,96 @@ export function useStage1Fleet() {
   return { fleet, now, recordAttempt };
 }
 
-function ShipIcon({ muted = false }: { muted?: boolean }) {
+/** Exactly the blue enamel spacecraft used on the main cinematic canvas. */
+function ShipIcon({
+  muted = false,
+  large = false,
+}: {
+  muted?: boolean;
+  large?: boolean;
+}) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    paintStage1FleetShip(ctx, canvas.width, canvas.height, muted);
+  }, [muted]);
   return (
-    <svg
-      width="20"
-      height="25"
-      viewBox="0 0 24 30"
-      fill="none"
+    <canvas
+      ref={ref}
+      width={100}
+      height={60}
+      className={large
+        ? "block h-[36px] w-[60px] drop-shadow-[0_0_10px_rgba(52,145,246,0.3)]"
+        : "block h-[24px] w-[39px] drop-shadow-[0_0_4px_rgba(52,145,246,0.25)]"}
       aria-hidden="true"
-      className={muted ? "opacity-20" : "drop-shadow-[0_0_5px_rgba(103,232,249,0.55)]"}
-    >
-      <path
-        d="M12 1.5 19 18l3 8-9-4h-2l-9 4 3-8 7-16.5Z"
-        fill={muted ? "#64748b" : "#d5f5ff"}
-        stroke={muted ? "#64748b" : "#8ceaff"}
-        strokeWidth="1.2"
-      />
-      <path d="M12 6v13" stroke="#164d65" strokeWidth="1.5" />
-      <path d="M9 23.5h6L12 29l-3-5.5Z" fill={muted ? "#475569" : "#67e8f9"} />
-    </svg>
+    />
   );
 }
 
 export function Stage1FleetHud({
   fleet,
   phase,
-  launchCount,
+  flightProgress,
+  spaceShare,
+  introSequence,
+  arrivalPlaying,
 }: {
   fleet: FleetState;
   phase: ReentryPhase;
-  launchCount: number;
+  flightProgress: number;
+  spaceShare: number;
+  introSequence: number;
+  arrivalPlaying: boolean;
 }) {
+  const [undocked, setUndocked] = useState(false);
+  useEffect(() => {
+    if (introSequence < 1) return;
+    setUndocked(false);
+    const id = window.setTimeout(() => setUndocked(true), 220);
+    return () => window.clearTimeout(id);
+  }, [introSequence]);
+
+  // Keep the rack visible in SPACE only. It disappears at atmospheric entry
+  // and never overlays the ocean or the successful Stage 1 epilogue.
+  const inSpace =
+    phase === "power" ||
+    phase === "angle" ||
+    (phase === "flight" && flightProgress < spaceShare);
+  if (!fleet.loaded || !inSpace || fleet.remaining === 0) return null;
+
+  const activeShipPreparing = (phase === "power" || phase === "angle") &&
+    introSequence > 0 && undocked;
+  // The active craft is now flying up to the fixed launch anchor, while
+  // failed attempts have already been consumed by recordAttempt().
+  const docked = Math.max(0, fleet.remaining - (activeShipPreparing ? 1 : 0));
+
   return (
     <>
       <div
         className="pointer-events-none absolute right-2 z-[71] rounded border border-cyan-100/20 bg-[#020d19]/75 px-2.5 py-2 text-right text-cyan-50 shadow-[0_0_20px_rgba(6,182,212,0.07)] backdrop-blur-sm sm:right-5"
         style={{ bottom: "max(7rem, calc(env(safe-area-inset-bottom) + 6rem))" }}
         role="status"
-        aria-label={`Stage 1 ships remaining: ${fleet.loaded ? fleet.remaining : "..."} of 3`}
+        aria-label={`Stage 1 docked ships: ${docked} of 3`}
       >
         <div className="text-[0.55rem] font-semibold tracking-[0.2em] text-cyan-100/75">
-          FLEET · {fleet.loaded ? fleet.remaining : "--"}/03
+          FLEET · {String(docked).padStart(2, "0")}/03
         </div>
-        <div className="mt-1.5 flex justify-end gap-1">
+        <div className="mt-1.5 flex justify-end gap-0.5">
           {Array.from({ length: STAGE1_SHIPS }, (_, i) => (
-            <ShipIcon key={i} muted={fleet.loaded && i >= fleet.remaining} />
+            <ShipIcon key={i} muted={i >= docked} />
           ))}
         </div>
         <div className="mt-1.5 text-[0.48rem] tracking-[0.08em] text-cyan-100/50">
           CLEAR RATE TARGET ≈1%
         </div>
       </div>
-      {launchCount > 0 && phase === "flight" && (
-        <div key={launchCount} className="stage1-fleet-flyout pointer-events-none fixed bottom-[7.5rem] right-7 z-[72] text-cyan-50" aria-hidden="true">
-          <ShipIcon />
+      {arrivalPlaying && phase === "power" && introSequence > 0 && (
+        <div className="stage1-fleet-arrival-layer" aria-hidden="true">
+          <div key={introSequence} className="stage1-fleet-arriving-ship">
+            <ShipIcon large />
+          </div>
         </div>
       )}
     </>
@@ -199,6 +236,7 @@ export function Stage1Extinction({
   const hh = String(Math.floor(seconds / 3600)).padStart(2, "0");
   const mm = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
   const ss = String(seconds % 60).padStart(2, "0");
+  const displayTime = `${hh}:${mm}.${ss}`;
   return (
     <div
       className="pointer-events-auto absolute inset-0 z-[85] flex flex-col items-center justify-center bg-[#020509]/90 px-4 text-center backdrop-blur-sm"
@@ -208,14 +246,14 @@ export function Stage1Extinction({
       <div className="mb-4 text-[0.65rem] tracking-[0.5em] text-red-300/70">
         FINAL TRANSMISSION · STAGE 1
       </div>
-      <h2 className="stage1-extinction-glow text-[clamp(1.7rem,6vw,4.7rem)] font-black tracking-[0.12em] text-red-200">
+      <h2 className="stage1-extinction-glow text-[clamp(1.7rem,6vw,4.7rem)] font-black tracking-[0.12em] text-red-300">
         HUMANITY EXTINCT
       </h2>
       <p className="mt-5 text-[0.7rem] tracking-[0.25em] text-cyan-100/60">
         FLEET RECONSTRUCTION IN
       </p>
-      <div className="stage1-countdown mt-2 font-mono text-[clamp(2.8rem,12vw,7rem)] font-light tabular-nums tracking-[0.04em] text-cyan-100">
-        {hh}:{mm}:{ss}
+      <div className="stage1-countdown mt-2 whitespace-nowrap font-mono text-[clamp(2.0rem,9vw,6.5rem)] font-medium tabular-nums tracking-[0.015em] text-red-400">
+        {displayTime}
       </div>
       <p className="mt-3 max-w-sm text-[0.67rem] leading-relaxed tracking-[0.1em] text-cyan-100/45">
         All three ships have been lost. Three ships return 24 hours after the final failed launch.
