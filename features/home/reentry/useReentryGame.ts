@@ -81,6 +81,9 @@ export function useReentryGame(options?: {
   const rafRef = useRef<number | null>(null);
   const powerRafRef = useRef<number | null>(null);
   const launchingRef = useRef(false);
+  // Record a failed ship only when its cinematic outcome is confirmed.
+  // Keeping this separate from LAUNCH prevents a 24h timer starting early.
+  const pendingOutcomeRef = useRef<ReentryResult["outcome"] | null>(null);
 
   const stopFlightLoop = useCallback(() => {
     if (rafRef.current !== null) {
@@ -172,6 +175,11 @@ export function useReentryGame(options?: {
         }
 
         if (p >= 1) {
+          const completedOutcome = pendingOutcomeRef.current;
+          pendingOutcomeRef.current = null;
+          if (completedOutcome !== null) {
+            options?.onAttemptResult?.(completedOutcome);
+          }
           stopFlightLoop();
           setPhase("result");
           return;
@@ -188,6 +196,7 @@ export function useReentryGame(options?: {
 
   const retry = useCallback(() => {
     launchingRef.current = false;
+    pendingOutcomeRef.current = null;
     stopFlightLoop();
     setResult(null);
     setPlayRecord(null);
@@ -297,10 +306,9 @@ export function useReentryGame(options?: {
         spaceStartAltitudeM,
       );
 
-    if (options?.onAttemptResult && !options.onAttemptResult(launched.result.outcome)) {
-      launchingRef.current = false;
-      return;
-    }
+    // No countdown or life loss yet: the result must finish playing first.
+    // Only this normal launch path queues an attempt (not development presets).
+    pendingOutcomeRef.current = launched.result.outcome;
 
     if (guaranteed) {
       setAngleNorm(
@@ -338,7 +346,6 @@ export function useReentryGame(options?: {
     beginFlight,
     lockedPowerNorm,
     options?.canLaunch,
-    options?.onAttemptResult,
     options?.guaranteedClear,
     phase,
     seed,
