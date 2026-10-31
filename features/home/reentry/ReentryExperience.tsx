@@ -10,6 +10,7 @@ import {
 import { ReentryFullscreenPortal } from "./ReentryFullscreenPortal";
 import { ReentryHybridStage } from "./ReentryHybridStage";
 import { ReentryLaunchControls } from "./ReentryLaunchControls";
+import { Stage1Extinction, Stage1FleetHud, useStage1Fleet } from "./Stage1Fleet";
 import { ReentryShellProvider } from "./reentryShellContext";
 import { useBodyScrollLock } from "./useBodyScrollLock";
 import { useNearbySuccess } from "./useNearbySuccess";
@@ -73,6 +74,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     typeof window !== "undefined" && devPresetRequiresExpand(),
   );
   const [clearAssist, setClearAssist] = useState(false);
+  const [launchCount, setLaunchCount] = useState(0);
+  const { fleet, now, recordAttempt } = useStage1Fleet();
   // Start locked for SSR/hydration; restore a prior win after mounting.
   const [galaxyUnlocked, setGalaxyUnlocked] = useState(false);
   const [galaxyTwinkle, setGalaxyTwinkle] = useState(false);
@@ -115,6 +118,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
   const onFlightStart = useCallback(() => {
     setExpanded(true);
+    setLaunchCount(count => count + 1);
   }, []);
 
   const {
@@ -137,7 +141,12 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   } = useReentryGame({
     onFlightStart,
     guaranteedClear: clearAssist,
+    canLaunch: fleet.loaded && fleet.remaining > 0,
+    onAttemptResult: recordAttempt,
   });
+
+  const fleetExtinct = fleet.loaded && fleet.remaining === 0 &&
+    fleet.reviveAt !== null && phase !== "flight";
 
   // Only a completed, successful Stage 1 run unlocks the galaxy.
   // Failed attempts, loading the page and starting a flight do not.
@@ -157,6 +166,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const nearbySuccess = useNearbySuccess({
     enabled:
       expanded &&
+      fleet.remaining > 0 &&
       phase === "result" &&
       shouldShowNearbySuccess(result?.outcome) &&
       spaceApproach?.kind !== "SPACE_MISS",
@@ -340,6 +350,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             MIAV-922228
           </button>
           <ReentryAudioControl />
+          <Stage1FleetHud fleet={fleet} phase={phase} launchCount={launchCount} />
           <div
             ref={surfaceRef}
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
@@ -358,6 +369,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               assistMode={clearAssist}
             />
 
+            {fleet.loaded && fleet.remaining > 0 && (
             <ReentryLaunchControls
               phase={phase}
               powerOscillator={powerOscillator}
@@ -370,6 +382,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               onLaunch={launch}
               onNudgeAngle={nudgeAngle}
             />
+            )}
 
             {showFsHint && phase === "power" && (
               <p
@@ -381,6 +394,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
           </div>
           {phase === "result" &&
+            !fleetExtinct &&
             result &&
             result.outcome !== "EARTH_REACHED" && (
               <div
@@ -420,7 +434,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             )}
 
           {/* The flight reaches result only at the escape timeline endpoint. */}
-          {phase === "result" && result &&
+          {phase === "result" && result && !fleetExtinct &&
             (result.outcome !== "EARTH_REACHED" || flightProgress >= 1) && (
             result.outcome === "EARTH_REACHED" ? (
               <div
@@ -487,6 +501,9 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 </div>
               </div>
             )
+          )}
+          {fleetExtinct && fleet.reviveAt !== null && (
+            <Stage1Extinction reviveAt={fleet.reviveAt} now={now} />
           )}
         </div>
         </ReentryFullscreenPortal>
