@@ -13,6 +13,7 @@ export function ReentryHybridStage({
   showStars = false,
   showIntroPulse = false,
   assistMode = false,
+  hideIdleCraft = false,
   className,
 }: {
   state: ReentryDrawState;
@@ -24,6 +25,7 @@ export function ReentryHybridStage({
   showStars?: boolean;
   showIntroPulse?: boolean;
   assistMode?: boolean;
+  hideIdleCraft?: boolean;
   className?: string;
 }) {
   // Signature is kept stable so the surrounding experience does not need to
@@ -50,6 +52,7 @@ export function ReentryHybridStage({
         powerNorm={state.powerNorm ?? 0.5}
         variant={variant}
         assistMode={assistMode}
+        hideIdleCraft={hideIdleCraft}
       />
     </div>
   );
