@@ -20,11 +20,13 @@
   27%  { left: 81%; top: 113%; opacity: 0; transform: translate(-50%,-50%) rotate(55deg) scale(.65); }
   32%  { left: 111%; top: 46%; opacity: 0; transform: translate(-50%,-50%) rotate(18deg) scale(.78); }
   38%  { left: 106%; top: 37%; opacity: 1; transform: translate(-50%,-50%) rotate(25deg) scale(1); }
-  51%  { left: 99%; top: 17%; opacity: 1; transform: translate(-50%,-50%) rotate(29deg) scale(.92); }
-  67%  { left: 91%; top: 11%; opacity: 1; transform: translate(-50%,-50%) rotate(-4deg) scale(.82); }
-  82%  { left: 83%; top: 13%; opacity: 1; transform: translate(-50%,-50%) rotate(-25deg) scale(.75); }
-  94%  { left: 77%; top: 23%; opacity: 1; transform: translate(-50%,-50%) rotate(-31deg) scale(.72); }
-  100% { left: 77%; top: 23%; opacity: 0; transform: translate(-50%,-50%) rotate(-31deg) scale(.72); }
+  51%  { left: 99%; top: 17%; opacity: 1; transform: translate(-50%,-50%) rotate(29deg) scale(1); }
+  /* Line up with the heading of the *actual* waiting craft by the last bend. */
+  67%  { left: 91%; top: 11%; opacity: 1; transform: translate(-50%,-50%) rotate(calc(var(--stage1-settle-turn) + 16deg)) scale(1); }
+  82%  { left: 83%; top: 13%; opacity: 1; transform: translate(-50%,-50%) rotate(calc(var(--stage1-settle-turn) + 5deg)) scale(1); }
+  94%  { left: 77%; top: 23%; opacity: 1; transform: translate(-50%,-50%) rotate(var(--stage1-settle-turn)) scale(1); }
+  /* Do not fade out before the main craft becomes visible on this frame. */
+  100% { left: 77%; top: 23%; opacity: 1; transform: translate(-50%,-50%) rotate(var(--stage1-settle-turn)) scale(1); }
 }
 .stage1-fleet-arriving-ship {
   position: absolute;
