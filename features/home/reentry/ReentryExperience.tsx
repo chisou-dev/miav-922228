@@ -503,7 +503,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             )
           )}
           {fleetExtinct && fleet.reviveAt !== null && (
-            <Stage1Extinction reviveAt={fleet.reviveAt} now={now} />
+            <Stage1Extinction reviveAt={fleet.reviveAt} now={now} onClose={closeSession} />
           )}
         </div>
         </ReentryFullscreenPortal>
