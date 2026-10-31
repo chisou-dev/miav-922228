@@ -204,8 +204,8 @@ export function Stage1FleetHud({
           FLEET · {String(docked).padStart(2, "0")}/03
         </div>
         <div className="mt-1.5 flex justify-end gap-0.5">
-          {Array.from({ length: STAGE1_SHIPS }, (_, i) => (
-            <ShipIcon key={i} muted={i >= docked} />
+          {Array.from({ length: docked }, (_, i) => (
+            <ShipIcon key={i} />
           ))}
         </div>
         <div className="mt-1.5 text-[0.48rem] tracking-[0.08em] text-cyan-100/50">
