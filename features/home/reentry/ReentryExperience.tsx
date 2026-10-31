@@ -379,6 +379,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
           <Stage1FleetHud
             fleet={fleet}
             phase={phase}
+            angleNorm={angleNorm}
             flightProgress={flightProgress}
             spaceShare={spaceShare}
             introSequence={introSequence}
