@@ -189,9 +189,11 @@ export function Stage1FleetHud({
 export function Stage1Extinction({
   reviveAt,
   now,
+  onClose,
 }: {
   reviveAt: number;
   now: number;
+  onClose: () => void;
 }) {
   const seconds = Math.max(0, Math.ceil((reviveAt - now) / 1000));
   const hh = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -218,6 +220,13 @@ export function Stage1Extinction({
       <p className="mt-3 max-w-sm text-[0.67rem] leading-relaxed tracking-[0.1em] text-cyan-100/45">
         All three ships have been lost. Three ships return 24 hours after the final failed launch.
       </p>
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-9 rounded border border-cyan-100/25 bg-cyan-950/25 px-5 py-2 text-[0.72rem] tracking-[0.22em] text-cyan-100/80 hover:bg-cyan-900/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100"
+      >
+        RETURN TO MIAV
+      </button>
     </div>
   );
 }
