@@ -74,7 +74,8 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     typeof window !== "undefined" && devPresetRequiresExpand(),
   );
   const [clearAssist, setClearAssist] = useState(false);
-  const [launchCount, setLaunchCount] = useState(0);
+  const [introSequence, setIntroSequence] = useState(0);
+  const [arrivalPlaying, setArrivalPlaying] = useState(false);
   const { fleet, now, recordAttempt } = useStage1Fleet();
   // Start locked for SSR/hydration; restore a prior win after mounting.
   const [galaxyUnlocked, setGalaxyUnlocked] = useState(false);
@@ -118,7 +119,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
   const onFlightStart = useCallback(() => {
     setExpanded(true);
-    setLaunchCount(count => count + 1);
+    setArrivalPlaying(false);
   }, []);
 
   const {
@@ -145,8 +146,25 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
     onAttemptResult: recordAttempt,
   });
 
+  // The third failed flight still shows its result until Retry is clicked.
   const fleetExtinct = fleet.loaded && fleet.remaining === 0 &&
-    fleet.reviveAt !== null && phase !== "flight";
+    fleet.reviveAt !== null && (phase === "power" || phase === "angle");
+
+  const beginShipArrival = useCallback(() => {
+    if (!fleet.loaded || fleet.remaining <= 0) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setArrivalPlaying(false);
+      return;
+    }
+    setIntroSequence(value => value + 1);
+    setArrivalPlaying(true);
+  }, [fleet.loaded, fleet.remaining]);
+
+  useEffect(() => {
+    if (!arrivalPlaying) return;
+    const timer = window.setTimeout(() => setArrivalPlaying(false), 3100);
+    return () => window.clearTimeout(timer);
+  }, [introSequence, arrivalPlaying]);
 
   // Only a completed, successful Stage 1 run unlocks the galaxy.
   // Failed attempts, loading the page and starting a flight do not.
@@ -197,6 +215,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
   const openExpanded = useCallback(() => {
     startReentryAmbience();
     setExpanded(true);
+    beginShipArrival();
     void preloadReentryPreviewAssets();
     try {
       if (!sessionStorage.getItem(FS_HINT_KEY)) {
@@ -207,7 +226,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
       setShowFsHint(true);
       setShowIntroPulse(true);
     }
-  }, []);
+  }, [beginShipArrival]);
 
   useEffect(() => {
     if (!showFsHint) return;
@@ -227,10 +246,17 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
 
   const closeSession = useCallback(() => {
     stopReentryAudio();
+    setArrivalPlaying(false);
     retry();
     setClearAssist(false);
     setExpanded(false);
   }, [retry]);
+
+  const restartAttempt = useCallback(() => {
+    startReentryAmbience();
+    retry();
+    beginShipArrival();
+  }, [retry, beginShipArrival]);
 
   const handleMiavTitleTap = useCallback(() => {
     const now =
@@ -350,7 +376,14 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
             MIAV-922228
           </button>
           <ReentryAudioControl />
-          <Stage1FleetHud fleet={fleet} phase={phase} launchCount={launchCount} />
+          <Stage1FleetHud
+            fleet={fleet}
+            phase={phase}
+            flightProgress={flightProgress}
+            spaceShare={spaceShare}
+            introSequence={introSequence}
+            arrivalPlaying={arrivalPlaying}
+          />
           <div
             ref={surfaceRef}
             className={`${REENTRY_ART.fullscreenStageClass} touch-none select-none`}
@@ -367,9 +400,10 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
               showStars
               showIntroPulse={showIntroPulse && phase === "power"}
               assistMode={clearAssist}
+              hideIdleCraft={arrivalPlaying && phase === "power"}
             />
 
-            {fleet.loaded && fleet.remaining > 0 && (
+            {fleet.loaded && fleet.remaining > 0 && !arrivalPlaying && (
             <ReentryLaunchControls
               phase={phase}
               powerOscillator={powerOscillator}
@@ -451,10 +485,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      startReentryAmbience();
-                      retry();
-                    }}
+                    onClick={restartAttempt}
                     className="rounded-sm bg-black/20 px-2 py-1 text-[0.72rem] tracking-[0.16em] text-white/75 underline decoration-white/30 underline-offset-[0.45em] backdrop-blur-[2px] transition-colors duration-300 hover:text-white"
                   >
                     Retry
@@ -482,10 +513,7 @@ export function ReentryExperience({ heroCopy }: { heroCopy: ReactNode }) {
                 <div className="mt-3 flex justify-center gap-8">
                   <button
                     type="button"
-                    onClick={() => {
-                      startReentryAmbience();
-                      retry();
-                    }}
+                    onClick={restartAttempt}
                     className={actionClass}
                   >
                     Retry
